@@ -70,9 +70,9 @@ header{grid-column:1/-1;display:flex;align-items:center;justify-content:space-be
 .step-dot.done{border-color:var(--accent);background:var(--accent);color:var(--bg)}
 .step-line{flex:1;height:1px;background:var(--border2);transition:background 0.3s}
 .step-line.done{background:var(--accent)}
-.sec-label{font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:var(--dim);margin:10px 0 6px}
+.sec-label{font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#aaaaaa;margin:12px 0 7px;font-weight:600}
 .fgroup{margin-bottom:7px}
-.fgroup label{display:flex;justify-content:space-between;align-items:center;font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:3px}
+.fgroup label{display:flex;justify-content:space-between;align-items:center;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:#cccccc;margin-bottom:3px;font-weight:500}
 .calc-badge{font-size:8px;background:var(--accent-dim);color:var(--accent);border:1px solid var(--border2);border-radius:3px;padding:1px 4px}
 input[type=date],input[type=text],select,textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;padding:5px 8px;outline:none;transition:border-color 0.15s,box-shadow 0.15s;appearance:none;-webkit-appearance:none}
 input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-glow)}
@@ -248,7 +248,6 @@ td.meta-cell{max-width:120px}
     </div>
     <div class="logo">
       <span class="logo-title">ΕΜΒΟΛΙΑ</span>
-      <span class="logo-sub">Παρακολούθηση Παραγγελιών · 2026</span>
     </div>
   </div>
   <div class="header-right">
@@ -273,7 +272,7 @@ td.meta-cell{max-width:120px}
 <!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-inner">
-    <div class="form-heading">+ <span>Νέα Παραγγελία Εμβολίου</span></div>
+    <div class="form-heading">+ <span>Νέα Παραγγελία</span></div>
     <div class="steps">
       <div class="step-dot active" id="step1">1</div>
       <div class="step-line" id="line1"></div>
@@ -282,28 +281,31 @@ td.meta-cell{max-width:120px}
       <div class="step-dot" id="step3">3</div>
     </div>
 
-    <div class="sec-label">Βήμα 1 — Ημερομηνίες</div>
+    <div class="sec-label">Βήμα 1 — Ημερομηνίες & Αναθρεπτήριο</div>
     <div class="fgroup">
-      <label>Ημ. Εκκόλαψης <span style="color:var(--dim);font-size:9px">ΗΜ. ΕΚΚ</span></label>
+      <label>Ημ. Εκκόλαψης</label>
       <input type="date" id="f-hatch" onchange="onDateChange()">
     </div>
     <div class="fgroup">
-      <label>Ημ. Εμβολιασμού <span style="color:var(--dim);font-size:9px">ΗΜ. ΕΜΒ</span></label>
+      <label>Αναθρεπτήριο</label>
+      <select id="f-flock" onchange="onFieldChange()">
+        <option value="">— επιλογή —</option>
+        <option>Θ1</option><option>Θ2</option><option>Θ3</option><option>Θ4</option><option>Α1</option>
+      </select>
+    </div>
+    <div class="fgroup">
+      <label>Ημ. Εμβολιασμού</label>
       <input type="date" id="f-vacc" onchange="onDateChange()">
     </div>
     <div class="fgroup">
       <label>Ημ. Παραγγελίας <span class="calc-badge">ΑΥΤΟ −30 ημ.</span></label>
       <input type="text" id="f-orderdate" class="calc-field" readonly placeholder="Ορίστε πρώτα ημ. εμβολιασμού…">
     </div>
-    <div class="fgroup">
-      <label>Ημ. Παράδοσης <span style="color:var(--dim);font-size:9px">ΗΜ. ΠΑΡ</span></label>
-      <input type="date" id="f-deliv">
-    </div>
 
     <div class="divider"></div>
-    <div class="sec-label">Βήμα 2 — Εμβόλιο &amp; Αναθρεπτήριο</div>
+    <div class="sec-label">Βήμα 2 — Εμβόλιο</div>
     <div class="fgroup">
-      <label>Εμβόλιο <span style="color:var(--dim);font-size:9px">ΕΜΒΟΛΙΑ</span></label>
+      <label>Εμβόλιο</label>
       <input type="text" id="f-vaccine" list="vaccine-list" placeholder="Πληκτρολογήστε ή επιλέξτε…" oninput="onFieldChange()">
       <datalist id="vaccine-list">
         <option value="AVINEW"><option value="AVINEW / CLONE 30"><option value="AVINEW NEO">
@@ -316,13 +318,6 @@ td.meta-cell{max-width:120px}
         <option value="SG-9R"><option value="TARTYLL"><option value="TS-11">
         <option value="VAXSAFE"><option value="VECTROMUNE">
       </datalist>
-    </div>
-    <div class="fgroup">
-      <label>Αναθρεπτήριο <span style="color:var(--dim);font-size:9px">ΑΝΑΘ.</span></label>
-      <select id="f-flock" onchange="onFieldChange()">
-        <option value="">— επιλογή —</option>
-        <option>Θ1</option><option>Θ2</option><option>Θ3</option><option>Θ4</option><option>Α1</option>
-      </select>
     </div>
 
     <div class="divider"></div>
@@ -350,11 +345,10 @@ td.meta-cell{max-width:120px}
   <div class="toolbar">
     <div class="search-wrap">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="search" placeholder="Αναζήτηση εμβολίου, πελάτη, αναθρεπτικής…" oninput="render()">
+      <input type="text" id="search" placeholder="Αναζήτηση εμβολίου, πελάτη, αναθρεπτηρίου…" oninput="render()">
     </div>
-    <select class="filter-sel" id="filt-flock" onchange="render()">
+    <select class="filter-sel" id="filt-flock" onchange="render()" style="min-width:160px">
       <option value="">Όλα τα αναθρεπτήρια</option>
-      <option>Θ1</option><option>Θ2</option><option>Θ3</option><option>Θ4</option><option>Α1</option>
     </select>
     <select class="filter-sel" id="filt-ordered" onchange="render()">
       <option value="">Όλες οι καταστάσεις</option>
@@ -381,11 +375,10 @@ td.meta-cell{max-width:120px}
       <table>
         <thead><tr>
           <th class="cb-cell"><input type="checkbox" id="cb-all" onchange="toggleSelectAll(this.checked)" title="Επιλογή όλων"></th>
-          <th onclick="sortBy('hm_ekk')">Ημ. Εκκόλαψης<span class="arr" id="s-hm_ekk"></span></th>
+          <th onclick="sortBy('hm_ekk')">Εκκόλαψη — Αναθρεπτήριο<span class="arr" id="s-hm_ekk"></span></th>
           <th onclick="sortBy('hm_emv')">Ημ. Εμβολιασμού<span class="arr" id="s-hm_emv"></span></th>
           <th onclick="sortBy('hm_paragelia')">Ημ. Παραγγελίας<span class="arr" id="s-hm_paragelia"></span></th>
           <th onclick="sortBy('emvolio')">Εμβόλιο<span class="arr" id="s-emvolio"></span></th>
-          <th onclick="sortBy('anath')">Αναθρεπτήριο<span class="arr" id="s-anath"></span></th>
           <th onclick="sortBy('posotita')">Ποσότητα<span class="arr" id="s-posotita"></span></th>
           <th onclick="sortBy('pelatis')">Πελάτης<span class="arr" id="s-pelatis"></span></th>
           <th>Σχόλια Πάνος</th>
@@ -587,8 +580,8 @@ function onDateChange() {
 function onFieldChange() { updateSteps(); }
 
 function updateSteps() {
-  const s1 = !!(document.getElementById('f-hatch').value && document.getElementById('f-vacc').value);
-  const s2 = !!(document.getElementById('f-vaccine').value.trim() && document.getElementById('f-flock').value);
+  const s1 = !!(document.getElementById('f-hatch').value && document.getElementById('f-flock').value);
+  const s2 = !!(document.getElementById('f-vaccine').value.trim() && document.getElementById('f-vacc').value);
   document.getElementById('step1').className = 'step-dot ' + (s1 ? 'done' : 'active');
   document.getElementById('step2').className = 'step-dot ' + (s2 ? 'done' : s1 ? 'active' : '');
   document.getElementById('step3').className = 'step-dot ' + (s2 ? 'active' : '');
@@ -615,13 +608,13 @@ async function addEntry() {
   const flock   = document.getElementById('f-flock').value;
   if (!vaccine) { toast('Εισάγετε όνομα εμβολίου', true); return; }
   if (!hatch)   { toast('Εισάγετε ημερομηνία εκκόλαψης', true); return; }
+  if (!flock)   { toast('Επιλέξτε αναθρεπτήριο', true); return; }
   if (!vacc)    { toast('Εισάγετε ημερομηνία εμβολιασμού', true); return; }
-  if (!flock)   { toast('Επιλέξτε αναθρεπτική', true); return; }
 
   const now = new Date().toISOString();
   const row = {
     emvolio: vaccine, hm_ekk: hatch||null, hm_emv: vacc||null,
-    hm_par: document.getElementById('f-deliv').value||null,
+    hm_par: null,
     anath: flock, pelatis: document.getElementById('f-customer').value.trim()||null,
     posotita: document.getElementById('f-qty').value.trim()||null,
     sxolia_panos: document.getElementById('f-notes').value.trim()||null,
@@ -655,7 +648,7 @@ async function addEntry() {
 }
 
 function resetForm() {
-  ['f-hatch','f-vacc','f-deliv','f-vaccine','f-customer','f-qty','f-supplier','f-notes','f-notes2']
+  ['f-hatch','f-vacc','f-vaccine','f-customer','f-qty','f-supplier','f-notes','f-notes2']
     .forEach(id => { const e = document.getElementById(id); if(e) e.value=''; });
   document.getElementById('f-flock').value = '';
   const od = document.getElementById('f-orderdate'); od.value=''; od.dataset.iso='';
@@ -776,15 +769,48 @@ async function confirmDelete() {
 function closeConfirm() { document.getElementById('confirm-bg').style.display='none'; deleteId=null; }
 
 // ── RENDER ────────────────────────────────────────────────────────
+// combined flock label: "04/07/2026 – Θ3"
+function flockLabel(r) {
+  if (!r.hm_ekk && !r.anath) return '—';
+  if (!r.hm_ekk) return r.anath || '—';
+  if (!r.anath)  return fmt(r.hm_ekk);
+  return fmt(r.hm_ekk) + ' – ' + r.anath;
+}
+
+// rebuild the dynamic flock filter from current data
+function populateFlockFilter() {
+  const sel = document.getElementById('filt-flock');
+  const cur = sel.value;
+  // collect unique flock keys sorted
+  const keys = [...new Map(
+    data.map(r => [flockLabel(r), { hm_ekk: r.hm_ekk, anath: r.anath }])
+  ).entries()]
+    .filter(([k]) => k !== '—')
+    .sort((a, b) => {
+      // sort by hm_ekk date asc, then anath
+      const da = a[1].hm_ekk || '', db = b[1].hm_ekk || '';
+      return da < db ? -1 : da > db ? 1 : (a[1].anath||'').localeCompare(b[1].anath||'');
+    });
+  sel.innerHTML = '<option value="">Όλα τα αναθρεπτήρια</option>';
+  keys.forEach(([label]) => {
+    const o = document.createElement('option');
+    o.value = label; o.textContent = label;
+    sel.appendChild(o);
+  });
+  sel.value = cur; // restore selection if still valid
+}
+
 function sortBy(col) { if(sortCol===col) sortDir*=-1; else{sortCol=col;sortDir=1;} render(); }
 
 function getFiltered() {
   const q  = (document.getElementById('search').value||'').toLowerCase();
-  const ff = document.getElementById('filt-flock').value;
+  const ff = document.getElementById('filt-flock').value;   // now a combined label
   const fo = document.getElementById('filt-ordered').value;
   return data.filter(r => {
-    if (q && !Object.values(r).join(' ').toLowerCase().includes(q)) return false;
-    if (ff && r.anath !== ff) return false;
+    // search includes the combined flock label
+    const searchStr = Object.values(r).join(' ') + ' ' + flockLabel(r);
+    if (q && !searchStr.toLowerCase().includes(q)) return false;
+    if (ff && flockLabel(r) !== ff) return false;
     if (fo==='ΝΑΙ' && r.paragelia!=='ΝΑΙ') return false;
     if (fo==='-'   && r.paragelia==='ΝΑΙ') return false;
     return true;
@@ -792,7 +818,8 @@ function getFiltered() {
 }
 
 function render() {
-  const SC = ['emvolio','anath','hm_ekk','hm_emv','hm_paragelia','hm_par','pelatis','posotita','paragelia','created_by'];
+  populateFlockFilter();
+  const SC = ['emvolio','hm_ekk','hm_emv','hm_paragelia','hm_par','pelatis','posotita','paragelia','created_by'];
   SC.forEach(c => { const e=document.getElementById('s-'+c); if(e) e.textContent=sortCol===c?(sortDir===1?'↑':'↓'):''; });
 
   const rows = getFiltered().sort((a,b) => {
@@ -808,8 +835,9 @@ function render() {
     const tr = document.createElement('tr');
     if (r._new) { tr.classList.add('new-row'); delete r._new; }
     const ord = r.paragelia==='ΝΑΙ', fri = r.psygeio==='ΝΑΙ';
+    const fl = flockLabel(r);
 
-    // meta cell: created vs updated
+    // meta cell
     let metaHtml = '';
     if (r.created_by) {
       metaHtml = `<div class="meta-info">` +
@@ -825,11 +853,10 @@ function render() {
 
     tr.innerHTML =
       `<td class="cb-cell"><input type="checkbox" class="row-cb" data-id="${r.id}" onchange="onRowCheck(${r.id},this.checked)"></td>`+
-      `<td>${fmt(r.hm_ekk)}</td>`+
+      `<td><span class="badge b-flock" title="${x(fl)}">${x(fl)}</span></td>`+
       `<td>${fmt(r.hm_emv)}</td>`+
       `<td style="color:${r.hm_paragelia?'var(--amber)':'var(--dim)'}">${fmt(r.hm_paragelia)||'—'}</td>`+
       `<td class="vacc" title="${x(r.emvolio)}">${x(r.emvolio)}</td>`+
-      `<td><span class="badge b-flock">${x(r.anath||'—')}</span></td>`+
       `<td>${x(r.posotita||'—')}</td>`+
       `<td style="color:var(--muted)">${x(r.pelatis||'—')}</td>`+
       `<td style="color:var(--muted);font-size:11px" title="${x(r.sxolia_panos||'')}">${x(r.sxolia_panos||'—')}</td>`+
