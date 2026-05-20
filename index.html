@@ -564,12 +564,12 @@ async function addEntry() {
     hm_par: document.getElementById('f-deliv').value||null,
     anath: flock, pelatis: document.getElementById('f-customer').value.trim()||null,
     posotita: document.getElementById('f-qty').value.trim()||null,
-    sxolia: document.getElementById('f-notes').value.trim()||null,
+    sxolia_panos: document.getElementById('f-notes').value.trim()||null,
     promitheutis: document.getElementById('f-supplier').value.trim()||null,
     paragelia: orderedVal||null,
     hm_paragelia: document.getElementById('f-orderdate').dataset.iso||null,
     psygeio: fridgeVal||null,
-    sxolia2: document.getElementById('f-notes2').value.trim()||null,
+    sxolia_eleni: document.getElementById('f-notes2').value.trim()||null,
     created_by: currentUser, created_at: now,
     updated_by: currentUser, updated_at: now,
   };
@@ -610,7 +610,7 @@ async function editEntry(id) {
   set('m-vaccine',r.emvolio); set('m-hatch',r.hm_ekk); set('m-vacc',r.hm_emv);
   set('m-deliv',r.hm_par);   set('m-flock',r.anath);  set('m-customer',r.pelatis);
   set('m-qty',r.posotita);   set('m-ordered',r.paragelia); set('m-fridge',r.psygeio);
-  set('m-supplier',r.promitheutis); set('m-notes',r.sxolia); set('m-notes2',r.sxolia2);
+  set('m-supplier',r.promitheutis); set('m-notes',r.sxolia_panos); set('m-notes2',r.sxolia_eleni);
   modalDateChange();
   document.getElementById('modal-bg').style.display = 'flex';
   loadHistory(id);
@@ -659,7 +659,7 @@ async function saveEdit() {
     pelatis: g('m-customer').trim()||null, posotita: g('m-qty').trim()||null,
     paragelia: g('m-ordered')||null, psygeio: g('m-fridge')||null,
     promitheutis: g('m-supplier').trim()||null,
-    sxolia: g('m-notes').trim()||null, sxolia2: g('m-notes2').trim()||null,
+    sxolia_panos: g('m-notes').trim()||null, sxolia_eleni: g('m-notes2').trim()||null,
     hm_paragelia: document.getElementById('m-orderdate').dataset.iso||null,
     updated_by: currentUser, updated_at: now,
   };
@@ -772,12 +772,12 @@ function render() {
       `<td><span class="badge b-flock">${x(r.anath||'—')}</span></td>`+
       `<td>${x(r.posotita||'—')}</td>`+
       `<td style="color:var(--muted)">${x(r.pelatis||'—')}</td>`+
-      `<td style="color:var(--muted);font-size:11px" title="${x(r.sxolia||'')}">${x(r.sxolia||'—')}</td>`+
+      `<td style="color:var(--muted);font-size:11px" title="${x(r.sxolia_panos||'')}">${x(r.sxolia_panos||'—')}</td>`+
       `<td><span class="badge ${ord?'b-yes':'b-pending'}">${ord?'ΝΑΙ':'—'}</span></td>`+
       `<td>${fmt(r.hm_par)||'—'}</td>`+
       `<td style="color:var(--muted);font-size:11px">${x(r.promitheutis||'—')}</td>`+
       `<td><span class="badge ${fri?'b-yes':'b-no'}">${fri?'ΝΑΙ':'—'}</span></td>`+
-      `<td style="color:var(--muted);font-size:11px" title="${x(r.sxolia2||'')}">${x(r.sxolia2||'—')}</td>`+
+      `<td style="color:var(--muted);font-size:11px" title="${x(r.sxolia_eleni||'')}">${x(r.sxolia_eleni||'—')}</td>`+
       `<td class="meta-cell">${metaHtml}</td>`+
       `<td><div class="row-actions">`+
         `<button class="row-btn" onclick="editEntry(${r.id})">Επεξ.</button>`+
@@ -810,8 +810,8 @@ function setZoom(v) {
 
 // ── EXPORT ────────────────────────────────────────────────────────
 function exportCSV() {
-  const H = ['emvolio','hm_ekk','hm_emv','hm_par','anath','pelatis','posotita','sxolia','promitheutis','paragelia','hm_paragelia','psygeio','sxolia2','created_by','created_at','updated_by','updated_at'];
-  const L = ['ΕΜΒΟΛΙΑ','ΗΜ.ΕΚΚ','ΗΜ.ΕΜΒ','ΗΜ.ΠΑΡ','ΑΝΑΘ.','ΠΕΛΑΤΗΣ','ΠΟΣΟΤΗΤΑ','ΣΧΟΛΙΑ','ΠΡΟΜΗΘΕΥΤΗΣ','ΠΑΡΑΓΓΕΛΙΑ','ΗΜ.ΠΑΡΑΓΓ.','ΨΥΓΕΙΟ','ΣΧΟΛΙΑ2','ΔΗΜΙΟΥΡΓΗΘΗΚΕ_ΑΠΟ','ΔΗΜΙΟΥΡΓΗΘΗΚΕ','ΕΠΕΞΕΡΓΑΣΤΗΚΕ_ΑΠΟ','ΕΠΕΞΕΡΓΑΣΤΗΚΕ'];
+  const H = ['emvolio','hm_ekk','hm_emv','hm_par','anath','pelatis','posotita','sxolia_panos','promitheutis','paragelia','hm_paragelia','psygeio','sxolia_eleni','created_by','created_at','updated_by','updated_at'];
+  const L = ['ΕΜΒΟΛΙΑ','ΗΜ.ΕΚΚ','ΗΜ.ΕΜΒ','ΗΜ.ΠΑΡ','ΑΝΑΘ.','ΠΕΛΑΤΗΣ','ΠΟΣΟΤΗΤΑ','ΣΧΟΛΙΑ ΠΑΝΟΣ','ΠΡΟΜΗΘΕΥΤΗΣ','ΠΑΡΑΓΓΕΛΙΑ','ΗΜ.ΠΑΡΑΓΓ.','ΨΥΓΕΙΟ','ΣΧΟΛΙΑ ΕΛΕΝΗ','ΔΗΜΙΟΥΡΓΗΘΗΚΕ_ΑΠΟ','ΔΗΜΙΟΥΡΓΗΘΗΚΕ','ΕΠΕΞΕΡΓΑΣΤΗΚΕ_ΑΠΟ','ΕΠΕΞΕΡΓΑΣΤΗΚΕ'];
   const rows = getFiltered().map(r => H.map(h => '"'+(r[h]||'').toString().replace(/"/g,'""')+'"').join(','));
   const a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent([L.join(','),...rows].join('\n'));
