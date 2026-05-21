@@ -35,7 +35,6 @@ header{grid-column:1/-1;display:flex;align-items:center;justify-content:space-be
 .shell.collapsed .sidebar-toggle span:nth-child(3){transform:translateY(-3.25px) rotate(-45deg);background:var(--accent)}
 .logo{display:flex;align-items:baseline;gap:8px}
 .logo-title{font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--accent);letter-spacing:-0.5px}
-.logo-sub{font-size:10px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase}
 .header-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .hstats{display:flex;gap:16px}
 .hstat{text-align:right}
@@ -512,25 +511,6 @@ let editId = null, deleteId = null, orderedVal = '', fridgeVal = '';
 let currentUser = '';
 
 // ── NAME GATE ─────────────────────────────────────────────────────
-function confirmName() {
-  const name = document.getElementById('gate-name').value.trim();
-  if (!name) { document.getElementById('gate-name').focus(); return; }
-  currentUser = name;
-  sessionStorage.setItem('emvolia_user', name);
-  document.getElementById('gate-bg').style.display = 'none';
-  document.getElementById('user-chip-name').textContent = name;
-  loadData();
-}
-
-function changeUser() {
-  const name = prompt('Αλλαγή ονόματος χρήστη:', currentUser);
-  if (name && name.trim()) {
-    currentUser = name.trim();
-    sessionStorage.setItem('emvolia_user', currentUser);
-    document.getElementById('user-chip-name').textContent = currentUser;
-    toast('Καλώς ήρθες, ' + currentUser + '!');
-  }
-}
 
 // ── SIDEBAR COLLAPSE ──────────────────────────────────────────────
 let sidebarOpen = true;
@@ -591,13 +571,16 @@ function updateSteps() {
 
 function toggleOrdered(v) {
   orderedVal = v;
-  document.getElementById('tog-ord-y').className = 'toggle-btn' + (v==='ΝΑΙ' ? ' active' : '');
-  document.getElementById('tog-ord-n').className = 'toggle-btn' + (v==='' ? ' active' : '');
+  // toggle buttons only exist in the edit/add context if re-added later
+  const y = document.getElementById('tog-ord-y'), n = document.getElementById('tog-ord-n');
+  if (y) y.className = 'toggle-btn' + (v==='ΝΑΙ' ? ' active' : '');
+  if (n) n.className = 'toggle-btn' + (v==='' ? ' active' : '');
 }
 function toggleFridge(v) {
   fridgeVal = v;
-  document.getElementById('tog-fri-y').className = 'toggle-btn' + (v==='ΝΑΙ' ? ' active' : '');
-  document.getElementById('tog-fri-n').className = 'toggle-btn' + (v==='' ? ' active' : '');
+  const y = document.getElementById('tog-fri-y'), n = document.getElementById('tog-fri-n');
+  if (y) y.className = 'toggle-btn' + (v==='ΝΑΙ' ? ' active' : '');
+  if (n) n.className = 'toggle-btn' + (v==='' ? ' active' : '');
 }
 
 // ── ADD ───────────────────────────────────────────────────────────
@@ -622,7 +605,7 @@ async function addEntry() {
     paragelia: orderedVal||null,
     hm_paragelia: document.getElementById('f-orderdate').dataset.iso||null,
     psygeio: fridgeVal||null,
-    sxolia_eleni: document.getElementById('f-notes2').value.trim()||null,
+    sxolia_eleni: null,
     created_by: currentUser, created_at: now,
     updated_by: currentUser, updated_at: now,
   };
@@ -648,7 +631,7 @@ async function addEntry() {
 }
 
 function resetForm() {
-  ['f-hatch','f-vacc','f-vaccine','f-customer','f-qty','f-supplier','f-notes','f-notes2']
+  ['f-hatch','f-vacc','f-vaccine','f-customer','f-qty','f-supplier','f-notes']
     .forEach(id => { const e = document.getElementById(id); if(e) e.value=''; });
   document.getElementById('f-flock').value = '';
   const od = document.getElementById('f-orderdate'); od.value=''; od.dataset.iso='';
@@ -1256,7 +1239,9 @@ async function confirmBatchDelete() {
 }
 
 
-toggleOrdered(''); toggleFridge(''); updateUndoRedoBtns();
+// ── INIT ──────────────────────────────────────────────────────────
+orderedVal = ''; fridgeVal = ''; // sidebar toggles removed; defaults stay empty
+updateUndoRedoBtns();
 
 // Always check password on every page load — never skip it
 // sessionStorage is tab-scoped so new tabs always ask again
