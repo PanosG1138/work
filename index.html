@@ -99,7 +99,12 @@ textarea{resize:vertical;min-height:40px;font-size:11px}
 .btn-tool{padding:5px 11px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:var(--rs);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;white-space:nowrap;transition:border-color 0.15s,color 0.15s}
 .btn-tool:hover{border-color:var(--accent);color:var(--accent)}
 
-/* ── BATCH ── */
+/* ── OFFLINE BLOCK ── */
+.offline-overlay{display:none;position:absolute;inset:0;background:rgba(0,0,0,0.7);z-index:40;align-items:center;justify-content:center;flex-direction:column;gap:10px;backdrop-filter:blur(2px);border-radius:var(--rs)}
+.offline-overlay.active{display:flex}
+.offline-msg{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--red);text-align:center;line-height:1.6}
+.offline-msg span{display:block;font-family:'DM Mono',monospace;font-weight:400;font-size:11px;color:var(--muted);margin-top:4px}
+.sidebar{position:relative}
 .batch-bar{display:none;align-items:center;gap:10px;padding:8px 14px;background:#1a1400;border:1px solid rgba(255,170,0,0.35);border-radius:var(--rs);flex-wrap:wrap}
 .batch-bar.visible{display:flex}
 .batch-count{font-family:'Syne',sans-serif;font-weight:700;font-size:12px;color:var(--amber);white-space:nowrap}
@@ -270,6 +275,10 @@ td.meta-cell{max-width:120px}
 
 <!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
+  <div class="offline-overlay" id="sidebar-offline">
+    <div class="offline-msg">⚠ Χωρίς σύνδεση<span>Αδύνατη η αποθήκευση.<br>Ανανεώστε για να συνδεθείτε.</span></div>
+    <button class="btn-tool" style="margin-top:4px" onclick="loadData()">↺ Ανανέωση</button>
+  </div>
   <div class="sidebar-inner">
     <div class="form-heading">+ <span>Νέα Παραγγελία</span></div>
     <div class="steps">
@@ -520,10 +529,39 @@ function toggleSidebar() {
 }
 
 // ── SYNC STATUS ───────────────────────────────────────────────────
+let isConnected = false;
+
 function setSyncStatus(state, text) {
   const b = document.getElementById('sync-badge');
   b.className = 'sync-badge ' + state;
   document.getElementById('sync-text').textContent = text;
+
+  const connected = state === 'ok';
+  if (isConnected === connected) return; // no change — skip DOM updates
+  isConnected = connected;
+
+  // sidebar overlay
+  const overlay = document.getElementById('sidebar-offline');
+  if (overlay) overlay.classList.toggle('active', !connected);
+
+  // block/unblock write buttons in toolbar and batch bar
+  const writeIds = ['btn-undo','btn-redo','btn-add'];
+  writeIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (!connected) {
+      el.dataset.wasDisabled = el.disabled ? '1' : '0';
+      el.disabled = true;
+    } else {
+      // restore previous disabled state (undo/redo may legitimately be disabled)
+      if (el.dataset.wasDisabled !== '1') el.disabled = false;
+    }
+  });
+
+  // batch bar write buttons
+  ['btn-batch-edit-inner','btn-batch-del-inner'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.disabled = !connected;
+  });
 }
 
 // ── LOAD ──────────────────────────────────────────────────────────
@@ -583,8 +621,18 @@ function toggleFridge(v) {
   if (n) n.className = 'toggle-btn' + (v==='' ? ' active' : '');
 }
 
+// ── CONNECTION GUARD ──────────────────────────────────────────────
+function guardConnected() {
+  if (!isConnected) {
+    toast('⚠ Χωρίς σύνδεση — αδύνατη η αποθήκευση. Ανανεώστε πρώτα.', true);
+    return false;
+  }
+  return true;
+}
+
 // ── ADD ───────────────────────────────────────────────────────────
 async function addEntry() {
+  if (!guardConnected()) return;
   const vaccine = document.getElementById('f-vaccine').value.trim();
   const hatch   = document.getElementById('f-hatch').value;
   const vacc    = document.getElementById('f-vacc').value;
@@ -640,6 +688,7 @@ function resetForm() {
 
 // ── EDIT ──────────────────────────────────────────────────────────
 async function editEntry(id) {
+  if (!guardConnected()) return;
   editId = id;
   const r = data.find(x => x.id === id); if (!r) return;
   const set = (i,v) => { const e=document.getElementById(i); if(e) e.value=v||''; };
@@ -687,6 +736,7 @@ async function loadHistory(rowId) {
 }
 
 async function saveEdit() {
+  if (!guardConnected()) return;
   const g = id => document.getElementById(id).value;
   const now = new Date().toISOString();
   const row = {
@@ -724,6 +774,7 @@ function closeModal() { document.getElementById('modal-bg').style.display='none'
 
 // ── DELETE ────────────────────────────────────────────────────────
 function promptDelete(id) {
+  if (!guardConnected()) return;
   deleteId = id;
   const r = data.find(x => x.id === id);
   document.getElementById('confirm-name').textContent = r ? r.emvolio : '';
@@ -731,6 +782,7 @@ function promptDelete(id) {
 }
 
 async function confirmDelete() {
+  if (!guardConnected()) return;
   const btn = document.getElementById('btn-confirm-del');
   btn.disabled=true; btn.textContent='Διαγραφή…';
   setSyncStatus('loading','Διαγραφή…');
@@ -915,6 +967,7 @@ function updateUndoRedoBtns() {
 }
 
 async function undo() {
+  if (!guardConnected()) return;
   if (!undoStack.length) return;
   const entry = undoStack.pop();
   redoStack.push(entry);
@@ -954,6 +1007,7 @@ async function undo() {
 }
 
 async function redo() {
+  if (!guardConnected()) return;
   if (!redoStack.length) return;
   const entry = redoStack.pop();
   undoStack.push(entry);
@@ -1116,6 +1170,7 @@ const BATCH_FIELDS = [
 ];
 
 function batchEdit() {
+  if (!guardConnected()) return;
   if (!selectedIds.size) return;
   document.getElementById('batch-modal-sub').textContent = selectedIds.size + ' εγγραφές επιλεγμένες';
 
@@ -1156,6 +1211,7 @@ function toggleBatchField(key, enabled) {
 function closeBatchModal() { document.getElementById('batch-modal-bg').style.display = 'none'; }
 
 async function saveBatchEdit() {
+  if (!guardConnected()) return;
   // collect enabled fields
   const updates = {};
   BATCH_FIELDS.forEach(f => {
@@ -1207,6 +1263,7 @@ async function saveBatchEdit() {
 
 // ── BATCH DELETE ──────────────────────────────────────────────────
 function batchDelete() {
+  if (!guardConnected()) return;
   if (!selectedIds.size) return;
   document.getElementById('batch-del-count').textContent = selectedIds.size;
   document.getElementById('batch-del-bg').style.display = 'flex';
@@ -1214,6 +1271,7 @@ function batchDelete() {
 function closeBatchDel() { document.getElementById('batch-del-bg').style.display = 'none'; }
 
 async function confirmBatchDelete() {
+  if (!guardConnected()) return;
   const btn = document.getElementById('btn-batch-del-confirm');
   btn.disabled = true; btn.textContent = 'Διαγραφή…';
   setSyncStatus('loading', 'Μαζική διαγραφή…');
