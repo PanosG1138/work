@@ -280,6 +280,9 @@ tbody tr{border-bottom:1px solid var(--gh-border-muted);transition:background 0.
 tbody tr:last-child{border-bottom:none}
 tbody tr:hover{background:var(--gh-canvas-subtle)}
 tbody tr.selected{background:var(--gh-accent-subtle)!important}
+tbody tr.row-arrived{background:rgba(46,160,67,0.06)}
+tbody tr.row-arrived:hover{background:rgba(46,160,67,0.12)}
+tbody tr.row-arrived.selected{background:var(--gh-accent-subtle)!important}
 tbody tr.new-row{animation:rowIn 0.4s ease}
 @keyframes rowIn{from{background:rgba(56,139,253,0.15)}to{background:transparent}}
 td{padding:7px 12px;color:var(--gh-fg-default);max-width:160px;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;font-size:13px}
@@ -538,7 +541,8 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
     <div class="sec-label">Βήμα 2 — Εμβόλιο</div>
     <div class="fgroup">
       <label>Εμβόλιο</label>
-      <input type="text" id="f-vaccine" list="vaccine-list" placeholder="Πληκτρολογήστε ή επιλέξτε…" oninput="onFieldChange()">
+      <input type="text" id="f-vaccine" list="vaccine-suggest" placeholder="Πληκτρολογήστε ή επιλέξτε…" oninput="onVaccineInput(this)" autocomplete="off">
+      <datalist id="vaccine-suggest"></datalist>
       <datalist id="vaccine-list">
         <option value="AVINEW"><option value="AVINEW / CLONE 30"><option value="AVINEW NEO">
         <option value="BIONEW BI"><option value="BIONEW BI + COR"><option value="Clone30">
@@ -554,10 +558,8 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
 
     <div class="divider"></div>
     <div class="sec-label">Βήμα 3 — Λεπτομέρειες</div>
-    <div class="row2">
-      <div class="fgroup"><label>Πελάτης</label><input type="text" id="f-customer" list="customer-list" placeholder="Προαιρετικό…"><datalist id="customer-list"></datalist></div>
-      <div class="fgroup"><label>Ποσότητα</label><input type="text" id="f-qty" placeholder="π.χ. 75000" onblur="fmtQty(this)" onfocus="stripQty(this)"></div>
-    </div>
+    <div class="fgroup"><label>Ποσότητα <span style="font-size:10px;color:var(--gh-fg-subtle);font-weight:400">(χωρίστε με κόμμα για πολλούς πελάτες)</span></label><input type="text" id="f-qty" placeholder="π.χ. 75.000 ή 10.000, 15.000" oninput="onQtyInput()"></div>
+    <div class="fgroup"><label>Πελάτης <span style="font-size:10px;color:var(--gh-fg-subtle);font-weight:400">(χωρίστε με κόμμα)</span></label><input type="text" id="f-customer" list="customer-list" placeholder="Προαιρετικό…" oninput="onCustomerInput()"><datalist id="customer-list"></datalist></div>
     <div class="fgroup">
       <label>Προμηθευτής</label>
       <input type="text" id="f-supplier" list="supplier-list" placeholder="Προαιρετικό…">
@@ -568,7 +570,8 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
     </div>
     <div class="fgroup"><label>Σχόλια Πάνος</label><textarea id="f-notes" placeholder="…"></textarea></div>
     <button class="btn-submit" id="btn-add" onclick="addEntry()">+ Προσθήκη στον Πίνακα</button>
-    <button class="btn-cancel" onclick="resetForm()">Καθαρισμός φόρμας</button>
+    <button class="btn-cancel" onclick="resetForm()">Καθαρισμός (διατήρηση ημερομηνιών)</button>
+    <button class="btn-cancel" onclick="resetFormFull()" style="margin-top:4px;color:var(--gh-danger-fg);border-color:rgba(248,81,73,0.3)">Καθαρισμός όλων</button>
   </div>
 </aside>
 
@@ -948,40 +951,55 @@ function guardConnected() {
 // ── ADD ───────────────────────────────────────────────────────────
 async function addEntry() {
   if (!guardConnected()) return;
-  const vaccineRaw = document.getElementById('f-vaccine').value.trim();
-  const hatch   = document.getElementById('f-hatch').dataset.iso  || '';
-  const vacc    = document.getElementById('f-vacc').dataset.iso   || '';
-  const flock   = document.getElementById('f-flock').value;
+  const vaccineRaw  = document.getElementById('f-vaccine').value.trim();
+  const customerRaw = document.getElementById('f-customer').value.trim();
+  const qtyRaw      = document.getElementById('f-qty').value.trim();
+  const hatch = document.getElementById('f-hatch').dataset.iso || '';
+  const vacc  = document.getElementById('f-vacc').dataset.iso  || '';
+  const flock = document.getElementById('f-flock').value;
   if (!vaccineRaw) { toast('Εισάγετε όνομα εμβολίου', true); return; }
   if (!hatch)      { toast('Εισάγετε ημερομηνία εκκόλαψης', true); return; }
   if (!flock)      { toast('Επιλέξτε αναθρεπτήριο', true); return; }
   if (!vacc)       { toast('Εισάγετε ημερομηνία εμβολιασμού', true); return; }
 
-  // split by comma (with optional space after comma)
-  const vaccines = vaccineRaw.split(/,\s*/).map(v => v.trim()).filter(Boolean);
+  const splitCSV = s => s ? s.split(/,\s*/).map(v => v.trim()).filter(Boolean) : [''];
+  const vaccines  = splitCSV(vaccineRaw);
+  const customers = splitCSV(customerRaw) || [''];
+  const qtys      = splitCSV(qtyRaw);
+
+  // qty assignment: if one qty → same for all; if qty count matches customer count → pair them
+  const getQty = (custIdx) => {
+    if (qtys.length === 0) return null;
+    if (qtys.length === 1) return rawQty(qtys[0]);
+    if (qtys.length === customers.length) return rawQty(qtys[custIdx]);
+    return rawQty(qtys[0]); // fallback: use first
+  };
 
   const now = new Date().toISOString();
   const baseRow = {
-    hm_ekk: hatch||null, hm_emv: vacc||null, hm_par: null,
-    anath: flock, pelatis: document.getElementById('f-customer').value.trim()||null,
-    posotita: rawQty(document.getElementById('f-qty').value),
+    hm_ekk: hatch||null, hm_emv: vacc||null, hm_par: null, anath: flock,
     sxolia_panos: document.getElementById('f-notes').value.trim()||null,
     promitheutis: document.getElementById('f-supplier').value.trim()||null,
     paragelia: orderedVal||null,
     hm_paragelia: document.getElementById('f-orderdate').dataset.iso||null,
-    psygeio: fridgeVal||null,
-    sxolia_eleni: null,
-    created_by: currentUser, created_at: now,
-    updated_by: currentUser, updated_at: now,
+    psygeio: fridgeVal||null, sxolia_eleni: null,
+    created_by: currentUser, created_at: now, updated_by: currentUser, updated_at: now,
   };
+
+  // build all combinations: vaccine × customer
+  const combos = [];
+  vaccines.forEach(vaccine => {
+    customers.forEach((pelatis, ci) => {
+      combos.push({ ...baseRow, emvolio: vaccine, pelatis: pelatis||null, posotita: getQty(ci) });
+    });
+  });
 
   const btn = document.getElementById('btn-add');
   btn.disabled = true;
-  btn.textContent = vaccines.length > 1 ? `Αποθήκευση ${vaccines.length}…` : 'Αποθήκευση…';
+  btn.textContent = combos.length > 1 ? `Αποθήκευση ${combos.length}…` : 'Αποθήκευση…';
   setSyncStatus('loading', 'Αποθήκευση…');
   try {
-    for (const vaccine of vaccines) {
-      const row = { ...baseRow, emvolio: vaccine };
+    for (const row of combos) {
       const [inserted] = await sbInsert(row);
       await sbHInsert({ row_id: inserted.id, action: 'created', user_name: currentUser, ts: now });
       pushUndo({ type: 'add', after: inserted });
@@ -989,25 +1007,13 @@ async function addEntry() {
     }
     resetForm(); render();
     setSyncStatus('ok', 'Αποθηκεύτηκε ✓');
-    toast(vaccines.length > 1 ? `${vaccines.length} εμβόλια προστέθηκαν!` : 'Η παραγγελία προστέθηκε!');
+    toast(combos.length > 1 ? `${combos.length} εγγραφές προστέθηκαν!` : 'Η παραγγελία προστέθηκε!');
   } catch (e) {
     setSyncStatus('err', 'Σφάλμα');
     toast('Σφάλμα: ' + e.message, true);
   } finally {
     btn.disabled = false; btn.textContent = '+ Προσθήκη στον Πίνακα';
   }
-}
-
-function resetForm() {
-  ['f-hatch','f-vacc','f-vaccine','f-customer','f-qty','f-supplier','f-notes']
-    .forEach(id => {
-      const e = document.getElementById(id); if(!e) return;
-      e.value = ''; e.style.borderColor = '';
-      if (e.dataset) e.dataset.iso = '';
-    });
-  document.getElementById('f-flock').value = '';
-  const od = document.getElementById('f-orderdate'); od.value=''; od.dataset.iso='';
-  toggleOrdered(''); toggleFridge(''); updateSteps();
 }
 
 // ── EDIT ──────────────────────────────────────────────────────────
@@ -1128,10 +1134,13 @@ async function saveEdit() {
   setSyncStatus('loading', 'Αποθήκευση…');
   try {
     const [updated] = await sbUpdate(editId, row);
-    await sbHInsert({
-      row_id: editId, action: 'edited', user_name: currentUser, ts: now,
-      changes_json: Object.keys(changes).length ? JSON.stringify(changes) : null,
-    });
+    // only log history if something actually changed
+    if (Object.keys(changes).length > 0) {
+      await sbHInsert({
+        row_id: editId, action: 'edited', user_name: currentUser, ts: now,
+        changes_json: JSON.stringify(changes),
+      });
+    }
     if (idx >= 0) data[idx] = updated;
     if (before) pushUndo({ type: 'edit', before, after: updated });
     closeModal(); render();
@@ -1214,15 +1223,16 @@ function sortBy(col) { if(sortCol===col) sortDir*=-1; else{sortCol=col;sortDir=1
 
 function getFiltered() {
   const raw = (document.getElementById('search').value || '').trim();
-  // split on comma (with optional space), filter empty — ALL terms must match (AND logic)
-  const terms = raw ? raw.split(/,\s*/).map(t => t.trim().toLowerCase()).filter(Boolean) : [];
+  // split on comma, resolve month names, AND logic — all terms must match
+  const terms = raw
+    ? raw.split(/,\s*/).map(t => resolveSearchTerm(t.trim())).filter(Boolean)
+    : [];
   const ff = document.getElementById('filt-flock').value;
   const fo = document.getElementById('filt-ordered').value;
   return data.filter(r => {
     if (terms.length) {
       const searchStr = (Object.values(r).join(' ') + ' ' + flockLabel(r)).toLowerCase();
-      // every term must be found — narrows down progressively
-      if (!terms.every(t => searchStr.includes(t))) return false;
+      if (!terms.every(t => searchStr.includes(t.toLowerCase()))) return false;
     }
     if (ff && flockLabel(r) !== ff) return false;
     if (fo==='ΝΑΙ' && r.paragelia!=='ΝΑΙ') return false;
@@ -1284,6 +1294,7 @@ function render() {
     const tr = document.createElement('tr');
     if (r._new) { tr.classList.add('new-row'); delete r._new; }
     const ord = r.paragelia==='ΝΑΙ', fri = r.psygeio==='ΝΑΙ';
+    if (fri) tr.classList.add('row-arrived');
     const fl = flockLabel(r);
 
     // meta cell
@@ -1744,6 +1755,119 @@ async function confirmBatchDelete() {
   }
 }
 
+
+// ── VACCINE SMART DATALIST ────────────────────────────────────────
+// Updates the suggestion list based on the last comma-separated token being typed
+const VACCINE_OPTIONS = [
+  'AVINEW','AVINEW / CLONE 30','AVINEW NEO','BIONEW BI','BIONEW BI + COR','Clone30',
+  'CORIPRAVAC','E.COLI','GALLIMUNE 407','GALLIMUNE SE+ST','IB 4/91','IB PRIMER',
+  'LASOTA ND','Ma5','MG 6/85','NEMOVAC TRT','OLVAC B+HG','POULVAC E.COLI',
+  'RESPIVAC','SALENVAC ETC','SALMOVAC','SG-9R','TARTYLL','TS-11','VAXSAFE','VECTROMUNE'
+];
+
+function onVaccineInput(el) {
+  // get the last token after the last comma
+  const parts = el.value.split(',');
+  const lastToken = parts[parts.length - 1].trim().toLowerCase();
+  const prefix = parts.slice(0, -1).map(p => p.trim()).join(', ');
+
+  const dl = document.getElementById('vaccine-suggest');
+  dl.innerHTML = '';
+  if (lastToken.length === 0) { onFieldChange(); return; }
+
+  VACCINE_OPTIONS
+    .filter(v => v.toLowerCase().includes(lastToken))
+    .forEach(v => {
+      const opt = document.createElement('option');
+      // value = already-typed prefix + this suggestion
+      opt.value = prefix ? prefix + ', ' + v : v;
+      opt.label = v;
+      dl.appendChild(opt);
+    });
+  onFieldChange();
+}
+
+// ── CUSTOMER SMART DATALIST ───────────────────────────────────────
+function onCustomerInput() {
+  const el = document.getElementById('f-customer');
+  const parts = el.value.split(',');
+  const lastToken = parts[parts.length - 1].trim().toLowerCase();
+  const prefix = parts.slice(0, -1).map(p => p.trim()).join(', ');
+
+  const dl = document.getElementById('customer-list');
+  dl.innerHTML = '';
+  if (!lastToken) return;
+
+  const customers = [...new Set(data.map(r => r.pelatis).filter(Boolean))];
+  customers
+    .filter(c => c.toLowerCase().includes(lastToken))
+    .forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = prefix ? prefix + ', ' + c : c;
+      opt.label = c;
+      dl.appendChild(opt);
+    });
+}
+
+// ── QTY MULTI-INPUT HINT ─────────────────────────────────────────
+function onQtyInput() {
+  // no special processing on input — formatting happens on blur
+  // this is a hook for future use; blur handling remains in fmtQty
+}
+
+// ── MONTH SEARCH MAP ─────────────────────────────────────────────
+// Maps month names (Greek + English) to zero-padded month numbers
+const MONTH_MAP = {
+  'ιανουαριος':'01','ιανουάριος':'01','january':'01','jan':'01',
+  'φεβρουαριος':'02','φεβρουάριος':'02','february':'02','feb':'02',
+  'μαρτιος':'03','μάρτιος':'03','march':'03','mar':'03',
+  'απριλιος':'04','απρίλιος':'04','april':'04','apr':'04',
+  'μαιος':'05','μάιος':'05','may':'05',
+  'ιουνιος':'06','ιούνιος':'06','june':'06','jun':'06',
+  'ιουλιος':'07','ιούλιος':'07','july':'07','jul':'07',
+  'αυγουστος':'08','αύγουστος':'08','august':'08','aug':'08',
+  'σεπτεμβριος':'09','σεπτέμβριος':'09','september':'09','sep':'09','sept':'09',
+  'οκτωβριος':'10','οκτώβριος':'10','october':'10','oct':'10',
+  'νοεμβριος':'11','νοέμβριος':'11','november':'11','nov':'11',
+  'δεκεμβριος':'12','δεκέμβριος':'12','december':'12','dec':'12',
+};
+
+// Resolves a search term: if it's a month name, return the month number; else return as-is
+function resolveSearchTerm(t) {
+  const lower = t.toLowerCase().replace(/[άέήίόύώ]/g, c =>
+    ({ά:'α',έ:'ε',ή:'η',ί:'ι',ό:'ο',ύ:'υ',ώ:'ω'}[c]||c));
+  return MONTH_MAP[lower] || MONTH_MAP[t.toLowerCase()] || t;
+}
+
+// ── RESET FORM (KEEP STEP 1) ─────────────────────────────────────
+function resetForm() {
+  // clears step 2 and 3 only — keeps hatch date, flock, vacc date, order date
+  ['f-vaccine','f-customer','f-qty','f-supplier','f-notes']
+    .forEach(id => {
+      const e = document.getElementById(id); if(!e) return;
+      e.value = ''; e.style.borderColor = '';
+      if (e.dataset) e.dataset.iso = '';
+    });
+  // also clear vaccine suggest datalist
+  const dl = document.getElementById('vaccine-suggest');
+  if (dl) dl.innerHTML = '';
+  updateSteps();
+}
+
+// ── RESET FORM FULL (CLEAR EVERYTHING) ───────────────────────────
+function resetFormFull() {
+  ['f-hatch','f-vacc','f-vaccine','f-customer','f-qty','f-supplier','f-notes']
+    .forEach(id => {
+      const e = document.getElementById(id); if(!e) return;
+      e.value = ''; e.style.borderColor = '';
+      if (e.dataset) e.dataset.iso = '';
+    });
+  document.getElementById('f-flock').value = '';
+  const od = document.getElementById('f-orderdate'); od.value=''; od.dataset.iso='';
+  const dl = document.getElementById('vaccine-suggest');
+  if (dl) dl.innerHTML = '';
+  toggleOrdered(''); toggleFridge(''); updateSteps();
+}
 
 // ── THEME ─────────────────────────────────────────────────────────
 function applyTheme(theme) {
