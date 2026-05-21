@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ── GITHUB DARK COLOUR SYSTEM ── */
-:root{
+:root,[data-theme="dark"]{
   /* Canvas */
   --gh-canvas-default:    #0d1117;
   --gh-canvas-subtle:     #161b22;
@@ -37,13 +37,50 @@
   /* Danger red */
   --gh-danger-fg:         #f85149;
   --gh-danger-subtle:     rgba(248,81,73,0.1);
-  /* Done purple */
-  --gh-done-fg:           #a5d6ff;
+  /* Hover */
+  --gh-hover-bg:          #21262d;
   /* Radius */
   --r:6px;--rs:6px;
   /* Zoom */
   --zoom:1;
 }
+
+/* ── GITHUB LIGHT THEME ── */
+[data-theme="light"]{
+  --gh-canvas-default:    #ffffff;
+  --gh-canvas-subtle:     #f6f8fa;
+  --gh-canvas-inset:      #f0f2f5;
+  --gh-border-default:    #d0d7de;
+  --gh-border-muted:      #d8dee4;
+  --gh-border-subtle:     rgba(31,35,40,0.06);
+  --gh-fg-default:        #1f2328;
+  --gh-fg-muted:          #636c76;
+  --gh-fg-subtle:         #6e7781;
+  --gh-fg-onEmphasis:     #ffffff;
+  --gh-accent-fg:         #0969da;
+  --gh-accent-emphasis:   #0969da;
+  --gh-accent-subtle:     rgba(9,105,218,0.08);
+  --gh-success-fg:        #1a7f37;
+  --gh-success-subtle:    rgba(26,127,55,0.08);
+  --gh-attention-fg:      #9a6700;
+  --gh-attention-subtle:  rgba(154,103,0,0.08);
+  --gh-danger-fg:         #d1242f;
+  --gh-danger-subtle:     rgba(209,36,47,0.08);
+  --gh-hover-bg:          #eaeef2;
+  --r:6px;--rs:6px;
+  --zoom:1;
+}
+
+/* theme toggle button */
+.theme-toggle{
+  display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;
+  border:1px solid var(--gh-border-default);border-radius:var(--rs);
+  background:var(--gh-canvas-subtle);color:var(--gh-fg-muted);
+  font-family:'Inter',system-ui,sans-serif;font-size:12px;font-weight:500;
+  cursor:pointer;transition:background 0.15s,border-color 0.15s,color 0.15s;
+  user-select:none;flex-shrink:0;
+}
+.theme-toggle:hover{background:var(--gh-hover-bg);color:var(--gh-fg-default);border-color:var(--gh-fg-subtle)}
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
@@ -212,7 +249,7 @@ textarea{resize:vertical;min-height:44px;font-size:13px}
   cursor:pointer;white-space:nowrap;
   transition:background 0.15s,border-color 0.15s;
 }
-.btn-tool:hover{background:#21262d;border-color:var(--gh-fg-subtle)}
+.btn-tool:hover{background:var(--gh-hover-bg);border-color:var(--gh-fg-subtle)}
 .btn-tool:disabled{opacity:0.4;cursor:not-allowed;pointer-events:none}
 
 /* ── BATCH BAR ── */
@@ -221,7 +258,7 @@ textarea{resize:vertical;min-height:44px;font-size:13px}
 .batch-count{font-weight:600;font-size:13px;color:var(--gh-accent-fg);white-space:nowrap}
 .batch-sep{width:1px;height:16px;background:var(--gh-border-default)}
 .btn-batch{height:28px;padding:0 12px;border-radius:var(--rs);border:1px solid var(--gh-border-default);background:var(--gh-canvas-subtle);color:var(--gh-fg-default);font-family:'Inter',system-ui,sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:background 0.15s,border-color 0.15s;white-space:nowrap}
-.btn-batch:hover{background:#21262d;border-color:var(--gh-fg-subtle)}
+.btn-batch:hover{background:var(--gh-hover-bg);border-color:var(--gh-fg-subtle)}
 .btn-batch.danger{border-color:rgba(248,81,73,0.4);background:var(--gh-danger-subtle);color:var(--gh-danger-fg)}
 .btn-batch.danger:hover{background:rgba(248,81,73,0.2)}
 .btn-batch.clear{color:var(--gh-fg-muted)}
@@ -262,7 +299,7 @@ td.meta-cell{max-width:130px}
   font-family:'Inter',system-ui,sans-serif;font-size:12px;font-weight:500;
   cursor:pointer;transition:background 0.12s,border-color 0.12s,color 0.12s;white-space:nowrap;
 }
-.row-btn:hover{background:#21262d;border-color:var(--gh-fg-subtle);color:var(--gh-accent-fg)}
+.row-btn:hover{background:var(--gh-hover-bg);border-color:var(--gh-fg-subtle);color:var(--gh-accent-fg)}
 .row-btn.del:hover{border-color:rgba(248,81,73,0.5);background:var(--gh-danger-subtle);color:var(--gh-danger-fg)}
 
 .empty-state{padding:48px 20px;text-align:center;color:var(--gh-fg-muted);font-size:14px}
@@ -289,13 +326,13 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
 .batch-modal-sub{font-size:12px;color:var(--gh-fg-muted);margin-bottom:14px}
 
 /* ── OFFLINE OVERLAY ── */
-.offline-overlay{display:none;position:absolute;inset:0;background:rgba(1,4,9,0.8);z-index:40;align-items:center;justify-content:center;flex-direction:column;gap:12px;backdrop-filter:blur(2px);border-radius:var(--rs)}
+.offline-overlay{display:none;position:absolute;inset:0;background:rgba(var(--gh-overlay-rgb,1,4,9),0.8);z-index:40;align-items:center;justify-content:center;flex-direction:column;gap:12px;backdrop-filter:blur(2px);border-radius:var(--rs)}
 .offline-overlay.active{display:flex}
 .offline-msg{font-weight:600;font-size:14px;color:var(--gh-danger-fg);text-align:center;line-height:1.6}
 .offline-msg span{display:block;font-weight:400;font-size:12px;color:var(--gh-fg-muted);margin-top:4px}
 
 /* ── MODALS ── */
-.modal-bg{position:fixed;inset:0;background:rgba(1,4,9,0.8);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(4px)}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(4px)}
 .modal{
   background:var(--gh-canvas-subtle);
   border:1px solid var(--gh-border-default);
@@ -325,7 +362,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
   font-family:'Inter',system-ui,sans-serif;font-size:13px;font-weight:500;
   cursor:pointer;transition:background 0.15s,border-color 0.15s;
 }
-.btn-secondary:hover{background:#21262d;border-color:var(--gh-fg-subtle)}
+.btn-secondary:hover{background:var(--gh-hover-bg);border-color:var(--gh-fg-subtle)}
 
 /* Confirm dialog */
 .confirm-box{background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:var(--r);padding:24px;width:340px;text-align:center}
@@ -428,6 +465,10 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
   </div>
   <div class="header-right">
     <div id="sync-badge" class="sync-badge loading"><div class="sync-dot"></div><span id="sync-text">Σύνδεση…</span></div>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Εναλλαγή θέματος">
+      <span id="theme-icon">☀</span>
+      <span id="theme-label">Φωτεινό</span>
+    </button>
     <div class="zoom-ctrl">
       <label>Μέγεθος</label>
       <input type="range" id="zoom-range" min="0.5" max="1.2" step="0.05" value="1" oninput="setZoom(this.value)">
@@ -1467,7 +1508,30 @@ async function confirmBatchDelete() {
 }
 
 
+// ── THEME ─────────────────────────────────────────────────────────
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const isDark = theme === 'dark';
+  document.getElementById('theme-icon').textContent  = isDark ? '☀' : '☾';
+  document.getElementById('theme-label').textContent = isDark ? 'Φωτεινό' : 'Σκοτεινό';
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next = current === 'dark' ? 'light' : 'dark';
+  applyTheme(next);
+  // persist per-browser (not per-session — survives page reloads)
+  try { localStorage.setItem('emvolia_theme', next); } catch(e) {}
+}
+
 // ── INIT ──────────────────────────────────────────────────────────
+// Apply saved theme immediately (before render) to avoid flash
+(function(){
+  let saved = 'dark';
+  try { saved = localStorage.getItem('emvolia_theme') || 'dark'; } catch(e) {}
+  applyTheme(saved);
+})();
+
 orderedVal = ''; fridgeVal = '';
 updateUndoRedoBtns();
 
