@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>ΕΜΒΟΛΙΑ — Παρακολούθηση Παραγγελιών</title>
+<title>ΕΜΒΟΛΙΑ</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ── GITHUB DARK COLOUR SYSTEM ── */
@@ -158,7 +158,8 @@ header{
   position:relative;
 }
 .shell.collapsed .sidebar{border-right:none}
-.sidebar-inner{padding:16px;overflow-y:auto;flex:1;min-width:300px}
+.sidebar-inner{padding:16px;overflow-y:auto;flex:1;min-width:300px;min-height:0}
+.sidebar-footer{padding:12px 16px;border-top:1px solid var(--gh-border-muted);background:var(--gh-canvas-subtle);display:flex;flex-direction:column;gap:6px;flex-shrink:0;min-width:300px}
 
 /* Form */
 .form-heading{font-weight:600;font-size:12px;color:var(--gh-fg-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:14px}
@@ -588,9 +589,11 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
       </datalist>
     </div>
     <div class="fgroup"><label>Σχόλια Πάνος</label><textarea id="f-notes" placeholder="…"></textarea></div>
+  </div>
+  <div class="sidebar-footer">
     <button class="btn-submit" id="btn-add" onclick="addEntry()">+ Προσθήκη στον Πίνακα</button>
     <button class="btn-cancel" onclick="resetForm()">Καθαρισμός (διατήρηση ημερομηνιών)</button>
-    <button class="btn-cancel" onclick="resetFormFull()" style="margin-top:4px;color:var(--gh-danger-fg);border-color:rgba(248,81,73,0.3)">Καθαρισμός όλων</button>
+    <button class="btn-cancel" onclick="resetFormFull()" style="color:var(--gh-danger-fg);border-color:rgba(248,81,73,0.3)">Καθαρισμός όλων</button>
   </div>
 </aside>
 
@@ -780,7 +783,7 @@ const sbHistory = rowId     => sbFetch(`${HTABLE}?row_id=eq.${rowId}&order=ts.as
 const sbHInsert = entry     => sbFetch(HTABLE, { method:'POST', body: JSON.stringify(entry) });
 // fetch history entries by other users since a given timestamp, joined with vaccine name via row_id
 const sbChangelog = (since, user) =>
-  sbFetch(`${HTABLE}?ts=gt.${encodeURIComponent(since)}&user_name=neq.${encodeURIComponent(user)}&order=ts.desc&limit=50`);
+  sbFetch(`${HTABLE}?ts=gt.${since}&user_name=neq.${encodeURIComponent(user)}&order=ts.desc&limit=50`);
 
 // ── STATE ─────────────────────────────────────────────────────────
 let data = [], sortCol = 'hm_emv', sortDir = 1;
