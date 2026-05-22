@@ -425,7 +425,21 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
 }
 .name-opt-btn:hover{background:var(--gh-accent-subtle);border-color:var(--gh-accent-emphasis);color:var(--gh-accent-fg)}
 
-/* ── CHANGELOG MODAL ── */
+/* ── CUSTOM AUTOCOMPLETE DROPDOWN ── */
+.ac-wrap{position:relative}
+.ac-dropdown{
+  position:absolute;top:100%;left:0;right:0;z-index:300;
+  background:var(--gh-canvas-default);
+  border:1px solid var(--gh-border-default);
+  border-top:none;border-radius:0 0 var(--rs) var(--rs);
+  max-height:200px;overflow-y:auto;
+  box-shadow:0 4px 12px rgba(0,0,0,0.3);
+}
+.ac-option{
+  padding:7px 10px;font-size:13px;color:var(--gh-fg-default);cursor:pointer;
+  transition:background 0.1s;
+}
+.ac-option:hover,.ac-option.active{background:var(--gh-accent-subtle);color:var(--gh-accent-fg)}
 .changelog-modal{background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:var(--r);padding:24px;width:520px;max-width:95vw;max-height:80vh;display:flex;flex-direction:column}
 .changelog-modal h3{font-weight:600;font-size:15px;color:var(--gh-fg-default);margin-bottom:4px}
 .changelog-sub{font-size:12px;color:var(--gh-fg-muted);margin-bottom:14px}
@@ -568,8 +582,13 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
     <div class="sec-label">Βήμα 2 — Εμβόλιο</div>
     <div class="fgroup">
       <label>Εμβόλιο</label>
-      <input type="text" id="f-vaccine" list="vaccine-suggest" placeholder="Πληκτρολογήστε ή επιλέξτε…" oninput="onVaccineInput(this)" autocomplete="off">
-      <datalist id="vaccine-suggest"></datalist>
+      <div class="ac-wrap">
+        <input type="text" id="f-vaccine" placeholder="Πληκτρολογήστε ή επιλέξτε…"
+          oninput="onVaccineInput(this)" onkeydown="onVaccineKey(event)"
+          onblur="scheduleCloseVacDrop()" autocomplete="off">
+        <div class="ac-dropdown" id="vac-dropdown" style="display:none"></div>
+      </div>
+    </div>
       <datalist id="vaccine-list">
         <option value="AVINEW"><option value="AVINEW / CLONE 30"><option value="AVINEW NEO">
         <option value="BIONEW BI"><option value="BIONEW BI + COR"><option value="Clone30">
@@ -1302,9 +1321,9 @@ function populateFlockFilter() {
 function sortBy(col) { if(sortCol===col) sortDir*=-1; else{sortCol=col;sortDir=1;} render(); }
 
 function modalDelete() {
-  // close edit modal and open the delete confirm with the current editId
+  const idToDelete = editId; // capture before closeModal() nulls it
   closeModal();
-  promptDelete(editId);
+  promptDelete(idToDelete);
 }
 
 // rebuild hatch date datalist from existing data (sorted, unique, displayed as dd/mm/yyyy)
