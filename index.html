@@ -593,18 +593,6 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
         onblur="scheduleCloseVacDrop()" autocomplete="off">
       <div class="ac-dropdown" id="vac-dropdown" style="display:none"></div>
     </div>
-      <datalist id="vaccine-list">
-        <option value="AVINEW"><option value="AVINEW / CLONE 30"><option value="AVINEW NEO">
-        <option value="BIONEW BI"><option value="BIONEW BI + COR"><option value="Clone30">
-        <option value="CORIPRAVAC"><option value="E.COLI"><option value="GALLIMUNE 407">
-        <option value="GALLIMUNE SE+ST"><option value="IB 4/91"><option value="IB PRIMER">
-        <option value="LASOTA ND"><option value="Ma5"><option value="MG 6/85">
-        <option value="NEMOVAC TRT"><option value="OLVAC B+HG"><option value="POULVAC E.COLI">
-        <option value="RESPIVAC"><option value="SALENVAC ETC"><option value="SALMOVAC">
-        <option value="SG-9R"><option value="TARTYLL"><option value="TS-11">
-        <option value="VAXSAFE"><option value="VECTROMUNE">
-      </datalist>
-    </div>
 
     <div class="divider"></div>
     <div class="sec-label">Βήμα 3 — Λεπτομέρειες</div>
@@ -2119,5 +2107,17 @@ if (sessionStorage.getItem('emvolia_pw') === '1') {
   setTimeout(() => document.getElementById('pw-input').focus(), 100);
 }
 </script>
+
+      <datalist id="vaccine-list">
+        <option value="AVINEW"><option value="AVINEW / CLONE 30"><option value="AVINEW NEO">
+        <option value="BIONEW BI"><option value="BIONEW BI + COR"><option value="Clone30">
+        <option value="CORIPRAVAC"><option value="E.COLI"><option value="GALLIMUNE 407">
+        <option value="GALLIMUNE SE+ST"><option value="IB 4/91"><option value="IB PRIMER">
+        <option value="LASOTA ND"><option value="Ma5"><option value="MG 6/85">
+        <option value="NEMOVAC TRT"><option value="OLVAC B+HG"><option value="POULVAC E.COLI">
+        <option value="RESPIVAC"><option value="SALENVAC ETC"><option value="SALMOVAC">
+        <option value="SG-9R"><option value="TARTYLL"><option value="TS-11">
+        <option value="VAXSAFE"><option value="VECTROMUNE">
+      </datalist>
 </body>
 </html>
