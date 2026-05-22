@@ -239,7 +239,6 @@ textarea{resize:vertical;min-height:44px;font-size:13px}
 
 /* ── MAIN ── */
 .main{grid-column:2;padding:16px;overflow:hidden;display:flex;flex-direction:column;gap:10px;min-height:0}
-.tbl-outer{overflow:auto;border:1px solid var(--gh-border-default);border-radius:var(--rs);flex:1;min-height:0}
 /* Total footer row */
 tfoot tr{background:var(--gh-canvas-subtle);border-top:2px solid var(--gh-border-default)}
 tfoot td{padding:7px 12px;font-size:13px;font-weight:600;color:var(--gh-fg-default)}
@@ -277,7 +276,7 @@ tfoot td{padding:7px 12px;font-size:13px;font-weight:600;color:var(--gh-fg-defau
 .btn-batch.clear:hover{color:var(--gh-fg-default)}
 
 /* ── TABLE ── */
-.tbl-outer{overflow:auto;border:1px solid var(--gh-border-default);border-radius:var(--rs);flex:1}
+.tbl-outer{overflow:auto;border:1px solid var(--gh-border-default);border-radius:var(--rs);flex:1;min-height:0}
 .tbl-scaler{transform-origin:top left;transform:scale(var(--zoom));width:calc(100% / var(--zoom))}
 table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap}
 thead tr{background:var(--gh-canvas-subtle);border-bottom:1px solid var(--gh-border-default)}
