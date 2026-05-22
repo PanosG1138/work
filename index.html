@@ -596,7 +596,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
 
     <div class="divider"></div>
     <div class="sec-label">Βήμα 3 — Λεπτομέρειες</div>
-    <div class="fgroup"><label>Ποσότητα <span style="font-size:10px;color:var(--gh-fg-subtle);font-weight:400">(χωρίστε με κόμμα για πολλούς πελάτες)</span></label><input type="text" id="f-qty" placeholder="π.χ. 75.000 ή 10.000, 15.000" oninput="onQtyInput()"></div>
+    <div class="fgroup"><label>Ποσότητα <span style="font-size:10px;color:var(--gh-fg-subtle);font-weight:400">(χωρίστε με κόμμα για πολλούς πελάτες)</span></label><input type="text" id="f-qty" placeholder="π.χ. 75.000 ή 10.000, 15.000" onblur="fmtQty(this)" onfocus="stripQty(this)"></div>
     <div class="fgroup"><label>Πελάτης <span style="font-size:10px;color:var(--gh-fg-subtle);font-weight:400">(χωρίστε με κόμμα)</span></label><input type="text" id="f-customer" list="customer-list" placeholder="Προαιρετικό…" oninput="onCustomerInput()"><datalist id="customer-list"></datalist></div>
     <div class="fgroup">
       <label>Προμηθευτής</label>
@@ -984,39 +984,28 @@ function updateSteps() {
   document.getElementById('line2').className = 'step-line ' + (s2 ? 'done' : '');
 }
 
-function toggleOrdered(v) {
-  orderedVal = v;
-  // toggle buttons only exist in the edit/add context if re-added later
-  const y = document.getElementById('tog-ord-y'), n = document.getElementById('tog-ord-n');
-  if (y) y.className = 'toggle-btn' + (v==='ΝΑΙ' ? ' active' : '');
-  if (n) n.className = 'toggle-btn' + (v==='' ? ' active' : '');
-}
-function toggleFridge(v) {
-  fridgeVal = v;
-  const y = document.getElementById('tog-fri-y'), n = document.getElementById('tog-fri-n');
-  if (y) y.className = 'toggle-btn' + (v==='ΝΑΙ' ? ' active' : '');
-  if (n) n.className = 'toggle-btn' + (v==='' ? ' active' : '');
-}
-
 // ── QUANTITY FORMATTING ───────────────────────────────────────────
 function fmtQty(el) {
-  const raw = el.value.replace(/\./g, '').trim();
-  const n = parseInt(raw, 10);
-  if (!isNaN(n) && String(n) === raw) {
-    el.value = n.toLocaleString('el-GR'); // Greek locale uses . as thousands separator
-  }
-  // non-numeric values like "7 ΚΙΛΑ" are left untouched
+  // Handle comma-separated multi-value input (e.g. "10000, 15000")
+  const parts = el.value.split(',').map(p => p.trim());
+  const formatted = parts.map(p => {
+    const raw = p.replace(/\./g, '');
+    const n = parseInt(raw, 10);
+    if (!isNaN(n) && String(n) === raw) return n.toLocaleString('el-GR');
+    return p; // non-numeric like "7 ΚΙΛΑ" stays as-is
+  });
+  el.value = formatted.join(', ');
 }
 
 function stripQty(el) {
-  // on focus, remove dots so the user can edit the raw number
+  // remove thousands dots so the user can edit each number cleanly
   el.value = el.value.replace(/\./g, '');
 }
 
-// strip formatting before sending to DB
+// strip formatting before sending to DB (single value)
 function rawQty(val) {
   if (!val) return null;
-  const stripped = val.replace(/\./g, '').trim();
+  const stripped = String(val).replace(/\./g, '').trim();
   return stripped || null;
 }
 
