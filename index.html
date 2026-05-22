@@ -287,13 +287,14 @@ tbody tr{border-bottom:1px solid var(--gh-border-muted);transition:background 0.
 tbody tr:last-child{border-bottom:none}
 tbody tr:hover{background:var(--gh-canvas-subtle)}
 tbody tr.selected{background:var(--gh-accent-subtle)!important}
-tbody tr.row-arrived{background:rgba(46,160,67,0.06)}
-tbody tr.row-arrived:hover{background:rgba(46,160,67,0.12)}
+tbody tr.row-arrived{background:rgba(46,160,67,0.13);border-left:3px solid rgba(46,160,67,0.5)}
+tbody tr.row-arrived:hover{background:rgba(46,160,67,0.2)}
 tbody tr.row-arrived.selected{background:var(--gh-accent-subtle)!important}
 tbody tr.new-row{animation:rowIn 0.4s ease}
 @keyframes rowIn{from{background:rgba(56,139,253,0.15)}to{background:transparent}}
 td{padding:7px 12px;color:var(--gh-fg-default);max-width:160px;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;font-size:13px}
 td.vacc{font-weight:600;color:var(--gh-fg-default)}
+td.td-notes{max-width:200px;overflow:visible;text-overflow:unset;white-space:normal;word-break:break-word;line-height:1.4}
 
 /* Badges */
 .badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500;line-height:18px}
@@ -457,6 +458,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
 .cl-action.created{color:var(--gh-success-fg);border-color:rgba(63,185,80,0.4);background:var(--gh-success-subtle)}
 .cl-action.edited{color:var(--gh-attention-fg);border-color:rgba(210,153,34,0.4);background:var(--gh-attention-subtle)}
 .cl-vaccine{font-size:12px;font-weight:600;color:var(--gh-accent-fg)}
+.cl-ctx{font-size:11px;font-weight:400;color:var(--gh-fg-muted)}
 .cl-time{font-size:11px;color:var(--gh-fg-muted);margin-left:auto}
 .cl-changes{font-size:11px;color:var(--gh-fg-muted);margin-top:4px;display:flex;flex-direction:column;gap:2px}
 .cl-change{display:flex;align-items:baseline;gap:4px}
@@ -525,6 +527,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
   </div>
   <div class="header-right">
     <div id="sync-badge" class="sync-badge loading"><div class="sync-dot"></div><span id="sync-text">Σύνδεση…</span></div>
+    <button class="btn-tool" id="btn-changelog" onclick="reopenChangelog()" title="Εμφάνιση αλλαγών από άλλους χρήστες" style="display:none">📋 Αλλαγές</button>
     <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Εναλλαγή θέματος">
       <span id="theme-icon">☀</span>
       <span id="theme-label">Φωτεινό</span>
@@ -1378,12 +1381,12 @@ function render() {
       `<td class="vacc" title="${x(r.emvolio)}">${x(r.emvolio)}</td>`+
       `<td>${fmtPosotita(r.posotita)}</td>`+
       `<td style="color:var(--gh-fg-muted)">${x(r.pelatis||'—')}</td>`+
-      `<td style="color:var(--gh-fg-muted);font-size:11px" title="${x(r.sxolia_panos||'')}">${x(r.sxolia_panos||'—')}</td>`+
+      `<td class="td-notes" style="color:var(--gh-fg-muted);font-size:11px">${x(r.sxolia_panos||'—')}</td>`+
       `<td><span class="badge ${ord?'b-yes':'b-pending'}">${ord?'ΝΑΙ':'—'}</span></td>`+
       `<td>${fmt(r.hm_par)||'—'}</td>`+
       `<td style="color:var(--gh-fg-muted);font-size:11px">${x(r.promitheutis||'—')}</td>`+
       `<td><span class="badge ${fri?'b-yes':'b-no'}">${fri?'ΝΑΙ':'—'}</span></td>`+
-      `<td style="color:var(--gh-fg-muted);font-size:11px" title="${x(r.sxolia_eleni||'')}">${x(r.sxolia_eleni||'—')}</td>`+
+      `<td class="td-notes" style="color:var(--gh-fg-muted);font-size:11px">${x(r.sxolia_eleni||'—')}</td>`+
       `<td><div class="row-actions"><button class="row-btn" onclick="editEntry(${r.id})">Επεξ.</button></div></td>`;
     frag.appendChild(tr);
   });
@@ -1915,6 +1918,14 @@ async function showChangelog(user) {
     hist.forEach(h => {
       const row = data.find(r => r.id === h.row_id);
       const vaccineName = row ? row.emvolio : '(διαγραμμένο)';
+      // build contextual subtitle: vaccine | anath – hm_ekk
+      let vaccineCtx = x(vaccineName);
+      if (row) {
+        const parts = [];
+        if (row.anath) parts.push(x(row.anath));
+        if (row.hm_ekk) parts.push(fmt(row.hm_ekk));
+        if (parts.length) vaccineCtx += ` <span class="cl-ctx">| ${parts.join(' – ')}</span>`;
+      }
 
       const div = document.createElement('div');
       div.className = 'cl-item';
@@ -1941,7 +1952,7 @@ async function showChangelog(user) {
         `<div class="cl-header">` +
           `<span class="cl-user">${x(h.user_name)}</span>` +
           `<span class="cl-action ${h.action}">${h.action === 'created' ? 'Καταχώρηση' : 'Επεξεργασία'}</span>` +
-          `<span class="cl-vaccine">${x(vaccineName)}</span>` +
+          `<span class="cl-vaccine">${vaccineCtx}</span>` +
           `<span class="cl-time">${fmtDt(h.ts)}</span>` +
         `</div>` +
         changesHtml;
@@ -1950,6 +1961,8 @@ async function showChangelog(user) {
 
     document.getElementById('changelog-title').textContent =
       hist.length + ' αλλαγ' + (hist.length === 1 ? 'ή' : 'ές') + ' από άλλους χρήστες';
+    // show the replay button in the header for this session
+    document.getElementById('btn-changelog').style.display = '';
 
   } catch(e) {
     list.innerHTML = `<div class="cl-empty">Σφάλμα φόρτωσης: ${x(e.message)}</div>`;
@@ -1958,6 +1971,11 @@ async function showChangelog(user) {
 
 function closeChangelog() {
   document.getElementById('changelog-bg').style.display = 'none';
+}
+
+// Re-opens the changelog from the cached content of the current session
+function reopenChangelog() {
+  document.getElementById('changelog-bg').style.display = 'flex';
 }
 
 // ── MONTH SEARCH MAP ─────────────────────────────────────────────
