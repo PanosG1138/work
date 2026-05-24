@@ -1,0 +1,33 @@
+name: Daily Supabase Backup
+
+on:
+  schedule:
+    # Runs every day at 03:00 UTC (05:00 Greek summer time)
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    # Allows manual trigger from GitHub Actions tab anytime
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests gspread google-auth
+
+      - name: Run backup script
+        env:
+          SUPABASE_URL: https://oorhbrphdbigwgizejcc.supabase.co
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+          SHEET_ID: ${{ secrets.SHEET_ID }}
+        run: python backup.py
