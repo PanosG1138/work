@@ -215,15 +215,6 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .toast.show{transform:translateY(0);opacity:1}
 .toast.err{background:var(--gh-danger-subtle);border-color:rgba(248,81,73,0.4);color:var(--gh-danger-fg)}
 
-/* ── SUMMARY CARDS ── */
-.summary-row{display:flex;gap:12px;flex-wrap:wrap}
-.sum-card{
-  flex:1;min-width:140px;padding:12px 16px;
-  background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);
-  border-radius:var(--rs);
-}
-.sum-card-val{font-weight:700;font-size:22px;color:var(--gh-fg-default)}
-.sum-card-label{font-size:11px;color:var(--gh-fg-muted);margin-top:2px;text-transform:uppercase;letter-spacing:0.04em}
 </style>
 </head>
 <body>
@@ -283,10 +274,8 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <div class="fgroup">
       <label>Μονάδα</label>
       <select id="m-monada">
-        <option value="δόσεις">δόσεις</option>
-        <option value="φιαλίδια">φιαλίδια</option>
-        <option value="κιλά">κιλά</option>
-        <option value="τεμάχια">τεμάχια</option>
+        <option value="Δόσεις">Δόσεις</option>
+        <option value="Κιλά">Κιλά</option>
       </select>
     </div>
     <div class="fgroup">
@@ -343,26 +332,6 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 </header>
 
 <main class="main">
-  <!-- Summary cards -->
-  <div class="summary-row">
-    <div class="sum-card">
-      <div class="sum-card-val" id="stat-total">—</div>
-      <div class="sum-card-label">Εμβόλια</div>
-    </div>
-    <div class="sum-card">
-      <div class="sum-card-val" id="stat-instock" style="color:var(--gh-success-fg)">—</div>
-      <div class="sum-card-label">Σε απόθεμα</div>
-    </div>
-    <div class="sum-card">
-      <div class="sum-card-val" id="stat-zero" style="color:var(--gh-fg-subtle)">—</div>
-      <div class="sum-card-label">Εκτός αποθέματος</div>
-    </div>
-    <div class="sum-card">
-      <div class="sum-card-val" id="stat-total-doses" style="color:var(--gh-accent-fg)">—</div>
-      <div class="sum-card-label">Σύνολο δόσεων</div>
-    </div>
-  </div>
-
   <!-- Toolbar -->
   <div class="toolbar">
     <div class="search-wrap">
@@ -381,14 +350,12 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
           <th onclick="sortBy('emvolio')">Εμβόλιο<span class="arr" id="s-emvolio"></span></th>
           <th onclick="sortBy('posotita')">Ποσότητα<span class="arr" id="s-posotita"></span></th>
           <th onclick="sortBy('monada')">Μονάδα<span class="arr" id="s-monada"></span></th>
-          <th>Κατάσταση</th>
           <th onclick="sortBy('sxolia')">Σχόλια<span class="arr" id="s-sxolia"></span></th>
-          <th onclick="sortBy('updated_by')">Τελ. ενημ.<span class="arr" id="s-updated_by"></span></th>
           <th>Ενέργειες</th>
         </tr>
       </thead>
       <tbody id="tbody">
-        <tr><td colspan="7" class="empty-state">Φόρτωση…</td></tr>
+        <tr><td colspan="5" class="empty-state">Φόρτωση…</td></tr>
       </tbody>
     </table>
   </div>
@@ -580,25 +547,15 @@ function render() {
   });
 
   // sort arrows
-  ['emvolio','posotita','monada','sxolia','updated_by'].forEach(c => {
+  ['emvolio','posotita','monada','sxolia'].forEach(c => {
     const el = document.getElementById('s-' + c);
     if (el) el.textContent = sortCol === c ? (sortDir > 0 ? ' ↑' : ' ↓') : '';
   });
 
-  // summary stats
-  const total      = data.length;
-  const inStock    = data.filter(r => (r.posotita||0) > 0).length;
-  const zero       = data.filter(r => !(r.posotita||0)).length;
-  const totalDoses = data.filter(r => r.monada === 'δόσεις').reduce((s,r) => s + (r.posotita||0), 0);
-  document.getElementById('stat-total').textContent       = total;
-  document.getElementById('stat-instock').textContent     = inStock;
-  document.getElementById('stat-zero').textContent        = zero;
-  document.getElementById('stat-total-doses').textContent = totalDoses > 0 ? totalDoses.toLocaleString('el-GR') : '—';
-
   // table
   const tbody = document.getElementById('tbody');
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="7" class="empty-state">${q ? 'Δεν βρέθηκαν αποτελέσματα.' : 'Δεν υπάρχουν εγγραφές.'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="empty-state">${q ? 'Δεν βρέθηκαν αποτελέσματα.' : 'Δεν υπάρχουν εγγραφές.'}</td></tr>`;
     return;
   }
 
@@ -612,9 +569,7 @@ function render() {
       `<td style="font-weight:600">${x(r.emvolio)}</td>`+
       `<td class="qty-cell ${qty <= 0 ? 'zero' : qty < 10000 ? 'low' : 'ok'}">${fmtNum(qty)}</td>`+
       `<td style="color:var(--gh-fg-muted)">${x(r.monada||'—')}</td>`+
-      `<td>${stockBadge(qty)}</td>`+
       `<td style="color:var(--gh-fg-muted);font-size:12px">${x(r.sxolia||'—')}</td>`+
-      `<td style="color:var(--gh-fg-muted);font-size:11px">${x(r.updated_by||'—')}<br><span style="font-size:10px">${fmtDt(r.updated_at)}</span></td>`+
       `<td><button class="btn-secondary" style="height:26px;padding:0 10px;font-size:12px" onclick="openEdit(${r.id})">Επεξ.</button></td>`;
     frag.appendChild(tr);
   });
