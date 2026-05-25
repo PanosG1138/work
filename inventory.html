@@ -136,16 +136,8 @@ tbody tr:hover{background:var(--gh-canvas-subtle)}
 tbody tr.new-row{animation:rowIn 0.4s ease}
 @keyframes rowIn{from{background:rgba(56,139,253,0.15)}to{background:transparent}}
 td{padding:8px 14px;color:var(--gh-fg-default);vertical-align:middle;font-size:13px}
-td.qty-cell{font-weight:700;font-size:14px}
-td.zero{color:var(--gh-fg-subtle)}
-td.low{color:var(--gh-attention-fg);font-weight:700}
-td.ok{color:var(--gh-success-fg);font-weight:700}
+td.qty-cell{font-weight:700;font-size:14px;color:var(--gh-success-fg)}
 
-/* Stock status badge */
-.stock-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:600}
-.stock-badge.zero-b{background:var(--gh-canvas-inset);color:var(--gh-fg-subtle);border:1px solid var(--gh-border-muted)}
-.stock-badge.low-b{background:var(--gh-attention-subtle);color:var(--gh-attention-fg);border:1px solid rgba(210,153,34,0.3)}
-.stock-badge.ok-b{background:var(--gh-success-subtle);color:var(--gh-success-fg);border:1px solid rgba(63,185,80,0.3)}
 
 .empty-state{padding:48px;text-align:center;color:var(--gh-fg-muted);font-size:14px}
 
@@ -274,7 +266,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <div class="fgroup">
       <label>Μονάδα</label>
       <select id="m-monada">
-        <option value="Δόσεις">Δόσεις</option>
+        <option value="Δόσεις" selected>Δόσεις</option>
         <option value="Κιλά">Κιλά</option>
       </select>
     </div>
@@ -523,11 +515,6 @@ function sortBy(col) {
 function x(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ── RENDER ────────────────────────────────────────────────────────
-function stockBadge(qty) {
-  if (!qty || qty <= 0) return `<span class="stock-badge zero-b">Εκτός</span>`;
-  if (qty < 10000)      return `<span class="stock-badge low-b">Χαμηλό</span>`;
-  return                       `<span class="stock-badge ok-b">✓ Σε στοκ</span>`;
-}
 
 function render() {
   const q = (document.getElementById('search').value || '').toLowerCase().trim();
@@ -567,7 +554,7 @@ function render() {
     tr.addEventListener('dblclick', () => openEdit(r.id));
     tr.innerHTML =
       `<td style="font-weight:600">${x(r.emvolio)}</td>`+
-      `<td class="qty-cell ${qty <= 0 ? 'zero' : qty < 10000 ? 'low' : 'ok'}">${fmtNum(qty)}</td>`+
+      `<td class="qty-cell">${fmtNum(qty)}</td>`+
       `<td style="color:var(--gh-fg-muted)">${x(r.monada||'—')}</td>`+
       `<td style="color:var(--gh-fg-muted);font-size:12px">${x(r.sxolia||'—')}</td>`+
       `<td><button class="btn-secondary" style="height:26px;padding:0 10px;font-size:12px" onclick="openEdit(${r.id})">Επεξ.</button></td>`;
