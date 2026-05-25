@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>ΕΜΒΟΛΙΑ — Απόθεμα</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── GITHUB DARK COLOUR SYSTEM ── */
+:root,[data-theme="dark"]{
+  --gh-canvas-default:#0d1117;--gh-canvas-subtle:#161b22;--gh-canvas-inset:#010409;
+  --gh-border-default:#30363d;--gh-border-muted:#21262d;
+  --gh-fg-default:#e6edf3;--gh-fg-muted:#8b949e;--gh-fg-subtle:#6e7681;
+  --gh-accent-fg:#58a6ff;--gh-accent-emphasis:#1f6feb;--gh-accent-subtle:rgba(56,139,253,0.1);
+  --gh-success-fg:#3fb950;--gh-success-subtle:rgba(46,160,67,0.1);
+  --gh-attention-fg:#d29922;--gh-attention-subtle:rgba(187,128,9,0.1);
+  --gh-danger-fg:#f85149;--gh-danger-subtle:rgba(248,81,73,0.1);
+  --gh-hover-bg:#21262d;--r:6px;--rs:6px;
+}
+[data-theme="light"]{
+  --gh-canvas-default:#ffffff;--gh-canvas-subtle:#f6f8fa;--gh-canvas-inset:#f0f2f5;
+  --gh-border-default:#d0d7de;--gh-border-muted:#d8dee4;
+  --gh-fg-default:#1f2328;--gh-fg-muted:#636c76;--gh-fg-subtle:#6e7781;
+  --gh-accent-fg:#0969da;--gh-accent-emphasis:#0969da;--gh-accent-subtle:rgba(9,105,218,0.08);
+  --gh-success-fg:#1a7f37;--gh-success-subtle:rgba(26,127,55,0.08);
+  --gh-attention-fg:#9a6700;--gh-attention-subtle:rgba(154,103,0,0.08);
+  --gh-danger-fg:#d1242f;--gh-danger-subtle:rgba(209,36,47,0.08);
+  --gh-hover-bg:#eaeef2;--r:6px;--rs:6px;
+}
+.theme-toggle{
+  display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;
+  border:1px solid var(--gh-border-default);border-radius:var(--rs);
+  background:var(--gh-canvas-subtle);color:var(--gh-fg-muted);
+  font-family:'Inter',system-ui,sans-serif;font-size:12px;font-weight:500;
+  cursor:pointer;transition:background 0.15s,border-color 0.15s,color 0.15s;user-select:none;
+}
+.theme-toggle:hover{background:var(--gh-hover-bg);color:var(--gh-fg-default)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{height:100%;overflow:hidden}
+body{
+  height:100%;overflow:hidden;
+  background:var(--gh-canvas-default);color:var(--gh-fg-default);
+  font-family:'Inter',system-ui,-apple-system,sans-serif;font-size:14px;line-height:1.5;
+}
+
+/* ── LAYOUT ── */
+.shell{display:grid;grid-template-rows:48px 1fr;height:100vh;max-height:100vh;overflow:hidden}
+
+/* ── HEADER ── */
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;height:48px;
+  background:var(--gh-canvas-default);
+  border-bottom:1px solid var(--gh-border-default);
+  z-index:50;gap:12px;overflow:hidden;
+}
+.header-left{display:flex;align-items:center;gap:12px}
+.logo-title{font-weight:600;font-size:15px;color:var(--gh-fg-default)}
+.logo-sub{font-size:12px;color:var(--gh-fg-muted);margin-left:4px}
+.header-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+
+/* Sync badge */
+.sync-badge{display:flex;align-items:center;gap:5px;font-size:12px;padding:0 10px;height:24px;border-radius:99px;border:1px solid var(--gh-border-default);background:var(--gh-canvas-subtle);color:var(--gh-fg-muted);white-space:nowrap;transition:all 0.25s}
+.sync-badge.ok{border-color:rgba(63,185,80,0.4);color:var(--gh-success-fg);background:var(--gh-success-subtle)}
+.sync-badge.err{border-color:rgba(248,81,73,0.4);color:var(--gh-danger-fg);background:var(--gh-danger-subtle)}
+.sync-badge.loading{border-color:rgba(210,153,34,0.4);color:var(--gh-attention-fg);background:var(--gh-attention-subtle)}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.sync-badge.loading .sync-dot{animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.2}}
+
+/* User chip */
+.user-chip{display:flex;align-items:center;gap:6px;height:28px;padding:0 12px;border:1px solid var(--gh-border-default);border-radius:99px;background:var(--gh-canvas-subtle);font-size:12px;color:var(--gh-fg-default);cursor:pointer;transition:background 0.15s,border-color 0.15s;font-weight:500}
+.user-chip:hover{border-color:var(--gh-accent-fg);color:var(--gh-accent-fg)}
+.user-chip .dot{width:7px;height:7px;border-radius:50%;background:var(--gh-success-fg);flex-shrink:0}
+
+/* Back link */
+.btn-back{
+  display:flex;align-items:center;gap:6px;height:28px;padding:0 12px;
+  border:1px solid var(--gh-border-default);border-radius:var(--rs);
+  background:var(--gh-canvas-subtle);color:var(--gh-fg-muted);
+  font-family:'Inter',system-ui,sans-serif;font-size:12px;font-weight:500;
+  cursor:pointer;text-decoration:none;transition:background 0.15s,color 0.15s;
+}
+.btn-back:hover{background:var(--gh-hover-bg);color:var(--gh-fg-default)}
+
+/* ── MAIN ── */
+.main{padding:20px;overflow:hidden;display:flex;flex-direction:column;gap:14px;min-height:0}
+
+/* Toolbar */
+.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.search-wrap{position:relative;flex:1;min-width:180px}
+.search-wrap svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--gh-fg-muted);pointer-events:none}
+.search-wrap input{padding-left:32px;height:32px}
+
+/* Buttons */
+.btn-tool{
+  height:32px;padding:0 12px;background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);
+  color:var(--gh-fg-default);border-radius:var(--rs);font-family:'Inter',system-ui,sans-serif;
+  font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:background 0.15s,border-color 0.15s;
+}
+.btn-tool:hover{background:var(--gh-hover-bg);border-color:var(--gh-fg-subtle)}
+.btn-primary{
+  height:32px;padding:0 16px;background:var(--gh-accent-emphasis);color:#fff;
+  border:1px solid rgba(240,246,252,0.1);border-radius:var(--rs);
+  font-family:'Inter',system-ui,sans-serif;font-weight:500;font-size:14px;
+  cursor:pointer;transition:background 0.15s;
+}
+.btn-primary:hover{background:#388bfd}
+.btn-primary:disabled{opacity:0.4;cursor:not-allowed}
+.btn-secondary{
+  height:32px;padding:0 16px;background:var(--gh-canvas-subtle);color:var(--gh-fg-default);
+  border:1px solid var(--gh-border-default);border-radius:var(--rs);
+  font-family:'Inter',system-ui,sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background 0.15s;
+}
+.btn-secondary:hover{background:var(--gh-hover-bg)}
+.btn-danger{
+  height:32px;padding:0 16px;background:var(--gh-danger-subtle);color:var(--gh-danger-fg);
+  border:1px solid rgba(248,81,73,0.4);border-radius:var(--rs);
+  font-family:'Inter',system-ui,sans-serif;font-weight:500;font-size:13px;cursor:pointer;transition:background 0.15s;
+}
+.btn-danger:hover{background:rgba(248,81,73,0.2)}
+
+/* ── TABLE ── */
+.tbl-outer{overflow:auto;border:1px solid var(--gh-border-default);border-radius:var(--rs);flex:1;min-height:0}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead tr{background:var(--gh-canvas-subtle);border-bottom:1px solid var(--gh-border-default)}
+th{padding:8px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--gh-fg-default);cursor:pointer;user-select:none;white-space:normal;min-width:80px;vertical-align:bottom;line-height:1.3}
+th:hover{color:var(--gh-accent-fg)}
+.arr{font-size:10px;margin-left:3px;color:var(--gh-fg-muted)}
+tbody tr{border-bottom:1px solid var(--gh-border-muted);transition:background 0.1s;cursor:pointer}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--gh-canvas-subtle)}
+tbody tr.new-row{animation:rowIn 0.4s ease}
+@keyframes rowIn{from{background:rgba(56,139,253,0.15)}to{background:transparent}}
+td{padding:8px 14px;color:var(--gh-fg-default);vertical-align:middle;font-size:13px}
+td.qty-cell{font-weight:700;font-size:14px}
+td.zero{color:var(--gh-fg-subtle)}
+td.low{color:var(--gh-attention-fg);font-weight:700}
+td.ok{color:var(--gh-success-fg);font-weight:700}
+
+/* Stock status badge */
+.stock-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:600}
+.stock-badge.zero-b{background:var(--gh-canvas-inset);color:var(--gh-fg-subtle);border:1px solid var(--gh-border-muted)}
+.stock-badge.low-b{background:var(--gh-attention-subtle);color:var(--gh-attention-fg);border:1px solid rgba(210,153,34,0.3)}
+.stock-badge.ok-b{background:var(--gh-success-subtle);color:var(--gh-success-fg);border:1px solid rgba(63,185,80,0.3)}
+
+.empty-state{padding:48px;text-align:center;color:var(--gh-fg-muted);font-size:14px}
+
+/* ── MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(4px)}
+.modal{
+  background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);
+  border-radius:var(--r);padding:24px;width:460px;max-width:95vw;max-height:90vh;overflow-y:auto;
+}
+.modal h3{font-weight:600;font-size:16px;margin-bottom:18px;color:var(--gh-fg-default)}
+.fgroup{margin-bottom:12px}
+.fgroup label{display:block;font-size:12px;font-weight:500;color:var(--gh-fg-muted);margin-bottom:5px}
+input[type=text],input[type=number],input[type=password],select,textarea{
+  width:100%;background:var(--gh-canvas-default);border:1px solid var(--gh-border-default);
+  border-radius:var(--rs);color:var(--gh-fg-default);
+  font-family:'Inter',system-ui,sans-serif;font-size:14px;padding:6px 10px;
+  outline:none;transition:border-color 0.15s,box-shadow 0.15s;appearance:none;
+}
+input::placeholder,textarea::placeholder{color:var(--gh-fg-subtle)}
+input:focus,select:focus,textarea:focus{border-color:var(--gh-accent-emphasis);box-shadow:0 0 0 3px rgba(31,111,235,0.3)}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%238b949e' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;cursor:pointer}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;padding-top:14px;border-top:1px solid var(--gh-border-muted)}
+
+/* History within modal */
+.history-section{margin-top:18px;padding-top:14px;border-top:1px solid var(--gh-border-muted)}
+.history-title{font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:var(--gh-fg-muted);margin-bottom:8px}
+.history-list{display:flex;flex-direction:column;gap:6px;max-height:180px;overflow-y:auto}
+.history-item{background:var(--gh-canvas-default);border:1px solid var(--gh-border-muted);border-radius:var(--rs);padding:8px 12px}
+.hi-row{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.hi-user{font-size:12px;font-weight:600;color:var(--gh-fg-default)}
+.hi-date{font-size:11px;color:var(--gh-fg-muted)}
+.hi-delta{font-size:12px;margin-top:3px}
+.hi-from{color:var(--gh-danger-fg);text-decoration:line-through}
+.hi-to{color:var(--gh-success-fg);font-weight:600}
+
+/* ── NAME / PASSWORD GATE ── */
+.name-gate{
+  background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);
+  border-radius:var(--r);padding:32px;width:380px;text-align:center;
+}
+.name-gate h2{font-weight:700;font-size:20px;color:var(--gh-fg-default);margin-bottom:8px}
+.name-gate p{font-size:13px;color:var(--gh-fg-muted);margin-bottom:22px;line-height:1.6}
+.name-gate input{text-align:center;font-size:15px;padding:8px;margin-bottom:12px}
+.name-gate .btn-primary{width:100%;height:36px;font-size:14px}
+.gate-error{font-size:12px;color:var(--gh-danger-fg);margin-top:8px;min-height:18px}
+.name-options{display:flex;gap:8px;margin-top:4px}
+.name-opt-btn{
+  flex:1;padding:12px 8px;background:var(--gh-canvas-default);border:1px solid var(--gh-border-default);
+  border-radius:var(--rs);color:var(--gh-fg-default);
+  font-family:'Inter',system-ui,sans-serif;font-weight:600;font-size:15px;
+  cursor:pointer;transition:background 0.15s,border-color 0.15s,color 0.15s;
+}
+.name-opt-btn:hover{background:var(--gh-accent-subtle);border-color:var(--gh-accent-emphasis);color:var(--gh-accent-fg)}
+
+/* ── CONFIRM DIALOG ── */
+.confirm-box{background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:var(--r);padding:24px;width:340px;text-align:center}
+.confirm-box p{color:var(--gh-fg-muted);font-size:14px;margin-bottom:16px;line-height:1.6}
+
+/* ── TOAST ── */
+.toast{
+  position:fixed;bottom:20px;right:20px;background:var(--gh-canvas-subtle);
+  border:1px solid var(--gh-border-default);color:var(--gh-fg-default);
+  padding:10px 16px;border-radius:var(--rs);font-size:13px;font-weight:500;
+  z-index:999;transform:translateY(80px);opacity:0;
+  transition:all 0.25s cubic-bezier(0.34,1.4,0.64,1);pointer-events:none;max-width:320px;
+}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.err{background:var(--gh-danger-subtle);border-color:rgba(248,81,73,0.4);color:var(--gh-danger-fg)}
+
+/* ── SUMMARY CARDS ── */
+.summary-row{display:flex;gap:12px;flex-wrap:wrap}
+.sum-card{
+  flex:1;min-width:140px;padding:12px 16px;
+  background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);
+  border-radius:var(--rs);
+}
+.sum-card-val{font-weight:700;font-size:22px;color:var(--gh-fg-default)}
+.sum-card-label{font-size:11px;color:var(--gh-fg-muted);margin-top:2px;text-transform:uppercase;letter-spacing:0.04em}
+</style>
+</head>
+<body>
+
+<!-- PASSWORD GATE -->
+<div id="pw-gate-bg" class="modal-bg">
+  <div class="name-gate">
+    <h2>ΕΜΒΟΛΙΑ</h2>
+    <p>Απόθεμα Εμβολίων<br>Εισάγετε τον κωδικό πρόσβασης.</p>
+    <div class="fgroup"><input type="password" id="pw-input" placeholder="Κωδικός…" onkeydown="if(event.key==='Enter')confirmPassword()"></div>
+    <button class="btn-primary" onclick="confirmPassword()">Είσοδος</button>
+    <div class="gate-error" id="pw-error"></div>
+  </div>
+</div>
+
+<!-- NAME GATE -->
+<div id="gate-bg" class="modal-bg" style="display:none">
+  <div class="name-gate">
+    <h2>ΕΜΒΟΛΙΑ</h2>
+    <p>Απόθεμα Εμβολίων<br>Ποιος είσαι;</p>
+    <div class="name-options">
+      <button class="name-opt-btn" onclick="selectName('Πάνος')">Πάνος</button>
+      <button class="name-opt-btn" onclick="selectName('Ελένη')">Ελένη</button>
+      <button class="name-opt-btn" onclick="toggleOther()">Άλλο…</button>
+    </div>
+    <div id="other-wrap" style="display:none;margin-top:10px">
+      <input type="text" id="gate-name" placeholder="Εισάγετε το όνομά σας…" onkeydown="if(event.key==='Enter')confirmOther()">
+      <button class="btn-primary" style="width:100%;margin-top:8px" onclick="confirmOther()">Είσοδος</button>
+    </div>
+    <div class="gate-error" id="name-error"></div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div id="edit-bg" class="modal-bg" style="display:none">
+  <div class="modal">
+    <h3 id="modal-title">Εμβόλιο</h3>
+    <div class="fgroup">
+      <label>Εμβόλιο</label>
+      <input type="text" id="m-emvolio" list="vaccine-list" placeholder="Όνομα εμβολίου…">
+      <datalist id="vaccine-list">
+        <option value="AVINEW"><option value="AVINEW / CLONE 30"><option value="AVINEW NEO">
+        <option value="BIONEW BI"><option value="BIONEW BI + COR"><option value="Clone30">
+        <option value="CORIPRAVAC"><option value="E.COLI"><option value="GALLIMUNE 407">
+        <option value="GALLIMUNE SE+ST"><option value="IB 4/91"><option value="IB PRIMER">
+        <option value="LASOTA ND"><option value="Ma5"><option value="MG 6/85">
+        <option value="NEMOVAC TRT"><option value="OLVAC B+HG"><option value="POULVAC E.COLI">
+        <option value="RESPIVAC"><option value="SALENVAC ETC"><option value="SALMOVAC">
+        <option value="SG-9R"><option value="TARTYLL"><option value="TS-11">
+        <option value="VAXSAFE"><option value="VECTROMUNE">
+      </datalist>
+    </div>
+    <div class="fgroup">
+      <label>Ποσότητα σε απόθεμα</label>
+      <input type="text" id="m-posotita" placeholder="π.χ. 60.000" onblur="fmtInput(this)" onfocus="stripFmt(this)">
+    </div>
+    <div class="fgroup">
+      <label>Μονάδα</label>
+      <select id="m-monada">
+        <option value="δόσεις">δόσεις</option>
+        <option value="φιαλίδια">φιαλίδια</option>
+        <option value="κιλά">κιλά</option>
+        <option value="τεμάχια">τεμάχια</option>
+      </select>
+    </div>
+    <div class="fgroup">
+      <label>Σχόλια</label>
+      <textarea id="m-sxolia" rows="2" placeholder="Προαιρετικό…"></textarea>
+    </div>
+
+    <!-- History -->
+    <div class="history-section" id="history-section" style="display:none">
+      <div class="history-title">Ιστορικό αλλαγών</div>
+      <div class="history-list" id="history-list"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-danger" id="btn-modal-delete" onclick="promptDelete()">Διαγραφή</button>
+      <div style="flex:1"></div>
+      <button class="btn-secondary" onclick="closeModal()">Ακύρωση</button>
+      <button class="btn-primary" id="btn-save" onclick="saveEntry()">Αποθήκευση</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE -->
+<div id="confirm-bg" class="modal-bg" style="display:none">
+  <div class="confirm-box">
+    <p>Διαγραφή του εμβολίου από το απόθεμα;<br><strong id="confirm-name" style="color:var(--gh-danger-fg)"></strong></p>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button class="btn-secondary" onclick="closeConfirm()">Ακύρωση</button>
+      <button class="btn-danger" onclick="confirmDelete()">Διαγραφή</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="shell">
+<header>
+  <div class="header-left">
+    <a href="index.html" class="btn-back" title="Πίσω στις παραγγελίες">← Παραγγελίες</a>
+    <span class="logo-title">Απόθεμα</span>
+    <span class="logo-sub">εμβολίων</span>
+  </div>
+  <div class="header-right">
+    <div id="sync-badge" class="sync-badge loading"><div class="sync-dot"></div><span id="sync-text">Σύνδεση…</span></div>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">
+      <span id="theme-icon">☀</span>
+      <span id="theme-label">Φωτεινό</span>
+    </button>
+    <div class="user-chip" onclick="changeUser()">
+      <div class="dot"></div>
+      <span id="user-name">—</span>
+    </div>
+  </div>
+</header>
+
+<main class="main">
+  <!-- Summary cards -->
+  <div class="summary-row">
+    <div class="sum-card">
+      <div class="sum-card-val" id="stat-total">—</div>
+      <div class="sum-card-label">Εμβόλια</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-card-val" id="stat-instock" style="color:var(--gh-success-fg)">—</div>
+      <div class="sum-card-label">Σε απόθεμα</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-card-val" id="stat-zero" style="color:var(--gh-fg-subtle)">—</div>
+      <div class="sum-card-label">Εκτός αποθέματος</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-card-val" id="stat-total-doses" style="color:var(--gh-accent-fg)">—</div>
+      <div class="sum-card-label">Σύνολο δόσεων</div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="search" placeholder="Αναζήτηση εμβολίου…" oninput="render()">
+    </div>
+    <button class="btn-primary" onclick="openNew()">+ Νέο εμβόλιο</button>
+    <button class="btn-tool" onclick="loadData()">↺ Ανανέωση</button>
+  </div>
+
+  <!-- Table -->
+  <div class="tbl-outer">
+    <table>
+      <thead>
+        <tr>
+          <th onclick="sortBy('emvolio')">Εμβόλιο<span class="arr" id="s-emvolio"></span></th>
+          <th onclick="sortBy('posotita')">Ποσότητα<span class="arr" id="s-posotita"></span></th>
+          <th onclick="sortBy('monada')">Μονάδα<span class="arr" id="s-monada"></span></th>
+          <th>Κατάσταση</th>
+          <th onclick="sortBy('sxolia')">Σχόλια<span class="arr" id="s-sxolia"></span></th>
+          <th onclick="sortBy('updated_by')">Τελ. ενημ.<span class="arr" id="s-updated_by"></span></th>
+          <th>Ενέργειες</th>
+        </tr>
+      </thead>
+      <tbody id="tbody">
+        <tr><td colspan="7" class="empty-state">Φόρτωση…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────
+const SB_URL   = 'https://oorhbrphdbigwgizejcc.supabase.co';
+const SB_KEY   = 'sb_publishable_1S3L1sNMOjr-YgwGAAD2Kg_X_3S4cTl';
+const TABLE    = 'inventory';
+const HTABLE   = 'inventory_history';
+const PW_HASH  = '6a396c5a067a36c937ef23e9a6164280be68daa3df1a8d0cdee91c0492d98ef7';
+
+// ── SUPABASE ──────────────────────────────────────────────────────
+async function sbFetch(path, opts = {}) {
+  const res = await fetch(`${SB_URL}/rest/v1/${path}`, {
+    ...opts,
+    headers: {
+      apikey: SB_KEY,
+      Authorization: `Bearer ${SB_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: opts.prefer || '',
+      ...opts.headers,
+    },
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || err.hint || `HTTP ${res.status}`);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+const sbSelect  = ()        => sbFetch(`${TABLE}?order=emvolio.asc`);
+const sbInsert  = row       => sbFetch(TABLE, { method:'POST', prefer:'return=representation', body: JSON.stringify(row) });
+const sbUpdate  = (id, row) => sbFetch(`${TABLE}?id=eq.${id}`, { method:'PATCH', prefer:'return=representation', body: JSON.stringify(row) });
+const sbDelete  = id        => sbFetch(`${TABLE}?id=eq.${id}`, { method:'DELETE' });
+const sbHistory = id        => sbFetch(`${HTABLE}?inventory_id=eq.${id}&order=ts.desc`);
+const sbHInsert = entry     => sbFetch(HTABLE, { method:'POST', body: JSON.stringify(entry) });
+
+// ── STATE ─────────────────────────────────────────────────────────
+let data = [], sortCol = 'emvolio', sortDir = 1;
+let editId = null, currentUser = '';
+
+// ── AUTH ──────────────────────────────────────────────────────────
+async function hashStr(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function confirmPassword() {
+  const val = document.getElementById('pw-input').value;
+  const hashed = await hashStr(val);
+  if (hashed === PW_HASH) {
+    sessionStorage.setItem('emvolia_pw', '1');
+    document.getElementById('pw-gate-bg').style.display = 'none';
+    document.getElementById('gate-bg').style.display = 'flex';
+    setTimeout(() => document.querySelector('.name-opt-btn').focus(), 100);
+  } else {
+    const err = document.getElementById('pw-error');
+    err.textContent = 'Λάθος κωδικός.';
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-input').focus();
+    setTimeout(() => { err.textContent = ''; }, 3000);
+  }
+}
+
+function selectName(name) {
+  sessionStorage.setItem('emvolia_user', name);
+  currentUser = name;
+  document.getElementById('user-name').textContent = name;
+  document.getElementById('gate-bg').style.display = 'none';
+  loadData();
+}
+
+function toggleOther() {
+  const w = document.getElementById('other-wrap');
+  w.style.display = w.style.display === 'none' ? 'block' : 'none';
+  if (w.style.display === 'block') setTimeout(() => document.getElementById('gate-name').focus(), 50);
+}
+
+function confirmOther() {
+  const name = document.getElementById('gate-name').value.trim();
+  if (!name) {
+    document.getElementById('name-error').textContent = 'Εισάγετε ένα όνομα.';
+    setTimeout(() => { document.getElementById('name-error').textContent = ''; }, 2500);
+    return;
+  }
+  selectName(name);
+}
+
+function changeUser() {
+  sessionStorage.removeItem('emvolia_user');
+  currentUser = '';
+  document.getElementById('other-wrap').style.display = 'none';
+  document.getElementById('gate-name').value = '';
+  document.getElementById('gate-bg').style.display = 'flex';
+}
+
+// ── THEME ─────────────────────────────────────────────────────────
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  const d = t === 'dark';
+  document.getElementById('theme-icon').textContent  = d ? '☀' : '☾';
+  document.getElementById('theme-label').textContent = d ? 'Φωτεινό' : 'Σκοτεινό';
+}
+function toggleTheme() {
+  const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  applyTheme(next);
+  try { localStorage.setItem('emvolia_theme', next); } catch(e) {}
+}
+
+// ── SYNC STATUS ───────────────────────────────────────────────────
+function setSyncStatus(state, text) {
+  const b = document.getElementById('sync-badge');
+  b.className = 'sync-badge ' + state;
+  document.getElementById('sync-text').textContent = text;
+}
+
+// ── DATA ──────────────────────────────────────────────────────────
+async function loadData() {
+  setSyncStatus('loading', 'Φόρτωση…');
+  try {
+    data = await sbSelect();
+    setSyncStatus('ok', 'Συνδέθηκε ✓');
+    render();
+  } catch(e) {
+    setSyncStatus('err', 'Σφάλμα σύνδεσης');
+    toast('Σφάλμα: ' + e.message, true);
+  }
+}
+
+// ── NUMBER FORMATTING ─────────────────────────────────────────────
+function fmtNum(val) {
+  if (val === null || val === undefined || val === '') return '—';
+  const n = parseInt(String(val).replace(/\./g, ''), 10);
+  return isNaN(n) ? String(val) : n.toLocaleString('el-GR');
+}
+function rawNum(val) {
+  if (!val) return null;
+  const s = String(val).replace(/\./g, '').trim();
+  const n = parseInt(s, 10);
+  return isNaN(n) ? null : n;
+}
+function fmtInput(el) {
+  const n = parseInt(el.value.replace(/\./g, ''), 10);
+  if (!isNaN(n)) el.value = n.toLocaleString('el-GR');
+}
+function stripFmt(el) { el.value = el.value.replace(/\./g, ''); }
+
+function fmtDt(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('el-GR', {day:'2-digit',month:'2-digit',year:'2-digit'}) + ' ' +
+         d.toLocaleTimeString('el-GR', {hour:'2-digit',minute:'2-digit',hour12:false});
+}
+
+// ── SORT ──────────────────────────────────────────────────────────
+function sortBy(col) {
+  if (sortCol === col) sortDir *= -1; else { sortCol = col; sortDir = 1; }
+  render();
+}
+
+function x(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── RENDER ────────────────────────────────────────────────────────
+function stockBadge(qty) {
+  if (!qty || qty <= 0) return `<span class="stock-badge zero-b">Εκτός</span>`;
+  if (qty < 10000)      return `<span class="stock-badge low-b">Χαμηλό</span>`;
+  return                       `<span class="stock-badge ok-b">✓ Σε στοκ</span>`;
+}
+
+function render() {
+  const q = (document.getElementById('search').value || '').toLowerCase().trim();
+
+  let rows = [...data];
+  if (q) rows = rows.filter(r =>
+    (r.emvolio||'').toLowerCase().includes(q) ||
+    (r.sxolia||'').toLowerCase().includes(q) ||
+    (r.monada||'').toLowerCase().includes(q)
+  );
+
+  // sort
+  rows.sort((a, b) => {
+    let av = a[sortCol] ?? '', bv = b[sortCol] ?? '';
+    if (sortCol === 'posotita') { av = Number(av)||0; bv = Number(bv)||0; }
+    return av < bv ? -sortDir : av > bv ? sortDir : 0;
+  });
+
+  // sort arrows
+  ['emvolio','posotita','monada','sxolia','updated_by'].forEach(c => {
+    const el = document.getElementById('s-' + c);
+    if (el) el.textContent = sortCol === c ? (sortDir > 0 ? ' ↑' : ' ↓') : '';
+  });
+
+  // summary stats
+  const total      = data.length;
+  const inStock    = data.filter(r => (r.posotita||0) > 0).length;
+  const zero       = data.filter(r => !(r.posotita||0)).length;
+  const totalDoses = data.filter(r => r.monada === 'δόσεις').reduce((s,r) => s + (r.posotita||0), 0);
+  document.getElementById('stat-total').textContent       = total;
+  document.getElementById('stat-instock').textContent     = inStock;
+  document.getElementById('stat-zero').textContent        = zero;
+  document.getElementById('stat-total-doses').textContent = totalDoses > 0 ? totalDoses.toLocaleString('el-GR') : '—';
+
+  // table
+  const tbody = document.getElementById('tbody');
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="7" class="empty-state">${q ? 'Δεν βρέθηκαν αποτελέσματα.' : 'Δεν υπάρχουν εγγραφές.'}</td></tr>`;
+    return;
+  }
+
+  const frag = document.createDocumentFragment();
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    const qty = r.posotita || 0;
+    if (r._new) { tr.classList.add('new-row'); delete r._new; }
+    tr.addEventListener('dblclick', () => openEdit(r.id));
+    tr.innerHTML =
+      `<td style="font-weight:600">${x(r.emvolio)}</td>`+
+      `<td class="qty-cell ${qty <= 0 ? 'zero' : qty < 10000 ? 'low' : 'ok'}">${fmtNum(qty)}</td>`+
+      `<td style="color:var(--gh-fg-muted)">${x(r.monada||'—')}</td>`+
+      `<td>${stockBadge(qty)}</td>`+
+      `<td style="color:var(--gh-fg-muted);font-size:12px">${x(r.sxolia||'—')}</td>`+
+      `<td style="color:var(--gh-fg-muted);font-size:11px">${x(r.updated_by||'—')}<br><span style="font-size:10px">${fmtDt(r.updated_at)}</span></td>`+
+      `<td><button class="btn-secondary" style="height:26px;padding:0 10px;font-size:12px" onclick="openEdit(${r.id})">Επεξ.</button></td>`;
+    frag.appendChild(tr);
+  });
+  tbody.innerHTML = '';
+  tbody.appendChild(frag);
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────
+function openNew() {
+  editId = null;
+  document.getElementById('modal-title').textContent = '+ Νέο εμβόλιο';
+  document.getElementById('m-emvolio').value = '';
+  document.getElementById('m-posotita').value = '';
+  document.getElementById('m-monada').value = 'δόσεις';
+  document.getElementById('m-sxolia').value = '';
+  document.getElementById('history-section').style.display = 'none';
+  document.getElementById('btn-modal-delete').style.display = 'none';
+  document.getElementById('edit-bg').style.display = 'flex';
+  setTimeout(() => document.getElementById('m-emvolio').focus(), 50);
+}
+
+async function openEdit(id) {
+  const r = data.find(r => r.id === id);
+  if (!r) return;
+  editId = id;
+  document.getElementById('modal-title').textContent = x(r.emvolio);
+  document.getElementById('m-emvolio').value = r.emvolio || '';
+  document.getElementById('m-posotita').value = fmtNum(r.posotita);
+  document.getElementById('m-monada').value = r.monada || 'δόσεις';
+  document.getElementById('m-sxolia').value = r.sxolia || '';
+  document.getElementById('btn-modal-delete').style.display = '';
+  document.getElementById('edit-bg').style.display = 'flex';
+  // load history
+  loadHistory(id);
+}
+
+function closeModal() {
+  document.getElementById('edit-bg').style.display = 'none';
+  editId = null;
+}
+
+async function loadHistory(id) {
+  const section = document.getElementById('history-section');
+  const list    = document.getElementById('history-list');
+  section.style.display = 'block';
+  list.innerHTML = '<div style="color:var(--gh-fg-muted);font-size:11px">Φόρτωση…</div>';
+  try {
+    const hist = await sbHistory(id);
+    if (!hist || !hist.length) {
+      list.innerHTML = '<div style="color:var(--gh-fg-muted);font-size:11px">Δεν υπάρχει ιστορικό.</div>';
+      return;
+    }
+    list.innerHTML = hist.map(h => {
+      const delta = (h.posotita_before !== null && h.posotita_after !== null)
+        ? `<div class="hi-delta"><span class="hi-from">${fmtNum(h.posotita_before)}</span> → <span class="hi-to">${fmtNum(h.posotita_after)}</span></div>`
+        : '';
+      return `<div class="history-item">
+        <div class="hi-row"><span class="hi-user">${x(h.user_name)}</span><span class="hi-date">${fmtDt(h.ts)}</span></div>
+        ${delta}
+      </div>`;
+    }).join('');
+  } catch(e) {
+    list.innerHTML = '<div style="color:var(--gh-fg-muted);font-size:11px">Σφάλμα φόρτωσης.</div>';
+  }
+}
+
+// ── SAVE ──────────────────────────────────────────────────────────
+async function saveEntry() {
+  const emvolio  = document.getElementById('m-emvolio').value.trim();
+  const posotita = rawNum(document.getElementById('m-posotita').value);
+  const monada   = document.getElementById('m-monada').value;
+  const sxolia   = document.getElementById('m-sxolia').value.trim() || null;
+
+  if (!emvolio) { toast('Εισάγετε όνομα εμβολίου.', true); return; }
+
+  const now = new Date().toISOString();
+  const btn = document.getElementById('btn-save');
+  btn.disabled = true; btn.textContent = 'Αποθήκευση…';
+  setSyncStatus('loading', 'Αποθήκευση…');
+
+  try {
+    if (editId) {
+      // edit — capture before for history
+      const before = data.find(r => r.id === editId);
+      const row = { emvolio, posotita, monada, sxolia, updated_by: currentUser, updated_at: now };
+      const [updated] = await sbUpdate(editId, row);
+      // only log if qty changed
+      if (before && before.posotita !== posotita) {
+        await sbHInsert({ inventory_id: editId, user_name: currentUser, ts: now,
+          posotita_before: before.posotita, posotita_after: posotita });
+      }
+      const idx = data.findIndex(r => r.id === editId);
+      if (idx >= 0) data[idx] = updated;
+      toast('Ενημερώθηκε ✓');
+    } else {
+      // new entry
+      const row = { emvolio, posotita, monada, sxolia,
+        created_by: currentUser, created_at: now, updated_by: currentUser, updated_at: now };
+      const [inserted] = await sbInsert(row);
+      await sbHInsert({ inventory_id: inserted.id, user_name: currentUser, ts: now,
+        posotita_before: null, posotita_after: posotita });
+      data.unshift({ ...inserted, _new: true });
+      toast('Προστέθηκε ✓');
+    }
+    closeModal(); render();
+    setSyncStatus('ok', 'Αποθηκεύτηκε ✓');
+  } catch(e) {
+    setSyncStatus('err', 'Σφάλμα');
+    toast('Σφάλμα: ' + e.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Αποθήκευση';
+  }
+}
+
+// ── DELETE ────────────────────────────────────────────────────────
+let deleteId = null;
+function promptDelete() {
+  deleteId = editId;
+  const r = data.find(r => r.id === deleteId);
+  document.getElementById('confirm-name').textContent = r ? r.emvolio : '';
+  closeModal();
+  document.getElementById('confirm-bg').style.display = 'flex';
+}
+function closeConfirm() {
+  document.getElementById('confirm-bg').style.display = 'none';
+  deleteId = null;
+}
+async function confirmDelete() {
+  if (!deleteId) return;
+  try {
+    await sbDelete(deleteId);
+    data = data.filter(r => r.id !== deleteId);
+    closeConfirm(); render();
+    toast('Διαγράφηκε.');
+    setSyncStatus('ok', 'Αποθηκεύτηκε ✓');
+  } catch(e) {
+    toast('Σφάλμα διαγραφής: ' + e.message, true);
+    setSyncStatus('err', 'Σφάλμα');
+  }
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────
+let toastTimer;
+function toast(msg, err = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (err ? ' err' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = 'toast'; }, 3500);
+}
+
+// ── KEYBOARD SHORTCUTS ────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeModal(); closeConfirm(); }
+});
+
+// ── INIT ──────────────────────────────────────────────────────────
+(function(){
+  let saved = 'dark';
+  try { saved = localStorage.getItem('emvolia_theme') || 'dark'; } catch(e) {}
+  applyTheme(saved);
+})();
+
+sessionStorage.removeItem('emvolia_user');
+
+if (sessionStorage.getItem('emvolia_pw') === '1') {
+  document.getElementById('pw-gate-bg').style.display = 'none';
+  document.getElementById('gate-bg').style.display = 'flex';
+  setTimeout(() => document.querySelector('.name-opt-btn').focus(), 100);
+} else {
+  document.getElementById('gate-bg').style.display = 'none';
+  setTimeout(() => document.getElementById('pw-input').focus(), 100);
+}
+</script>
+</body>
+</html>
