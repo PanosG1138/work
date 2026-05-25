@@ -55,6 +55,24 @@ def fetch(table, order):
     print(f"  ✓ Fetched {len(rows)} rows from '{table}'")
     return rows
 
+# ── CLEANUP OLD HISTORY ───────────────────────────────────────────
+def cleanup_old_history():
+    """Delete history entries older than 6 months via Supabase REST API."""
+    from datetime import timedelta
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=183)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    deleted_total = 0
+    for table in ["emvolia_history", "inventory_history"]:
+        url = f"{SUPABASE_URL}/rest/v1/{table}?ts=lt.{cutoff}"
+        r = requests.delete(url, headers={**SB_HEADERS, "Prefer": "return=representation"}, timeout=30)
+        if r.ok:
+            deleted = len(r.json()) if r.text and r.text != '[]' else 0
+            deleted_total += deleted
+            print(f"  ✓ Cleaned {deleted} old entries from '{table}' (before {cutoff[:10]})")
+        else:
+            print(f"  ⚠ Cleanup of '{table}' returned {r.status_code}: {r.text[:100]}")
+    return deleted_total
+
 # ── WRITE SHEET TAB ───────────────────────────────────────────────
 def write_tab(sh, title, columns, headers, rows, header_col_count):
     try:
@@ -87,6 +105,9 @@ def run_backup():
     gc = gspread.authorize(creds)
     sh = gc.open_by_key(SHEET_ID)
     print("  ✓ Connected")
+
+    print("\nCleaning up old history (>6 months)…")
+    cleanup_old_history()
 
     print("\nFetching data from Supabase…")
     emvolia   = fetch("emvolia",           "hm_emv.asc")
