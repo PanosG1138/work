@@ -705,7 +705,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
         </tr></thead>
         <tbody id="tbody"></tbody>
         <tfoot id="tfoot" style="display:none"><tr>
-          <td colspan="5" class="total-label">Σύνολο ποσότητας</td>
+          <td colspan="5" class="total-label">Σύνολο εκκρεμών ποσοτήτων</td>
           <td class="total-val" id="total-qty">—</td>
           <td colspan="8"></td>
         </tr></tfoot>
@@ -806,6 +806,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
 
 <div class="toast" id="toast"></div>
 
+<datalist id="vaccine-list"></datalist>
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────
 const SB_URL = 'https://oorhbrphdbigwgizejcc.supabase.co';
@@ -1460,11 +1461,13 @@ function render() {
   tfoot.style.display = showTotal ? '' : 'none';
   if (showTotal) {
     // sum qty from current visible rows OR selected rows if any selected
+    // always exclude rows where παραγγελία = ΝΑΙ (already ordered)
     const src = selectedIds.size > 1
       ? rows.filter(r => selectedIds.has(r.id))
       : rows;
     let total = 0;
     src.forEach(r => {
+      if (r.paragelia === 'ΝΑΙ') return; // exclude already ordered
       const n = parseInt(String(r.posotita || '').replace(/\./g, ''), 10);
       if (!isNaN(n)) total += n;
     });
@@ -2156,12 +2159,11 @@ orderedVal = ''; fridgeVal = '';
 if (isMobile()) sidebarOpen = false;
 updateUndoRedoBtns();
 
-// Populate vaccine datalist from single source of truth
-document.addEventListener('DOMContentLoaded', function() {
+// Populate vaccine datalist from VACCINE_OPTIONS (datalist is in HTML above this script)
+(function(){
   const dl = document.getElementById('vaccine-list');
-  if (!dl) return;
-  VACCINE_OPTIONS.forEach(v => { const o = document.createElement('option'); o.value = v; dl.appendChild(o); });
-});
+  if (dl) VACCINE_OPTIONS.forEach(v => { const o = document.createElement('option'); o.value = v; dl.appendChild(o); });
+})();
 
 // Always require password + name on every fresh page load
 // Clear any saved name so the name gate always shows after password
@@ -2179,6 +2181,5 @@ if (sessionStorage.getItem('emvolia_pw') === '1') {
 }
 </script>
 
-      <datalist id="vaccine-list"></datalist>
 </body>
 </html>
