@@ -18,7 +18,7 @@
   --gh-success-fg:#3fb950;--gh-success-subtle:rgba(46,160,67,0.1);
   --gh-attention-fg:#d29922;--gh-attention-subtle:rgba(187,128,9,0.1);
   --gh-danger-fg:#f85149;--gh-danger-subtle:rgba(248,81,73,0.1);
-  --gh-hover-bg:#21262d;--r:6px;--rs:6px;
+  --gh-hover-bg:#21262d;--r:6px;--rs:6px;--zoom:1;
 }
 [data-theme="light"]{
   --gh-canvas-default:#ffffff;--gh-canvas-subtle:#f6f8fa;--gh-canvas-inset:#f0f2f5;
@@ -28,7 +28,7 @@
   --gh-success-fg:#1a7f37;--gh-success-subtle:rgba(26,127,55,0.08);
   --gh-attention-fg:#9a6700;--gh-attention-subtle:rgba(154,103,0,0.08);
   --gh-danger-fg:#d1242f;--gh-danger-subtle:rgba(209,36,47,0.08);
-  --gh-hover-bg:#eaeef2;--r:6px;--rs:6px;
+  --gh-hover-bg:#eaeef2;--r:6px;--rs:6px;--zoom:1;
 }
 .theme-toggle{
   display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;
@@ -75,6 +75,12 @@ header{
 .user-chip{display:flex;align-items:center;gap:6px;height:28px;padding:0 12px;border:1px solid var(--gh-border-default);border-radius:99px;background:var(--gh-canvas-subtle);font-size:12px;color:var(--gh-fg-default);cursor:pointer;transition:background 0.15s,border-color 0.15s;font-weight:500}
 .user-chip:hover{border-color:var(--gh-accent-fg);color:var(--gh-accent-fg)}
 .user-chip .dot{width:7px;height:7px;border-radius:50%;background:var(--gh-success-fg);flex-shrink:0}
+
+/* Zoom */
+.zoom-ctrl{display:flex;align-items:center;gap:6px;padding:0 8px;height:28px;border:1px solid var(--gh-border-default);border-radius:var(--rs);background:var(--gh-canvas-subtle)}
+.zoom-ctrl label{font-size:11px;color:var(--gh-fg-muted);white-space:nowrap}
+.zoom-ctrl input[type=range]{width:72px;accent-color:var(--gh-accent-fg);cursor:pointer}
+.zoom-val{font-size:11px;color:var(--gh-fg-default);min-width:30px;text-align:right}
 
 /* Back link */
 .btn-back{
@@ -125,9 +131,10 @@ header{
 
 /* ── TABLE ── */
 .tbl-outer{overflow:auto;border:1px solid var(--gh-border-default);border-radius:var(--rs);flex:1;min-height:0}
+.tbl-scaler{transform-origin:top left;transform:scale(var(--zoom));width:calc(100% / var(--zoom))}
 table{width:100%;border-collapse:collapse;font-size:13px}
 thead tr{background:var(--gh-canvas-subtle);border-bottom:1px solid var(--gh-border-default)}
-th{padding:8px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--gh-fg-default);cursor:pointer;user-select:none;white-space:normal;min-width:80px;vertical-align:bottom;line-height:1.3}
+th{padding:8px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--gh-fg-default);cursor:pointer;user-select:none;white-space:normal;min-width:80px;vertical-align:bottom;line-height:1.3;position:sticky;top:0;background:var(--gh-canvas-subtle);z-index:2}
 th:hover{color:var(--gh-accent-fg)}
 .arr{font-size:10px;margin-left:3px;color:var(--gh-fg-muted)}
 tbody tr{border-bottom:1px solid var(--gh-border-muted);transition:background 0.1s;cursor:pointer}
@@ -247,17 +254,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <div class="fgroup">
       <label>Εμβόλιο</label>
       <input type="text" id="m-emvolio" list="vaccine-list" placeholder="Όνομα εμβολίου…">
-      <datalist id="vaccine-list">
-        <option value="AVINEW"><option value="AVINEW / CLONE 30"><option value="AVINEW NEO">
-        <option value="BIONEW BI"><option value="BIONEW BI + COR"><option value="Clone30">
-        <option value="CORIPRAVAC"><option value="E.COLI"><option value="GALLIMUNE 407">
-        <option value="GALLIMUNE SE+ST"><option value="IB 4/91"><option value="IB PRIMER">
-        <option value="LASOTA ND"><option value="Ma5"><option value="MG 6/85">
-        <option value="NEMOVAC TRT"><option value="OLVAC B+HG"><option value="POULVAC E.COLI">
-        <option value="RESPIVAC"><option value="SALENVAC ETC"><option value="SALMOVAC">
-        <option value="SG-9R"><option value="TARTYLL"><option value="TS-11">
-        <option value="VAXSAFE"><option value="VECTROMUNE">
-      </datalist>
+      <datalist id="vaccine-list"></datalist>
     </div>
     <div class="fgroup">
       <label>Ποσότητα σε απόθεμα</label>
@@ -312,6 +309,11 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
   </div>
   <div class="header-right">
     <div id="sync-badge" class="sync-badge loading"><div class="sync-dot"></div><span id="sync-text">Σύνδεση…</span></div>
+    <div class="zoom-ctrl">
+      <label>Μέγεθος</label>
+      <input type="range" id="zoom-range" min="0.5" max="1.2" step="0.05" value="1" oninput="setZoom(this.value)">
+      <span class="zoom-val" id="zoom-label">100%</span>
+    </div>
     <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">
       <span id="theme-icon">☀</span>
       <span id="theme-label">Φωτεινό</span>
@@ -336,7 +338,8 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 
   <!-- Table -->
   <div class="tbl-outer">
-    <table>
+    <div class="tbl-scaler" id="tbl-scaler">
+      <table>
       <thead>
         <tr>
           <th onclick="sortBy('emvolio')">Εμβόλιο<span class="arr" id="s-emvolio"></span></th>
@@ -350,6 +353,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
         <tr><td colspan="5" class="empty-state">Φόρτωση…</td></tr>
       </tbody>
     </table>
+    </div><!-- tbl-scaler -->
   </div>
 </main>
 </div>
@@ -361,6 +365,14 @@ const SB_KEY   = 'sb_publishable_1S3L1sNMOjr-YgwGAAD2Kg_X_3S4cTl';
 const TABLE    = 'inventory';
 const HTABLE   = 'inventory_history';
 const PW_HASH  = '6a396c5a067a36c937ef23e9a6164280be68daa3df1a8d0cdee91c0492d98ef7';
+
+// ── VACCINE LIST — single source of truth (keep in sync with index.html) ──
+const VACCINE_OPTIONS = [
+  'AVINEW','AVINEW NEO','BIONEW BI','BIONEW BI + COR','Clone30',
+  'CORIPRAVAC','E.COLI','GALLIMUNE 407','GALLIMUNE SE+ST','IB 4/91','IB PRIMER',
+  'LASOTA ND','Ma5','MG 6/85','NEMOVAC TRT','OLVAC B+HG','POULVAC E.COLI',
+  'RESPIVAC','SALENVAC ETC','SALMOVAC','SG-9R','TARTYLL','TS-11','VAXSAFE','VECTROMUNE'
+];
 
 // ── SUPABASE ──────────────────────────────────────────────────────
 async function sbFetch(path, opts = {}) {
@@ -708,6 +720,17 @@ function toast(msg, err = false) {
   toastTimer = setTimeout(() => { el.className = 'toast'; }, 3500);
 }
 
+// ── ZOOM ──────────────────────────────────────────────────────────
+function setZoom(v) {
+  v = parseFloat(v);
+  document.documentElement.style.setProperty('--zoom', v);
+  document.getElementById('zoom-label').textContent = Math.round(v * 100) + '%';
+  const s = document.getElementById('tbl-scaler');
+  s.style.width  = (100 / v) + '%';
+  s.style.height = (100 / v) + '%';
+  try { localStorage.setItem('emvolia_inv_zoom', v); } catch(e) {}
+}
+
 // ── KEYBOARD SHORTCUTS ────────────────────────────────────────────
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { closeModal(); closeConfirm(); }
@@ -718,9 +741,24 @@ document.addEventListener('keydown', e => {
   let saved = 'dark';
   try { saved = localStorage.getItem('emvolia_theme') || 'dark'; } catch(e) {}
   applyTheme(saved);
+  // restore zoom
+  try {
+    const z = parseFloat(localStorage.getItem('emvolia_inv_zoom') || '1');
+    if (z && z !== 1) {
+      document.getElementById('zoom-range').value = z;
+      setZoom(z);
+    }
+  } catch(e) {}
 })();
 
 sessionStorage.removeItem('emvolia_user');
+
+// Populate vaccine datalist from VACCINE_OPTIONS
+document.addEventListener('DOMContentLoaded', function() {
+  const dl = document.getElementById('vaccine-list');
+  if (!dl) return;
+  VACCINE_OPTIONS.forEach(v => { const o = document.createElement('option'); o.value = v; dl.appendChild(o); });
+});
 
 if (sessionStorage.getItem('emvolia_pw') === '1') {
   document.getElementById('pw-gate-bg').style.display = 'none';
