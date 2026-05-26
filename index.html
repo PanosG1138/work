@@ -2183,17 +2183,24 @@ updateUndoRedoBtns();
   if (dl) VACCINE_OPTIONS.forEach(v => { const o = document.createElement('option'); o.value = v; dl.appendChild(o); });
 })();
 
-// Always require password + name on every fresh page load
-// Clear any saved name so the name gate always shows after password
-sessionStorage.removeItem('emvolia_user');
-
-if (sessionStorage.getItem('emvolia_pw') === '1') {
-  // Password already verified this session (e.g. same tab reload) — skip to name gate
+// ── SESSION RESTORE ───────────────────────────────────────────────
+// If already authenticated this session (e.g. switching from inventory.html),
+// skip both gates entirely and go straight to the app.
+const _savedUser = sessionStorage.getItem('emvolia_user');
+if (sessionStorage.getItem('emvolia_pw') === '1' && _savedUser) {
+  // fully authenticated — restore user and load directly
+  currentUser = _savedUser;
+  document.getElementById('user-chip-name').textContent = _savedUser;
+  document.getElementById('pw-gate-bg').style.display = 'none';
+  document.getElementById('gate-bg').style.display = 'none';
+  loadData();
+} else if (sessionStorage.getItem('emvolia_pw') === '1') {
+  // password verified but no name yet — skip to name gate
   document.getElementById('pw-gate-bg').style.display = 'none';
   document.getElementById('gate-bg').style.display = 'flex';
   setTimeout(() => { const f = document.querySelector('.name-opt-btn'); if(f) f.focus(); }, 100);
 } else {
-  // Fresh visit — show password gate, keep name gate hidden
+  // fresh visit — show password gate
   document.getElementById('gate-bg').style.display = 'none';
   setTimeout(() => document.getElementById('pw-input').focus(), 100);
 }
