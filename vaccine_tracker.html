@@ -686,6 +686,11 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
       <option value="ΝΑΙ">Παραγγελθέντα</option>
       <option value="-">Εκκρεμείς</option>
     </select>
+    <select class="filter-sel" id="filt-fridge" onchange="render()">
+      <option value="">Όλα τα ψυγεία</option>
+      <option value="ΝΑΙ">Στο ψυγείο</option>
+      <option value="-">Όχι στο ψυγείο</option>
+    </select>
     <button class="btn-tool" onclick="loadData()">↺ Ανανέωση</button>
     <button class="btn-tool" id="btn-undo" onclick="undo()" disabled title="Undo (Ctrl+Z)">↩ Undo</button>
     <button class="btn-tool" id="btn-redo" onclick="redo()" disabled title="Redo (Ctrl+Y)">↪ Redo</button>
@@ -1472,7 +1477,8 @@ function render() {
   const isFiltered = getFiltered().length < data.length ||
                      document.getElementById('search').value.trim() ||
                      document.getElementById('filt-flock').value ||
-                     document.getElementById('filt-ordered').value;
+                     document.getElementById('filt-ordered').value ||
+                     document.getElementById('filt-fridge').value;
   const showTotal = isFiltered || selectedIds.size > 1;
   const tfoot = document.getElementById('tfoot');
   tfoot.style.display = showTotal ? '' : 'none';
@@ -2112,6 +2118,7 @@ function getFiltered() {
     : [];
   const ff = document.getElementById('filt-flock').value;
   const fo = document.getElementById('filt-ordered').value;
+  const fr = document.getElementById('filt-fridge').value;
   return data.filter(r => {
     if (terms.length) {
       for (const t of terms) {
@@ -2131,6 +2138,8 @@ function getFiltered() {
     if (ff && flockLabel(r) !== ff) return false;
     if (fo==='ΝΑΙ' && r.paragelia!=='ΝΑΙ') return false;
     if (fo==='-'   && r.paragelia==='ΝΑΙ') return false;
+    if (fr==='ΝΑΙ' && r.psygeio!=='ΝΑΙ') return false;
+    if (fr==='-'   && r.psygeio==='ΝΑΙ') return false;
     return true;
   });
 }
