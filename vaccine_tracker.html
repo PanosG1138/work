@@ -2124,12 +2124,14 @@ function getFiltered() {
       for (const t of terms) {
         let match;
         if (t.type === 'vacc') {
-          match = (r.hm_emv || '').includes(t.value);
+          match = (r.hm_emv || '').includes(t.value) || fmt(r.hm_emv).includes(t.value);
         } else if (t.type === 'ord') {
-          match = (r.hm_paragelia || '').includes(t.value);
+          match = (r.hm_paragelia || '').includes(t.value) || fmt(r.hm_paragelia).includes(t.value);
         } else {
-          // normalize the whole row's data for accent+case insensitive matching
-          const searchStr = normalize(Object.values(r).join(' ') + ' ' + flockLabel(r));
+          // build search string from raw values + formatted dates for dd/mm/yyyy matching
+          const DATE_COLS = ['hm_ekk','hm_emv','hm_par','hm_paragelia'];
+          const extra = DATE_COLS.map(c => fmt(r[c])).join(' ');
+          const searchStr = normalize(Object.values(r).join(' ') + ' ' + flockLabel(r) + ' ' + extra);
           match = searchStr.includes(t.value);
         }
         if (!match) return false;
