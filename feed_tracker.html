@@ -1,2346 +1,576 @@
 <!DOCTYPE html>
-<html lang="el">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
-<title>ΕΜΒΟΛΙΑ</title>
+<title>Feed Program — Poultry Nutrition Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* ── GITHUB DARK COLOUR SYSTEM ── */
 :root,[data-theme="dark"]{
-  /* Canvas */
-  --gh-canvas-default:    #0d1117;
-  --gh-canvas-subtle:     #161b22;
-  --gh-canvas-inset:      #010409;
-  /* Borders */
-  --gh-border-default:    #30363d;
-  --gh-border-muted:      #21262d;
-  --gh-border-subtle:     rgba(240,246,252,0.1);
-  /* Foreground */
-  --gh-fg-default:        #e6edf3;
-  --gh-fg-muted:          #8b949e;
-  --gh-fg-subtle:         #6e7681;
-  --gh-fg-onEmphasis:     #ffffff;
-  /* Accent blue */
-  --gh-accent-fg:         #58a6ff;
-  --gh-accent-emphasis:   #1f6feb;
-  --gh-accent-subtle:     rgba(56,139,253,0.1);
-  /* Success green */
-  --gh-success-fg:        #3fb950;
-  --gh-success-subtle:    rgba(46,160,67,0.1);
-  /* Attention amber */
-  --gh-attention-fg:      #d29922;
-  --gh-attention-subtle:  rgba(187,128,9,0.1);
-  /* Danger red */
-  --gh-danger-fg:         #f85149;
-  --gh-danger-subtle:     rgba(248,81,73,0.1);
-  /* Hover */
-  --gh-hover-bg:          #21262d;
-  /* Radius */
-  --r:6px;--rs:6px;
-  /* Zoom */
-  --zoom:1;
+  --gh-canvas-default:#0d1117;--gh-canvas-subtle:#161b22;--gh-canvas-inset:#010409;
+  --gh-border-default:#30363d;--gh-border-muted:#21262d;
+  --gh-fg-default:#e6edf3;--gh-fg-muted:#8b949e;--gh-fg-subtle:#6e7681;
+  --gh-accent-fg:#58a6ff;--gh-accent-emphasis:#1f6feb;--gh-accent-subtle:rgba(56,139,253,0.1);
+  --gh-success-fg:#3fb950;--gh-success-subtle:rgba(46,160,67,0.1);
+  --gh-attention-fg:#d29922;--gh-attention-subtle:rgba(187,128,9,0.1);
+  --gh-danger-fg:#f85149;--gh-danger-subtle:rgba(248,81,73,0.1);
+  --gh-hover-bg:#21262d;--r:6px;--rs:6px;
 }
-
-/* ── GITHUB LIGHT THEME ── */
 [data-theme="light"]{
-  --gh-canvas-default:    #ffffff;
-  --gh-canvas-subtle:     #f6f8fa;
-  --gh-canvas-inset:      #f0f2f5;
-  --gh-border-default:    #d0d7de;
-  --gh-border-muted:      #d8dee4;
-  --gh-border-subtle:     rgba(31,35,40,0.06);
-  --gh-fg-default:        #1f2328;
-  --gh-fg-muted:          #636c76;
-  --gh-fg-subtle:         #6e7781;
-  --gh-fg-onEmphasis:     #ffffff;
-  --gh-accent-fg:         #0969da;
-  --gh-accent-emphasis:   #0969da;
-  --gh-accent-subtle:     rgba(9,105,218,0.08);
-  --gh-success-fg:        #1a7f37;
-  --gh-success-subtle:    rgba(26,127,55,0.08);
-  --gh-attention-fg:      #9a6700;
-  --gh-attention-subtle:  rgba(154,103,0,0.08);
-  --gh-danger-fg:         #d1242f;
-  --gh-danger-subtle:     rgba(209,36,47,0.08);
-  --gh-hover-bg:          #eaeef2;
-  --r:6px;--rs:6px;
-  --zoom:1;
+  --gh-canvas-default:#ffffff;--gh-canvas-subtle:#f6f8fa;--gh-canvas-inset:#f0f2f5;
+  --gh-border-default:#d0d7de;--gh-border-muted:#d8dee4;
+  --gh-fg-default:#1f2328;--gh-fg-muted:#636c76;--gh-fg-subtle:#6e7781;
+  --gh-accent-fg:#0969da;--gh-accent-emphasis:#0969da;--gh-accent-subtle:rgba(9,105,218,0.08);
+  --gh-success-fg:#1a7f37;--gh-success-subtle:rgba(26,127,55,0.08);
+  --gh-attention-fg:#9a6700;--gh-attention-subtle:rgba(154,103,0,0.08);
+  --gh-danger-fg:#d1242f;--gh-danger-subtle:rgba(209,36,47,0.08);
+  --gh-hover-bg:#eaeef2;--r:6px;--rs:6px;
 }
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--gh-canvas-default);color:var(--gh-fg-default);min-height:100vh;}
 
-/* theme toggle button */
-.theme-toggle{
-  display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;
-  border:1px solid var(--gh-border-default);border-radius:var(--rs);
-  background:var(--gh-canvas-subtle);color:var(--gh-fg-muted);
-  font-family:'Inter',system-ui,sans-serif;font-size:12px;font-weight:500;
-  cursor:pointer;transition:background 0.15s,border-color 0.15s,color 0.15s;
-  user-select:none;flex-shrink:0;
-}
+/* HEADER */
+.header{background:var(--gh-canvas-subtle);border-bottom:1px solid var(--gh-border-default);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:50;}
+.header-left{display:flex;align-items:center;gap:10px}
+.header-icon{font-size:18px}
+.header-title{font-size:15px;font-weight:600;color:var(--gh-fg-default)}
+.header-sub{font-size:12px;color:var(--gh-fg-muted);margin-top:1px}
+.header-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+
+/* SYNC BADGE */
+.sync-badge{display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:1px solid var(--gh-border-default);border-radius:var(--rs);font-size:12px;font-weight:500;color:var(--gh-fg-muted);background:var(--gh-canvas-subtle);white-space:nowrap;}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--gh-fg-subtle);flex-shrink:0;}
+.sync-badge.ok .sync-dot{background:var(--gh-success-fg);}
+.sync-badge.ok{color:var(--gh-success-fg);border-color:rgba(63,185,80,0.3);}
+.sync-badge.err .sync-dot{background:var(--gh-danger-fg);}
+.sync-badge.err{color:var(--gh-danger-fg);border-color:rgba(248,81,73,0.3);}
+.sync-badge.loading .sync-dot{background:var(--gh-accent-fg);animation:pulse 1s infinite;}
+.sync-badge.loading{color:var(--gh-accent-fg);border-color:rgba(56,139,253,0.3);}
+.sync-badge.saving .sync-dot{background:var(--gh-attention-fg);animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* ZOOM */
+.zoom-ctrl{display:flex;align-items:center;gap:4px}
+.zoom-btn{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border:1px solid var(--gh-border-default);border-radius:var(--rs);background:var(--gh-canvas-subtle);color:var(--gh-fg-muted);font-size:14px;font-weight:600;cursor:pointer;transition:background 0.15s,color 0.15s;user-select:none;}
+.zoom-btn:hover{background:var(--gh-hover-bg);color:var(--gh-fg-default)}
+.zoom-label{font-size:12px;color:var(--gh-fg-muted);min-width:36px;text-align:center}
+
+/* THEME */
+.theme-toggle{display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:1px solid var(--gh-border-default);border-radius:var(--rs);background:var(--gh-canvas-subtle);color:var(--gh-fg-muted);font-family:'Inter',system-ui,sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:background 0.15s,border-color 0.15s,color 0.15s;user-select:none;}
 .theme-toggle:hover{background:var(--gh-hover-bg);color:var(--gh-fg-default);border-color:var(--gh-fg-subtle)}
 
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+/* OFFLINE OVERLAY */
+.offline-overlay{display:none;position:fixed;inset:0;background:rgba(1,4,9,0.85);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:12px;backdrop-filter:blur(3px);}
+.offline-overlay.active{display:flex;}
+.offline-msg{font-size:15px;font-weight:600;color:var(--gh-danger-fg);text-align:center;line-height:1.6;}
+.offline-msg span{display:block;font-size:12px;font-weight:400;color:var(--gh-fg-muted);margin-top:6px;}
+.offline-retry{display:flex;align-items:center;gap:6px;height:32px;padding:0 14px;border:1px solid var(--gh-border-default);border-radius:var(--rs);background:var(--gh-canvas-subtle);color:var(--gh-fg-default);font-family:'Inter',system-ui,sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background 0.15s;}
+.offline-retry:hover{background:var(--gh-hover-bg);}
 
-html{height:100%;overflow:hidden}
-body{
-  height:100%;overflow:hidden;
-  background:var(--gh-canvas-default);
-  color:var(--gh-fg-default);
-  font-family:'Inter',system-ui,-apple-system,sans-serif;
-  font-size:14px;
-  line-height:1.5;
-}
+/* MAIN */
+.main{padding:16px;transform-origin:top left;}
 
-/* ── LAYOUT ── */
-.shell{
-  display:grid;
-  grid-template-columns:var(--sidebar-w,300px) 1fr;
-  grid-template-rows:48px 1fr;
-  height:100vh;
-  max-height:100vh;
-  overflow:hidden;
-  transition:grid-template-columns 0.2s ease;
-}
-.shell.collapsed{--sidebar-w:0px}
-
-/* ── HEADER ── */
-header{
-  grid-column:1/-1;
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 16px;height:48px;
-  background:var(--gh-canvas-default);
-  border-bottom:1px solid var(--gh-border-default);
-  z-index:50;
-  gap:12px;flex-wrap:wrap;
-  overflow:hidden;
-}
-.header-left{display:flex;align-items:center;gap:12px}
-.sidebar-toggle{
-  width:28px;height:28px;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;gap:4px;cursor:pointer;
-  border:1px solid var(--gh-border-default);border-radius:var(--rs);
-  background:transparent;flex-shrink:0;transition:background 0.15s,border-color 0.15s;
-}
-.sidebar-toggle:hover{background:var(--gh-canvas-subtle);border-color:var(--gh-border-default)}
-.sidebar-toggle span{display:block;width:13px;height:1.5px;background:var(--gh-fg-muted);transition:all 0.2s;transform-origin:center}
-.shell.collapsed .sidebar-toggle span:nth-child(1){transform:translateY(2.75px) rotate(45deg);background:var(--gh-fg-default)}
-.shell.collapsed .sidebar-toggle span:nth-child(2){opacity:0;transform:scaleX(0)}
-.shell.collapsed .sidebar-toggle span:nth-child(3){transform:translateY(-2.75px) rotate(-45deg);background:var(--gh-fg-default)}
-.logo{display:flex;align-items:center;gap:8px}
-.logo-title{font-weight:600;font-size:15px;color:var(--gh-fg-default);letter-spacing:0}
-.header-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.hstats{display:flex;gap:16px}
-.hstat{text-align:right}
-.hstat-val{font-weight:700;font-size:15px;color:var(--gh-fg-default)}
-.hstat-label{font-size:11px;color:var(--gh-fg-muted)}
-
-/* Zoom */
-.zoom-ctrl{display:flex;align-items:center;gap:6px;padding:0 8px;height:28px;border:1px solid var(--gh-border-default);border-radius:var(--rs);background:var(--gh-canvas-subtle)}
-.zoom-ctrl label{font-size:11px;color:var(--gh-fg-muted);white-space:nowrap}
-.zoom-ctrl input[type=range]{width:72px;accent-color:var(--gh-accent-fg);cursor:pointer}
-.zoom-val{font-size:11px;color:var(--gh-fg-default);min-width:30px;text-align:right}
-
-/* Sync badge */
-.sync-badge{display:flex;align-items:center;gap:5px;font-size:12px;padding:0 10px;height:24px;border-radius:99px;border:1px solid var(--gh-border-default);background:var(--gh-canvas-subtle);color:var(--gh-fg-muted);white-space:nowrap;transition:all 0.25s}
-.sync-badge.ok{border-color:rgba(63,185,80,0.4);color:var(--gh-success-fg);background:var(--gh-success-subtle)}
-.sync-badge.err{border-color:rgba(248,81,73,0.4);color:var(--gh-danger-fg);background:var(--gh-danger-subtle)}
-.sync-badge.loading{border-color:rgba(210,153,34,0.4);color:var(--gh-attention-fg);background:var(--gh-attention-subtle)}
-.sync-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
-.sync-badge.loading .sync-dot{animation:pulse 1.2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.2}}
-
-/* User chip */
-.user-chip{display:flex;align-items:center;gap:6px;height:28px;padding:0 12px;border:1px solid var(--gh-border-default);border-radius:99px;background:var(--gh-canvas-subtle);font-size:12px;color:var(--gh-fg-default);cursor:pointer;transition:background 0.15s,border-color 0.15s;font-weight:500}
-.user-chip:hover{background:var(--gh-canvas-subtle);border-color:var(--gh-accent-fg);color:var(--gh-accent-fg)}
-.user-chip .dot{width:7px;height:7px;border-radius:50%;background:var(--gh-success-fg);flex-shrink:0}
-
-/* ── SIDEBAR ── */
-.sidebar{
-  grid-column:1;background:var(--gh-canvas-subtle);
-  border-right:1px solid var(--gh-border-default);
-  display:flex;flex-direction:column;
-  height:100%;overflow:hidden;
-}
-.shell.collapsed .sidebar{border-right:none}
-.sidebar-inner{padding:16px;overflow-y:auto;overflow-x:visible;flex:1;min-width:300px;min-height:0}
-.sidebar-footer{padding:12px 16px;border-top:1px solid var(--gh-border-muted);background:var(--gh-canvas-subtle);display:flex;flex-direction:column;gap:6px;flex-shrink:0;min-width:300px}
-
-/* Form */
-.form-heading{font-weight:600;font-size:12px;color:var(--gh-fg-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:14px}
-.form-heading span{color:var(--gh-fg-default)}
-
-/* Steps */
-.steps{display:flex;align-items:center;margin-bottom:16px}
-.step-dot{width:22px;height:22px;border-radius:50%;border:1px solid var(--gh-border-default);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:11px;color:var(--gh-fg-muted);background:var(--gh-canvas-inset);flex-shrink:0;transition:all 0.2s}
-.step-dot.active{border-color:var(--gh-accent-fg);color:var(--gh-accent-fg);background:var(--gh-accent-subtle)}
-.step-dot.done{border-color:var(--gh-success-fg);background:var(--gh-success-fg);color:#fff}
-.step-line{flex:1;height:1px;background:var(--gh-border-default);transition:background 0.2s}
-.step-line.done{background:var(--gh-success-fg)}
-
-/* Form sections */
-.sec-label{font-size:12px;font-weight:600;color:var(--gh-fg-muted);text-transform:uppercase;letter-spacing:0.04em;margin:14px 0 8px}
-.fgroup{margin-bottom:10px}
-.fgroup label{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:500;color:var(--gh-fg-default);margin-bottom:5px}
-.calc-badge{font-size:10px;background:var(--gh-attention-subtle);color:var(--gh-attention-fg);border:1px solid rgba(210,153,34,0.4);border-radius:4px;padding:1px 5px;font-weight:500}
-
-/* Inputs */
-input[type=date],input[type=text],input[type=password],select,textarea{
-  width:100%;
-  background:var(--gh-canvas-default);
-  border:1px solid var(--gh-border-default);
-  border-radius:var(--rs);
-  color:var(--gh-fg-default);
-  font-family:'Inter',system-ui,sans-serif;
-  font-size:14px;
-  padding:6px 10px;
-  outline:none;
-  transition:border-color 0.15s,box-shadow 0.15s;
-  appearance:none;-webkit-appearance:none;
-}
-input::placeholder,textarea::placeholder{color:var(--gh-fg-subtle)}
-input:focus,select:focus,textarea:focus{
-  border-color:var(--gh-accent-emphasis);
-  box-shadow:0 0 0 3px rgba(31,111,235,0.3);
-}
-select{
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%238b949e' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;cursor:pointer;
-}
-textarea{resize:vertical;min-height:44px;font-size:13px}
-.calc-field{background:var(--gh-attention-subtle)!important;border-color:rgba(210,153,34,0.5)!important;color:var(--gh-attention-fg)!important;font-weight:500}
-
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.divider{height:1px;background:var(--gh-border-muted);margin:12px 0}
-.toggle-group{display:flex;gap:4px}
-.toggle-btn{flex:1;padding:6px 4px;border-radius:var(--rs);border:1px solid var(--gh-border-default);background:var(--gh-canvas-default);color:var(--gh-fg-muted);font-family:'Inter',system-ui,sans-serif;font-size:13px;cursor:pointer;text-align:center;transition:all 0.15s}
-.toggle-btn.active{border-color:var(--gh-accent-emphasis);background:var(--gh-accent-subtle);color:var(--gh-accent-fg)}
-
-/* Sidebar buttons */
-.btn-submit{
-  width:100%;padding:8px 16px;
-  background:var(--gh-accent-emphasis);color:#fff;
-  border:1px solid rgba(240,246,252,0.1);border-radius:var(--rs);
-  font-family:'Inter',system-ui,sans-serif;font-weight:500;font-size:14px;
-  cursor:pointer;margin-top:8px;transition:background 0.15s,opacity 0.15s;
-}
-.btn-submit:hover{background:#388bfd}
-.btn-submit:disabled{opacity:0.4;cursor:not-allowed}
-.btn-cancel{
-  width:100%;padding:6px 16px;
-  background:transparent;color:var(--gh-fg-muted);
-  border:1px solid var(--gh-border-default);border-radius:var(--rs);
-  font-family:'Inter',system-ui,sans-serif;font-size:13px;cursor:pointer;margin-top:6px;
-  transition:background 0.15s,color 0.15s,border-color 0.15s;
-}
-.btn-cancel:hover{background:var(--gh-canvas-default);color:var(--gh-fg-default);border-color:var(--gh-border-default)}
-
-/* ── MAIN ── */
-.main{grid-column:2;padding:16px;overflow:hidden;display:flex;flex-direction:column;gap:10px;min-height:0}
-/* Total footer row */
-tfoot tr{background:var(--gh-canvas-subtle);border-top:2px solid var(--gh-border-default)}
-tfoot td{padding:7px 12px;font-size:13px;font-weight:600;color:var(--gh-fg-default)}
-.total-label{color:var(--gh-fg-muted);font-size:11px;text-transform:uppercase;letter-spacing:0.05em}
-.total-val{color:var(--gh-accent-fg);font-size:14px}
-.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.search-wrap{position:relative;flex:1;min-width:200px}
-.search-wrap svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--gh-fg-muted);pointer-events:none}
-.search-wrap input{padding-left:32px;height:32px}
-.filter-sel{width:auto;min-width:120px;height:32px;font-size:13px;padding:0 28px 0 10px}
-.btn-tool{
-  height:32px;padding:0 12px;
-  background:var(--gh-canvas-subtle);
-  border:1px solid var(--gh-border-default);
-  color:var(--gh-fg-default);
-  border-radius:var(--rs);
-  font-family:'Inter',system-ui,sans-serif;
-  font-size:13px;font-weight:500;
-  cursor:pointer;white-space:nowrap;
-  display:inline-flex;align-items:center;gap:4px;
-  line-height:1;text-decoration:none;
-  transition:background 0.15s,border-color 0.15s;
-}
-.btn-tool:hover{background:var(--gh-hover-bg);border-color:var(--gh-fg-subtle)}
-.btn-tool:disabled{opacity:0.4;cursor:not-allowed;pointer-events:none}
-
-/* ── BATCH BAR ── */
-.batch-bar{display:none;align-items:center;gap:10px;padding:8px 12px;background:var(--gh-accent-subtle);border:1px solid rgba(56,139,253,0.4);border-radius:var(--rs);flex-wrap:wrap}
-.batch-bar.visible{display:flex}
-.batch-count{font-weight:600;font-size:13px;color:var(--gh-accent-fg);white-space:nowrap}
-.batch-sep{width:1px;height:16px;background:var(--gh-border-default)}
-.btn-batch{height:28px;padding:0 12px;border-radius:var(--rs);border:1px solid var(--gh-border-default);background:var(--gh-canvas-subtle);color:var(--gh-fg-default);font-family:'Inter',system-ui,sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:background 0.15s,border-color 0.15s;white-space:nowrap}
-.btn-batch:hover{background:var(--gh-hover-bg);border-color:var(--gh-fg-subtle)}
-.btn-batch.danger{border-color:rgba(248,81,73,0.4);background:var(--gh-danger-subtle);color:var(--gh-danger-fg)}
-.btn-batch.danger:hover{background:rgba(248,81,73,0.2)}
-.btn-batch.clear{color:var(--gh-fg-muted)}
-.btn-batch.clear:hover{color:var(--gh-fg-default)}
-
-/* ── TABLE ── */
-.tbl-outer{overflow:auto;border:1px solid var(--gh-border-default);border-radius:var(--rs);flex:1;min-height:0}
-.tbl-scaler{transform-origin:top left;transform:scale(var(--zoom));width:calc(100% / var(--zoom))}
-table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap}
-thead tr{background:var(--gh-canvas-subtle);border-bottom:1px solid var(--gh-border-default)}
-th{padding:8px 12px;text-align:left;font-size:12px;font-weight:600;color:var(--gh-fg-default);cursor:pointer;user-select:none;letter-spacing:0;white-space:normal;min-width:80px;vertical-align:bottom;line-height:1.3;position:sticky;top:0;background:var(--gh-canvas-subtle);z-index:2}
-th:hover{color:var(--gh-accent-fg)}
-th .arr{font-size:10px;margin-left:3px;color:var(--gh-fg-muted)}
-tbody tr{border-bottom:1px solid var(--gh-border-muted);transition:background 0.1s}
+/* TABLE */
+.table-wrap{overflow-x:auto;border:1px solid var(--gh-border-default);border-radius:var(--r);background:var(--gh-canvas-subtle);}
+table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap;}
+thead tr{background:var(--gh-canvas-inset);border-bottom:1px solid var(--gh-border-default);}
+thead th{padding:8px 10px;font-size:11px;font-weight:600;color:var(--gh-fg-muted);text-align:left;text-transform:uppercase;letter-spacing:0.04em;border-right:1px solid var(--gh-border-muted);}
+thead th:last-child{border-right:none}
+thead th.phase-col{text-align:center;color:var(--gh-accent-fg)}
+tbody tr{border-bottom:1px solid var(--gh-border-muted);transition:background 0.1s;}
 tbody tr:last-child{border-bottom:none}
-tbody tr:hover{background:var(--gh-canvas-subtle)}
-tbody tr.selected{background:var(--gh-accent-subtle)!important}
-tbody tr.row-arrived{background:rgba(46,160,67,0.13);border-left:3px solid rgba(46,160,67,0.5)}
-tbody tr.row-arrived:hover{background:rgba(46,160,67,0.2)}
-tbody tr.row-arrived.selected{background:var(--gh-accent-subtle)!important}
-tbody tr.new-row{animation:rowIn 0.4s ease}
-@keyframes rowIn{from{background:rgba(56,139,253,0.15)}to{background:transparent}}
-td{padding:7px 12px;color:var(--gh-fg-default);max-width:160px;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;font-size:13px}
-td.vacc{font-weight:600;color:var(--gh-fg-default)}
-td.td-notes{max-width:200px;overflow:visible;text-overflow:unset;white-space:normal;word-break:break-word;line-height:1.4}
+tbody tr:hover{background:var(--gh-hover-bg)}
+tbody td{padding:9px 10px;color:var(--gh-fg-default);border-right:1px solid var(--gh-border-muted);vertical-align:middle;}
+tbody td:last-child{border-right:none}
+tbody td.phase-col{text-align:center}
 
-/* Badges */
-.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500;line-height:18px}
-.b-yes{background:var(--gh-success-subtle);color:var(--gh-success-fg);border:1px solid rgba(63,185,80,0.3)}
-.b-no{background:var(--gh-canvas-subtle);color:var(--gh-fg-subtle);border:1px solid var(--gh-border-muted)}
-.b-flock{background:var(--gh-accent-subtle);color:var(--gh-accent-fg);border:1px solid rgba(56,139,253,0.45);font-weight:700;font-size:12px;letter-spacing:0.01em}
-.b-pending{background:var(--gh-attention-subtle);color:var(--gh-attention-fg);border:1px solid rgba(210,153,34,0.3)}
+/* INPUTS */
+.cell-input{background:transparent;border:1px solid transparent;border-radius:4px;color:var(--gh-fg-default);font-family:'Inter',system-ui,sans-serif;font-size:13px;padding:3px 6px;width:100%;transition:border-color 0.15s,background 0.15s;outline:none;}
+.cell-input:hover{border-color:var(--gh-border-default);background:var(--gh-canvas-default)}
+.cell-input:focus{border-color:var(--gh-accent-emphasis);background:var(--gh-canvas-default);box-shadow:0 0 0 3px rgba(31,111,235,0.3)}
+.cell-input:disabled{opacity:0.45;cursor:not-allowed;}
+select.cell-input{cursor:pointer;padding-right:4px}
+select.cell-input option{background:var(--gh-canvas-subtle);color:var(--gh-fg-default)}
+select.cell-input option:disabled{color:var(--gh-fg-subtle);}
 
-/* Row action buttons */
-.row-actions{display:flex;gap:4px;justify-content:flex-end}
-.row-btn{
-  height:24px;padding:0 10px;border-radius:var(--rs);
-  border:1px solid var(--gh-border-default);
-  background:var(--gh-canvas-subtle);
-  color:var(--gh-fg-default);
-  font-family:'Inter',system-ui,sans-serif;font-size:12px;font-weight:500;
-  cursor:pointer;transition:background 0.12s,border-color 0.12s,color 0.12s;white-space:nowrap;
-}
-.row-btn:hover{background:var(--gh-hover-bg);border-color:var(--gh-fg-subtle);color:var(--gh-accent-fg)}
-.row-btn.del:hover{border-color:rgba(248,81,73,0.5);background:var(--gh-danger-subtle);color:var(--gh-danger-fg)}
+/* DATE TEXT INPUT */
+.date-text-input{background:transparent;border:1px solid transparent;border-radius:4px;color:var(--gh-fg-default);font-family:'Inter',system-ui,sans-serif;font-size:13px;padding:3px 6px;width:115px;transition:border-color 0.15s,background 0.15s;outline:none;}
+.date-text-input:hover{border-color:var(--gh-border-default);background:var(--gh-canvas-default)}
+.date-text-input:focus{border-color:var(--gh-accent-emphasis);background:var(--gh-canvas-default);box-shadow:0 0 0 3px rgba(31,111,235,0.3)}
+.date-text-input:disabled{opacity:0.45;cursor:not-allowed;}
+.date-text-input::placeholder{color:var(--gh-fg-subtle);}
+.date-text-input.invalid{border-color:var(--gh-danger-fg) !important;box-shadow:0 0 0 3px var(--gh-danger-subtle) !important;}
 
-.empty-state{padding:48px 20px;text-align:center;color:var(--gh-fg-muted);font-size:14px}
+/* PHASE CELLS */
+.phase-cell{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.phase-label{font-size:11px;font-weight:600;color:var(--gh-fg-muted);letter-spacing:0.03em;text-transform:uppercase;}
+.phase-empty{font-size:12px;color:var(--gh-border-default);}
 
-/* Checkbox */
-td.cb-cell,th.cb-cell{width:36px;padding:6px 8px;text-align:center}
-input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cursor:pointer}
+/* DATE CHIPS */
+.date-chip{display:inline-block;padding:2px 9px;border-radius:12px;font-size:12px;font-weight:500;background:var(--gh-accent-subtle);color:var(--gh-accent-fg);border:1px solid rgba(56,139,253,0.2);font-variant-numeric:tabular-nums;}
+.date-chip.past{background:var(--gh-canvas-inset);color:var(--gh-fg-subtle);border-color:var(--gh-border-muted);}
+.date-chip.today{background:var(--gh-success-subtle);color:var(--gh-success-fg);border-color:rgba(63,185,80,0.3);}
+.date-chip.soon{background:var(--gh-attention-subtle);color:var(--gh-attention-fg);border-color:rgba(210,153,34,0.3);}
 
-/* Meta info */
-.meta-info{display:flex;flex-direction:column;gap:2px}
-.meta-user{font-size:12px;color:var(--gh-fg-default);font-weight:500}
-.meta-date{font-size:11px;color:var(--gh-fg-muted)}
-.meta-edited{font-size:11px;color:var(--gh-attention-fg)}
+/* LEGEND */
+.legend{display:flex;gap:16px;align-items:center;padding:10px 16px;font-size:12px;color:var(--gh-fg-muted);flex-wrap:wrap;}
+.legend-item{display:flex;align-items:center;gap:6px}
+.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 
-/* Batch field list */
-.batch-field-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
-.batch-field-row{display:grid;grid-template-columns:20px 1fr 1fr;align-items:center;gap:10px}
-.batch-field-row input[type=checkbox]{margin:0}
-.batch-field-row label{font-size:12px;color:var(--gh-fg-muted);cursor:pointer;font-weight:500}
-.batch-field-row label.active{color:var(--gh-fg-default)}
-.batch-field-row .field-input{opacity:0.3;pointer-events:none;transition:opacity 0.15s}
-.batch-field-row.enabled .field-input{opacity:1;pointer-events:all}
-.batch-modal-title{font-weight:700;font-size:15px;color:var(--gh-fg-default);margin-bottom:4px}
-.batch-modal-sub{font-size:12px;color:var(--gh-fg-muted);margin-bottom:14px}
-
-/* ── OFFLINE OVERLAY ── */
-.offline-overlay{display:none;position:absolute;inset:0;background:rgba(var(--gh-overlay-rgb,1,4,9),0.8);z-index:40;align-items:center;justify-content:center;flex-direction:column;gap:12px;backdrop-filter:blur(2px);border-radius:var(--rs)}
-.offline-overlay.active{display:flex}
-.offline-msg{font-weight:600;font-size:14px;color:var(--gh-danger-fg);text-align:center;line-height:1.6}
-.offline-msg span{display:block;font-weight:400;font-size:12px;color:var(--gh-fg-muted);margin-top:4px}
-
-/* ── MODALS ── */
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(4px)}
-.modal{
-  background:var(--gh-canvas-subtle);
-  border:1px solid var(--gh-border-default);
-  border-radius:var(--r);padding:24px;
-  width:580px;max-width:95vw;max-height:90vh;overflow-y:auto;
-}
-.modal h3{font-weight:600;font-size:16px;margin-bottom:18px;color:var(--gh-fg-default)}
-.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.mgrid .full{grid-column:1/-1}
-.modal .fgroup label{font-size:12px;font-weight:500;color:var(--gh-fg-muted);margin-bottom:5px}
-.modal .fgroup input,.modal .fgroup select,.modal .fgroup textarea{font-size:14px;padding:6px 10px;color:var(--gh-fg-default);background:var(--gh-canvas-default);border-color:var(--gh-border-default)}
-.modal .fgroup input:focus,.modal .fgroup select:focus,.modal .fgroup textarea:focus{border-color:var(--gh-accent-emphasis);box-shadow:0 0 0 3px rgba(31,111,235,0.3)}
-.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;padding-top:16px;border-top:1px solid var(--gh-border-muted)}
-.btn-primary{
-  height:32px;padding:0 16px;
-  background:var(--gh-accent-emphasis);color:#fff;
-  border:1px solid rgba(240,246,252,0.1);border-radius:var(--rs);
-  font-family:'Inter',system-ui,sans-serif;font-weight:500;font-size:14px;
-  cursor:pointer;transition:background 0.15s,opacity 0.15s;
-}
-.btn-primary:hover{background:#388bfd}
-.btn-primary:disabled{opacity:0.4;cursor:not-allowed}
-.btn-danger{
-  height:32px;padding:0 16px;
-  background:var(--gh-danger-subtle);color:var(--gh-danger-fg);
-  border:1px solid rgba(248,81,73,0.4);border-radius:var(--rs);
-  font-family:'Inter',system-ui,sans-serif;font-weight:500;font-size:13px;
-  cursor:pointer;transition:background 0.15s;
-}
-.btn-danger:hover{background:rgba(248,81,73,0.2)}
-.btn-secondary{
-  height:32px;padding:0 16px;
-  background:var(--gh-canvas-subtle);color:var(--gh-fg-default);
-  border:1px solid var(--gh-border-default);border-radius:var(--rs);
-  font-family:'Inter',system-ui,sans-serif;font-size:13px;font-weight:500;
-  cursor:pointer;transition:background 0.15s,border-color 0.15s;
-}
-.btn-secondary:hover{background:var(--gh-hover-bg);border-color:var(--gh-fg-subtle)}
-
-/* Confirm dialog */
-.confirm-box{background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:var(--r);padding:24px;width:340px;text-align:center}
-.confirm-box p{color:var(--gh-fg-muted);font-size:14px;margin-bottom:16px;line-height:1.6}
-.confirm-name{color:var(--gh-danger-fg);font-weight:700;font-size:15px;display:block;margin:8px 0}
-
-/* History */
-.history-section{margin-top:18px;padding-top:16px;border-top:1px solid var(--gh-border-muted)}
-.history-title{font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:var(--gh-fg-muted);margin-bottom:10px}
-.history-list{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto}
-.history-item{background:var(--gh-canvas-default);border:1px solid var(--gh-border-muted);border-radius:var(--rs);padding:10px 12px}
-.history-item-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
-.hi-user{font-size:13px;font-weight:600;color:var(--gh-fg-default)}
-.hi-action{font-size:11px;padding:1px 8px;border-radius:99px;border:1px solid;font-weight:500}
-.hi-action.created{color:var(--gh-success-fg);border-color:rgba(63,185,80,0.4);background:var(--gh-success-subtle)}
-.hi-action.edited{color:var(--gh-attention-fg);border-color:rgba(210,153,34,0.4);background:var(--gh-attention-subtle)}
-.hi-date{font-size:12px;color:var(--gh-fg-muted)}
-.hi-changes{margin-top:6px;display:flex;flex-direction:column;gap:3px}
-.hi-change{font-size:11px;display:grid;grid-template-columns:auto 1fr;gap:4px;align-items:baseline}
-.hi-field{color:var(--gh-fg-muted);font-weight:500;white-space:nowrap}
-.hi-from{color:var(--gh-danger-fg);text-decoration:line-through;word-break:break-word}
-.hi-arrow{color:var(--gh-fg-subtle);margin:0 3px}
-.hi-to{color:var(--gh-success-fg);font-weight:500;word-break:break-word}
-
-/* ── NAME / PASSWORD GATE ── */
-.name-gate{
-  background:var(--gh-canvas-subtle);
-  border:1px solid var(--gh-border-default);
-  border-radius:var(--r);padding:32px;width:380px;text-align:center;
-}
-.name-gate h2{font-weight:700;font-size:20px;color:var(--gh-fg-default);margin-bottom:8px}
-.name-gate p{font-size:13px;color:var(--gh-fg-muted);margin-bottom:22px;line-height:1.6}
-.name-gate input{text-align:center;font-size:15px;padding:8px;margin-bottom:12px;letter-spacing:0.02em}
-.name-gate .btn-primary{width:100%;height:36px;font-size:14px}
-.gate-error{font-size:12px;color:var(--gh-danger-fg);margin-top:8px;min-height:18px}
-.name-options{display:flex;gap:8px;margin-top:4px}
-.name-opt-btn{
-  flex:1;padding:12px 8px;
-  background:var(--gh-canvas-default);
-  border:1px solid var(--gh-border-default);
-  border-radius:var(--rs);
-  color:var(--gh-fg-default);
-  font-family:'Inter',system-ui,sans-serif;font-weight:600;font-size:15px;
-  cursor:pointer;transition:background 0.15s,border-color 0.15s,color 0.15s;
-}
-.name-opt-btn:hover{background:var(--gh-accent-subtle);border-color:var(--gh-accent-emphasis);color:var(--gh-accent-fg)}
-
-/* ── CUSTOM AUTOCOMPLETE DROPDOWN ── */
-.ac-dropdown{
-  position:absolute;top:100%;left:0;right:0;z-index:400;
-  background:var(--gh-canvas-default);
-  border:1px solid var(--gh-border-default);
-  border-radius:0 0 var(--rs) var(--rs);
-  max-height:160px;overflow-y:auto;
-  box-shadow:0 6px 16px rgba(0,0,0,0.4);
-  width:100%;
-}
-.ac-option{
-  padding:7px 10px;font-size:13px;color:var(--gh-fg-default);cursor:pointer;
-  transition:background 0.1s;white-space:nowrap;
-}
-.ac-option:hover,.ac-option.active{background:var(--gh-accent-subtle);color:var(--gh-accent-fg)}
-.changelog-modal{background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:var(--r);padding:24px;width:520px;max-width:95vw;max-height:80vh;display:flex;flex-direction:column}
-.changelog-modal h3{font-weight:600;font-size:15px;color:var(--gh-fg-default);margin-bottom:4px}
-.changelog-sub{font-size:12px;color:var(--gh-fg-muted);margin-bottom:14px}
-.changelog-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;min-height:0}
-.cl-item{background:var(--gh-canvas-default);border:1px solid var(--gh-border-muted);border-radius:var(--rs);padding:10px 12px}
-.cl-header{display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap}
-.cl-user{font-weight:600;font-size:13px;color:var(--gh-fg-default)}
-.cl-action{font-size:11px;padding:1px 7px;border-radius:99px;border:1px solid;font-weight:500}
-.cl-action.created{color:var(--gh-success-fg);border-color:rgba(63,185,80,0.4);background:var(--gh-success-subtle)}
-.cl-action.edited{color:var(--gh-attention-fg);border-color:rgba(210,153,34,0.4);background:var(--gh-attention-subtle)}
-.cl-vaccine{font-size:12px;font-weight:600;color:var(--gh-accent-fg)}
-.cl-ctx{font-size:11px;font-weight:400;color:var(--gh-fg-muted)}
-.cl-time{font-size:11px;color:var(--gh-fg-muted);margin-left:auto}
-.cl-changes{font-size:11px;color:var(--gh-fg-muted);margin-top:4px;display:flex;flex-direction:column;gap:2px}
-.cl-change{display:flex;align-items:baseline;gap:4px}
-.cl-field{color:var(--gh-fg-subtle);min-width:80px}
-.cl-from{color:var(--gh-danger-fg);text-decoration:line-through}
-.cl-to{color:var(--gh-success-fg);font-weight:500}
-.cl-empty{padding:24px;text-align:center;color:var(--gh-fg-muted);font-size:13px}
-.changelog-actions{margin-top:16px;padding-top:14px;border-top:1px solid var(--gh-border-muted);display:flex;justify-content:flex-end}
-
-/* ── MOBILE (≤768px) ── */
-@media (max-width: 768px) {
-  /* ── Shell: single column ── */
-  .shell{grid-template-columns:1fr;grid-template-rows:48px 1fr}
-
-  /* ── Sidebar: full-screen slide-in drawer ── */
-  .sidebar{
-    position:fixed;top:0;left:0;right:0;bottom:0;
-    width:100%;z-index:200;
-    transform:translateX(-100%);
-    transition:transform 0.25s ease;
-    box-shadow:none;
-  }
-  .sidebar.mobile-open{transform:translateX(0)}
-  .sidebar-inner{min-width:unset;padding:12px 16px;padding-top:56px}
-  .sidebar-footer{min-width:unset;padding:12px 16px}
-
-  /* ── Close button inside the sidebar on mobile ── */
-  .sidebar-close{
-    display:flex!important;
-    position:absolute;top:12px;right:12px;
-    width:36px;height:36px;
-    align-items:center;justify-content:center;
-    background:var(--gh-canvas-default);
-    border:1px solid var(--gh-border-default);
-    border-radius:50%;font-size:18px;
-    color:var(--gh-fg-muted);cursor:pointer;
-    z-index:10;
-  }
-
-  /* Backdrop */
-  .mobile-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:199}
-  .mobile-backdrop.visible{display:block}
-
-  /* ── Main: fill width ── */
-  .main{grid-column:1;padding:8px;gap:8px}
-
-  /* ── Header: slim, essentials only ── */
-  header{padding:0 10px;gap:8px;position:relative}
-  .header-right{gap:6px}
-  .zoom-ctrl{display:none}
-  .hstats{gap:8px}
-  .hstat-val{font-size:13px}
-  .hstat-label{font-size:10px}
-  .theme-toggle span:last-child{display:none}
-  .theme-toggle{padding:0 8px;min-width:unset}
-  #btn-changelog{display:none!important}
-  /* hide Απόθεμα text, keep emoji */
-  a.btn-tool[href="inventory.html"]{font-size:0}
-  a.btn-tool[href="inventory.html"]::before{content:"📦";font-size:16px}
-
-  /* ── Toolbar: search full width, filters below ── */
-  .toolbar{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:6px;
-    align-items:center;
-  }
-  .search-wrap{
-    grid-column:1/-1;
-    min-width:0;
-  }
-  .search-wrap input{height:38px;font-size:14px}
-  .filter-sel{
-    width:100%;min-width:0;
-    height:36px;font-size:13px;
-    padding:0 24px 0 8px;
-  }
-  /* Undo/Redo/Refresh/CSV: one row of small icon buttons */
-  #btn-undo,#btn-redo{font-size:0;padding:0;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center}
-  #btn-undo::before{content:"↩";font-size:16px}
-  #btn-redo::before{content:"↪";font-size:16px}
-  .btn-tool{font-size:12px;padding:0 10px;height:36px}
-
-  /* ── Table: horizontal scroll with sticky flock column ── */
-  .tbl-outer{border-radius:var(--rs);overflow:auto;-webkit-overflow-scrolling:touch}
-  .tbl-scaler{transform:none!important;width:100%!important;height:auto!important}
-  table{font-size:12px;min-width:600px}
-  th,td{padding:7px 8px;white-space:nowrap}
-  /* sticky checkbox + flock columns */
-  th:nth-child(1),td:nth-child(1){position:sticky;left:0;z-index:3;background:var(--gh-canvas-subtle)}
-  th:nth-child(2),td:nth-child(2){position:sticky;left:36px;z-index:3;background:var(--gh-canvas-subtle)}
-  tbody tr:hover th:nth-child(1),
-  tbody tr:hover td:nth-child(1),
-  tbody tr:hover th:nth-child(2),
-  tbody tr:hover td:nth-child(2){background:var(--gh-hover-bg)}
-  tbody tr.row-arrived td:nth-child(1),
-  tbody tr.row-arrived td:nth-child(2){background:rgba(46,160,67,0.13)}
-
-  /* ── Batch bar ── */
-  .batch-bar{padding:8px;gap:6px;font-size:12px}
-  .batch-sep{display:none}
-
-  /* ── FAB: floating add button ── */
-  .mobile-fab{
-    display:flex!important;
-    position:fixed;bottom:24px;right:20px;z-index:150;
-    width:52px;height:52px;border-radius:50%;
-    background:var(--gh-accent-emphasis);color:#fff;
-    font-size:26px;line-height:1;
-    align-items:center;justify-content:center;
-    border:none;cursor:pointer;
-    box-shadow:0 4px 16px rgba(0,0,0,0.4);
-  }
-
-  /* ── Modals: full-screen on mobile ── */
-  .modal-bg{align-items:flex-end}
-  .modal{
-    width:100%;max-width:100%;
-    border-radius:var(--r) var(--r) 0 0;
-    max-height:90vh;
-    padding:20px 16px 32px;
-  }
-  .confirm-box{width:90%;border-radius:var(--r)}
-}
-
-.toast{
-  position:fixed;bottom:20px;right:20px;
-  background:var(--gh-canvas-subtle);
-  border:1px solid var(--gh-border-default);
-  color:var(--gh-fg-default);
-  padding:10px 16px;border-radius:var(--rs);
-  font-size:13px;font-weight:500;
-  z-index:999;transform:translateY(80px);opacity:0;
-  transition:all 0.25s cubic-bezier(0.34,1.4,0.64,1);
-  pointer-events:none;max-width:320px;
-}
-.toast.show{transform:translateY(0);opacity:1}
-.toast.err{background:var(--gh-danger-subtle);border-color:rgba(248,81,73,0.4);color:var(--gh-danger-fg)}
-
-/* ── PRINT ── */
-@media print{
-  header,.sidebar,.sidebar-footer,.toolbar,.batch-bar,
-  .btn-tool,.btn-primary,.btn-secondary,.btn-danger,
-  .row-btn,.modal-bg,.toast,#btn-changelog,
-  tfoot{display:none!important}
-  .shell{display:block}
-  .main{padding:0;overflow:visible}
-  .tbl-outer{overflow:visible;border:none;height:auto}
-  .tbl-scaler{transform:none!important;width:100%!important;height:auto!important}
-  table{font-size:11px;width:100%}
-  th,td{padding:4px 6px;border:1px solid #ccc;color:#000!important;background:#fff!important}
-  thead tr{background:#eee!important}
-  tbody tr.row-arrived{background:#e6f4ea!important}
-  @page{margin:1cm;size:landscape}
-}
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:var(--r);padding:8px 16px;font-size:13px;color:var(--gh-fg-default);z-index:999;opacity:0;transition:opacity 0.2s;pointer-events:none;}
+.toast.show{opacity:1}
 </style>
 </head>
 <body>
 
-<!-- PASSWORD GATE -->
-<div id="pw-gate-bg" class="modal-bg">
-  <div class="name-gate">
-    <h2>ΕΜΒΟΛΙΑ</h2>
-    <p>Παρακολούθηση Παραγγελιών<br>Εισάγετε τον κωδικό πρόσβασης.</p>
-    <div class="fgroup"><input type="password" id="pw-input" placeholder="Κωδικός…" onkeydown="if(event.key==='Enter')confirmPassword()"></div>
-    <button class="btn-primary" onclick="confirmPassword()">Είσοδος</button>
-    <div class="gate-error" id="pw-error"></div>
+<!-- OFFLINE OVERLAY — shown when Supabase is unreachable -->
+<div class="offline-overlay" id="offline-overlay">
+  <div class="offline-msg">
+    ⚠ No connection to database
+    <span>Editing is disabled until the connection is restored.</span>
   </div>
+  <button class="offline-retry" onclick="retryConnection()">↻ Retry</button>
 </div>
 
-<!-- NAME GATE -->
-<div id="gate-bg" class="modal-bg">
-  <div class="name-gate">
-    <h2>ΕΜΒΟΛΙΑ</h2>
-    <p>Παρακολούθηση Παραγγελιών<br>Ποιος είσαι;</p>
-    <div class="name-options">
-      <button class="name-opt-btn" onclick="selectPresetName('Πάνος')">Πάνος</button>
-      <button class="name-opt-btn" onclick="selectPresetName('Ελένη')">Ελένη</button>
-      <button class="name-opt-btn" id="other-btn" onclick="toggleOtherName()">Άλλο…</button>
-    </div>
-    <div id="other-name-wrap" style="display:none;margin-top:10px">
-      <input type="text" id="gate-name" placeholder="Εισάγετε το όνομά σας…" onkeydown="if(event.key==='Enter')confirmOtherName()">
-      <button class="btn-primary" style="width:100%;margin-top:8px" onclick="confirmOtherName()">Είσοδος</button>
-    </div>
-    <div class="gate-error" id="name-error"></div>
-  </div>
-</div>
-
-<div class="shell" id="shell">
-<div class="mobile-backdrop" id="mobile-backdrop" onclick="toggleSidebar()"></div>
-
-<!-- HEADER -->
-<header>
+<div class="header">
   <div class="header-left">
-    <div class="sidebar-toggle" onclick="toggleSidebar()" title="Εναλλαγή φόρμας">
-      <span></span><span></span><span></span>
-    </div>
-    <div class="logo">
-      <span class="logo-title">ΕΜΒΟΛΙΑ</span>
+    <span class="header-icon">🐔</span>
+    <div>
+      <div class="header-title">Feed Program</div>
+      <div class="header-sub">Poultry Nutrition Tracker</div>
     </div>
   </div>
   <div class="header-right">
-    <div id="sync-badge" class="sync-badge loading"><div class="sync-dot"></div><span id="sync-text">Σύνδεση…</span></div>
-    <button class="btn-tool" id="btn-changelog" onclick="reopenChangelog()" title="Εμφάνιση αλλαγών από άλλους χρήστες" style="display:none">📋 Αλλαγές</button>
-    <a href="inventory.html" class="btn-tool" title="Απόθεμα εμβολίων">📦 Απόθεμα</a>
-    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Εναλλαγή θέματος">
-      <span id="theme-icon">☀</span>
-      <span id="theme-label">Φωτεινό</span>
-    </button>
+    <div class="sync-badge" id="sync-badge">
+      <div class="sync-dot"></div>
+      <span id="sync-text">Connecting…</span>
+    </div>
     <div class="zoom-ctrl">
-      <label>Μέγεθος</label>
-      <input type="range" id="zoom-range" min="0.5" max="1.2" step="0.05" value="1" oninput="setZoom(this.value)">
-      <span class="zoom-val" id="zoom-label">100%</span>
+      <button class="zoom-btn" onclick="changeZoom(-0.1)" title="Zoom out">−</button>
+      <span class="zoom-label" id="zoom-label">100%</span>
+      <button class="zoom-btn" onclick="changeZoom(0.1)" title="Zoom in">+</button>
     </div>
-    <div class="hstats">
-      <div class="hstat"><div class="hstat-val" id="stat-total">—</div><div class="hstat-label">Σύνολο</div></div>
-      <div class="hstat"><div class="hstat-val" id="stat-ordered" style="color:var(--gh-success-fg)">—</div><div class="hstat-label">Παραγγέλθηκαν</div></div>
-      <div class="hstat"><div class="hstat-val" id="stat-pending" style="color:var(--gh-attention-fg)">—</div><div class="hstat-label">Εκκρεμείς</div></div>
-    </div>
-    <div class="user-chip" id="user-chip" onclick="changeUser()">
-      <div class="dot"></div>
-      <span id="user-chip-name">—</span>
-    </div>
-  </div>
-</header>
-
-<!-- SIDEBAR -->
-<aside class="sidebar" id="sidebar">
-  <!-- Close button — mobile only -->
-  <button class="sidebar-close" style="display:none" onclick="toggleSidebar()" title="Κλείσιμο">✕</button>
-  <div class="offline-overlay" id="sidebar-offline">
-    <div class="offline-msg">⚠ Χωρίς σύνδεση<span>Αδύνατη η αποθήκευση.<br>Ανανεώστε για να συνδεθείτε.</span></div>
-    <button class="btn-tool" style="margin-top:4px" onclick="loadData()">↺ Ανανέωση</button>
-  </div>
-  <div class="sidebar-inner">
-    <div class="form-heading">+ <span>Νέα Παραγγελία</span></div>
-    <div class="steps">
-      <div class="step-dot active" id="step1">1</div>
-      <div class="step-line" id="line1"></div>
-      <div class="step-dot" id="step2">2</div>
-      <div class="step-line" id="line2"></div>
-      <div class="step-dot" id="step3">3</div>
-    </div>
-
-    <div class="sec-label">Βήμα 1 — Ημερομηνίες & Αναθρεπτήριο</div>
-    <div class="fgroup">
-      <label>Ημ. Εκκόλαψης</label>
-      <input type="text" id="f-hatch" list="hatch-list" placeholder="ηη/μμ ή ηη/μμ/εε" onblur="onSmartDateBlur(this)" autocomplete="off">
-      <datalist id="hatch-list"></datalist>
-    </div>
-    <div class="fgroup">
-      <label>Αναθρεπτήριο</label>
-      <select id="f-flock" onchange="onFieldChange()">
-        <option value="">— επιλογή —</option>
-        <option>Θ1</option><option>Θ2</option><option>Θ3</option><option>Θ4</option><option>Α1</option>
-      </select>
-    </div>
-    <div class="fgroup">
-      <label>Ημ. Εμβολιασμού</label>
-      <input type="text" id="f-vacc" placeholder="ηη/μμ ή ηη/μμ/εε" onblur="onSmartDateBlur(this)" autocomplete="off">
-    </div>
-    <div class="fgroup">
-      <label>Ημ. Παραγγελίας <span class="calc-badge">ΑΥΤΟ −30 ημ.</span></label>
-      <input type="text" id="f-orderdate" class="calc-field" readonly placeholder="Ορίστε πρώτα ημ. εμβολιασμού…">
-    </div>
-
-    <div class="divider"></div>
-    <div class="sec-label">Βήμα 2 — Εμβόλιο</div>
-    <div class="fgroup" style="position:relative">
-      <label>Εμβόλιο</label>
-      <input type="text" id="f-vaccine" placeholder="Πληκτρολογήστε ή επιλέξτε…"
-        oninput="onVaccineInput(this)" onkeydown="onVaccineKey(event)"
-        onblur="scheduleCloseVacDrop()" autocomplete="off">
-      <div class="ac-dropdown" id="vac-dropdown" style="display:none"></div>
-    </div>
-
-    <div class="divider"></div>
-    <div class="sec-label">Βήμα 3 — Λεπτομέρειες</div>
-    <div class="fgroup"><label>Ποσότητα <span style="font-size:10px;color:var(--gh-fg-subtle);font-weight:400">(χωρίστε με κόμμα για πολλούς πελάτες)</span></label><input type="text" id="f-qty" placeholder="π.χ. 75.000 ή 10.000, 15.000" onblur="fmtQty(this)" onfocus="stripQty(this)"></div>
-    <div class="fgroup"><label>Πελάτης <span style="font-size:10px;color:var(--gh-fg-subtle);font-weight:400">(χωρίστε με κόμμα)</span></label><input type="text" id="f-customer" list="customer-list" placeholder="Προαιρετικό…" oninput="onCustomerInput()"><datalist id="customer-list"></datalist></div>
-    <div class="fgroup">
-      <label>Προμηθευτής</label>
-      <input type="text" id="f-supplier" list="supplier-list" placeholder="Προαιρετικό…">
-      <datalist id="supplier-list">
-        <option value="FAENTINA"><option value="Faentina">
-        <option value="ΚΟΜΠΟΥΛΗΣ"><option value="ΤΡΑΙΚΟΥΔΗΣ">
-      </datalist>
-    </div>
-    <div class="fgroup"><label>Σχόλια Πάνος</label><textarea id="f-notes" placeholder="…"></textarea></div>
-  </div>
-  <div class="sidebar-footer">
-    <button class="btn-submit" id="btn-add" onclick="addEntry()">+ Προσθήκη στον Πίνακα</button>
-    <button class="btn-cancel" onclick="resetForm()">Καθαρισμός (διατήρηση ημερομηνιών)</button>
-  </div>
-</aside>
-
-<!-- MAIN -->
-<main class="main">
-  <div class="toolbar">
-    <div class="search-wrap">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="search" placeholder="Αναζήτηση…" oninput="render()">
-    </div>
-    <select class="filter-sel" id="filt-flock" onchange="render()" style="min-width:160px">
-      <option value="">Όλα τα αναθρεπτήρια</option>
-    </select>
-    <select class="filter-sel" id="filt-ordered" onchange="render()">
-      <option value="">Όλες οι καταστάσεις</option>
-      <option value="ΝΑΙ">Παραγγελθέντα</option>
-      <option value="-">Εκκρεμείς</option>
-    </select>
-    <select class="filter-sel" id="filt-fridge" onchange="render()">
-      <option value="">Όλα τα ψυγεία</option>
-      <option value="ΝΑΙ">Στο ψυγείο</option>
-      <option value="-">Όχι στο ψυγείο</option>
-    </select>
-    <button class="btn-tool" onclick="loadData()">↺ Ανανέωση</button>
-    <button class="btn-tool" id="btn-undo" onclick="undo()" disabled title="Undo (Ctrl+Z)">↩ Undo</button>
-    <button class="btn-tool" id="btn-redo" onclick="redo()" disabled title="Redo (Ctrl+Y)">↪ Redo</button>
-    <button class="btn-tool" onclick="exportCSV()">↓ CSV</button>
-  </div>
-
-  <!-- BATCH ACTION BAR -->
-  <div class="batch-bar" id="batch-bar">
-    <span class="batch-count" id="batch-count">0 επιλεγμένα</span>
-    <div class="batch-sep"></div>
-    <button class="btn-batch" onclick="batchEdit()">✎ Μαζική Επεξεργασία</button>
-    <button class="btn-batch danger" onclick="batchDelete()">✕ Μαζική Διαγραφή</button>
-    <button class="btn-batch clear" onclick="clearSelection()">Αποεπιλογή</button>
-  </div>
-
-  <div class="tbl-outer">
-    <div class="tbl-scaler" id="tbl-scaler">
-      <table>
-        <thead><tr>
-          <th class="cb-cell"><input type="checkbox" id="cb-all" onchange="toggleSelectAll(this.checked)" title="Επιλογή όλων"></th>
-          <th onclick="sortBy('hm_ekk')">Εκκόλαψη — Αναθρεπτήριο<span class="arr" id="s-hm_ekk"></span></th>
-          <th onclick="sortBy('hm_emv')">Ημ. Εμβολιασμού<span class="arr" id="s-hm_emv"></span></th>
-          <th onclick="sortBy('hm_paragelia')">Ημ. Παραγγελίας<span class="arr" id="s-hm_paragelia"></span></th>
-          <th onclick="sortBy('emvolio')">Εμβόλιο<span class="arr" id="s-emvolio"></span></th>
-          <th onclick="sortBy('posotita')">Ποσότητα<span class="arr" id="s-posotita"></span></th>
-          <th onclick="sortBy('pelatis')">Πελάτης<span class="arr" id="s-pelatis"></span></th>
-          <th>Σχόλια Πάνος</th>
-          <th onclick="sortBy('paragelia')">Παραγγελία<span class="arr" id="s-paragelia"></span></th>
-          <th onclick="sortBy('hm_par')">Ημ. Καταχώρησης Παραγγελίας<span class="arr" id="s-hm_par"></span></th>
-          <th>Προμηθευτής</th>
-          <th>Ψυγείο</th>
-          <th>Σχόλια Ελένη</th>
-          <th style="text-align:right">Ενέργειες</th>
-        </tr></thead>
-        <tbody id="tbody"></tbody>
-        <tfoot id="tfoot" style="display:none"><tr>
-          <td colspan="5" class="total-label">Σύνολο εκκρεμών ποσοτήτων</td>
-          <td class="total-val" id="total-qty">—</td>
-          <td colspan="8"></td>
-        </tr></tfoot>
-      </table>
-      <div id="empty-state" class="empty-state" style="display:none">💉 Δεν βρέθηκαν εγγραφές.</div>
-    </div>
-  </div>
-</main>
-<!-- FAB: mobile-only floating add button -->
-<button class="mobile-fab" style="display:none" onclick="openSidebarMobile()" title="Νέα παραγγελία" aria-label="Νέα παραγγελία">+</button>
-
-</div><!-- .shell -->
-
-<!-- EDIT MODAL -->
-<div id="modal-bg" class="modal-bg" style="display:none" onclick="if(event.target===this)closeModal()">
-  <div class="modal">
-    <h3>Επεξεργασία Παραγγελίας</h3>
-    <div class="mgrid">
-      <div class="fgroup full"><label>Εμβόλιο</label><input type="text" id="m-vaccine" list="vaccine-list"></div>
-      <div class="fgroup"><label>Ημ. Εκκόλαψης</label><input type="text" id="m-hatch" placeholder="ηη/μμ ή ηη/μμ/εε" onblur="onSmartDateBlur(this)" autocomplete="off"></div>
-      <div class="fgroup"><label>Ημ. Εμβολιασμού</label><input type="text" id="m-vacc" placeholder="ηη/μμ ή ηη/μμ/εε" onblur="onSmartDateBlur(this)" autocomplete="off"></div>
-      <div class="fgroup"><label>Ημ. Παραγγελίας <span class="calc-badge">ΑΥΤΟ</span></label><input type="text" id="m-orderdate" class="calc-field" readonly></div>
-      <div class="fgroup"><label>Ημ. Καταχώρησης Παραγγελίας</label><input type="text" id="m-deliv" placeholder="ηη/μμ ή ηη/μμ/εε" onblur="onSmartDateBlur(this)" autocomplete="off"></div>
-      <div class="fgroup"><label>Αναθρεπτήριο</label>
-        <select id="m-flock"><option value="">—</option><option>Θ1</option><option>Θ2</option><option>Θ3</option><option>Θ4</option><option>Α1</option></select></div>
-      <div class="fgroup"><label>Πελάτης</label><input type="text" id="m-customer"></div>
-      <div class="fgroup"><label>Ποσότητα</label><input type="text" id="m-qty" onblur="fmtQty(this)" onfocus="stripQty(this)"></div>
-      <div class="fgroup"><label>Παραγγελία</label>
-        <select id="m-ordered"><option value="">—</option><option value="ΝΑΙ">ΝΑΙ</option></select></div>
-      <div class="fgroup"><label>Ψυγείο</label>
-        <select id="m-fridge"><option value="">—</option><option value="ΝΑΙ">ΝΑΙ</option></select></div>
-      <div class="fgroup"><label>Προμηθευτής</label><input type="text" id="m-supplier" list="supplier-list"></div>
-      <div class="fgroup"><label>Σχόλια Πάνος</label><input type="text" id="m-notes"></div>
-      <div class="fgroup full"><label>Σχόλια Ελένη</label><input type="text" id="m-notes2"></div>
-    </div>
-    <!-- HISTORY -->
-    <div class="history-section">
-      <div class="history-title">Ιστορικό αλλαγών</div>
-      <div class="history-list" id="history-list">
-        <div style="color:var(--gh-fg-muted);font-size:11px">Φόρτωση…</div>
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-danger" id="btn-modal-delete" onclick="modalDelete()">Διαγραφή</button>
-      <div style="flex:1"></div>
-      <button class="btn-secondary" onclick="closeModal()">Ακύρωση</button>
-      <button class="btn-primary" id="btn-save" onclick="saveEdit()">Αποθήκευση</button>
-    </div>
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <span id="theme-icon">☀</span>
+      <span id="theme-label">Light</span>
+    </button>
   </div>
 </div>
 
-<!-- CONFIRM DELETE -->
-<div id="confirm-bg" class="modal-bg" style="display:none" onclick="if(event.target===this)closeConfirm()">
-  <div class="confirm-box">
-    <p>Διαγραφή αυτής της παραγγελίας;<span class="confirm-name" id="confirm-name"></span></p>
-    <div class="modal-actions" style="justify-content:center">
-      <button class="btn-secondary" onclick="closeConfirm()">Ακύρωση</button>
-      <button class="btn-primary" style="background:var(--gh-danger-fg);color:#fff" id="btn-confirm-del" onclick="confirmDelete()">Διαγραφή</button>
-    </div>
+<div class="main" id="main">
+  <div class="table-wrap">
+    <table>
+      <thead><tr id="header-row"></tr></thead>
+      <tbody id="table-body"></tbody>
+    </table>
   </div>
-</div>
-
-<!-- BATCH EDIT MODAL -->
-<div id="batch-modal-bg" class="modal-bg" style="display:none" onclick="if(event.target===this)closeBatchModal()">
-  <div class="modal" style="width:580px">
-    <div class="batch-modal-title">✎ Μαζική Επεξεργασία</div>
-    <div class="batch-modal-sub" id="batch-modal-sub">0 εγγραφές επιλεγμένες</div>
-    <p style="font-size:11px;color:var(--gh-fg-muted);margin-bottom:14px">Ενεργοποιήστε τα πεδία που θέλετε να αλλάξετε. Τα ανενεργά πεδία δεν θα τροποποιηθούν.</p>
-    <div class="batch-field-list" id="batch-field-list"></div>
-    <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeBatchModal()">Ακύρωση</button>
-      <button class="btn-primary" style="background:var(--gh-attention-fg);color:#000" id="btn-batch-save" onclick="saveBatchEdit()">Εφαρμογή σε όλα</button>
-    </div>
-  </div>
-</div>
-
-<!-- BATCH DELETE CONFIRM -->
-<div id="batch-del-bg" class="modal-bg" style="display:none" onclick="if(event.target===this)closeBatchDel()">
-  <div class="confirm-box">
-    <p>Διαγραφή <span id="batch-del-count" style="color:var(--gh-danger-fg);font-weight:700"></span> εγγραφών;<br><span style="font-size:11px">Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.</span></p>
-    <div class="modal-actions" style="justify-content:center">
-      <button class="btn-secondary" onclick="closeBatchDel()">Ακύρωση</button>
-      <button class="btn-primary" style="background:var(--gh-danger-fg);color:#fff" id="btn-batch-del-confirm" onclick="confirmBatchDelete()">Διαγραφή όλων</button>
-    </div>
-  </div>
-</div>
-
-<!-- CHANGELOG MODAL -->
-<div id="changelog-bg" class="modal-bg" style="display:none">
-  <div class="changelog-modal">
-    <h3 id="changelog-title">Αλλαγές από την τελευταία σύνδεση</h3>
-    <div class="changelog-sub" id="changelog-sub"></div>
-    <div class="changelog-list" id="changelog-list">
-      <div class="cl-empty">Φόρτωση…</div>
-    </div>
-    <div class="changelog-actions">
-      <button class="btn-primary" onclick="closeChangelog()">Κατανοητό</button>
-    </div>
+  <div class="legend">
+    <span style="font-weight:500">Legend:</span>
+    <div class="legend-item"><span class="legend-dot" style="background:var(--gh-fg-subtle)"></span> Past</div>
+    <div class="legend-item"><span class="legend-dot" style="background:var(--gh-attention-fg)"></span> Within 7 days</div>
+    <div class="legend-item"><span class="legend-dot" style="background:var(--gh-success-fg)"></span> Current</div>
+    <div class="legend-item"><span class="legend-dot" style="background:var(--gh-accent-fg)"></span> Upcoming</div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<datalist id="vaccine-list"></datalist>
 <script>
-// ── CONFIG ────────────────────────────────────────────────────────
+// ── CONFIG ───────────────────────────────────────────────────────
 const SB_URL = 'https://oorhbrphdbigwgizejcc.supabase.co';
 const SB_KEY = 'sb_publishable_1S3L1sNMOjr-YgwGAAD2Kg_X_3S4cTl';
-const TABLE  = 'emvolia';
-const HTABLE = 'emvolia_history';
 
-// ── SUPABASE ──────────────────────────────────────────────────────
-async function sbFetch(path, opts = {}) {
+// ── FEED SCHEDULES ───────────────────────────────────────────────
+const BREEDS = {
+  'NOVOGEN': { phases: ['0-5 Wks','6-10 Wks','11-15 Wks','16-2%'],            days: [0,35,70,105] },
+  'HY-LINE': { phases: ['0-3 Wks','4-6 Wks','7-12 Wks','13-15 Wks','PRELAY'], days: [0,22,42,84,105] },
+  'ISA':     { phases: ['0-5 Wks','6-10 Wks','11-16 Wks','17-2%'],            days: [0,35,70,119] }
+};
+
+const HOUSES     = ['Θ1','Θ2','Θ3','Θ4','Θ5','Θ6'];
+const NUM_ROWS   = 6;
+const MAX_PHASES = Math.max(...Object.values(BREEDS).map(b => b.phases.length));
+
+// ── STATE ────────────────────────────────────────────────────────
+let rows       = Array.from({length: NUM_ROWS}, () => ({id: null, house:'', breed:'', hatch:''}));
+let saveTimers = {};
+let isOnline   = false;   // gate — no edits until Supabase confirmed reachable
+
+// ── ONLINE GATE ──────────────────────────────────────────────────
+function setOnline(online) {
+  isOnline = online;
+  document.getElementById('offline-overlay').classList.toggle('active', !online);
+  // Enable / disable all inputs
+  document.querySelectorAll('.cell-input, .date-text-input').forEach(el => {
+    el.disabled = !online;
+  });
+}
+
+async function retryConnection() {
+  setSyncState('loading', 'Connecting…');
+  await loadFromSupabase();
+}
+
+// ── SUPABASE HELPERS ─────────────────────────────────────────────
+async function sbFetch(path, options = {}) {
   const res = await fetch(`${SB_URL}/rest/v1/${path}`, {
-    ...opts,
+    ...options,
     headers: {
-      'apikey': SB_KEY,
+      'apikey':        SB_KEY,
       'Authorization': `Bearer ${SB_KEY}`,
-      'Content-Type': 'application/json',
-      'Prefer': opts.prefer || '',
-      ...opts.headers,
-    },
+      'Content-Type':  'application/json',
+      'Prefer':        options.prefer || '',
+      ...(options.headers || {})
+    }
   });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || err.hint || `HTTP ${res.status}`);
+    const err = await res.text();
+    throw new Error(err);
   }
   const text = await res.text();
   return text ? JSON.parse(text) : null;
 }
 
-const sbSelect  = ()        => sbFetch(`${TABLE}?order=hm_emv.asc`);
-const sbInsert  = row       => sbFetch(TABLE, { method:'POST', prefer:'return=representation', body: JSON.stringify(row) });
-const sbUpdate  = (id, row) => sbFetch(`${TABLE}?id=eq.${id}`, { method:'PATCH', prefer:'return=representation', body: JSON.stringify(row) });
-const sbDelete  = id        => sbFetch(`${TABLE}?id=eq.${id}`, { method:'DELETE' });
-const sbHistory = rowId     => sbFetch(`${HTABLE}?row_id=eq.${rowId}&order=ts.asc`);
-const sbHInsert = entry     => sbFetch(HTABLE, { method:'POST', body: JSON.stringify(entry) });
-// fetch history entries by other users since a given timestamp, joined with vaccine name via row_id
-const sbChangelog = (since, user) =>
-  sbFetch(`${HTABLE}?ts=gt.${since}&user_name=neq.${encodeURIComponent(user)}&order=ts.desc&limit=50`);
-
-// ── STATE ─────────────────────────────────────────────────────────
-let data = [], sortCol = 'hm_emv', sortDir = 1;
-let editId = null, editLoadedAt = null, deleteId = null, orderedVal = '', fridgeVal = '';
-let currentUser = '';
-
-// ── NAME GATE & CHANGELOG ─────────────────────────────────────────
-function showNameGateOrProceed() {
-  document.getElementById('gate-bg').style.display = 'flex';
-  setTimeout(() => { const f = document.querySelector('.name-opt-btn'); if(f) f.focus(); }, 100);
-}
-
-function selectPresetName(name) {
-  sessionStorage.setItem('emvolia_user', name);
-  currentUser = name;
-  document.getElementById('user-chip-name').textContent = name;
-  document.getElementById('gate-bg').style.display = 'none';
-  loadData().then(() => showChangelog(name));
-}
-
-function toggleOtherName() {
-  const wrap = document.getElementById('other-name-wrap');
-  wrap.style.display = wrap.style.display === 'none' ? 'block' : 'none';
-  if (wrap.style.display === 'block') setTimeout(() => document.getElementById('gate-name').focus(), 50);
-}
-
-function confirmOtherName() {
-  const name = document.getElementById('gate-name').value.trim();
-  if (!name) {
-    document.getElementById('name-error').textContent = 'Εισάγετε ένα όνομα.';
-    setTimeout(() => { document.getElementById('name-error').textContent = ''; }, 2500);
-    return;
-  }
-  selectPresetName(name);
-}
-
-function changeUser() {
-  sessionStorage.removeItem('emvolia_user');
-  currentUser = '';
-  document.getElementById('other-name-wrap').style.display = 'none';
-  document.getElementById('gate-name').value = '';
-  document.getElementById('gate-bg').style.display = 'flex';
-}
-let sidebarOpen = true;
-function isMobile() { return window.innerWidth <= 768; }
-
-function toggleSidebar() {
-  if (isMobile()) {
-    sidebarOpen = !sidebarOpen;
-    document.getElementById('sidebar').classList.toggle('mobile-open', sidebarOpen);
-    document.getElementById('mobile-backdrop').classList.toggle('visible', sidebarOpen);
-    document.body.style.overflow = sidebarOpen ? 'hidden' : '';
-  } else {
-    sidebarOpen = !sidebarOpen;
-    document.getElementById('shell').classList.toggle('collapsed', !sidebarOpen);
-  }
-}
-
-function openSidebarMobile() {
-  if (!sidebarOpen) {
-    sidebarOpen = true;
-    document.getElementById('sidebar').classList.add('mobile-open');
-    document.getElementById('mobile-backdrop').classList.add('visible');
-    document.body.style.overflow = 'hidden';
-  }
-}
-
-window.addEventListener('resize', () => {
-  if (!isMobile()) {
-    document.getElementById('sidebar').classList.remove('mobile-open');
-    document.getElementById('mobile-backdrop').classList.remove('visible');
-    document.body.style.overflow = '';
-    sidebarOpen = true;
-  }
-});
-
-// ── SYNC STATUS ───────────────────────────────────────────────────
-let isConnected = false;
-
-function setSyncStatus(state, text) {
-  const b = document.getElementById('sync-badge');
-  b.className = 'sync-badge ' + state;
-  document.getElementById('sync-text').textContent = text;
-
-  const connected = state === 'ok';
-  if (isConnected === connected) return; // no change — skip DOM updates
-  isConnected = connected;
-
-  // sidebar overlay
-  const overlay = document.getElementById('sidebar-offline');
-  if (overlay) overlay.classList.toggle('active', !connected);
-
-  // block/unblock write buttons in toolbar and batch bar
-  const writeIds = ['btn-undo','btn-redo','btn-add'];
-  writeIds.forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    if (!connected) {
-      el.dataset.wasDisabled = el.disabled ? '1' : '0';
-      el.disabled = true;
-    } else {
-      // restore previous disabled state (undo/redo may legitimately be disabled)
-      if (el.dataset.wasDisabled !== '1') el.disabled = false;
-    }
-  });
-
-  // batch bar write buttons
-  ['btn-batch-edit-inner','btn-batch-del-inner'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.disabled = !connected;
-  });
-}
-
-// ── LOAD ──────────────────────────────────────────────────────────
-async function loadData() {
-  setSyncStatus('loading', 'Φόρτωση…');
+// ── LOAD FROM SUPABASE ───────────────────────────────────────────
+async function loadFromSupabase() {
+  setSyncState('loading', 'Connecting…');
   try {
-    data = await sbSelect();
-    selectedIds.clear();
-    setSyncStatus('ok', 'Συνδέθηκε ✓');
-    render();
-  } catch (e) {
-    setSyncStatus('err', 'Σφάλμα σύνδεσης');
-    toast('Σφάλμα φόρτωσης: ' + e.message, true);
-  }
-}
-
-// ── DATES ─────────────────────────────────────────────────────────
-function subDays(iso, n) { const d = new Date(iso); d.setDate(d.getDate() - n); return d.toISOString().slice(0,10); }
-function fmt(iso) { if(!iso) return ''; const [y,m,d] = iso.split('-'); return `${d}/${m}/${y}`; }
-function fmtDt(iso) {
-  if(!iso) return '—';
-  const d = new Date(iso);
-  return d.toLocaleDateString('el-GR',{day:'2-digit',month:'2-digit',year:'2-digit'}) + ' ' +
-         d.toLocaleTimeString('el-GR',{hour:'2-digit',minute:'2-digit',hour12:false});
-}
-
-// ── SMART DATE PARSING ────────────────────────────────────────────
-// Accepts: dd/mm, dd/mm/yy, dd/mm/yyyy, dd-mm, dd-mm-yy, dd-mm-yyyy
-// Missing year → current year. 2-digit year → 20xx.
-function parseSmartDate(raw) {
-  if (!raw || !raw.trim()) return '';
-  const s = raw.trim().replace(/[-\.]/g, '/');
-  const parts = s.split('/').map(p => p.trim());
-  if (parts.length < 2) return '';
-  const d = parseInt(parts[0], 10);
-  const m = parseInt(parts[1], 10);
-  let y;
-  if (parts.length >= 3 && parts[2]) {
-    y = parseInt(parts[2], 10);
-    if (y < 100) y += 2000; // 26 → 2026
-  } else {
-    y = new Date().getFullYear(); // auto current year
-  }
-  if (isNaN(d) || isNaN(m) || isNaN(y)) return '';
-  if (m < 1 || m > 12 || d < 1 || d > 31) return '';
-  // pad and return ISO
-  return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-}
-
-// Called on blur of any smart date text input — parses and normalises display
-function onSmartDateBlur(el) {
-  const iso = parseSmartDate(el.value);
-  if (iso) {
-    el.value = fmt(iso);       // show as dd/mm/yyyy
-    el.dataset.iso = iso;      // store ISO for DB writes
-  } else if (el.value.trim()) {
-    el.style.borderColor = 'var(--gh-danger-fg)'; // invalid — highlight red
-    el.dataset.iso = '';
-    return;
-  } else {
-    el.dataset.iso = '';
-  }
-  el.style.borderColor = ''; // clear any error state
-  // trigger downstream logic (order date calc, steps)
-  if (el.id === 'f-vacc' || el.id === 'f-hatch') onDateChange();
-  if (el.id === 'f-hatch') autoFillFlock(el.dataset.iso);
-  if (el.id === 'm-vacc') modalDateChange();
-}
-
-function autoFillFlock(hatchIso) {
-  if (!hatchIso) return;
-  const flockSel = document.getElementById('f-flock');
-  if (flockSel.value) return;
-  const match = data.find(r => r.hm_ekk === hatchIso && r.anath);
-  if (match) {
-    flockSel.value = match.anath;
-    onFieldChange();
-  }
-}
-
-function onDateChange() {
-  const vaccIso = document.getElementById('f-vacc').dataset.iso || '';
-  const el = document.getElementById('f-orderdate');
-  if (vaccIso) { const od = subDays(vaccIso, 30); el.value = fmt(od); el.dataset.iso = od; }
-  else { el.value = ''; el.dataset.iso = ''; }
-  updateSteps();
-}
-function onFieldChange() { updateSteps(); }
-
-function updateSteps() {
-  const s1 = !!(document.getElementById('f-hatch').dataset.iso && document.getElementById('f-flock').value);
-  const s2 = !!(document.getElementById('f-vaccine').value.trim() && document.getElementById('f-vacc').dataset.iso);
-  document.getElementById('step1').className = 'step-dot ' + (s1 ? 'done' : 'active');
-  document.getElementById('step2').className = 'step-dot ' + (s2 ? 'done' : s1 ? 'active' : '');
-  document.getElementById('step3').className = 'step-dot ' + (s2 ? 'active' : '');
-  document.getElementById('line1').className = 'step-line ' + (s1 ? 'done' : '');
-  document.getElementById('line2').className = 'step-line ' + (s2 ? 'done' : '');
-}
-
-// ── QUANTITY FORMATTING ───────────────────────────────────────────
-function fmtQty(el) {
-  // Handle comma-separated multi-value input (e.g. "10000, 15000")
-  const parts = el.value.split(',').map(p => p.trim());
-  const formatted = parts.map(p => {
-    const raw = p.replace(/\./g, '');
-    const n = parseInt(raw, 10);
-    if (!isNaN(n) && String(n) === raw) return n.toLocaleString('el-GR');
-    return p; // non-numeric like "7 ΚΙΛΑ" stays as-is
-  });
-  el.value = formatted.join(', ');
-}
-
-function stripQty(el) {
-  // remove thousands dots so the user can edit each number cleanly
-  el.value = el.value.replace(/\./g, '');
-}
-
-// strip formatting before sending to DB (single value)
-function rawQty(val) {
-  if (!val) return null;
-  const stripped = String(val).replace(/\./g, '').trim();
-  return stripped || null;
-}
-
-// format a raw quantity value for display in the table
-function fmtPosotita(val) {
-  if (!val) return '—';
-  const n = parseInt(String(val).replace(/\./g,''), 10);
-  if (!isNaN(n) && String(n) === String(val).replace(/\./g,'').trim()) {
-    return n.toLocaleString('el-GR');
-  }
-  return x(val); // non-numeric like "7 ΚΙΛΑ" — show as-is
-}
-
-
-function guardConnected() {
-  if (!isConnected) {
-    toast('⚠ Χωρίς σύνδεση — αδύνατη η αποθήκευση. Ανανεώστε πρώτα.', true);
-    return false;
-  }
-  return true;
-}
-
-// ── ADD ───────────────────────────────────────────────────────────
-async function addEntry() {
-  if (!guardConnected()) return;
-  const vaccineRaw  = document.getElementById('f-vaccine').value.trim();
-  const customerRaw = document.getElementById('f-customer').value.trim();
-  const qtyRaw      = document.getElementById('f-qty').value.trim();
-  const hatch = document.getElementById('f-hatch').dataset.iso || '';
-  const vacc  = document.getElementById('f-vacc').dataset.iso  || '';
-  const flock = document.getElementById('f-flock').value;
-  if (!vaccineRaw) { toast('Εισάγετε όνομα εμβολίου', true); return; }
-  if (!hatch)      { toast('Εισάγετε ημερομηνία εκκόλαψης', true); return; }
-  if (!flock)      { toast('Επιλέξτε αναθρεπτήριο', true); return; }
-  if (!vacc)       { toast('Εισάγετε ημερομηνία εμβολιασμού', true); return; }
-
-  const splitCSV = s => s ? s.split(/,\s*/).map(v => v.trim()).filter(Boolean) : [''];
-  const vaccines  = splitCSV(vaccineRaw);
-  const customers = splitCSV(customerRaw) || [''];
-  const qtys      = splitCSV(qtyRaw);
-
-  // qty assignment: if one qty → same for all; if qty count matches customer count → pair them
-  const getQty = (custIdx) => {
-    if (qtys.length === 0) return null;
-    if (qtys.length === 1) return rawQty(qtys[0]);
-    if (qtys.length === customers.length) return rawQty(qtys[custIdx]);
-    return rawQty(qtys[0]); // fallback: use first
-  };
-
-  const now = new Date().toISOString();
-  const baseRow = {
-    hm_ekk: hatch||null, hm_emv: vacc||null, hm_par: null, anath: flock,
-    sxolia_panos: document.getElementById('f-notes').value.trim()||null,
-    promitheutis: document.getElementById('f-supplier').value.trim()||null,
-    paragelia: orderedVal||null,
-    hm_paragelia: document.getElementById('f-orderdate').dataset.iso||null,
-    psygeio: fridgeVal||null, sxolia_eleni: null,
-    created_by: currentUser, created_at: now, updated_by: currentUser, updated_at: now,
-  };
-
-  // build all combinations: vaccine × customer
-  const combos = [];
-  vaccines.forEach(vaccine => {
-    customers.forEach((pelatis, ci) => {
-      combos.push({ ...baseRow, emvolio: vaccine, pelatis: pelatis||null, posotita: getQty(ci) });
-    });
-  });
-
-  const btn = document.getElementById('btn-add');
-  btn.disabled = true;
-  btn.textContent = combos.length > 1 ? `Αποθήκευση ${combos.length}…` : 'Αποθήκευση…';
-  setSyncStatus('loading', 'Αποθήκευση…');
-  try {
-    for (const row of combos) {
-      const [inserted] = await sbInsert(row);
-      await sbHInsert({ row_id: inserted.id, action: 'created', user_name: currentUser, ts: now });
-      pushUndo({ type: 'add', after: inserted });
-      data.unshift({ ...inserted, _new: true });
-    }
-    resetForm(); render();
-    // on mobile, close the drawer so the user sees the new row in the table
-    if (isMobile() && sidebarOpen) toggleSidebar();
-    setSyncStatus('ok', 'Αποθηκεύτηκε ✓');
-    toast(combos.length > 1 ? `${combos.length} εγγραφές προστέθηκαν!` : 'Η παραγγελία προστέθηκε!');
-  } catch (e) {
-    setSyncStatus('err', 'Σφάλμα');
-    toast('Σφάλμα: ' + e.message, true);
-  } finally {
-    btn.disabled = false; btn.textContent = '+ Προσθήκη στον Πίνακα';
-  }
-}
-
-// ── EDIT ──────────────────────────────────────────────────────────
-async function editEntry(id) {
-  if (!guardConnected()) return;
-  editId = id;
-  const r = data.find(x => x.id === id); if (!r) return;
-  // store the timestamp we loaded — used in saveEdit to detect concurrent edits
-  editLoadedAt = r.updated_at || null;
-  const set = (i,v) => { const e=document.getElementById(i); if(e) e.value=v||''; };
-  const setDate = (i,iso) => {
-    const e = document.getElementById(i); if(!e) return;
-    e.value = fmt(iso)||''; e.dataset.iso = iso||''; e.style.borderColor='';
-  };
-  set('m-vaccine',r.emvolio);
-  setDate('m-hatch', r.hm_ekk); setDate('m-vacc', r.hm_emv); setDate('m-deliv', r.hm_par);
-  set('m-flock',r.anath);  set('m-customer',r.pelatis);
-  set('m-qty',r.posotita); set('m-ordered',r.paragelia); set('m-fridge',r.psygeio);
-  const mqty = document.getElementById('m-qty'); if (mqty) fmtQty(mqty);
-  set('m-supplier',r.promitheutis); set('m-notes',r.sxolia_panos); set('m-notes2',r.sxolia_eleni);
-  modalDateChange();
-  document.getElementById('modal-bg').style.display = 'flex';
-  loadHistory(id);
-}
-
-function modalDateChange() {
-  const vaccIso = document.getElementById('m-vacc').dataset.iso || '';
-  const el = document.getElementById('m-orderdate');
-  if (vaccIso) { el.value = fmt(subDays(vaccIso,30)); el.dataset.iso = subDays(vaccIso,30); }
-  else { el.value=''; el.dataset.iso=''; }
-}
-
-async function loadHistory(rowId) {
-  const list = document.getElementById('history-list');
-  list.innerHTML = '<div style="color:var(--gh-fg-muted);font-size:11px">Φόρτωση…</div>';
-  try {
-    const hist = await sbHistory(rowId);
-    if (!hist || !hist.length) {
-      list.innerHTML = '<div style="color:var(--gh-fg-muted);font-size:11px">Δεν υπάρχει ιστορικό.</div>';
-      return;
-    }
-    list.innerHTML = '';
-    [...hist].reverse().forEach(h => {
-      const div = document.createElement('div');
-      div.className = 'history-item';
-
-      // parse changes_json if present
-      let changesHtml = '';
-      if (h.changes_json) {
-        try {
-          const changes = JSON.parse(h.changes_json);
-          const lines = Object.values(changes).map(c => {
-            const from = c.from !== null && c.from !== undefined ? x(String(c.from)) : '<em style="color:var(--gh-fg-subtle)">κενό</em>';
-            const to   = c.to   !== null && c.to   !== undefined ? x(String(c.to))   : '<em style="color:var(--gh-fg-subtle)">κενό</em>';
-            return `<div class="hi-change">` +
-              `<span class="hi-field">${x(c.label)}:</span>` +
-              `<span><span class="hi-from">${from}</span>` +
-              `<span class="hi-arrow">→</span>` +
-              `<span class="hi-to">${to}</span></span>` +
-              `</div>`;
-          });
-          if (lines.length) changesHtml = `<div class="hi-changes">${lines.join('')}</div>`;
-        } catch(e) {}
+    const data = await sbFetch('feed_hatches?select=*&order=row_index.asc');
+    rows = Array.from({length: NUM_ROWS}, () => ({id: null, house:'', breed:'', hatch:''}));
+    for (const rec of data) {
+      const idx = rec.row_index;
+      if (idx >= 0 && idx < NUM_ROWS) {
+        rows[idx] = {
+          id:    rec.id,
+          house: rec.house || '',
+          breed: rec.breed || '',
+          hatch: rec.hatch || ''
+        };
       }
-
-      div.innerHTML =
-        `<div class="history-item-top">` +
-          `<span class="hi-user">${x(h.user_name)}</span>` +
-          `<span class="hi-action ${h.action==='created'?'created':'edited'}">${h.action==='created'?'Καταχώρηση':'Επεξεργασία'}</span>` +
-        `</div>` +
-        `<div class="hi-date">${fmtDt(h.ts)}</div>` +
-        changesHtml;
-      list.appendChild(div);
-    });
+    }
+    setOnline(true);
+    setSyncState('ok', 'Synced');
+    buildRows();
   } catch(e) {
-    list.innerHTML = `<div style="color:var(--gh-fg-muted);font-size:11px">Σφάλμα φόρτωσης ιστορικού.</div>`;
+    console.error('Load error:', e);
+    setOnline(false);
+    setSyncState('err', 'No connection');
+    buildRows();   // render read-only state with whatever is in rows
   }
 }
 
-async function saveEdit() {
-  if (!guardConnected()) return;
-  const g  = id => document.getElementById(id).value;
-  const gd = id => document.getElementById(id).dataset.iso || null;
-  const now = new Date().toISOString();
+// ── SAVE ROW (debounced 600ms) ───────────────────────────────────
+function saveRow(idx) {
+  if (!isOnline) return;
+  localStorage.setItem('feed_tracker_rows', JSON.stringify(rows));
+  clearTimeout(saveTimers[idx]);
+  saveTimers[idx] = setTimeout(() => persistRow(idx), 600);
+}
 
-  // snapshot before state for diff
-  const idx = data.findIndex(x => x.id === editId);
-  const before = idx >= 0 ? { ...data[idx] } : {};
-
-  const row = {
-    emvolio: g('m-vaccine').trim(), hm_ekk: gd('m-hatch'), hm_emv: gd('m-vacc'),
-    hm_par: gd('m-deliv'), anath: g('m-flock'),
-    pelatis: g('m-customer').trim()||null, posotita: rawQty(g('m-qty')),
-    paragelia: g('m-ordered')||null, psygeio: g('m-fridge')||null,
-    promitheutis: g('m-supplier').trim()||null,
-    sxolia_panos: g('m-notes').trim()||null, sxolia_eleni: g('m-notes2').trim()||null,
-    hm_paragelia: document.getElementById('m-orderdate').dataset.iso||null,
-    updated_by: currentUser, updated_at: now,
-  };
-
-  // build diff: only fields that actually changed
-  const FIELD_LABELS = {
-    emvolio:'Εμβόλιο', hm_ekk:'Ημ. Εκκόλαψης', hm_emv:'Ημ. Εμβολιασμού',
-    hm_par:'Ημ. Καταχώρησης', anath:'Αναθρεπτήριο', pelatis:'Πελάτης',
-    posotita:'Ποσότητα', paragelia:'Παραγγελία', psygeio:'Ψυγείο',
-    promitheutis:'Προμηθευτής', sxolia_panos:'Σχόλια Πάνος',
-    sxolia_eleni:'Σχόλια Ελένη', hm_paragelia:'Ημ. Παραγγελίας',
-  };
-  const changes = {};
-  Object.keys(FIELD_LABELS).forEach(k => {
-    const oldVal = before[k] ?? null;
-    const newVal = row[k] ?? null;
-    if (String(oldVal ?? '') !== String(newVal ?? '')) {
-      changes[k] = { label: FIELD_LABELS[k], from: oldVal, to: newVal };
-    }
-  });
-
-  const btn = document.getElementById('btn-save');
-  btn.disabled = true; btn.textContent = 'Αποθήκευση…';
-  setSyncStatus('loading', 'Αποθήκευση…');
+async function persistRow(idx) {
+  if (!isOnline) return;
+  const r = rows[idx];
+  setSyncState('saving', 'Saving…');
   try {
-    // ── Concurrency check ─────────────────────────────────────────
-    // Fetch the current updated_at from Supabase before writing.
-    // If it differs from what we loaded, someone else saved in the meantime.
-    if (editLoadedAt !== undefined) {
-      const [fresh] = await sbFetch(`${TABLE}?id=eq.${editId}&select=updated_at,updated_by`);
-      if (fresh && fresh.updated_at !== editLoadedAt) {
-        const who = fresh.updated_by ? `από ${fresh.updated_by}` : 'από άλλον χρήστη';
-        const overwrite = confirm(
-          `Η εγγραφή τροποποιήθηκε ${who} ενώ την επεξεργαζόσουν.\n\n` +
-          `Πάτα OK για να αποθηκεύσεις τις αλλαγές σου (αντικαθιστά τις αλλαγές τους)\n` +
-          `ή Ακύρωση για να ανανεώσεις και να δεις τις νεότερες τιμές.`
-        );
-        if (!overwrite) {
-          // reload fresh data and reopen the modal with the latest values
-          btn.disabled = false; btn.textContent = 'Αποθήκευση';
-          setSyncStatus('loading', 'Ανανέωση…');
-          await loadData();
-          editEntry(editId);
-          return;
-        }
-      }
-    }
-    // ─────────────────────────────────────────────────────────────
-    const [updated] = await sbUpdate(editId, row);
-    // only log history if something actually changed
-    if (Object.keys(changes).length > 0) {
-      await sbHInsert({
-        row_id: editId, action: 'edited', user_name: currentUser, ts: now,
-        changes_json: JSON.stringify(changes),
+    const payload = {
+      row_index: idx,
+      house: r.house || null,
+      breed: r.breed || null,
+      hatch: r.hatch || null
+    };
+    if (r.id) {
+      await sbFetch(`feed_hatches?id=eq.${r.id}`, {
+        method: 'PATCH',
+        prefer: 'return=representation',
+        body: JSON.stringify(payload)
       });
+    } else {
+      const result = await sbFetch('feed_hatches', {
+        method: 'POST',
+        prefer: 'return=representation',
+        body: JSON.stringify(payload)
+      });
+      if (result && result[0]) rows[idx].id = result[0].id;
     }
-    if (idx >= 0) data[idx] = updated;
-    if (before) pushUndo({ type: 'edit', before, after: updated });
-    closeModal(); render();
-    setSyncStatus('ok', 'Αποθηκεύτηκε ✓');
-    toast('Η εγγραφή ενημερώθηκε');
-  } catch (e) {
-    setSyncStatus('err', 'Σφάλμα');
-    toast('Σφάλμα: ' + e.message, true);
-  } finally {
-    btn.disabled = false; btn.textContent = 'Αποθήκευση';
-  }
-}
-
-function closeModal() { document.getElementById('modal-bg').style.display='none'; editId=null; editLoadedAt=null; }
-
-// ── DELETE ────────────────────────────────────────────────────────
-function promptDelete(id) {
-  if (!guardConnected()) return;
-  deleteId = id;
-  const r = data.find(x => x.id === id);
-  document.getElementById('confirm-name').textContent = r ? r.emvolio : '';
-  document.getElementById('confirm-bg').style.display = 'flex';
-}
-
-async function confirmDelete() {
-  if (!guardConnected()) return;
-  const btn = document.getElementById('btn-confirm-del');
-  btn.disabled=true; btn.textContent='Διαγραφή…';
-  setSyncStatus('loading','Διαγραφή…');
-  try {
-    await sbDelete(deleteId);
-    const deleted = data.find(x => x.id === deleteId);
-    if (deleted) pushUndo({ type: 'delete', before: { ...deleted } });
-    data = data.filter(x => x.id !== deleteId);
-    closeConfirm(); render();
-    setSyncStatus('ok','Διαγράφηκε ✓');
-    toast('Η εγγραφή διαγράφηκε');
+    setSyncState('ok', 'Saved ✓');
+    setTimeout(() => setSyncState('ok', 'Synced'), 1500);
   } catch(e) {
-    setSyncStatus('err','Σφάλμα');
-    toast('Σφάλμα: ' + e.message, true);
-  } finally {
-    btn.disabled=false; btn.textContent='Διαγραφή';
+    console.error('Save error:', e);
+    setOnline(false);
+    setSyncState('err', 'No connection');
   }
 }
-function closeConfirm() { document.getElementById('confirm-bg').style.display='none'; deleteId=null; }
 
-// ── RENDER ────────────────────────────────────────────────────────
-// combined flock label: "04/07/2026 – Θ3"
-function flockLabel(r) {
-  if (!r.hm_ekk && !r.anath) return '—';
-  if (!r.hm_ekk) return r.anath || '—';
-  if (!r.anath)  return fmt(r.hm_ekk);
-  return fmt(r.hm_ekk) + ' – ' + r.anath;
+// ── SYNC BADGE ───────────────────────────────────────────────────
+function setSyncState(state, text) {
+  const badge = document.getElementById('sync-badge');
+  badge.className = 'sync-badge ' + state;
+  document.getElementById('sync-text').textContent = text;
 }
 
-// rebuild the dynamic flock filter from current data
-function populateFlockFilter() {
-  const sel = document.getElementById('filt-flock');
-  const cur = sel.value;
-  // collect unique flock keys sorted
-  const keys = [...new Map(
-    data.map(r => [flockLabel(r), { hm_ekk: r.hm_ekk, anath: r.anath }])
-  ).entries()]
-    .filter(([k]) => k !== '—')
-    .sort((a, b) => {
-      // sort by hm_ekk date asc, then anath
-      const da = a[1].hm_ekk || '', db = b[1].hm_ekk || '';
-      return da < db ? -1 : da > db ? 1 : (a[1].anath||'').localeCompare(b[1].anath||'');
+// ── DATE HELPERS ─────────────────────────────────────────────────
+// Parse flexible date input: dd/mm/yy, dd/mm/yyyy, dd-mm-yy, dd-mm-yyyy
+// Returns ISO string "YYYY-MM-DD" or null if invalid.
+function parseFlexDate(raw) {
+  if (!raw) return null;
+  const s = raw.trim().replace(/-/g, '/');
+  const parts = s.split('/');
+  if (parts.length !== 3) return null;
+
+  const dd  = parseInt(parts[0], 10);
+  const mm  = parseInt(parts[1], 10);
+  let   yy  = parseInt(parts[2], 10);
+
+  if (isNaN(dd) || isNaN(mm) || isNaN(yy)) return null;
+
+  // Expand 2-digit year: 00-99 → 2000-2099
+  if (yy >= 0 && yy <= 99) yy += 2000;
+
+  if (mm < 1 || mm > 12 || dd < 1 || dd > 31) return null;
+
+  // Zero-pad and build ISO
+  const iso = `${yy}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
+  // Validate via Date object
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return null;
+  return iso;
+}
+
+function isoToDisplay(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+function addDays(iso, days) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+function fmtDate(d) {
+  if (!d) return null;
+  return d.toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit', year:'numeric'});
+}
+
+// ── HOUSE EXCLUSIVITY ────────────────────────────────────────────
+// Returns set of house values currently used (excluding the given rowIdx)
+function usedHouses(excludeIdx) {
+  const used = new Set();
+  rows.forEach((r, i) => { if (i !== excludeIdx && r.house) used.add(r.house); });
+  return used;
+}
+
+// Refresh all house dropdowns to disable already-selected houses in other rows
+function refreshHouseDropdowns() {
+  for (let i = 0; i < NUM_ROWS; i++) {
+    const sel = document.getElementById(`house-${i}`);
+    if (!sel) continue;
+    const used = usedHouses(i);
+    Array.from(sel.options).forEach(opt => {
+      if (!opt.value) return;   // skip the blank "—" option
+      opt.disabled = used.has(opt.value);
     });
-  sel.innerHTML = '<option value="">Όλα τα αναθρεπτήρια</option>';
-  keys.forEach(([label]) => {
-    const o = document.createElement('option');
-    o.value = label; o.textContent = label;
-    sel.appendChild(o);
-  });
-  sel.value = cur; // restore selection if still valid
+  }
 }
 
-function sortBy(col) { if(sortCol===col) sortDir*=-1; else{sortCol=col;sortDir=1;} render(); }
-
-function modalDelete() {
-  const idToDelete = editId; // capture before closeModal() nulls it
-  closeModal();
-  promptDelete(idToDelete);
+// ── BUILD HEADER ─────────────────────────────────────────────────
+function buildHeader() {
+  let html = `<th style="min-width:130px">Hatch Date</th><th style="min-width:80px">House</th><th style="min-width:110px">Breed</th>`;
+  for (let i = 0; i < MAX_PHASES; i++) {
+    html += `<th class="phase-col" style="min-width:130px">Phase ${i+1}</th>`;
+  }
+  document.getElementById('header-row').innerHTML = html;
 }
 
-// rebuild hatch date datalist from existing data (sorted, unique, displayed as dd/mm/yyyy)
-function populateHatchList() {
-  const dl = document.getElementById('hatch-list');
-  if (!dl) return;
-  const seen = new Set();
-  const sorted = [...data]
-    .map(r => r.hm_ekk).filter(Boolean)
-    .sort();
-  dl.innerHTML = '';
-  sorted.forEach(iso => {
-    if (seen.has(iso)) return;
-    seen.add(iso);
-    const opt = document.createElement('option');
-    opt.value = fmt(iso); // show as dd/mm/yyyy so it matches what user types
-    dl.appendChild(opt);
-  });
+// ── BUILD ROWS ────────────────────────────────────────────────────
+function buildRows() {
+  const tbody = document.getElementById('table-body');
+  let html = '';
+  for (let i = 0; i < NUM_ROWS; i++) {
+    const r = rows[i];
+    const displayHatch = isoToDisplay(r.hatch);
+
+    html += `<tr id="row-${i}">`;
+
+    // Hatch date — text input with flex parsing
+    html += `<td>
+      <input type="text"
+        class="date-text-input"
+        id="hatch-${i}"
+        value="${displayHatch}"
+        placeholder="dd/mm/yy"
+        maxlength="10"
+        autocomplete="off"
+        ${!isOnline ? 'disabled' : ''}
+        onblur="onHatchBlur(${i}, this)"
+        onkeydown="if(event.key==='Enter')this.blur()">
+    </td>`;
+
+    // House dropdown
+    html += `<td><select class="cell-input" id="house-${i}" onchange="onHouseChange(${i},this.value)" ${!isOnline ? 'disabled' : ''}>
+      <option value="">—</option>
+      ${HOUSES.map(h => `<option value="${h}"${r.house===h?' selected':''}>${h}</option>`).join('')}
+    </select></td>`;
+
+    // Breed dropdown
+    html += `<td><select class="cell-input" id="breed-${i}" onchange="onBreedChange(${i},this.value)" ${!isOnline ? 'disabled' : ''}>
+      <option value="">—</option>
+      ${Object.keys(BREEDS).map(b => `<option value="${b}"${r.breed===b?' selected':''}>${b}</option>`).join('')}
+    </select></td>`;
+
+    // Phase cells
+    for (let p = 0; p < MAX_PHASES; p++) {
+      html += `<td class="phase-col" id="phase-${i}-${p}"></td>`;
+    }
+    html += '</tr>';
+  }
+  tbody.innerHTML = html;
+
+  // Apply house exclusivity and render phase dates
+  refreshHouseDropdowns();
+  for (let i = 0; i < NUM_ROWS; i++) updatePhaseDates(i);
 }
 
-// rebuild customer datalist from existing data
-function populateCustomerList() {
-  const dl = document.getElementById('customer-list');
-  if (!dl) return;
-  const seen = new Set();
-  dl.innerHTML = '';
-  data.filter(r => r.pelatis).forEach(r => {
-    if (seen.has(r.pelatis)) return;
-    seen.add(r.pelatis);
-    const opt = document.createElement('option');
-    opt.value = r.pelatis;
-    dl.appendChild(opt);
-  });
-}
+// ── UPDATE PHASE DATES ────────────────────────────────────────────
+// Green = current active phase (started but next hasn't begun yet)
+// Grey  = past phases already replaced
+// Orange = next phase due within 7 days
+// Blue  = future phases
+function updatePhaseDates(rowIdx) {
+  const r = rows[rowIdx];
+  const today = new Date(); today.setHours(0,0,0,0);
 
-function render() {
-  populateFlockFilter();
-  populateHatchList();
-  populateCustomerList();
-  const SC = ['emvolio','hm_ekk','hm_emv','hm_paragelia','hm_par','pelatis','posotita','paragelia'];
-  SC.forEach(c => { const e=document.getElementById('s-'+c); if(e) e.textContent=sortCol===c?(sortDir===1?'↑':'↓'):''; });
-
-  const rows = getFiltered().sort((a,b) => {
-    const av=(a[sortCol]||'').toString().toLowerCase();
-    const bv=(b[sortCol]||'').toString().toLowerCase();
-    return av<bv?-sortDir:av>bv?sortDir:0;
-  });
-
-  document.getElementById('empty-state').style.display = rows.length ? 'none' : 'block';
-  const frag = document.createDocumentFragment();
-
-  rows.forEach(r => {
-    const tr = document.createElement('tr');
-    if (r._new) { tr.classList.add('new-row'); delete r._new; }
-    const ord = r.paragelia==='ΝΑΙ', fri = r.psygeio==='ΝΑΙ';
-    if (fri) tr.classList.add('row-arrived');
-    const fl = flockLabel(r);
-
-    tr.setAttribute('data-id', r.id);
-    tr.setAttribute('title', 'Διπλό κλικ για επεξεργασία');
-    tr.style.cursor = 'default';
-    tr.addEventListener('dblclick', e => {
-      if (e.target.closest('button, input[type=checkbox]')) return;
-      editEntry(r.id);
-    });
-    tr.innerHTML =
-      `<td class="cb-cell"><input type="checkbox" class="row-cb" data-id="${r.id}" onchange="onRowCheck(${r.id},this.checked)"></td>`+
-      `<td><span class="badge b-flock" title="${x(fl)}">${x(fl)}</span></td>`+
-      `<td>${fmt(r.hm_emv)}</td>`+
-      `<td style="color:${r.hm_paragelia?'var(--gh-attention-fg)':'var(--gh-fg-subtle)'}">${fmt(r.hm_paragelia)||'—'}</td>`+
-      `<td class="vacc" title="${x(r.emvolio)}">${x(r.emvolio)}</td>`+
-      `<td>${fmtPosotita(r.posotita)}</td>`+
-      `<td style="color:var(--gh-fg-muted)">${x(r.pelatis||'—')}</td>`+
-      `<td class="td-notes" style="color:var(--gh-fg-muted);font-size:11px">${x(r.sxolia_panos||'—')}</td>`+
-      `<td><span class="badge ${ord?'b-yes':'b-pending'}">${ord?'ΝΑΙ':'—'}</span></td>`+
-      `<td>${fmt(r.hm_par)||'—'}</td>`+
-      `<td style="color:var(--gh-fg-muted);font-size:11px">${x(r.promitheutis||'—')}</td>`+
-      `<td><span class="badge ${fri?'b-yes':'b-no'}">${fri?'ΝΑΙ':'—'}</span></td>`+
-      `<td class="td-notes" style="color:var(--gh-fg-muted);font-size:11px">${x(r.sxolia_eleni||'—')}</td>`+
-      `<td><div class="row-actions"><button class="row-btn" onclick="editEntry(${r.id})">Επεξ.</button></div></td>`;
-    frag.appendChild(tr);
-  });
-
-  const tbody = document.getElementById('tbody');
-  tbody.innerHTML='';
-  tbody.appendChild(frag);
-
-  // totals footer — show when filtered or multiple rows selected
-  const isFiltered = getFiltered().length < data.length ||
-                     document.getElementById('search').value.trim() ||
-                     document.getElementById('filt-flock').value ||
-                     document.getElementById('filt-ordered').value ||
-                     document.getElementById('filt-fridge').value;
-  const showTotal = isFiltered || selectedIds.size > 1;
-  const tfoot = document.getElementById('tfoot');
-  tfoot.style.display = showTotal ? '' : 'none';
-  if (showTotal) {
-    // sum qty from current visible rows OR selected rows if any selected
-    // always exclude rows where παραγγελία = ΝΑΙ (already ordered)
-    const src = selectedIds.size > 1
-      ? rows.filter(r => selectedIds.has(r.id))
-      : rows;
-    let total = 0;
-    src.forEach(r => {
-      if (r.paragelia === 'ΝΑΙ') return; // exclude already ordered
-      const n = parseInt(String(r.posotita || '').replace(/\./g, ''), 10);
-      if (!isNaN(n)) total += n;
-    });
-    document.getElementById('total-qty').textContent = total > 0 ? total.toLocaleString('el-GR') : '—';
+  // Bail early if row is incomplete — clear all phase cells
+  if (!r.breed || !r.hatch) {
+    for (let p = 0; p < MAX_PHASES; p++) {
+      const cell = document.getElementById(`phase-${rowIdx}-${p}`);
+      if (cell) cell.innerHTML = `<span class="phase-empty">—</span>`;
+    }
+    return;
   }
 
-  const total=data.length, confirmed=data.filter(r=>r.paragelia==='ΝΑΙ').length;
-  document.getElementById('stat-total').textContent   = total;
-  document.getElementById('stat-ordered').textContent = confirmed;
-  document.getElementById('stat-pending').textContent = total-confirmed;
+  const breed = BREEDS[r.breed];
+
+  // Build all phase Date objects once per row (not once per phase)
+  const phaseDates = breed.days.map(d => {
+    const dt = addDays(r.hatch, d);
+    dt.setHours(0,0,0,0);
+    return dt;
+  });
+
+  // Active phase = last index whose start date is today or in the past
+  let activeIdx = -1;
+  for (let i = 0; i < phaseDates.length; i++) {
+    if (phaseDates[i] <= today) activeIdx = i;
+  }
+
+  for (let p = 0; p < MAX_PHASES; p++) {
+    const cell = document.getElementById(`phase-${rowIdx}-${p}`);
+    if (!cell) continue;
+
+    if (p >= breed.phases.length) {
+      cell.innerHTML = `<span class="phase-empty">—</span>`;
+      continue;
+    }
+
+    const phaseDate = phaseDates[p];
+    let cls = '';
+    if (p === activeIdx) {
+      cls = 'today';                                        // green — currently on this feed
+    } else if (p < activeIdx) {
+      cls = 'past';                                         // grey  — already replaced
+    } else {
+      const diff = Math.round((phaseDate - today) / 86400000);
+      cls = diff <= 7 ? 'soon' : '';                        // orange ≤7 days, blue otherwise
+    }
+
+    cell.innerHTML = `<div class="phase-cell"><span class="phase-label">${breed.phases[p]}</span><span class="date-chip ${cls}">${fmtDate(phaseDate)||'—'}</span></div>`;
+  }
 }
 
-function x(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+// ── EVENT HANDLERS ────────────────────────────────────────────────
+function onHatchBlur(idx, input) {
+  if (!isOnline) return;
+  const raw = input.value.trim();
+  if (!raw) {
+    // Cleared
+    input.classList.remove('invalid');
+    rows[idx].hatch = '';
+    updatePhaseDates(idx);
+    saveRow(idx);
+    return;
+  }
+  const iso = parseFlexDate(raw);
+  if (!iso) {
+    input.classList.add('invalid');
+    showToast('Invalid date — use dd/mm/yy or dd/mm/yyyy');
+    return;
+  }
+  input.classList.remove('invalid');
+  input.value = isoToDisplay(iso);   // normalise display to dd/mm/yyyy
+  rows[idx].hatch = iso;
+  updatePhaseDates(idx);
+  saveRow(idx);
+}
+
+function onHouseChange(idx, val) {
+  if (!isOnline) return;
+  rows[idx].house = val;
+  refreshHouseDropdowns();
+  saveRow(idx);
+}
+
+function onBreedChange(idx, val) {
+  if (!isOnline) return;
+  rows[idx].breed = val;
+  updatePhaseDates(idx);
+  saveRow(idx);
+}
 
 // ── ZOOM ──────────────────────────────────────────────────────────
-function setZoom(v) {
-  v = parseFloat(v);
-  document.documentElement.style.setProperty('--zoom', v);
-  document.getElementById('zoom-label').textContent = Math.round(v*100)+'%';
-  const s = document.getElementById('tbl-scaler');
-  s.style.width  = (100/v)+'%';
-  s.style.height = (100/v)+'%';
+let zoom = parseFloat(localStorage.getItem('feed_zoom') || '1');
+function applyZoom() {
+  zoom = Math.max(0.5, Math.min(2, Math.round(zoom * 10) / 10));
+  const m = document.getElementById('main');
+  m.style.transform      = `scale(${zoom})`;
+  m.style.width          = `calc(100% / ${zoom})`;
+  m.style.transformOrigin = 'top left';
+  document.getElementById('zoom-label').textContent = Math.round(zoom * 100) + '%';
+  localStorage.setItem('feed_zoom', zoom);
 }
-
-// ── EXPORT ────────────────────────────────────────────────────────
-function exportCSV() {
-  const H = ['emvolio','hm_ekk','hm_emv','hm_par','anath','pelatis','posotita','sxolia_panos','promitheutis','paragelia','hm_paragelia','psygeio','sxolia_eleni','created_by','created_at','updated_by','updated_at'];
-  const L = ['ΕΜΒΟΛΙΑ','ΗΜ.ΕΚΚ','ΗΜ.ΕΜΒ','ΗΜ.ΠΑΡ','ΑΝΑΘ.','ΠΕΛΑΤΗΣ','ΠΟΣΟΤΗΤΑ','ΣΧΟΛΙΑ ΠΑΝΟΣ','ΠΡΟΜΗΘΕΥΤΗΣ','ΠΑΡΑΓΓΕΛΙΑ','ΗΜ.ΠΑΡΑΓΓ.','ΨΥΓΕΙΟ','ΣΧΟΛΙΑ ΕΛΕΝΗ','ΔΗΜΙΟΥΡΓΗΘΗΚΕ_ΑΠΟ','ΔΗΜΙΟΥΡΓΗΘΗΚΕ','ΕΠΕΞΕΡΓΑΣΤΗΚΕ_ΑΠΟ','ΕΠΕΞΕΡΓΑΣΤΗΚΕ'];
-  const rows = getFiltered().map(r => H.map(h => '"'+(r[h]||'').toString().replace(/"/g,'""')+'"').join(','));
-  const a = document.createElement('a');
-  a.href = 'data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent([L.join(','),...rows].join('\n'));
-  a.download = 'emvolia_export.csv'; a.click();
-  toast('CSV εξαχθέν');
-}
-
-// ── TOAST ─────────────────────────────────────────────────────────
-let tt;
-function toast(msg, err=false) {
-  const e = document.getElementById('toast');
-  e.textContent=msg; e.className='toast show'+(err?' err':'');
-  clearTimeout(tt); tt=setTimeout(()=>{e.className='toast';},3000);
-}
-
-// ── UNDO / REDO ───────────────────────────────────────────────────
-// Each entry: { type: 'add'|'edit'|'delete', before, after }
-const undoStack = [], redoStack = [];
-const MAX_HISTORY = 30;
-
-function pushUndo(entry) {
-  undoStack.push(entry);
-  if (undoStack.length > MAX_HISTORY) undoStack.shift();
-  redoStack.length = 0; // clear redo on new action
-  updateUndoRedoBtns();
-}
-
-function updateUndoRedoBtns() {
-  document.getElementById('btn-undo').disabled = undoStack.length === 0;
-  document.getElementById('btn-redo').disabled = redoStack.length === 0;
-}
-
-async function undo() {
-  if (!guardConnected()) return;
-  if (!undoStack.length) return;
-  const entry = undoStack.pop();
-  redoStack.push(entry);
-  setSyncStatus('loading', 'Αναίρεση…');
-  try {
-    if (entry.type === 'add') {
-      await sbDelete(entry.after.id);
-      data = data.filter(x => x.id !== entry.after.id);
-    } else if (entry.type === 'delete') {
-      const { id, ...row } = entry.before;
-      const [inserted] = await sbInsert(row);
-      data.unshift(inserted);
-    } else if (entry.type === 'edit') {
-      const { id, ...row } = entry.before;
-      const [updated] = await sbUpdate(entry.before.id, row);
-      const idx = data.findIndex(x => x.id === entry.before.id);
-      if (idx >= 0) data[idx] = updated;
-    } else if (entry.type === 'batch-edit') {
-      await Promise.all(entry.beforeSnapshots.map(snap => {
-        const { id, ...row } = snap; return sbUpdate(id, row);
-      }));
-      entry.beforeSnapshots.forEach(snap => {
-        const idx = data.findIndex(x => x.id === snap.id);
-        if (idx >= 0) data[idx] = { ...snap };
-      });
-    } else if (entry.type === 'batch-delete') {
-      const inserted = await Promise.all(entry.beforeSnapshots.map(snap => {
-        const { id, ...row } = snap; return sbInsert(row).then(r => r[0]);
-      }));
-      inserted.forEach(r => data.unshift(r));
-    }
-    render(); setSyncStatus('ok', 'Αναιρέθηκε ✓'); toast('Αναίρεση εκτελέστηκε');
-  } catch(e) {
-    setSyncStatus('err', 'Σφάλμα'); toast('Σφάλμα αναίρεσης: ' + e.message, true);
-  }
-  updateUndoRedoBtns();
-}
-
-async function redo() {
-  if (!guardConnected()) return;
-  if (!redoStack.length) return;
-  const entry = redoStack.pop();
-  undoStack.push(entry);
-  setSyncStatus('loading', 'Επανάληψη…');
-  try {
-    if (entry.type === 'add') {
-      const { id, ...row } = entry.after;
-      const [inserted] = await sbInsert(row);
-      data.unshift(inserted);
-    } else if (entry.type === 'delete') {
-      await sbDelete(entry.before.id);
-      data = data.filter(x => x.id !== entry.before.id);
-    } else if (entry.type === 'edit') {
-      const { id, ...row } = entry.after;
-      const [updated] = await sbUpdate(entry.after.id, row);
-      const idx = data.findIndex(x => x.id === entry.after.id);
-      if (idx >= 0) data[idx] = updated;
-    } else if (entry.type === 'batch-edit') {
-      await Promise.all(entry.ids.map(id => sbUpdate(id, entry.updates)));
-      entry.ids.forEach(id => {
-        const idx = data.findIndex(x => x.id === id);
-        if (idx >= 0) data[idx] = { ...data[idx], ...entry.updates };
-      });
-    } else if (entry.type === 'batch-delete') {
-      await Promise.all(entry.ids.map(id => sbDelete(id)));
-      data = data.filter(x => !entry.ids.includes(x.id));
-    }
-    render(); setSyncStatus('ok', 'Επαναλήφθηκε ✓'); toast('Επανάληψη εκτελέστηκε');
-  } catch(e) {
-    setSyncStatus('err', 'Σφάλμα'); toast('Σφάλμα επανάληψης: ' + e.message, true);
-  }
-  updateUndoRedoBtns();
-}
-
-// keyboard shortcuts
-document.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'z') { e.preventDefault(); undo(); }
-  if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) { e.preventDefault(); redo(); }
-});
-
-// ── PASSWORD GATE ─────────────────────────────────────────────────
-const PW_HASH = '6a396c5a067a36c937ef23e9a6164280be68daa3df1a8d0cdee91c0492d98ef7';
-
-async function hashStr(str) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
-}
-
-async function confirmPassword() {
-  const val = document.getElementById('pw-input').value;
-  const hashed = await hashStr(val);
-  if (hashed === PW_HASH) {
-    sessionStorage.setItem('emvolia_pw', '1');
-    document.getElementById('pw-gate-bg').style.display = 'none';
-    showNameGateOrProceed();
-  } else {
-    const err = document.getElementById('pw-error');
-    err.textContent = 'Λάθος κωδικός. Προσπαθήστε ξανά.';
-    document.getElementById('pw-input').value = '';
-    document.getElementById('pw-input').focus();
-    setTimeout(() => { err.textContent = ''; }, 3000);
-  }
-}
-
-// ── BATCH SELECTION ───────────────────────────────────────────────
-let selectedIds = new Set();
-
-function onRowCheck(id, checked) {
-  if (checked) selectedIds.add(id); else selectedIds.delete(id);
-  updateBatchBar();
-  // update row highlight
-  const cb = document.querySelector(`.row-cb[data-id="${id}"]`);
-  if (cb) cb.closest('tr').classList.toggle('selected', checked);
-}
-
-function toggleSelectAll(checked) {
-  document.querySelectorAll('.row-cb').forEach(cb => {
-    const id = parseInt(cb.dataset.id);
-    cb.checked = checked;
-    if (checked) selectedIds.add(id); else selectedIds.delete(id);
-    cb.closest('tr').classList.toggle('selected', checked);
-  });
-  updateBatchBar();
-}
-
-function clearSelection() {
-  selectedIds.clear();
-  document.querySelectorAll('.row-cb').forEach(cb => { cb.checked = false; cb.closest('tr').classList.remove('selected'); });
-  document.getElementById('cb-all').checked = false;
-  updateBatchBar();
-}
-
-function updateBatchBar() {
-  const n = selectedIds.size;
-  const bar = document.getElementById('batch-bar');
-  bar.classList.toggle('visible', n > 0);
-  document.getElementById('batch-count').textContent = n + ' επιλεγμέν' + (n === 1 ? 'η' : 'ες');
-}
-
-// ── BATCH EDIT ────────────────────────────────────────────────────
-// Field definitions: { key, label, type, options? }
-const BATCH_FIELDS = [
-  { key:'emvolio',      label:'Εμβόλιο',          type:'text'   },
-  { key:'hm_ekk',       label:'Ημ. Εκκόλαψης',    type:'date'   },
-  { key:'hm_emv',       label:'Ημ. Εμβολιασμού',  type:'date'   },
-  { key:'hm_paragelia', label:'Ημ. Παραγγελίας',  type:'date'   },
-  { key:'hm_par',       label:'Ημ. Καταχώρησης Παραγγελίας', type:'date'   },
-  { key:'anath',        label:'Αναθρεπτήριο',      type:'select', options:['','Θ1','Θ2','Θ3','Θ4','Α1'] },
-  { key:'posotita',     label:'Ποσότητα',          type:'qty'    },
-  { key:'pelatis',      label:'Πελάτης',           type:'text'   },
-  { key:'paragelia',    label:'Παραγγελία',        type:'select', options:['','ΝΑΙ'] },
-  { key:'psygeio',      label:'Ψυγείο',            type:'select', options:['','ΝΑΙ'] },
-  { key:'promitheutis', label:'Προμηθευτής',       type:'text'   },
-  { key:'sxolia_panos', label:'Σχόλια Πάνος',      type:'text'   },
-  { key:'sxolia_eleni', label:'Σχόλια Ελένη',      type:'text'   },
-];
-
-function batchEdit() {
-  if (!guardConnected()) return;
-  if (!selectedIds.size) return;
-  document.getElementById('batch-modal-sub').textContent = selectedIds.size + ' εγγραφές επιλεγμένες';
-
-  // build field rows
-  const list = document.getElementById('batch-field-list');
-  list.innerHTML = '';
-  BATCH_FIELDS.forEach(f => {
-    const row = document.createElement('div');
-    row.className = 'batch-field-row';
-    row.id = 'bfr-' + f.key;
-
-    let inputHtml;
-    if (f.type === 'select') {
-      inputHtml = `<select class="field-input" id="bf-${f.key}">${f.options.map(o=>`<option value="${o}">${o||'—'}</option>`).join('')}</select>`;
-    } else if (f.type === 'date') {
-      inputHtml = `<input type="text" class="field-input" id="bf-${f.key}" placeholder="ηη/μμ ή ηη/μμ/εε" onblur="onSmartDateBlur(this)" autocomplete="off">`;
-    } else if (f.type === 'qty') {
-      inputHtml = `<input type="text" class="field-input" id="bf-${f.key}" placeholder="π.χ. 60000" onblur="fmtQty(this)" onfocus="stripQty(this)">`;
-    } else {
-      inputHtml = `<input type="text" class="field-input" id="bf-${f.key}" placeholder="Νέα τιμή…">`;
-    }
-
-    row.innerHTML =
-      `<input type="checkbox" id="bfc-${f.key}" onchange="toggleBatchField('${f.key}',this.checked)">` +
-      `<label for="bfc-${f.key}" id="bfl-${f.key}">${f.label}</label>` +
-      inputHtml;
-    list.appendChild(row);
-  });
-
-  document.getElementById('batch-modal-bg').style.display = 'flex';
-}
-
-function toggleBatchField(key, enabled) {
-  const row = document.getElementById('bfr-' + key);
-  const lbl = document.getElementById('bfl-' + key);
-  row.classList.toggle('enabled', enabled);
-  lbl.classList.toggle('active', enabled);
-}
-
-function closeBatchModal() { document.getElementById('batch-modal-bg').style.display = 'none'; }
-
-async function saveBatchEdit() {
-  if (!guardConnected()) return;
-  // collect enabled fields
-  const updates = {};
-  BATCH_FIELDS.forEach(f => {
-    const cb = document.getElementById('bfc-' + f.key);
-    if (cb && cb.checked) {
-      const el = document.getElementById('bf-' + f.key);
-      // for date fields use dataset.iso; for qty strip dots; for others use .value
-      let val;
-      if (f.type === 'date')      val = el.dataset.iso || null;
-      else if (f.type === 'qty')  val = rawQty(el.value);
-      else                        val = el.value || null;
-      updates[f.key] = val;
-    }
-  });
-
-  if (!Object.keys(updates).length) { toast('Δεν επιλέχθηκε κανένα πεδίο.', true); return; }
-
-  const now = new Date().toISOString();
-  updates.updated_by = currentUser;
-  updates.updated_at = now;
-
-  const btn = document.getElementById('btn-batch-save');
-  btn.disabled = true; btn.textContent = 'Αποθήκευση…';
-  setSyncStatus('loading', 'Μαζική αποθήκευση…');
-
-  const ids = [...selectedIds];
-  let successCount = 0;
-  const beforeSnapshots = ids.map(id => ({ ...data.find(r => r.id === id) }));
-
-  try {
-    // fire all updates in parallel
-    await Promise.all(ids.map(id => sbUpdate(id, updates)));
-    await Promise.all(ids.map(id => sbHInsert({ row_id: id, action: 'edited', user_name: currentUser, ts: now })));
-
-    // apply to local data
-    ids.forEach(id => {
-      const idx = data.findIndex(r => r.id === id);
-      if (idx >= 0) { data[idx] = { ...data[idx], ...updates }; successCount++; }
-    });
-
-    // push single undo entry for entire batch
-    pushUndo({ type: 'batch-edit', ids, beforeSnapshots, updates: { ...updates } });
-
-    closeBatchModal(); clearSelection(); render();
-    setSyncStatus('ok', 'Αποθηκεύτηκε ✓');
-    toast(`Ενημερώθηκαν ${successCount} εγγραφές`);
-  } catch(e) {
-    setSyncStatus('err', 'Σφάλμα');
-    toast('Σφάλμα: ' + e.message, true);
-  } finally {
-    btn.disabled = false; btn.textContent = 'Εφαρμογή σε όλα';
-  }
-}
-
-// ── BATCH DELETE ──────────────────────────────────────────────────
-function batchDelete() {
-  if (!guardConnected()) return;
-  if (!selectedIds.size) return;
-  document.getElementById('batch-del-count').textContent = selectedIds.size;
-  document.getElementById('batch-del-bg').style.display = 'flex';
-}
-function closeBatchDel() { document.getElementById('batch-del-bg').style.display = 'none'; }
-
-async function confirmBatchDelete() {
-  if (!guardConnected()) return;
-  const btn = document.getElementById('btn-batch-del-confirm');
-  btn.disabled = true; btn.textContent = 'Διαγραφή…';
-  setSyncStatus('loading', 'Μαζική διαγραφή…');
-
-  const ids = [...selectedIds];
-  const beforeSnapshots = ids.map(id => ({ ...data.find(r => r.id === id) }));
-
-  try {
-    await Promise.all(ids.map(id => sbDelete(id)));
-    pushUndo({ type: 'batch-delete', ids, beforeSnapshots });
-    data = data.filter(r => !ids.includes(r.id));
-    closeBatchDel(); clearSelection(); render();
-    setSyncStatus('ok', 'Διαγράφηκαν ✓');
-    toast(`Διαγράφηκαν ${ids.length} εγγραφές`);
-  } catch(e) {
-    setSyncStatus('err', 'Σφάλμα');
-    toast('Σφάλμα: ' + e.message, true);
-  } finally {
-    btn.disabled = false; btn.textContent = 'Διαγραφή όλων';
-  }
-}
-
-
-// ── VACCINE SMART DATALIST ────────────────────────────────────────
-// Updates the suggestion list based on the last comma-separated token being typed
-// VACCINE_OPTIONS — also defined in shared.js (single source of truth)
-const VACCINE_OPTIONS = [
-  'AVINEW','AVINEW NEO','BIONEW BI','BIONEW BI + COR','Clone30',
-  'CORIPRAVAC','E.COLI','GALLIMUNE 407','GALLIMUNE SE+ST','IB 4/91','IB PRIMER',
-  'LASOTA ND','Ma5','MG 6/85','NEMOVAC TRT','OLVAC B+HG','POULVAC E.COLI',
-  'RESPIVAC','SALENVAC ETC','SALMOVAC','SG-9R','TARTYLL','TS-11','VAXSAFE','VECTROMUNE'
-];
-
-let vacDropIdx = -1; // keyboard nav index
-
-function onVaccineInput(el) {
-  const parts = el.value.split(',');
-  const lastToken = parts[parts.length - 1].trim();
-  const prefix = parts.slice(0, -1).map(p => p.trim()).join(', ');
-  vacDropIdx = -1;
-
-  const drop = document.getElementById('vac-dropdown');
-  if (!lastToken) { drop.style.display = 'none'; onFieldChange(); return; }
-
-  const matches = VACCINE_OPTIONS.filter(v =>
-    v.toLowerCase().includes(lastToken.toLowerCase())
-  );
-
-  if (!matches.length) { drop.style.display = 'none'; onFieldChange(); return; }
-
-  drop.innerHTML = '';
-  matches.forEach((v, i) => {
-    const div = document.createElement('div');
-    div.className = 'ac-option';
-    div.textContent = v;
-    div.dataset.idx = i;
-    div.addEventListener('mousedown', e => {
-      e.preventDefault(); // prevent blur firing before click
-      selectVaccine(el, prefix, v);
-    });
-    drop.appendChild(div);
-  });
-  drop.style.display = 'block';
-  onFieldChange();
-}
-
-function selectVaccine(el, prefix, vaccine) {
-  el.value = prefix ? prefix + ', ' + vaccine + ', ' : vaccine + ', ';
-  // move cursor to end
-  el.setSelectionRange(el.value.length, el.value.length);
-  document.getElementById('vac-dropdown').style.display = 'none';
-  vacDropIdx = -1;
-  onFieldChange();
-}
-
-function onVaccineKey(e) {
-  const drop = document.getElementById('vac-dropdown');
-  if (drop.style.display === 'none') return;
-  const opts = drop.querySelectorAll('.ac-option');
-  if (!opts.length) return;
-
-  if (e.key === 'ArrowDown') {
-    e.preventDefault();
-    vacDropIdx = Math.min(vacDropIdx + 1, opts.length - 1);
-  } else if (e.key === 'ArrowUp') {
-    e.preventDefault();
-    vacDropIdx = Math.max(vacDropIdx - 1, 0);
-  } else if (e.key === 'Enter' || e.key === 'Tab') {
-    if (vacDropIdx >= 0) {
-      e.preventDefault();
-      const el = document.getElementById('f-vaccine');
-      const parts = el.value.split(',');
-      const prefix = parts.slice(0, -1).map(p => p.trim()).join(', ');
-      selectVaccine(el, prefix, opts[vacDropIdx].textContent);
-      return;
-    }
-    drop.style.display = 'none';
-    return;
-  } else if (e.key === 'Escape') {
-    drop.style.display = 'none';
-    vacDropIdx = -1;
-    return;
-  } else { return; }
-
-  // update highlight
-  opts.forEach((o, i) => o.classList.toggle('active', i === vacDropIdx));
-  if (vacDropIdx >= 0) opts[vacDropIdx].scrollIntoView({ block: 'nearest' });
-}
-
-function scheduleCloseVacDrop() {
-  // small delay so mousedown on option fires before blur closes dropdown
-  setTimeout(() => {
-    document.getElementById('vac-dropdown').style.display = 'none';
-    vacDropIdx = -1;
-  }, 150);
-}
-
-// ── CUSTOMER SMART DATALIST ───────────────────────────────────────
-function onCustomerInput() {
-  const el = document.getElementById('f-customer');
-  const parts = el.value.split(',');
-  const lastToken = parts[parts.length - 1].trim().toLowerCase();
-  const prefix = parts.slice(0, -1).map(p => p.trim()).join(', ');
-
-  const dl = document.getElementById('customer-list');
-  dl.innerHTML = '';
-  if (!lastToken) return;
-
-  const customers = [...new Set(data.map(r => r.pelatis).filter(Boolean))];
-  customers
-    .filter(c => c.toLowerCase().includes(lastToken))
-    .forEach(c => {
-      const opt = document.createElement('option');
-      opt.value = prefix ? prefix + ', ' + c : c;
-      opt.label = c;
-      dl.appendChild(opt);
-    });
-}
-
-// ── CHANGELOG ────────────────────────────────────────────────────
-// localStorage key stores last-seen timestamp per user
-function changelogKey(user) { return 'emvolia_lastseen_' + user; }
-
-async function showChangelog(user) {
-  // get last seen timestamp for this user (default: 7 days ago as safety net)
-  let since;
-  try {
-    since = localStorage.getItem(changelogKey(user)) ||
-            new Date(Date.now() - 7 * 86400000).toISOString();
-  } catch(e) {
-    since = new Date(Date.now() - 7 * 86400000).toISOString();
-  }
-
-  // save current timestamp as the new "last seen" before fetching
-  // (so any changes made during this session count as seen next time)
-  try { localStorage.setItem(changelogKey(user), new Date().toISOString()); } catch(e) {}
-
-  document.getElementById('changelog-bg').style.display = 'flex';
-  const list = document.getElementById('changelog-list');
-  list.innerHTML = '<div class="cl-empty">Φόρτωση…</div>';
-
-  const sinceDisplay = new Date(since).toLocaleString('el-GR', {
-    day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false
-  });
-  document.getElementById('changelog-sub').textContent =
-    'Αλλαγές από άλλους χρήστες από ' + sinceDisplay;
-
-  try {
-    const hist = await sbChangelog(since, user);
-
-    if (!hist || !hist.length) {
-      list.innerHTML = '<div class="cl-empty">✓ Δεν υπάρχουν νέες αλλαγές από άλλους χρήστες.</div>';
-      return;
-    }
-
-    // group by row_id to get vaccine name from data (already loaded)
-    list.innerHTML = '';
-    hist.forEach(h => {
-      const row = data.find(r => r.id === h.row_id);
-      const vaccineName = row ? row.emvolio : '(διαγραμμένο)';
-      // build contextual subtitle: vaccine | anath – hm_ekk
-      let vaccineCtx = x(vaccineName);
-      if (row) {
-        const parts = [];
-        if (row.anath) parts.push(x(row.anath));
-        if (row.hm_ekk) parts.push(fmt(row.hm_ekk));
-        if (parts.length) vaccineCtx += ` <span class="cl-ctx">| ${parts.join(' – ')}</span>`;
-      }
-
-      const div = document.createElement('div');
-      div.className = 'cl-item';
-
-      let changesHtml = '';
-      if (h.changes_json) {
-        try {
-          const changes = JSON.parse(h.changes_json);
-          const lines = Object.values(changes).map(c => {
-            const from = c.from != null ? x(String(c.from)) : '<em>κενό</em>';
-            const to   = c.to   != null ? x(String(c.to))   : '<em>κενό</em>';
-            return `<div class="cl-change">` +
-              `<span class="cl-field">${x(c.label)}</span>` +
-              `<span class="cl-from">${from}</span>` +
-              `<span style="color:var(--gh-fg-subtle)">→</span>` +
-              `<span class="cl-to">${to}</span>` +
-              `</div>`;
-          }).join('');
-          if (lines) changesHtml = `<div class="cl-changes">${lines}</div>`;
-        } catch(e) {}
-      }
-
-      div.innerHTML =
-        `<div class="cl-header">` +
-          `<span class="cl-user">${x(h.user_name)}</span>` +
-          `<span class="cl-action ${h.action}">${h.action === 'created' ? 'Καταχώρηση' : 'Επεξεργασία'}</span>` +
-          `<span class="cl-vaccine">${vaccineCtx}</span>` +
-          `<span class="cl-time">${fmtDt(h.ts)}</span>` +
-        `</div>` +
-        changesHtml;
-      list.appendChild(div);
-    });
-
-    document.getElementById('changelog-title').textContent =
-      hist.length + ' αλλαγ' + (hist.length === 1 ? 'ή' : 'ές') + ' από άλλους χρήστες';
-    // show the replay button in the header for this session
-    document.getElementById('btn-changelog').style.display = '';
-
-  } catch(e) {
-    list.innerHTML = `<div class="cl-empty">Σφάλμα φόρτωσης: ${x(e.message)}</div>`;
-  }
-}
-
-function closeChangelog() {
-  document.getElementById('changelog-bg').style.display = 'none';
-}
-
-// Re-opens the changelog from the cached content of the current session
-function reopenChangelog() {
-  document.getElementById('changelog-bg').style.display = 'flex';
-}
-
-// ── MONTH SEARCH MAP ─────────────────────────────────────────────
-// Maps month names (Greek + English) to zero-padded month numbers
-const MONTH_MAP = {
-  'ιανουαριος':'01','ιανουάριος':'01','january':'01','jan':'01',
-  'φεβρουαριος':'02','φεβρουάριος':'02','february':'02','feb':'02',
-  'μαρτιος':'03','μάρτιος':'03','march':'03','mar':'03',
-  'απριλιος':'04','απρίλιος':'04','april':'04','apr':'04',
-  'μαιος':'05','μάιος':'05','may':'05',
-  'ιουνιος':'06','ιούνιος':'06','june':'06','jun':'06',
-  'ιουλιος':'07','ιούλιος':'07','july':'07','jul':'07',
-  'αυγουστος':'08','αύγουστος':'08','august':'08','aug':'08',
-  'σεπτεμβριος':'09','σεπτέμβριος':'09','september':'09','sep':'09','sept':'09',
-  'οκτωβριος':'10','οκτώβριος':'10','october':'10','oct':'10',
-  'νοεμβριος':'11','νοέμβριος':'11','november':'11','nov':'11',
-  'δεκεμβριος':'12','δεκέμβριος':'12','december':'12','dec':'12',
-};
-
-// Resolves a plain month name to a zero-padded month number (e.g. "Μάιος" → "05")
-// Returns null if the input is not a month name
-// Strip Greek accents and lowercase — makes all searches accent+case insensitive
-function normalize(s) {
-  return (s||'').toLowerCase()
-    .replace(/ά/g,'α').replace(/έ/g,'ε').replace(/ή/g,'η').replace(/ί/g,'ι')
-    .replace(/ό/g,'ο').replace(/ύ/g,'υ').replace(/ώ/g,'ω')
-    .replace(/ϊ/g,'ι').replace(/ϋ/g,'υ').replace(/ΐ/g,'ι').replace(/ΰ/g,'υ');
-}
-
-function resolveMonth(t) {
-  const n = normalize(t);
-  return MONTH_MAP[n] || null;
-}
-
-// Prefixes for targeted date-column search:
-//   εμβ: / emv:  → hm_emv (vaccination date)
-//   παρ: / ord:  → hm_paragelia (order date)
-// No prefix → search everything
-const PREFIX_VACC = /^(εμβ|emv):/i;
-const PREFIX_ORD  = /^(παρ|ord):/i;
-
-function parseTerm(raw) {
-  if (PREFIX_VACC.test(raw)) {
-    const val = raw.replace(PREFIX_VACC, '').trim();
-    return { type: 'vacc', value: resolveMonth(val) || normalize(val) };
-  }
-  if (PREFIX_ORD.test(raw)) {
-    const val = raw.replace(PREFIX_ORD, '').trim();
-    return { type: 'ord',  value: resolveMonth(val) || normalize(val) };
-  }
-  return { type: 'all', value: resolveMonth(raw) || normalize(raw) };
-}
-
-function getFiltered() {
-  const raw = (document.getElementById('search').value || '').trim();
-  const terms = raw
-    ? raw.split(/,\s*/).map(t => parseTerm(t.trim())).filter(t => t.value)
-    : [];
-  const ff = document.getElementById('filt-flock').value;
-  const fo = document.getElementById('filt-ordered').value;
-  const fr = document.getElementById('filt-fridge').value;
-  return data.filter(r => {
-    if (terms.length) {
-      for (const t of terms) {
-        let match;
-        if (t.type === 'vacc') {
-          match = (r.hm_emv || '').includes(t.value) || fmt(r.hm_emv).includes(t.value);
-        } else if (t.type === 'ord') {
-          match = (r.hm_paragelia || '').includes(t.value) || fmt(r.hm_paragelia).includes(t.value);
-        } else {
-          // build search string from raw values + formatted dates for dd/mm/yyyy matching
-          const DATE_COLS = ['hm_ekk','hm_emv','hm_par','hm_paragelia'];
-          const extra = DATE_COLS.map(c => fmt(r[c])).join(' ');
-          const searchStr = normalize(Object.values(r).join(' ') + ' ' + flockLabel(r) + ' ' + extra);
-          match = searchStr.includes(t.value);
-        }
-        if (!match) return false;
-      }
-    }
-    if (ff && flockLabel(r) !== ff) return false;
-    if (fo==='ΝΑΙ' && r.paragelia!=='ΝΑΙ') return false;
-    if (fo==='-'   && r.paragelia==='ΝΑΙ') return false;
-    if (fr==='ΝΑΙ' && r.psygeio!=='ΝΑΙ') return false;
-    if (fr==='-'   && r.psygeio==='ΝΑΙ') return false;
-    return true;
-  });
-}
-
-function resetForm() {
-  // clears step 2 and 3 only — keeps hatch date, flock, vacc date, order date
-  ['f-vaccine','f-customer','f-qty','f-supplier','f-notes']
-    .forEach(id => {
-      const e = document.getElementById(id); if(!e) return;
-      e.value = ''; e.style.borderColor = '';
-      if (e.dataset) e.dataset.iso = '';
-    });
-  // close any open vaccine dropdown
-  document.getElementById('vac-dropdown').style.display = 'none';
-  updateSteps();
-}
+function changeZoom(delta) { zoom += delta; applyZoom(); }
 
 // ── THEME ─────────────────────────────────────────────────────────
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
   const isDark = theme === 'dark';
   document.getElementById('theme-icon').textContent  = isDark ? '☀' : '☾';
-  document.getElementById('theme-label').textContent = isDark ? 'Φωτεινό' : 'Σκοτεινό';
+  document.getElementById('theme-label').textContent = isDark ? 'Light' : 'Dark';
+  localStorage.setItem('feed_theme', theme);
+}
+function toggleTheme() {
+  applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
 }
 
-function toggleTheme() {
-  const current = document.documentElement.getAttribute('data-theme') || 'dark';
-  const next = current === 'dark' ? 'light' : 'dark';
-  applyTheme(next);
-  // persist per-browser (not per-session — survives page reloads)
-  try { localStorage.setItem('emvolia_theme', next); } catch(e) {}
+// ── TOAST ─────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
 }
 
 // ── INIT ──────────────────────────────────────────────────────────
-// Apply saved theme immediately (before render) to avoid flash
-(function(){
-  let saved = 'dark';
-  try { saved = localStorage.getItem('emvolia_theme') || 'dark'; } catch(e) {}
-  applyTheme(saved);
-})();
-
-orderedVal = ''; fridgeVal = '';
-// On mobile, sidebar starts closed
-if (isMobile()) sidebarOpen = false;
-updateUndoRedoBtns();
-
-// Populate vaccine datalist from VACCINE_OPTIONS (datalist is in HTML above this script)
-(function(){
-  const dl = document.getElementById('vaccine-list');
-  if (dl) VACCINE_OPTIONS.forEach(v => { const o = document.createElement('option'); o.value = v; dl.appendChild(o); });
-})();
-
-// ── SESSION RESTORE ───────────────────────────────────────────────
-// If already authenticated this session (e.g. switching from inventory.html),
-// skip both gates entirely and go straight to the app.
-const _savedUser = sessionStorage.getItem('emvolia_user');
-if (sessionStorage.getItem('emvolia_pw') === '1' && _savedUser) {
-  // fully authenticated — restore user and load directly
-  currentUser = _savedUser;
-  document.getElementById('user-chip-name').textContent = _savedUser;
-  document.getElementById('pw-gate-bg').style.display = 'none';
-  document.getElementById('gate-bg').style.display = 'none';
-  loadData();
-} else if (sessionStorage.getItem('emvolia_pw') === '1') {
-  // password verified but no name yet — skip to name gate
-  document.getElementById('pw-gate-bg').style.display = 'none';
-  document.getElementById('gate-bg').style.display = 'flex';
-  setTimeout(() => { const f = document.querySelector('.name-opt-btn'); if(f) f.focus(); }, 100);
-} else {
-  // fresh visit — show password gate
-  document.getElementById('gate-bg').style.display = 'none';
-  setTimeout(() => document.getElementById('pw-input').focus(), 100);
-}
+applyZoom();
+applyTheme(localStorage.getItem('feed_theme') || 'dark');
+buildHeader();
+loadFromSupabase();
 </script>
-
 </body>
 </html>
