@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rearing House Scheduler</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root,[data-theme="dark"]{
+  --gh-canvas-default:#0d1117;
+  --gh-canvas-subtle:#161b22;
+  --gh-canvas-inset:#010409;
+  --gh-border-default:#30363d;
+  --gh-border-muted:#21262d;
+  --gh-border-subtle:rgba(240,246,252,0.1);
+  --gh-fg-default:#e6edf3;
+  --gh-fg-muted:#8b949e;
+  --gh-fg-subtle:#6e7681;
+  --gh-fg-onEmphasis:#ffffff;
+  --gh-accent-fg:#58a6ff;
+  --gh-accent-emphasis:#1f6feb;
+  --gh-accent-subtle:rgba(56,139,253,0.1);
+  --gh-success-fg:#3fb950;
+  --gh-success-subtle:rgba(46,160,67,0.1);
+  --gh-attention-fg:#d29922;
+  --gh-attention-subtle:rgba(187,128,9,0.1);
+  --gh-danger-fg:#f85149;
+  --gh-danger-subtle:rgba(248,81,73,0.1);
+  --gh-hover-bg:#21262d;
+  --r:6px;--rs:6px;
+}
+[data-theme="light"]{
+  --gh-canvas-default:#ffffff;
+  --gh-canvas-subtle:#f6f8fa;
+  --gh-canvas-inset:#f0f2f5;
+  --gh-border-default:#d0d7de;
+  --gh-border-muted:#d8dee4;
+  --gh-border-subtle:rgba(31,35,40,0.06);
+  --gh-fg-default:#1f2328;
+  --gh-fg-muted:#636c76;
+  --gh-fg-subtle:#6e7781;
+  --gh-fg-onEmphasis:#ffffff;
+  --gh-accent-fg:#0969da;
+  --gh-accent-emphasis:#0969da;
+  --gh-accent-subtle:rgba(9,105,218,0.08);
+  --gh-success-fg:#1a7f37;
+  --gh-success-subtle:rgba(26,127,55,0.08);
+  --gh-attention-fg:#9a6700;
+  --gh-attention-subtle:rgba(154,103,0,0.08);
+  --gh-danger-fg:#d1242f;
+  --gh-danger-subtle:rgba(209,36,47,0.08);
+  --gh-hover-bg:#eaeef2;
+  --r:6px;--rs:6px;
+}
+.theme-toggle{
+  display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;
+  border:1px solid var(--gh-border-default);border-radius:var(--rs);
+  background:var(--gh-canvas-subtle);color:var(--gh-fg-muted);
+  font-family:'Inter',system-ui,sans-serif;font-size:12px;font-weight:500;
+  cursor:pointer;transition:background 0.15s,border-color 0.15s,color 0.15s;
+  user-select:none;flex-shrink:0;
+}
+.theme-toggle:hover{background:var(--gh-hover-bg);color:var(--gh-fg-default);border-color:var(--gh-fg-subtle)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{height:100%}
+body{
+  min-height:100%;
+  background:var(--gh-canvas-default);
+  color:var(--gh-fg-default);
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  font-size:14px;line-height:1.5;
+}
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;height:48px;
+  background:var(--gh-canvas-default);
+  border-bottom:1px solid var(--gh-border-default);
+  position:sticky;top:0;z-index:50;
+  gap:12px;
+}
+.header-left{display:flex;align-items:center;gap:10px}
+.logo-title{font-weight:600;font-size:15px;color:var(--gh-fg-default)}
+.logo-sub{font-size:12px;color:var(--gh-fg-muted)}
+.header-right{display:flex;align-items:center;gap:8px}
+.main{max-width:860px;margin:0 auto;padding:24px 16px 48px}
+.section-title{font-size:12px;font-weight:600;color:var(--gh-fg-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px}
+.houses-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:24px}
+@media(max-width:640px){.houses-grid{grid-template-columns:repeat(2,1fr)}}
+.house-card{
+  background:var(--gh-canvas-subtle);
+  border:1px solid var(--gh-border-default);
+  border-radius:var(--r);
+  padding:12px;
+}
+.house-card h3{
+  font-size:13px;font-weight:600;color:var(--gh-fg-default);
+  margin-bottom:8px;display:flex;align-items:center;gap:6px;
+}
+.house-dot{width:8px;height:8px;border-radius:50%;background:var(--gh-border-default);flex-shrink:0;transition:background 0.2s}
+.house-card.has-date .house-dot{background:var(--gh-accent-fg)}
+.house-card input[type="date"]{
+  width:100%;background:var(--gh-canvas-default);
+  border:1px solid var(--gh-border-default);border-radius:var(--rs);
+  color:var(--gh-fg-default);font-family:'Inter',system-ui,sans-serif;
+  font-size:13px;padding:5px 8px;outline:none;
+  transition:border-color 0.15s,box-shadow 0.15s;
+  appearance:none;-webkit-appearance:none;
+}
+.house-card input[type="date"]:focus{border-color:var(--gh-accent-emphasis);box-shadow:0 0 0 3px rgba(31,111,235,0.3)}
+.clear-link{font-size:11px;color:var(--gh-fg-subtle);background:none;border:none;cursor:pointer;padding:0;margin-top:5px;display:block;text-align:right;transition:color 0.15s}
+.clear-link:hover{color:var(--gh-danger-fg)}
+.divider{height:1px;background:var(--gh-border-muted);margin:20px 0}
+.results-area{display:flex;flex-direction:column;gap:10px}
+.result-card{
+  background:var(--gh-canvas-subtle);
+  border:1px solid var(--gh-border-default);
+  border-radius:var(--r);
+  padding:14px 16px;
+}
+.result-card-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:10px;
+}
+.result-house-name{font-size:14px;font-weight:600;color:var(--gh-fg-default)}
+.result-doc-date{font-size:12px;color:var(--gh-fg-muted)}
+.events-row{display:flex;flex-wrap:wrap;gap:6px}
+.pill{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:11px;font-weight:500;padding:3px 9px;border-radius:99px;
+  white-space:nowrap;
+}
+.pill-vax{background:var(--gh-accent-subtle);color:var(--gh-accent-fg);border:1px solid rgba(56,139,253,0.3)}
+.pill-load{background:var(--gh-success-subtle);color:var(--gh-success-fg);border:1px solid rgba(63,185,80,0.3)}
+.pill-clean{background:var(--gh-canvas-inset);color:var(--gh-fg-muted);border:1px solid var(--gh-border-muted)}
+.pill-conflict-flag{background:var(--gh-danger-subtle);color:var(--gh-danger-fg);border:1px solid rgba(248,81,73,0.3)}
+.conflict-banner{
+  background:var(--gh-danger-subtle);
+  border:1px solid rgba(248,81,73,0.4);
+  border-radius:var(--r);
+  padding:12px 14px;
+  margin-bottom:10px;
+}
+.conflict-banner-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:8px;
+}
+.conflict-banner-title{font-size:13px;font-weight:600;color:var(--gh-danger-fg);display:flex;align-items:center;gap:6px}
+.conflict-list{display:flex;flex-direction:column;gap:6px}
+.conflict-item{
+  background:var(--gh-canvas-default);
+  border:1px solid rgba(248,81,73,0.25);
+  border-radius:var(--rs);
+  padding:8px 12px;
+  font-size:12px;
+  color:var(--gh-fg-default);
+}
+.conflict-item strong{color:var(--gh-danger-fg)}
+.conflict-meta{font-size:11px;color:var(--gh-fg-muted);margin-top:2px}
+.ok-banner{
+  background:var(--gh-success-subtle);
+  border:1px solid rgba(63,185,80,0.4);
+  border-radius:var(--r);
+  padding:10px 14px;
+  font-size:13px;color:var(--gh-success-fg);
+  display:flex;align-items:center;gap:8px;
+  margin-bottom:10px;
+}
+.suggest-section{
+  background:var(--gh-attention-subtle);
+  border:1px solid rgba(210,153,34,0.4);
+  border-radius:var(--r);
+  padding:14px 16px;
+  margin-top:10px;
+}
+.suggest-title{font-size:13px;font-weight:600;color:var(--gh-attention-fg);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.suggest-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.suggest-card{
+  background:var(--gh-canvas-default);
+  border:1px solid rgba(210,153,34,0.3);
+  border-radius:var(--rs);
+  padding:10px 12px;
+}
+.suggest-card-house{font-size:12px;font-weight:600;color:var(--gh-fg-muted);margin-bottom:4px}
+.suggest-card-date{font-size:13px;font-weight:600;color:var(--gh-attention-fg)}
+.suggest-card-note{font-size:11px;color:var(--gh-fg-muted);margin-top:2px}
+.btn-suggest{
+  height:30px;padding:0 14px;
+  background:rgba(210,153,34,0.15);color:var(--gh-attention-fg);
+  border:1px solid rgba(210,153,34,0.5);border-radius:var(--rs);
+  font-family:'Inter',system-ui,sans-serif;font-size:12px;font-weight:500;
+  cursor:pointer;transition:background 0.15s;white-space:nowrap;
+}
+.btn-suggest:hover{background:rgba(210,153,34,0.25)}
+.empty-state{
+  padding:48px 20px;text-align:center;
+  color:var(--gh-fg-muted);font-size:14px;
+  background:var(--gh-canvas-subtle);
+  border:1px solid var(--gh-border-default);
+  border-radius:var(--r);
+}
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;align-items:center}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--gh-fg-muted)}
+svg.ico{width:14px;height:14px;flex-shrink:0;vertical-align:middle}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <span class="logo-title">🐔 Rearing House Scheduler</span>
+    <span class="logo-sub">Conflict checker</span>
+  </div>
+  <div class="header-right">
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <span id="theme-icon">☀️</span>
+      <span id="theme-label">Light</span>
+    </button>
+  </div>
+</header>
+
+<div class="main">
+
+  <div class="section-title">DOC Placement Dates</div>
+  <div class="houses-grid" id="houses-grid"></div>
+
+  <div class="divider"></div>
+
+  <div class="legend">
+    <span class="legend-item"><span class="pill pill-vax">Vax</span> Vaccination (days 60 & 90)</span>
+    <span class="legend-item"><span class="pill pill-load">Load</span> Loading (days 105–122)</span>
+    <span class="legend-item"><span class="pill pill-clean">Clean</span> Cleaning (days 123–152)</span>
+  </div>
+
+  <div id="results-area">
+    <div class="empty-state">Enter at least one placement date to see the schedule.</div>
+  </div>
+
+</div>
+
+<script>
+const HOUSES = ['Θ1','Θ2','Θ3','Θ4','Θ5'];
+const CONFLICT_WINDOW_DAYS = 6;
+
+/* ── Theme ── */
+(function(){
+  const saved = localStorage.getItem('theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+  updateThemeBtn(saved);
+})();
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  updateThemeBtn(next);
+}
+function updateThemeBtn(t){
+  document.getElementById('theme-icon').textContent = t === 'dark' ? '☀️' : '🌙';
+  document.getElementById('theme-label').textContent = t === 'dark' ? 'Light' : 'Dark';
+}
+
+/* ── Date helpers ── */
+function addDays(date, n){
+  const d = new Date(date);
+  d.setDate(d.getDate() + n);
+  return d;
+}
+function fmt(date){
+  return date.toLocaleDateString('en-GB', {day:'2-digit',month:'2-digit',year:'numeric'});
+}
+function daysDiff(a, b){
+  return Math.abs(Math.round((a - b) / 86400000));
+}
+function datesOverlap(s1, e1, s2, e2){
+  return s1 <= e2 && e1 >= s2;
+}
+function getSchedule(docDate){
+  const base = new Date(docDate);
+  return {
+    vax1:       addDays(base, 59),
+    vax2:       addDays(base, 89),
+    loadStart:  addDays(base, 104),
+    loadEnd:    addDays(base, 121),
+    cleanStart: addDays(base, 122),
+    cleanEnd:   addDays(base, 151),
+  };
+}
+
+/* ── Build inputs ── */
+function buildInputs(){
+  const grid = document.getElementById('houses-grid');
+  HOUSES.forEach(h => {
+    const card = document.createElement('div');
+    card.className = 'house-card';
+    card.id = 'card_' + h;
+    card.innerHTML = `
+      <h3><span class="house-dot" id="dot_${h}"></span>${h}</h3>
+      <input type="date" id="doc_${h}" aria-label="DOC date for ${h}" />
+      <button class="clear-link" onclick="clearHouse('${h}')">Clear</button>
+    `;
+    grid.appendChild(card);
+    card.querySelector('input').addEventListener('change', () => {
+      const hasVal = !!card.querySelector('input').value;
+      card.classList.toggle('has-date', hasVal);
+      render();
+    });
+  });
+}
+
+function clearHouse(h){
+  const inp = document.getElementById('doc_' + h);
+  inp.value = '';
+  document.getElementById('card_' + h).classList.remove('has-date');
+  render();
+}
+
+/* ── Conflict detection ── */
+function detectConflicts(entries){
+  const conflicts = [];
+  for(let i = 0; i < entries.length; i++){
+    for(let j = i + 1; j < entries.length; j++){
+      const a = entries[i], b = entries[j];
+      const sa = a.schedule, sb = b.schedule;
+
+      const d1 = daysDiff(sa.vax1, sb.vax1);
+      if(d1 <= CONFLICT_WINDOW_DAYS)
+        conflicts.push({type:'Vaccination 1 (day 60)', houses:[a.house,b.house],
+          dateA:fmt(sa.vax1), dateB:fmt(sb.vax1), diff:d1, kind:'vax'});
+
+      const d2 = daysDiff(sa.vax2, sb.vax2);
+      if(d2 <= CONFLICT_WINDOW_DAYS)
+        conflicts.push({type:'Vaccination 2 (day 90)', houses:[a.house,b.house],
+          dateA:fmt(sa.vax2), dateB:fmt(sb.vax2), diff:d2, kind:'vax'});
+
+      if(datesOverlap(sa.loadStart, sa.loadEnd, sb.loadStart, sb.loadEnd))
+        conflicts.push({type:'Loading', houses:[a.house,b.house],
+          dateA:`${fmt(sa.loadStart)}–${fmt(sa.loadEnd)}`,
+          dateB:`${fmt(sb.loadStart)}–${fmt(sb.loadEnd)}`,
+          diff:null, kind:'load'});
+    }
+  }
+  return conflicts;
+}
+
+/* ── Suggest conflict-free dates ── */
+/*
+  Strategy: keep the earliest entry fixed, then for each subsequent house
+  find the next Monday-aligned DOC that clears all conflicts with already
+  placed houses. We search day by day up to 365 days out.
+*/
+function suggestDates(entries){
+  if(!entries.length) return [];
+  const result = [];
+  const placed = []; // {house, docDate, schedule}
+
+  // Always keep the first (earliest) house unchanged
+  const first = entries.slice().sort((a,b) => a.docDate - b.docDate)[0];
+  placed.push(first);
+  result.push({house: first.house, docDate: first.docDate, changed: false});
+
+  // For each remaining house (sorted by original date) find a conflict-free date
+  const rest = entries.filter(e => e.house !== first.house)
+                      .sort((a,b) => a.docDate - b.docDate);
+
+  for(const entry of rest){
+    let candidate = new Date(entry.docDate);
+    let found = false;
+    for(let attempt = 0; attempt <= 365; attempt++){
+      const sched = getSchedule(candidate);
+      let ok = true;
+      for(const p of placed){
+        // Check vax1
+        if(daysDiff(sched.vax1, p.schedule.vax1) <= CONFLICT_WINDOW_DAYS){ ok=false; break; }
+        // Check vax2
+        if(daysDiff(sched.vax2, p.schedule.vax2) <= CONFLICT_WINDOW_DAYS){ ok=false; break; }
+        // Check loading overlap
+        if(datesOverlap(sched.loadStart, sched.loadEnd, p.schedule.loadStart, p.schedule.loadEnd)){ ok=false; break; }
+      }
+      if(ok){
+        const changed = candidate.toDateString() !== entry.docDate.toDateString();
+        placed.push({house: entry.house, docDate: candidate, schedule: sched});
+        result.push({house: entry.house, docDate: candidate, changed});
+        found = true;
+        break;
+      }
+      candidate = addDays(candidate, 1);
+    }
+    if(!found){
+      result.push({house: entry.house, docDate: entry.docDate, changed: false, failed: true});
+      placed.push(entry);
+    }
+  }
+  return result;
+}
+
+/* ── Render ── */
+function render(){
+  const entries = HOUSES.map(h => {
+    const val = document.getElementById('doc_' + h).value;
+    if(!val) return null;
+    const docDate = new Date(val);
+    return {house: h, docDate, schedule: getSchedule(docDate)};
+  }).filter(Boolean);
+
+  const area = document.getElementById('results-area');
+
+  if(!entries.length){
+    area.innerHTML = '<div class="empty-state">Enter at least one placement date to see the schedule.</div>';
+    return;
+  }
+
+  const conflicts = detectConflicts(entries);
+  let html = '';
+
+  /* Conflict / OK banner */
+  if(conflicts.length){
+    html += `<div class="conflict-banner">
+      <div class="conflict-banner-header">
+        <div class="conflict-banner-title">
+          ⚠️ ${conflicts.length} conflict${conflicts.length > 1 ? 's' : ''} detected
+        </div>
+        <button class="btn-suggest" onclick="renderSuggestions()">💡 Suggest conflict-free dates</button>
+      </div>
+      <div class="conflict-list">`;
+    conflicts.forEach(c => {
+      const diffText = c.diff !== null
+        ? `(${c.diff} day${c.diff === 1 ? '' : 's'} apart — need at least ${CONFLICT_WINDOW_DAYS + 1})`
+        : '(overlapping periods)';
+      html += `<div class="conflict-item">
+        <strong>${c.type}</strong> — ${c.houses[0]} &amp; ${c.houses[1]} ${diffText}
+        <div class="conflict-meta">${c.houses[0]}: ${c.dateA} &nbsp;|&nbsp; ${c.houses[1]}: ${c.dateB}</div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  } else {
+    html += `<div class="ok-banner">✅ No conflicts — all houses are clear.</div>`;
+  }
+
+  html += '<div id="suggestions-area"></div>';
+
+  /* Per-house schedule cards */
+  const sorted = entries.slice().sort((a,b) => a.docDate - b.docDate);
+  sorted.forEach(e => {
+    const s = e.schedule;
+    const houseConflicts = conflicts.filter(c => c.houses.includes(e.house));
+    html += `<div class="result-card">
+      <div class="result-card-header">
+        <span class="result-house-name">${e.house}</span>
+        <span class="result-doc-date">Placement: ${fmt(e.docDate)}</span>
+      </div>
+      <div class="events-row">
+        ${houseConflicts.some(c=>c.kind==='vax'&&c.type.includes('1'))
+          ? `<span class="pill pill-conflict-flag">⚠️ Vax 1 — ${fmt(s.vax1)}</span>`
+          : `<span class="pill pill-vax">Vax 1 — ${fmt(s.vax1)}</span>`}
+        ${houseConflicts.some(c=>c.kind==='vax'&&c.type.includes('2'))
+          ? `<span class="pill pill-conflict-flag">⚠️ Vax 2 — ${fmt(s.vax2)}</span>`
+          : `<span class="pill pill-vax">Vax 2 — ${fmt(s.vax2)}</span>`}
+        ${houseConflicts.some(c=>c.kind==='load')
+          ? `<span class="pill pill-conflict-flag">⚠️ Load ${fmt(s.loadStart)}–${fmt(s.loadEnd)}</span>`
+          : `<span class="pill pill-load">Load ${fmt(s.loadStart)}–${fmt(s.loadEnd)}</span>`}
+        <span class="pill pill-clean">Clean ${fmt(s.cleanStart)}–${fmt(s.cleanEnd)}</span>
+      </div>
+    </div>`;
+  });
+
+  area.innerHTML = html;
+}
+
+function renderSuggestions(){
+  const entries = HOUSES.map(h => {
+    const val = document.getElementById('doc_' + h).value;
+    if(!val) return null;
+    const docDate = new Date(val);
+    return {house: h, docDate, schedule: getSchedule(docDate)};
+  }).filter(Boolean);
+
+  const suggestions = suggestDates(entries);
+  const area = document.getElementById('suggestions-area');
+  if(!area) return;
+
+  let html = `<div class="suggest-section">
+    <div class="suggest-title">💡 Suggested conflict-free placement dates</div>
+    <div class="suggest-grid">`;
+
+  suggestions.forEach(s => {
+    const note = s.failed
+      ? 'No solution found within 365 days'
+      : s.changed
+        ? `+${daysDiff(s.docDate, entries.find(e=>e.house===s.house).docDate)} days from original`
+        : 'No change (reference house)';
+    html += `<div class="suggest-card">
+      <div class="suggest-card-house">${s.house}</div>
+      <div class="suggest-card-date">${fmt(s.docDate)}</div>
+      <div class="suggest-card-note">${note}</div>
+    </div>`;
+  });
+
+  html += `</div>
+    <p style="font-size:11px;color:var(--gh-fg-muted);margin-top:10px">
+      The earliest house is kept unchanged. Others are shifted forward by the minimum number of days needed to eliminate all conflicts.
+    </p>
+  </div>`;
+
+  area.innerHTML = html;
+}
+
+buildInputs();
+</script>
+</body>
+</html>
