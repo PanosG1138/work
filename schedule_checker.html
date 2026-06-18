@@ -12,11 +12,9 @@
   --gh-canvas-inset:#010409;
   --gh-border-default:#30363d;
   --gh-border-muted:#21262d;
-  --gh-border-subtle:rgba(240,246,252,0.1);
   --gh-fg-default:#e6edf3;
   --gh-fg-muted:#8b949e;
   --gh-fg-subtle:#6e7681;
-  --gh-fg-onEmphasis:#ffffff;
   --gh-accent-fg:#58a6ff;
   --gh-accent-emphasis:#1f6feb;
   --gh-accent-subtle:rgba(56,139,253,0.1);
@@ -35,11 +33,9 @@
   --gh-canvas-inset:#f0f2f5;
   --gh-border-default:#d0d7de;
   --gh-border-muted:#d8dee4;
-  --gh-border-subtle:rgba(31,35,40,0.06);
   --gh-fg-default:#1f2328;
   --gh-fg-muted:#636c76;
   --gh-fg-subtle:#6e7781;
-  --gh-fg-onEmphasis:#ffffff;
   --gh-accent-fg:#0969da;
   --gh-accent-emphasis:#0969da;
   --gh-accent-subtle:rgba(9,105,218,0.08);
@@ -52,20 +48,10 @@
   --gh-hover-bg:#eaeef2;
   --r:6px;--rs:6px;
 }
-.theme-toggle{
-  display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;
-  border:1px solid var(--gh-border-default);border-radius:var(--rs);
-  background:var(--gh-canvas-subtle);color:var(--gh-fg-muted);
-  font-family:'Inter',system-ui,sans-serif;font-size:12px;font-weight:500;
-  cursor:pointer;transition:background 0.15s,border-color 0.15s,color 0.15s;
-  user-select:none;flex-shrink:0;
-}
-.theme-toggle:hover{background:var(--gh-hover-bg);color:var(--gh-fg-default);border-color:var(--gh-fg-subtle)}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{height:100%}
 body{
-  min-height:100%;
-  background:var(--gh-canvas-default);
+  min-height:100%;background:var(--gh-canvas-default);
   color:var(--gh-fg-default);
   font-family:'Inter',system-ui,-apple-system,sans-serif;
   font-size:14px;line-height:1.5;
@@ -75,132 +61,179 @@ header{
   padding:0 16px;height:48px;
   background:var(--gh-canvas-default);
   border-bottom:1px solid var(--gh-border-default);
-  position:sticky;top:0;z-index:50;
-  gap:12px;
+  position:sticky;top:0;z-index:50;gap:12px;
 }
 .header-left{display:flex;align-items:center;gap:10px}
 .logo-title{font-weight:600;font-size:15px;color:var(--gh-fg-default)}
 .logo-sub{font-size:12px;color:var(--gh-fg-muted)}
 .header-right{display:flex;align-items:center;gap:8px}
-.main{max-width:860px;margin:0 auto;padding:24px 16px 48px}
-.section-title{font-size:12px;font-weight:600;color:var(--gh-fg-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px}
-.houses-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:24px}
-@media(max-width:640px){.houses-grid{grid-template-columns:repeat(2,1fr)}}
-.house-card{
-  background:var(--gh-canvas-subtle);
-  border:1px solid var(--gh-border-default);
-  border-radius:var(--r);
-  padding:12px;
-}
-.house-card h3{
-  font-size:13px;font-weight:600;color:var(--gh-fg-default);
-  margin-bottom:8px;display:flex;align-items:center;gap:6px;
-}
-.house-dot{width:8px;height:8px;border-radius:50%;background:var(--gh-border-default);flex-shrink:0;transition:background 0.2s}
-.house-card.has-date .house-dot{background:var(--gh-accent-fg)}
-.house-card input[type="date"]{
-  width:100%;background:var(--gh-canvas-default);
+.theme-toggle{
+  display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;
   border:1px solid var(--gh-border-default);border-radius:var(--rs);
-  color:var(--gh-fg-default);font-family:'Inter',system-ui,sans-serif;
-  font-size:13px;padding:5px 8px;outline:none;
-  transition:border-color 0.15s,box-shadow 0.15s;
-  appearance:none;-webkit-appearance:none;
+  background:var(--gh-canvas-subtle);color:var(--gh-fg-muted);
+  font-family:'Inter',system-ui,sans-serif;font-size:12px;font-weight:500;
+  cursor:pointer;transition:background 0.15s,border-color 0.15s,color 0.15s;user-select:none;
 }
-.house-card input[type="date"]:focus{border-color:var(--gh-accent-emphasis);box-shadow:0 0 0 3px rgba(31,111,235,0.3)}
-.clear-link{font-size:11px;color:var(--gh-fg-subtle);background:none;border:none;cursor:pointer;padding:0;margin-top:5px;display:block;text-align:right;transition:color 0.15s}
-.clear-link:hover{color:var(--gh-danger-fg)}
-.divider{height:1px;background:var(--gh-border-muted);margin:20px 0}
-.results-area{display:flex;flex-direction:column;gap:10px}
-.result-card{
-  background:var(--gh-canvas-subtle);
-  border:1px solid var(--gh-border-default);
-  border-radius:var(--r);
-  padding:14px 16px;
+.theme-toggle:hover{background:var(--gh-hover-bg);color:var(--gh-fg-default);border-color:var(--gh-fg-subtle)}
+.sync-badge{
+  display:flex;align-items:center;gap:5px;font-size:12px;padding:0 10px;height:24px;
+  border-radius:99px;border:1px solid var(--gh-border-default);
+  background:var(--gh-canvas-subtle);color:var(--gh-fg-muted);white-space:nowrap;transition:all 0.25s;
 }
-.result-card-header{
-  display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:10px;
+.sync-badge.ok{border-color:rgba(63,185,80,0.4);color:var(--gh-success-fg);background:var(--gh-success-subtle)}
+.sync-badge.err{border-color:rgba(248,81,73,0.4);color:var(--gh-danger-fg);background:var(--gh-danger-subtle)}
+.sync-badge.loading{border-color:rgba(210,153,34,0.4);color:var(--gh-attention-fg);background:var(--gh-attention-subtle)}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.sync-badge.loading .sync-dot{animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.2}}
+.main{max-width:1100px;margin:0 auto;padding:20px 16px 60px}
+.toolbar{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.btn-tool{
+  height:32px;padding:0 12px;
+  background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);
+  color:var(--gh-fg-default);border-radius:var(--rs);
+  font-family:'Inter',system-ui,sans-serif;font-size:13px;font-weight:500;
+  cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;
+  transition:background 0.15s,border-color 0.15s;
 }
-.result-house-name{font-size:14px;font-weight:600;color:var(--gh-fg-default)}
-.result-doc-date{font-size:12px;color:var(--gh-fg-muted)}
-.events-row{display:flex;flex-wrap:wrap;gap:6px}
-.pill{
-  display:inline-flex;align-items:center;gap:4px;
-  font-size:11px;font-weight:500;padding:3px 9px;border-radius:99px;
-  white-space:nowrap;
+.btn-tool:hover{background:var(--gh-hover-bg);border-color:var(--gh-fg-subtle)}
+.btn-tool.active{border-color:var(--gh-accent-emphasis);background:var(--gh-accent-subtle);color:var(--gh-accent-fg)}
+.btn-primary{
+  height:32px;padding:0 14px;
+  background:var(--gh-accent-emphasis);color:#fff;
+  border:1px solid rgba(240,246,252,0.1);border-radius:var(--rs);
+  font-family:'Inter',system-ui,sans-serif;font-weight:500;font-size:13px;
+  cursor:pointer;transition:background 0.15s;display:inline-flex;align-items:center;gap:5px;
 }
-.pill-vax{background:var(--gh-accent-subtle);color:var(--gh-accent-fg);border:1px solid rgba(56,139,253,0.3)}
-.pill-load{background:var(--gh-success-subtle);color:var(--gh-success-fg);border:1px solid rgba(63,185,80,0.3)}
-.pill-clean{background:var(--gh-canvas-inset);color:var(--gh-fg-muted);border:1px solid var(--gh-border-muted)}
-.pill-conflict-flag{background:var(--gh-danger-subtle);color:var(--gh-danger-fg);border:1px solid rgba(248,81,73,0.3)}
-.conflict-banner{
-  background:var(--gh-danger-subtle);
-  border:1px solid rgba(248,81,73,0.4);
-  border-radius:var(--r);
-  padding:12px 14px;
-  margin-bottom:10px;
+.btn-primary:hover{background:#388bfd}
+.btn-primary:disabled{opacity:0.4;cursor:not-allowed}
+.sep{width:1px;height:20px;background:var(--gh-border-default);flex-shrink:0}
+.conflict-bar{
+  background:var(--gh-danger-subtle);border:1px solid rgba(248,81,73,0.4);
+  border-radius:var(--r);padding:10px 14px;margin-bottom:14px;display:none;
 }
-.conflict-banner-header{
-  display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:8px;
-}
-.conflict-banner-title{font-size:13px;font-weight:600;color:var(--gh-danger-fg);display:flex;align-items:center;gap:6px}
-.conflict-list{display:flex;flex-direction:column;gap:6px}
+.conflict-bar.visible{display:block}
+.conflict-bar-title{font-size:13px;font-weight:600;color:var(--gh-danger-fg);margin-bottom:6px}
+.conflict-list{display:flex;flex-direction:column;gap:5px}
 .conflict-item{
-  background:var(--gh-canvas-default);
-  border:1px solid rgba(248,81,73,0.25);
-  border-radius:var(--rs);
-  padding:8px 12px;
-  font-size:12px;
-  color:var(--gh-fg-default);
+  background:var(--gh-canvas-default);border:1px solid rgba(248,81,73,0.2);
+  border-radius:var(--rs);padding:6px 10px;font-size:12px;color:var(--gh-fg-default);
 }
 .conflict-item strong{color:var(--gh-danger-fg)}
-.conflict-meta{font-size:11px;color:var(--gh-fg-muted);margin-top:2px}
-.ok-banner{
-  background:var(--gh-success-subtle);
-  border:1px solid rgba(63,185,80,0.4);
-  border-radius:var(--r);
-  padding:10px 14px;
-  font-size:13px;color:var(--gh-success-fg);
-  display:flex;align-items:center;gap:8px;
-  margin-bottom:10px;
+.conflict-meta{font-size:11px;color:var(--gh-fg-muted);margin-top:1px}
+.tbl-outer{overflow:auto;border:1px solid var(--gh-border-default);border-radius:var(--rs)}
+table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap}
+thead tr{background:var(--gh-canvas-subtle);border-bottom:1px solid var(--gh-border-default)}
+th{
+  padding:8px 12px;text-align:left;font-size:12px;font-weight:600;
+  color:var(--gh-fg-muted);position:sticky;top:0;background:var(--gh-canvas-subtle);z-index:2;
 }
-.suggest-section{
-  background:var(--gh-attention-subtle);
-  border:1px solid rgba(210,153,34,0.4);
-  border-radius:var(--r);
-  padding:14px 16px;
-  margin-top:10px;
+tbody tr{border-bottom:1px solid var(--gh-border-muted);transition:background 0.1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--gh-canvas-subtle)}
+tbody tr.conflict-row{border-left:3px solid rgba(248,81,73,0.6)}
+tbody tr.warn-row{border-left:3px solid rgba(210,153,34,0.6)}
+td{padding:7px 12px;color:var(--gh-fg-default);font-size:13px}
+.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500;line-height:18px}
+.b-house{background:var(--gh-accent-subtle);color:var(--gh-accent-fg);border:1px solid rgba(56,139,253,0.4);font-weight:700}
+.b-vax{background:var(--gh-accent-subtle);color:var(--gh-accent-fg);border:1px solid rgba(56,139,253,0.25)}
+.b-load{background:var(--gh-success-subtle);color:var(--gh-success-fg);border:1px solid rgba(63,185,80,0.25)}
+.b-clean{background:var(--gh-canvas-inset);color:var(--gh-fg-muted);border:1px solid var(--gh-border-muted)}
+.b-warn{background:var(--gh-attention-subtle);color:var(--gh-attention-fg);border:1px solid rgba(210,153,34,0.3);font-size:10px}
+.b-conflict{background:var(--gh-danger-subtle);color:var(--gh-danger-fg);border:1px solid rgba(248,81,73,0.3);font-size:10px}
+.row-actions{display:flex;gap:4px;justify-content:flex-end}
+.row-btn{
+  height:24px;padding:0 10px;border-radius:var(--rs);
+  border:1px solid var(--gh-border-default);background:var(--gh-canvas-subtle);
+  color:var(--gh-fg-default);font-family:'Inter',system-ui,sans-serif;
+  font-size:12px;font-weight:500;cursor:pointer;
+  transition:background 0.12s,border-color 0.12s,color 0.12s;
 }
-.suggest-title{font-size:13px;font-weight:600;color:var(--gh-attention-fg);margin-bottom:10px;display:flex;align-items:center;gap:6px}
-.suggest-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
-.suggest-card{
-  background:var(--gh-canvas-default);
-  border:1px solid rgba(210,153,34,0.3);
-  border-radius:var(--rs);
-  padding:10px 12px;
+.row-btn:hover{background:var(--gh-hover-bg);border-color:var(--gh-fg-subtle)}
+.row-btn.del:hover{border-color:rgba(248,81,73,0.5);background:var(--gh-danger-subtle);color:var(--gh-danger-fg)}
+.empty-state{padding:48px 20px;text-align:center;color:var(--gh-fg-muted);font-size:14px}
+.timeline-wrap{overflow-x:auto;border:1px solid var(--gh-border-default);border-radius:var(--rs)}
+.timeline-inner{min-width:800px;padding:16px}
+.tl-header{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.tl-header-title{font-size:12px;font-weight:600;color:var(--gh-fg-muted);text-transform:uppercase;letter-spacing:0.05em}
+.tl-nav{display:flex;align-items:center;gap:6px;margin-left:auto}
+.tl-nav button{
+  height:26px;padding:0 10px;border-radius:var(--rs);
+  border:1px solid var(--gh-border-default);background:var(--gh-canvas-subtle);
+  color:var(--gh-fg-default);font-family:'Inter',system-ui,sans-serif;
+  font-size:12px;cursor:pointer;transition:background 0.15s;
 }
-.suggest-card-house{font-size:12px;font-weight:600;color:var(--gh-fg-muted);margin-bottom:4px}
-.suggest-card-date{font-size:13px;font-weight:600;color:var(--gh-attention-fg)}
-.suggest-card-note{font-size:11px;color:var(--gh-fg-muted);margin-top:2px}
-.btn-suggest{
-  height:30px;padding:0 14px;
-  background:rgba(210,153,34,0.15);color:var(--gh-attention-fg);
-  border:1px solid rgba(210,153,34,0.5);border-radius:var(--rs);
-  font-family:'Inter',system-ui,sans-serif;font-size:12px;font-weight:500;
-  cursor:pointer;transition:background 0.15s;white-space:nowrap;
+.tl-nav button:hover{background:var(--gh-hover-bg)}
+.tl-range-label{font-size:12px;color:var(--gh-fg-muted);min-width:160px;text-align:center}
+.tl-axis{position:relative;height:24px;margin-bottom:8px;border-bottom:1px solid var(--gh-border-muted)}
+.tl-month-label{
+  position:absolute;font-size:11px;color:var(--gh-fg-muted);
+  white-space:nowrap;top:4px;transform:translateX(-50%);
 }
-.btn-suggest:hover{background:rgba(210,153,34,0.25)}
-.empty-state{
-  padding:48px 20px;text-align:center;
-  color:var(--gh-fg-muted);font-size:14px;
-  background:var(--gh-canvas-subtle);
-  border:1px solid var(--gh-border-default);
-  border-radius:var(--r);
+.tl-row{display:flex;align-items:center;gap:8px;height:32px;margin-bottom:4px}
+.tl-row-label{font-size:12px;font-weight:600;color:var(--gh-fg-default);width:28px;flex-shrink:0;text-align:right}
+.tl-row-track{flex:1;position:relative;height:100%}
+.tl-block{
+  position:absolute;height:22px;top:5px;border-radius:4px;
+  font-size:10px;font-weight:500;display:flex;align-items:center;
+  padding:0 5px;overflow:hidden;white-space:nowrap;cursor:default;transition:filter 0.15s;
 }
-.legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;align-items:center}
-.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--gh-fg-muted)}
-svg.ico{width:14px;height:14px;flex-shrink:0;vertical-align:middle}
+.tl-block:hover{filter:brightness(1.15)}
+.tl-block.vax1,.tl-block.vax2{background:rgba(56,139,253,0.25);color:var(--gh-accent-fg);border:1px solid rgba(56,139,253,0.4)}
+.tl-block.load{background:rgba(46,160,67,0.2);color:var(--gh-success-fg);border:1px solid rgba(63,185,80,0.4)}
+.tl-block.clean{background:var(--gh-canvas-subtle);color:var(--gh-fg-muted);border:1px solid var(--gh-border-default)}
+.tl-block.conflict{background:rgba(248,81,73,0.2);color:var(--gh-danger-fg);border:1px solid rgba(248,81,73,0.4)}
+.tl-today{position:absolute;top:0;bottom:0;width:1px;background:var(--gh-danger-fg);opacity:0.6;z-index:3}
+.tl-today-label{position:absolute;top:-18px;font-size:10px;color:var(--gh-danger-fg);transform:translateX(-50%);white-space:nowrap}
+.tl-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--gh-border-muted)}
+.tl-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--gh-fg-muted)}
+.tl-legend-swatch{width:14px;height:10px;border-radius:2px;flex-shrink:0}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(4px)}
+.modal-bg.hidden{display:none}
+.modal{
+  background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);
+  border-radius:var(--r);padding:24px;width:420px;max-width:95vw;
+}
+.modal h3{font-weight:600;font-size:16px;margin-bottom:18px;color:var(--gh-fg-default)}
+.fgroup{margin-bottom:12px}
+.fgroup label{display:block;font-size:12px;font-weight:500;color:var(--gh-fg-muted);margin-bottom:5px}
+.fgroup select,.fgroup input[type=date]{
+  width:100%;background:var(--gh-canvas-default);border:1px solid var(--gh-border-default);
+  border-radius:var(--rs);color:var(--gh-fg-default);
+  font-family:'Inter',system-ui,sans-serif;font-size:14px;padding:6px 10px;outline:none;
+  transition:border-color 0.15s,box-shadow 0.15s;appearance:none;-webkit-appearance:none;
+}
+.fgroup select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%238b949e' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;cursor:pointer;
+}
+.fgroup input:focus,.fgroup select:focus{border-color:var(--gh-accent-emphasis);box-shadow:0 0 0 3px rgba(31,111,235,0.3)}
+.warn-box{
+  background:var(--gh-attention-subtle);border:1px solid rgba(210,153,34,0.4);
+  border-radius:var(--rs);padding:8px 10px;font-size:12px;color:var(--gh-attention-fg);
+  margin-bottom:12px;display:none;
+}
+.warn-box.visible{display:block}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;padding-top:14px;border-top:1px solid var(--gh-border-muted)}
+.btn-secondary{
+  height:32px;padding:0 14px;background:var(--gh-canvas-subtle);color:var(--gh-fg-default);
+  border:1px solid var(--gh-border-default);border-radius:var(--rs);
+  font-family:'Inter',system-ui,sans-serif;font-size:13px;font-weight:500;
+  cursor:pointer;transition:background 0.15s,border-color 0.15s;
+}
+.btn-secondary:hover{background:var(--gh-hover-bg);border-color:var(--gh-fg-subtle)}
+.confirm-bg{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:300;backdrop-filter:blur(4px)}
+.confirm-bg.hidden{display:none}
+.confirm-box{background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:var(--r);padding:24px;width:320px;text-align:center}
+.confirm-box p{color:var(--gh-fg-muted);font-size:14px;margin-bottom:16px;line-height:1.6}
+.confirm-actions{display:flex;gap:8px;justify-content:center}
+.btn-danger{
+  height:32px;padding:0 14px;background:var(--gh-danger-subtle);color:var(--gh-danger-fg);
+  border:1px solid rgba(248,81,73,0.4);border-radius:var(--rs);
+  font-family:'Inter',system-ui,sans-serif;font-weight:500;font-size:13px;
+  cursor:pointer;transition:background 0.15s;
+}
+.btn-danger:hover{background:rgba(248,81,73,0.2)}
 </style>
 </head>
 <body>
@@ -208,9 +241,10 @@ svg.ico{width:14px;height:14px;flex-shrink:0;vertical-align:middle}
 <header>
   <div class="header-left">
     <span class="logo-title">🐔 Rearing House Scheduler</span>
-    <span class="logo-sub">Conflict checker</span>
+    <span class="logo-sub">Multi-cycle conflict checker</span>
   </div>
   <div class="header-right">
+    <div class="sync-badge loading" id="sync-badge"><div class="sync-dot"></div><span id="sync-text">Loading…</span></div>
     <button class="theme-toggle" onclick="toggleTheme()">
       <span id="theme-icon">☀️</span>
       <span id="theme-label">Light</span>
@@ -219,33 +253,66 @@ svg.ico{width:14px;height:14px;flex-shrink:0;vertical-align:middle}
 </header>
 
 <div class="main">
-
-  <div class="section-title">DOC Placement Dates</div>
-  <div class="houses-grid" id="houses-grid"></div>
-
-  <div class="divider"></div>
-
-  <div class="legend">
-    <span class="legend-item"><span class="pill pill-vax">Vax</span> Vaccination (days 60 & 90)</span>
-    <span class="legend-item"><span class="pill pill-load">Load</span> Loading (days 105–122)</span>
-    <span class="legend-item"><span class="pill pill-clean">Clean</span> Cleaning (days 123–152)</span>
+  <div class="toolbar">
+    <button class="btn-primary" onclick="openAddModal()">+ Add placement</button>
+    <div class="sep"></div>
+    <button class="btn-tool active" id="tab-table" onclick="switchTab('table')">📋 Table</button>
+    <button class="btn-tool" id="tab-timeline" onclick="switchTab('timeline')">📅 Timeline</button>
   </div>
-
-  <div id="results-area">
-    <div class="empty-state">Enter at least one placement date to see the schedule.</div>
+  <div class="conflict-bar" id="conflict-bar">
+    <div class="conflict-bar-title" id="conflict-bar-title"></div>
+    <div class="conflict-list" id="conflict-list"></div>
   </div>
+  <div id="view-table"></div>
+  <div id="view-timeline" style="display:none"></div>
+</div>
 
+<!-- Add modal -->
+<div class="modal-bg hidden" id="modal-bg">
+  <div class="modal">
+    <h3>Add placement</h3>
+    <div class="fgroup">
+      <label>Rearing house</label>
+      <select id="m-house">
+        <option value="">— select —</option>
+        <option>Θ1</option><option>Θ2</option><option>Θ3</option>
+        <option>Θ4</option><option>Θ5</option>
+      </select>
+    </div>
+    <div class="fgroup">
+      <label>DOC placement date</label>
+      <input type="date" id="m-date" />
+    </div>
+    <div class="warn-box" id="m-warn"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" id="m-save" onclick="saveNew()" disabled>Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete confirm -->
+<div class="confirm-bg hidden" id="confirm-bg">
+  <div class="confirm-box">
+    <p>Delete this placement?<br><strong id="confirm-detail" style="color:var(--gh-danger-fg)"></strong></p>
+    <div class="confirm-actions">
+      <button class="btn-secondary" onclick="closeConfirm()">Cancel</button>
+      <button class="btn-danger" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
 </div>
 
 <script>
-const HOUSES = ['Θ1','Θ2','Θ3','Θ4','Θ5'];
-const CONFLICT_WINDOW_DAYS = 6;
+const SB_URL  = 'https://oorhbrphdbigwgizejcc.supabase.co';
+const SB_KEY  = 'sb_publishable_1S3L1sNMOjr-YgwGAAD2Kg_X_3S4cTl';
+const TABLE   = 'placements';
+const CONFLICT_WINDOW = 6;
+const HOUSES  = ['Θ1','Θ2','Θ3','Θ4','Θ5'];
 
-/* ── Theme ── */
 (function(){
-  const saved = localStorage.getItem('theme') || 'dark';
-  document.documentElement.setAttribute('data-theme', saved);
-  updateThemeBtn(saved);
+  const t = localStorage.getItem('theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', t);
+  updateThemeBtn(t);
 })();
 function toggleTheme(){
   const cur = document.documentElement.getAttribute('data-theme') || 'dark';
@@ -255,256 +322,316 @@ function toggleTheme(){
   updateThemeBtn(next);
 }
 function updateThemeBtn(t){
-  document.getElementById('theme-icon').textContent = t === 'dark' ? '☀️' : '🌙';
-  document.getElementById('theme-label').textContent = t === 'dark' ? 'Light' : 'Dark';
+  document.getElementById('theme-icon').textContent  = t==='dark' ? '☀️' : '🌙';
+  document.getElementById('theme-label').textContent = t==='dark' ? 'Light' : 'Dark';
 }
 
-/* ── Date helpers ── */
-function addDays(date, n){
-  const d = new Date(date);
-  d.setDate(d.getDate() + n);
-  return d;
+async function sbFetch(path, opts={}){
+  const res = await fetch(`${SB_URL}/rest/v1/${path}`, {
+    ...opts,
+    headers:{
+      'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`,
+      'Content-Type': 'application/json', 'Prefer': opts.prefer||'',
+      ...opts.headers,
+    },
+  });
+  if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.message||e.hint||`HTTP ${res.status}`); }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
 }
-function fmt(date){
-  return date.toLocaleDateString('en-GB', {day:'2-digit',month:'2-digit',year:'numeric'});
+const sbSelect = ()      => sbFetch(`${TABLE}?order=doc_date.asc`);
+const sbInsert = row     => sbFetch(TABLE, {method:'POST', prefer:'return=representation', body:JSON.stringify(row)});
+const sbDelete = id      => sbFetch(`${TABLE}?id=eq.${id}`, {method:'DELETE'});
+
+let data = [];
+let activeTab = 'table';
+let deleteId  = null;
+let tlOffset  = 0;
+
+function setSyncStatus(state, msg){
+  const b = document.getElementById('sync-badge');
+  b.className = 'sync-badge '+state;
+  document.getElementById('sync-text').textContent = msg;
 }
-function daysDiff(a, b){
-  return Math.abs(Math.round((a - b) / 86400000));
-}
-function datesOverlap(s1, e1, s2, e2){
-  return s1 <= e2 && e1 >= s2;
-}
+
+function addDays(date, n){ const d=new Date(date); d.setDate(d.getDate()+n); return d; }
+function fmtDate(d){ return new Date(d).toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric'}); }
+function daysDiff(a,b){ return Math.abs(Math.round((new Date(a)-new Date(b))/86400000)); }
+function datesOverlap(s1,e1,s2,e2){ return new Date(s1)<=new Date(e2) && new Date(e1)>=new Date(s2); }
 function getSchedule(docDate){
   const base = new Date(docDate);
   return {
-    vax1:       addDays(base, 59),
-    vax2:       addDays(base, 89),
-    loadStart:  addDays(base, 104),
-    loadEnd:    addDays(base, 121),
-    cleanStart: addDays(base, 122),
-    cleanEnd:   addDays(base, 151),
+    vax1:addDays(base,59), vax2:addDays(base,89),
+    loadStart:addDays(base,104), loadEnd:addDays(base,121),
+    cleanStart:addDays(base,122), cleanEnd:addDays(base,151),
   };
 }
 
-/* ── Build inputs ── */
-function buildInputs(){
-  const grid = document.getElementById('houses-grid');
-  HOUSES.forEach(h => {
-    const card = document.createElement('div');
-    card.className = 'house-card';
-    card.id = 'card_' + h;
-    card.innerHTML = `
-      <h3><span class="house-dot" id="dot_${h}"></span>${h}</h3>
-      <input type="date" id="doc_${h}" aria-label="DOC date for ${h}" />
-      <button class="clear-link" onclick="clearHouse('${h}')">Clear</button>
-    `;
-    grid.appendChild(card);
-    card.querySelector('input').addEventListener('change', () => {
-      const hasVal = !!card.querySelector('input').value;
-      card.classList.toggle('has-date', hasVal);
-      render();
-    });
-  });
+function detectConflicts(rows){
+  const out = [];
+  for(let i=0;i<rows.length;i++){
+    for(let j=i+1;j<rows.length;j++){
+      const a=rows[i],b=rows[j],sa=a.schedule,sb=b.schedule;
+      const d1=daysDiff(sa.vax1,sb.vax1);
+      if(d1<=CONFLICT_WINDOW)
+        out.push({type:'Vaccination 1 (day 60)',houses:[a.house,b.house],dateA:fmtDate(sa.vax1),dateB:fmtDate(sb.vax1),diff:d1,ids:[a.id,b.id],kind:'vax'});
+      const d2=daysDiff(sa.vax2,sb.vax2);
+      if(d2<=CONFLICT_WINDOW)
+        out.push({type:'Vaccination 2 (day 90)',houses:[a.house,b.house],dateA:fmtDate(sa.vax2),dateB:fmtDate(sb.vax2),diff:d2,ids:[a.id,b.id],kind:'vax'});
+      if(datesOverlap(sa.loadStart,sa.loadEnd,sb.loadStart,sb.loadEnd))
+        out.push({type:'Loading',houses:[a.house,b.house],
+          dateA:`${fmtDate(sa.loadStart)}-${fmtDate(sa.loadEnd)}`,
+          dateB:`${fmtDate(sb.loadStart)}-${fmtDate(sb.loadEnd)}`,
+          diff:null,ids:[a.id,b.id],kind:'load'});
+    }
+  }
+  return out;
 }
 
-function clearHouse(h){
-  const inp = document.getElementById('doc_' + h);
-  inp.value = '';
-  document.getElementById('card_' + h).classList.remove('has-date');
+function checkCleaningOverlap(house, docDate){
+  const sameHouse = data.filter(r=>r.house===house).sort((a,b)=>new Date(a.doc_date)-new Date(b.doc_date));
+  const newDoc = new Date(docDate);
+  for(const prev of sameHouse){
+    const s=prev.schedule;
+    if(newDoc>=s.cleanStart && newDoc<=s.cleanEnd)
+      return `This date falls within the cleaning period of a previous cycle (${fmtDate(s.cleanStart)} - ${fmtDate(s.cleanEnd)}).`;
+    if(newDoc>=s.loadStart && newDoc<=s.cleanEnd)
+      return `This date falls during the loading/cleaning window of a previous cycle.`;
+  }
+  return null;
+}
+
+async function load(){
+  setSyncStatus('loading','Loading...');
+  try{
+    const rows = await sbSelect();
+    data = (rows||[]).map(r=>({...r, schedule:getSchedule(r.doc_date)}));
+    setSyncStatus('ok','Synced');
+    render();
+  }catch(e){ setSyncStatus('err','Error: '+e.message); }
+}
+
+function render(){
+  const conflicts = detectConflicts(data);
+  const conflictIds = new Set(conflicts.flatMap(c=>c.ids));
+
+  const bar = document.getElementById('conflict-bar');
+  if(conflicts.length){
+    bar.classList.add('visible');
+    document.getElementById('conflict-bar-title').textContent =
+      `⚠️ ${conflicts.length} conflict${conflicts.length>1?'s':''} detected`;
+    document.getElementById('conflict-list').innerHTML = conflicts.map(c=>{
+      const diff = c.diff!==null
+        ? ` (${c.diff} day${c.diff===1?'':'s'} apart — need at least ${CONFLICT_WINDOW+1})`
+        : ' (overlapping periods)';
+      return `<div class="conflict-item">
+        <strong>${c.type}</strong> — ${c.houses[0]} &amp; ${c.houses[1]}${diff}
+        <div class="conflict-meta">${c.houses[0]}: ${c.dateA} &nbsp;|&nbsp; ${c.houses[1]}: ${c.dateB}</div>
+      </div>`;
+    }).join('');
+  } else {
+    bar.classList.remove('visible');
+  }
+
+  if(activeTab==='table') renderTable(conflictIds);
+  else renderTimeline();
+}
+
+function renderTable(conflictIds){
+  const el = document.getElementById('view-table');
+  if(!data.length){
+    el.innerHTML='<div class="empty-state">No placements yet. Add the first one.</div>';
+    return;
+  }
+  const sorted = data.slice().sort((a,b)=>new Date(a.doc_date)-new Date(b.doc_date));
+
+  const warnIds = new Set();
+  HOUSES.forEach(h=>{
+    const byHouse = sorted.filter(r=>r.house===h);
+    for(let i=1;i<byHouse.length;i++){
+      const prev=byHouse[i-1],cur=byHouse[i];
+      const d=new Date(cur.doc_date);
+      if(d>=prev.schedule.cleanStart && d<=prev.schedule.cleanEnd) warnIds.add(cur.id);
+    }
+  });
+
+  let html=`<div class="tbl-outer"><table>
+    <thead><tr>
+      <th>House</th><th>DOC date</th><th>Vaccination 1</th><th>Vaccination 2</th>
+      <th>Loading</th><th>Cleaning ends</th><th>Status</th><th></th>
+    </tr></thead><tbody>`;
+  sorted.forEach(r=>{
+    const s=r.schedule;
+    const isC=conflictIds.has(r.id), isW=warnIds.has(r.id);
+    html+=`<tr class="${isC?'conflict-row':isW?'warn-row':''}">
+      <td><span class="badge b-house">${r.house}</span></td>
+      <td>${fmtDate(r.doc_date)}</td>
+      <td><span class="badge b-vax">${fmtDate(s.vax1)}</span></td>
+      <td><span class="badge b-vax">${fmtDate(s.vax2)}</span></td>
+      <td><span class="badge b-load">${fmtDate(s.loadStart)} - ${fmtDate(s.loadEnd)}</span></td>
+      <td><span class="badge b-clean">${fmtDate(s.cleanEnd)}</span></td>
+      <td>
+        ${isC?'<span class="badge b-conflict">⚠️ Conflict</span>':''}
+        ${isW?'<span class="badge b-warn">⚠️ Clean overlap</span>':''}
+        ${!isC&&!isW?'<span style="color:var(--gh-success-fg);font-size:12px">✓ Clear</span>':''}
+      </td>
+      <td><div class="row-actions">
+        <button class="row-btn del" onclick="askDelete('${r.id}','${r.house}','${r.doc_date}')">Delete</button>
+      </div></td>
+    </tr>`;
+  });
+  html+='</tbody></table></div>';
+  el.innerHTML=html;
+}
+
+function renderTimeline(){
+  const el = document.getElementById('view-timeline');
+  const conflicts = detectConflicts(data);
+  const conflictIds = new Set(conflicts.flatMap(c=>c.ids));
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  const viewStart = new Date(today.getFullYear(), today.getMonth()+tlOffset, 1);
+  const viewEnd   = new Date(viewStart.getFullYear(), viewStart.getMonth()+6, 0);
+
+  function pct(d){ return (new Date(d)-viewStart)/(viewEnd-viewStart)*100; }
+  function pctW(s,e){
+    const cs=new Date(Math.max(new Date(s),viewStart));
+    const ce=new Date(Math.min(new Date(e),viewEnd));
+    if(cs>ce) return null;
+    return {left:pct(cs), width:(ce-cs)/(viewEnd-viewStart)*100};
+  }
+
+  let axisHtml='';
+  let cur=new Date(viewStart);
+  while(cur<=viewEnd){
+    const p=pct(cur);
+    if(p>=0&&p<=100){
+      const label=cur.toLocaleDateString('en-GB',{month:'short',year:'2-digit'});
+      axisHtml+=`<div class="tl-month-label" style="left:${p.toFixed(1)}%">${label}</div>`;
+    }
+    cur=new Date(cur.getFullYear(),cur.getMonth()+1,1);
+  }
+
+  const todayPct=pct(today);
+  const showToday=todayPct>=0&&todayPct<=100;
+
+  let rowsHtml='';
+  HOUSES.forEach(h=>{
+    const hRows=data.filter(r=>r.house===h);
+    let blocks='';
+    if(showToday)
+      blocks+=`<div class="tl-today" style="left:${todayPct.toFixed(2)}%"><div class="tl-today-label">Today</div></div>`;
+    hRows.forEach(r=>{
+      const s=r.schedule, isC=conflictIds.has(r.id);
+      [
+        {cls:isC?'conflict':'vax1', s:s.vax1, e:s.vax1, label:'V1'},
+        {cls:isC?'conflict':'vax2', s:s.vax2, e:s.vax2, label:'V2'},
+        {cls:isC?'conflict':'load', s:s.loadStart, e:s.loadEnd, label:'Load'},
+        {cls:'clean', s:s.cleanStart, e:s.cleanEnd, label:'Clean'},
+      ].forEach(ev=>{
+        const isSingleDay = ev.s.toDateString()===ev.e.toDateString();
+        const p = isSingleDay
+          ? {left:Math.max(0,Math.min(100,pct(ev.s)-0.3)), width:Math.max(0.8,100/(Math.round((viewEnd-viewStart)/86400000)+1))}
+          : pctW(ev.s,ev.e);
+        if(!p||p.width<=0) return;
+        blocks+=`<div class="tl-block ${ev.cls}" style="left:${p.left.toFixed(2)}%;width:${p.width.toFixed(2)}%" title="${h} ${ev.label}: ${fmtDate(ev.s)}${!isSingleDay?' - '+fmtDate(ev.e):''}">${p.width>3?ev.label:''}</div>`;
+      });
+    });
+    rowsHtml+=`<div class="tl-row"><div class="tl-row-label">${h}</div><div class="tl-row-track">${blocks}</div></div>`;
+  });
+
+  const vmS=viewStart.toLocaleDateString('en-GB',{month:'short',year:'numeric'});
+  const vmE=viewEnd.toLocaleDateString('en-GB',{month:'short',year:'numeric'});
+
+  el.innerHTML=`<div class="timeline-wrap"><div class="timeline-inner">
+    <div class="tl-header">
+      <span class="tl-header-title">6-month view</span>
+      <div class="tl-nav">
+        <button onclick="tlNav(-1)">&#8592; Back</button>
+        <span class="tl-range-label">${vmS} &#8212; ${vmE}</span>
+        <button onclick="tlNav(1)">Forward &#8594;</button>
+        <button onclick="tlReset()">Today</button>
+      </div>
+    </div>
+    <div class="tl-axis">${axisHtml}</div>
+    <div>${rowsHtml}</div>
+    <div class="tl-legend">
+      <span class="tl-legend-item"><span class="tl-legend-swatch" style="background:rgba(56,139,253,0.3);border:1px solid rgba(56,139,253,0.5)"></span>Vaccination (V1/V2)</span>
+      <span class="tl-legend-item"><span class="tl-legend-swatch" style="background:rgba(46,160,67,0.2);border:1px solid rgba(63,185,80,0.4)"></span>Loading</span>
+      <span class="tl-legend-item"><span class="tl-legend-swatch" style="background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default)"></span>Cleaning</span>
+      <span class="tl-legend-item"><span class="tl-legend-swatch" style="background:rgba(248,81,73,0.2);border:1px solid rgba(248,81,73,0.4)"></span>Conflict</span>
+    </div>
+  </div></div>`;
+}
+
+function tlNav(dir){ tlOffset+=dir; renderTimeline(); }
+function tlReset(){ tlOffset=0; renderTimeline(); }
+
+function switchTab(tab){
+  activeTab=tab;
+  document.getElementById('view-table').style.display    = tab==='table'    ? '' : 'none';
+  document.getElementById('view-timeline').style.display = tab==='timeline' ? '' : 'none';
+  document.getElementById('tab-table').classList.toggle('active',    tab==='table');
+  document.getElementById('tab-timeline').classList.toggle('active', tab==='timeline');
   render();
 }
 
-/* ── Conflict detection ── */
-function detectConflicts(entries){
-  const conflicts = [];
-  for(let i = 0; i < entries.length; i++){
-    for(let j = i + 1; j < entries.length; j++){
-      const a = entries[i], b = entries[j];
-      const sa = a.schedule, sb = b.schedule;
+function openAddModal(){
+  document.getElementById('m-house').value='';
+  document.getElementById('m-date').value='';
+  document.getElementById('m-warn').classList.remove('visible');
+  document.getElementById('m-save').disabled=true;
+  document.getElementById('modal-bg').classList.remove('hidden');
+}
+function closeModal(){ document.getElementById('modal-bg').classList.add('hidden'); }
 
-      const d1 = daysDiff(sa.vax1, sb.vax1);
-      if(d1 <= CONFLICT_WINDOW_DAYS)
-        conflicts.push({type:'Vaccination 1 (day 60)', houses:[a.house,b.house],
-          dateA:fmt(sa.vax1), dateB:fmt(sb.vax1), diff:d1, kind:'vax'});
+document.getElementById('m-house').addEventListener('change', checkModalWarn);
+document.getElementById('m-date').addEventListener('change',  checkModalWarn);
 
-      const d2 = daysDiff(sa.vax2, sb.vax2);
-      if(d2 <= CONFLICT_WINDOW_DAYS)
-        conflicts.push({type:'Vaccination 2 (day 90)', houses:[a.house,b.house],
-          dateA:fmt(sa.vax2), dateB:fmt(sb.vax2), diff:d2, kind:'vax'});
-
-      if(datesOverlap(sa.loadStart, sa.loadEnd, sb.loadStart, sb.loadEnd))
-        conflicts.push({type:'Loading', houses:[a.house,b.house],
-          dateA:`${fmt(sa.loadStart)}–${fmt(sa.loadEnd)}`,
-          dateB:`${fmt(sb.loadStart)}–${fmt(sb.loadEnd)}`,
-          diff:null, kind:'load'});
-    }
-  }
-  return conflicts;
+function checkModalWarn(){
+  const house=document.getElementById('m-house').value;
+  const date =document.getElementById('m-date').value;
+  document.getElementById('m-save').disabled=!(house&&date);
+  const warnBox=document.getElementById('m-warn');
+  if(house&&date){
+    const w=checkCleaningOverlap(house,date);
+    if(w){ warnBox.textContent='⚠️ '+w; warnBox.classList.add('visible'); }
+    else warnBox.classList.remove('visible');
+  } else warnBox.classList.remove('visible');
 }
 
-/* ── Suggest conflict-free dates ── */
-/*
-  Strategy: keep the earliest entry fixed, then for each subsequent house
-  find the next Monday-aligned DOC that clears all conflicts with already
-  placed houses. We search day by day up to 365 days out.
-*/
-function suggestDates(entries){
-  if(!entries.length) return [];
-  const result = [];
-  const placed = []; // {house, docDate, schedule}
-
-  // Always keep the first (earliest) house unchanged
-  const first = entries.slice().sort((a,b) => a.docDate - b.docDate)[0];
-  placed.push(first);
-  result.push({house: first.house, docDate: first.docDate, changed: false});
-
-  // For each remaining house (sorted by original date) find a conflict-free date
-  const rest = entries.filter(e => e.house !== first.house)
-                      .sort((a,b) => a.docDate - b.docDate);
-
-  for(const entry of rest){
-    let candidate = new Date(entry.docDate);
-    let found = false;
-    for(let attempt = 0; attempt <= 365; attempt++){
-      const sched = getSchedule(candidate);
-      let ok = true;
-      for(const p of placed){
-        // Check vax1
-        if(daysDiff(sched.vax1, p.schedule.vax1) <= CONFLICT_WINDOW_DAYS){ ok=false; break; }
-        // Check vax2
-        if(daysDiff(sched.vax2, p.schedule.vax2) <= CONFLICT_WINDOW_DAYS){ ok=false; break; }
-        // Check loading overlap
-        if(datesOverlap(sched.loadStart, sched.loadEnd, p.schedule.loadStart, p.schedule.loadEnd)){ ok=false; break; }
-      }
-      if(ok){
-        const changed = candidate.toDateString() !== entry.docDate.toDateString();
-        placed.push({house: entry.house, docDate: candidate, schedule: sched});
-        result.push({house: entry.house, docDate: candidate, changed});
-        found = true;
-        break;
-      }
-      candidate = addDays(candidate, 1);
-    }
-    if(!found){
-      result.push({house: entry.house, docDate: entry.docDate, changed: false, failed: true});
-      placed.push(entry);
-    }
-  }
-  return result;
+async function saveNew(){
+  const house=document.getElementById('m-house').value;
+  const date =document.getElementById('m-date').value;
+  if(!house||!date) return;
+  const btn=document.getElementById('m-save');
+  btn.disabled=true; btn.textContent='Saving...';
+  try{
+    const [inserted]=await sbInsert({house, doc_date:date});
+    data.push({...inserted, schedule:getSchedule(inserted.doc_date)});
+    closeModal(); render();
+    setSyncStatus('ok','Saved');
+  }catch(e){ setSyncStatus('err','Save failed: '+e.message); }
+  finally{ btn.disabled=false; btn.textContent='Save'; }
 }
 
-/* ── Render ── */
-function render(){
-  const entries = HOUSES.map(h => {
-    const val = document.getElementById('doc_' + h).value;
-    if(!val) return null;
-    const docDate = new Date(val);
-    return {house: h, docDate, schedule: getSchedule(docDate)};
-  }).filter(Boolean);
-
-  const area = document.getElementById('results-area');
-
-  if(!entries.length){
-    area.innerHTML = '<div class="empty-state">Enter at least one placement date to see the schedule.</div>';
-    return;
-  }
-
-  const conflicts = detectConflicts(entries);
-  let html = '';
-
-  /* Conflict / OK banner */
-  if(conflicts.length){
-    html += `<div class="conflict-banner">
-      <div class="conflict-banner-header">
-        <div class="conflict-banner-title">
-          ⚠️ ${conflicts.length} conflict${conflicts.length > 1 ? 's' : ''} detected
-        </div>
-        <button class="btn-suggest" onclick="renderSuggestions()">💡 Suggest conflict-free dates</button>
-      </div>
-      <div class="conflict-list">`;
-    conflicts.forEach(c => {
-      const diffText = c.diff !== null
-        ? `(${c.diff} day${c.diff === 1 ? '' : 's'} apart — need at least ${CONFLICT_WINDOW_DAYS + 1})`
-        : '(overlapping periods)';
-      html += `<div class="conflict-item">
-        <strong>${c.type}</strong> — ${c.houses[0]} &amp; ${c.houses[1]} ${diffText}
-        <div class="conflict-meta">${c.houses[0]}: ${c.dateA} &nbsp;|&nbsp; ${c.houses[1]}: ${c.dateB}</div>
-      </div>`;
-    });
-    html += `</div></div>`;
-  } else {
-    html += `<div class="ok-banner">✅ No conflicts — all houses are clear.</div>`;
-  }
-
-  html += '<div id="suggestions-area"></div>';
-
-  /* Per-house schedule cards */
-  const sorted = entries.slice().sort((a,b) => a.docDate - b.docDate);
-  sorted.forEach(e => {
-    const s = e.schedule;
-    const houseConflicts = conflicts.filter(c => c.houses.includes(e.house));
-    html += `<div class="result-card">
-      <div class="result-card-header">
-        <span class="result-house-name">${e.house}</span>
-        <span class="result-doc-date">Placement: ${fmt(e.docDate)}</span>
-      </div>
-      <div class="events-row">
-        ${houseConflicts.some(c=>c.kind==='vax'&&c.type.includes('1'))
-          ? `<span class="pill pill-conflict-flag">⚠️ Vax 1 — ${fmt(s.vax1)}</span>`
-          : `<span class="pill pill-vax">Vax 1 — ${fmt(s.vax1)}</span>`}
-        ${houseConflicts.some(c=>c.kind==='vax'&&c.type.includes('2'))
-          ? `<span class="pill pill-conflict-flag">⚠️ Vax 2 — ${fmt(s.vax2)}</span>`
-          : `<span class="pill pill-vax">Vax 2 — ${fmt(s.vax2)}</span>`}
-        ${houseConflicts.some(c=>c.kind==='load')
-          ? `<span class="pill pill-conflict-flag">⚠️ Load ${fmt(s.loadStart)}–${fmt(s.loadEnd)}</span>`
-          : `<span class="pill pill-load">Load ${fmt(s.loadStart)}–${fmt(s.loadEnd)}</span>`}
-        <span class="pill pill-clean">Clean ${fmt(s.cleanStart)}–${fmt(s.cleanEnd)}</span>
-      </div>
-    </div>`;
-  });
-
-  area.innerHTML = html;
+function askDelete(id, house, docDate){
+  deleteId=id;
+  document.getElementById('confirm-detail').textContent=`${house} — ${fmtDate(docDate)}`;
+  document.getElementById('confirm-bg').classList.remove('hidden');
+}
+function closeConfirm(){ document.getElementById('confirm-bg').classList.add('hidden'); deleteId=null; }
+async function confirmDelete(){
+  if(!deleteId) return;
+  try{
+    await sbDelete(deleteId);
+    data=data.filter(r=>r.id!==deleteId);
+    closeConfirm(); render();
+    setSyncStatus('ok','Deleted');
+  }catch(e){ setSyncStatus('err','Delete failed: '+e.message); closeConfirm(); }
 }
 
-function renderSuggestions(){
-  const entries = HOUSES.map(h => {
-    const val = document.getElementById('doc_' + h).value;
-    if(!val) return null;
-    const docDate = new Date(val);
-    return {house: h, docDate, schedule: getSchedule(docDate)};
-  }).filter(Boolean);
-
-  const suggestions = suggestDates(entries);
-  const area = document.getElementById('suggestions-area');
-  if(!area) return;
-
-  let html = `<div class="suggest-section">
-    <div class="suggest-title">💡 Suggested conflict-free placement dates</div>
-    <div class="suggest-grid">`;
-
-  suggestions.forEach(s => {
-    const note = s.failed
-      ? 'No solution found within 365 days'
-      : s.changed
-        ? `+${daysDiff(s.docDate, entries.find(e=>e.house===s.house).docDate)} days from original`
-        : 'No change (reference house)';
-    html += `<div class="suggest-card">
-      <div class="suggest-card-house">${s.house}</div>
-      <div class="suggest-card-date">${fmt(s.docDate)}</div>
-      <div class="suggest-card-note">${note}</div>
-    </div>`;
-  });
-
-  html += `</div>
-    <p style="font-size:11px;color:var(--gh-fg-muted);margin-top:10px">
-      The earliest house is kept unchanged. Others are shifted forward by the minimum number of days needed to eliminate all conflicts.
-    </p>
-  </div>`;
-
-  area.innerHTML = html;
-}
-
-buildInputs();
+load();
 </script>
 </body>
 </html>
