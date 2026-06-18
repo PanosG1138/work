@@ -153,8 +153,8 @@ td{padding:7px 12px;color:var(--gh-fg-default);font-size:13px}
 .row-btn.del:hover{border-color:rgba(248,81,73,0.5);background:var(--gh-danger-subtle);color:var(--gh-danger-fg)}
 .empty-state{padding:48px 20px;text-align:center;color:var(--gh-fg-muted);font-size:14px}
 .timeline-wrap{overflow-x:auto;border:1px solid var(--gh-border-default);border-radius:var(--rs)}
-.timeline-inner{min-width:800px;padding:16px}
-.tl-header{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.timeline-inner{min-width:900px;padding:16px 20px 20px}
+.tl-header{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
 .tl-header-title{font-size:12px;font-weight:600;color:var(--gh-fg-muted);text-transform:uppercase;letter-spacing:0.05em}
 .tl-nav{display:flex;align-items:center;gap:6px;margin-left:auto}
 .tl-nav button{
@@ -164,30 +164,55 @@ td{padding:7px 12px;color:var(--gh-fg-default);font-size:13px}
   font-size:12px;cursor:pointer;transition:background 0.15s;
 }
 .tl-nav button:hover{background:var(--gh-hover-bg)}
-.tl-range-label{font-size:12px;color:var(--gh-fg-muted);min-width:160px;text-align:center}
-.tl-axis{position:relative;height:24px;margin-bottom:8px;border-bottom:1px solid var(--gh-border-muted)}
+.tl-range-label{font-size:12px;color:var(--gh-fg-muted);min-width:180px;text-align:center}
+.tl-grid-wrap{display:flex;gap:0}
+.tl-labels{flex-shrink:0;width:56px;padding-top:32px;display:flex;flex-direction:column;gap:0}
+.tl-label-cell{height:30px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;font-size:11px;font-weight:600;color:var(--gh-fg-default);white-space:nowrap}
+.tl-label-cell.sub{color:var(--gh-fg-muted);font-weight:400;font-size:10px}
+.tl-label-cell.group-sep{margin-top:6px}
+.tl-chart{flex:1;position:relative;overflow:hidden}
+.tl-axis{height:32px;position:relative;border-bottom:1px solid var(--gh-border-default);margin-bottom:0}
 .tl-month-label{
   position:absolute;font-size:11px;color:var(--gh-fg-muted);
-  white-space:nowrap;top:4px;transform:translateX(-50%);
+  white-space:nowrap;top:6px;transform:translateX(-50%);
+  border-left:1px solid var(--gh-border-muted);padding-left:4px;
 }
-.tl-row{display:flex;align-items:center;gap:8px;height:32px;margin-bottom:4px}
-.tl-row-label{font-size:12px;font-weight:600;color:var(--gh-fg-default);width:28px;flex-shrink:0;text-align:right}
-.tl-row-track{flex:1;position:relative;height:100%}
+.tl-month-label:first-child{border-left:none}
+.tl-gridlines{position:absolute;top:32px;left:0;right:0;bottom:0;pointer-events:none;z-index:0}
+.tl-gridline{position:absolute;top:0;bottom:0;width:1px;background:var(--gh-border-muted);opacity:0.5}
+.tl-rows{position:relative;z-index:1}
+.tl-row{position:relative;height:30px;display:flex;align-items:center}
+.tl-row.group-sep{margin-top:6px}
+.tl-row-track{position:absolute;left:0;right:0;top:0;bottom:0}
+.tl-row-stripe{position:absolute;left:0;right:0;top:2px;bottom:2px;border-radius:3px;background:var(--gh-canvas-subtle);opacity:0.4}
 .tl-block{
-  position:absolute;height:22px;top:5px;border-radius:4px;
+  position:absolute;height:20px;top:5px;border-radius:3px;
   font-size:10px;font-weight:500;display:flex;align-items:center;
-  padding:0 5px;overflow:hidden;white-space:nowrap;cursor:default;transition:filter 0.15s;
+  padding:0 4px;overflow:hidden;white-space:nowrap;cursor:default;
+  transition:filter 0.12s,box-shadow 0.12s;z-index:2;
 }
-.tl-block:hover{filter:brightness(1.15)}
-.tl-block.vax1,.tl-block.vax2{background:rgba(56,139,253,0.25);color:var(--gh-accent-fg);border:1px solid rgba(56,139,253,0.4)}
-.tl-block.load{background:rgba(46,160,67,0.2);color:var(--gh-success-fg);border:1px solid rgba(63,185,80,0.4)}
-.tl-block.clean{background:var(--gh-canvas-subtle);color:var(--gh-fg-muted);border:1px solid var(--gh-border-default)}
-.tl-block.conflict{background:rgba(248,81,73,0.2);color:var(--gh-danger-fg);border:1px solid rgba(248,81,73,0.4)}
-.tl-today{position:absolute;top:0;bottom:0;width:1px;background:var(--gh-danger-fg);opacity:0.6;z-index:3}
-.tl-today-label{position:absolute;top:-18px;font-size:10px;color:var(--gh-danger-fg);transform:translateX(-50%);white-space:nowrap}
-.tl-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--gh-border-muted)}
+.tl-block:hover{filter:brightness(1.2);box-shadow:0 0 0 1px rgba(255,255,255,0.15)}
+.tl-block.rearing{background:rgba(56,139,253,0.12);color:var(--gh-accent-fg);border:1px solid rgba(56,139,253,0.2)}
+.tl-block.vax{background:rgba(56,139,253,0.35);color:var(--gh-accent-fg);border:1px solid rgba(56,139,253,0.6);z-index:3}
+.tl-block.transfer{background:rgba(210,153,34,0.3);color:var(--gh-attention-fg);border:1px solid rgba(210,153,34,0.6);z-index:3}
+.tl-block.load{background:rgba(46,160,67,0.3);color:var(--gh-success-fg);border:1px solid rgba(63,185,80,0.5);z-index:3}
+.tl-block.clean{background:var(--gh-canvas-inset);color:var(--gh-fg-subtle);border:1px solid var(--gh-border-default)}
+.tl-block.conflict{background:rgba(248,81,73,0.25);color:var(--gh-danger-fg);border:1px solid rgba(248,81,73,0.55);z-index:4}
+.tl-today{position:absolute;top:0;bottom:0;width:2px;background:var(--gh-danger-fg);opacity:0.7;z-index:10;pointer-events:none}
+.tl-today-label{position:absolute;top:-20px;font-size:10px;font-weight:600;color:var(--gh-danger-fg);transform:translateX(-50%);white-space:nowrap;background:var(--gh-canvas-default);padding:0 3px;border-radius:2px}
+.tl-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--gh-border-muted)}
 .tl-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--gh-fg-muted)}
-.tl-legend-swatch{width:14px;height:10px;border-radius:2px;flex-shrink:0}
+.tl-legend-swatch{width:16px;height:10px;border-radius:2px;flex-shrink:0}
+.tl-tooltip{
+  position:fixed;z-index:1000;pointer-events:none;
+  background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);
+  border-radius:var(--rs);padding:7px 10px;font-size:12px;color:var(--gh-fg-default);
+  box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:240px;line-height:1.6;
+  display:none;
+}
+.tl-tooltip.visible{display:block}
+.tl-tooltip-title{font-weight:600;color:var(--gh-fg-default);margin-bottom:2px}
+.tl-tooltip-dates{color:var(--gh-fg-muted);font-size:11px}
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(4px)}
 .modal-bg.hidden{display:none}
 .modal{
@@ -484,6 +509,18 @@ function renderTable(conflictIds){
   el.innerHTML=html;
 }
 
+function getA1Schedule(docDate){
+  const base = new Date(docDate);
+  return {
+    transferStart: addDays(base,34),
+    transferEnd:   addDays(base,40),
+    vax1:          addDays(base,59),
+    vax2:          addDays(base,89),
+    loadStart:     addDays(base,104),
+    loadEnd:       addDays(base,121),
+  };
+}
+
 function renderTimeline(){
   const el = document.getElementById('view-timeline');
   const conflicts = detectConflicts(data);
@@ -491,77 +528,189 @@ function renderTimeline(){
 
   const today = new Date(); today.setHours(0,0,0,0);
   const viewStart = new Date(today.getFullYear(), today.getMonth()+tlOffset, 1);
-  const viewEnd   = new Date(viewStart.getFullYear(), viewStart.getMonth()+6, 0);
+  const viewEnd   = new Date(viewStart.getFullYear(), viewStart.getMonth()+12, 0);
+  const totalMs   = viewEnd - viewStart;
 
-  function pct(d){ return (new Date(d)-viewStart)/(viewEnd-viewStart)*100; }
-  function pctW(s,e){
-    const cs=new Date(Math.max(new Date(s),viewStart));
-    const ce=new Date(Math.min(new Date(e),viewEnd));
-    if(cs>ce) return null;
-    return {left:pct(cs), width:(ce-cs)/(viewEnd-viewStart)*100};
+  const MIN_BLOCK_PCT = 0.8;
+
+  function pct(d){ return (new Date(d)-viewStart)/totalMs*100; }
+  function blockPos(s,e){
+    const cs = new Date(Math.max(new Date(s), viewStart));
+    const ce = new Date(Math.min(new Date(e), viewEnd));
+    if(cs > ce) return null;
+    const left  = (cs - viewStart)/totalMs*100;
+    const width = Math.max(MIN_BLOCK_PCT, (ce - cs)/totalMs*100);
+    return {left, width};
+  }
+  function singleDayPos(d){
+    const p = pct(d);
+    if(p < -1 || p > 101) return null;
+    return {left: Math.max(0, p), width: Math.max(MIN_BLOCK_PCT, 100/Math.round(totalMs/86400000))};
   }
 
-  let axisHtml='';
-  let cur=new Date(viewStart);
-  while(cur<=viewEnd){
-    const p=pct(cur);
-    if(p>=0&&p<=100){
-      const label=cur.toLocaleDateString('en-GB',{month:'short',year:'2-digit'});
-      axisHtml+=`<div class="tl-month-label" style="left:${p.toFixed(1)}%">${label}</div>`;
+  /* ── Month axis ── */
+  let axisHtml = '';
+  let cur = new Date(viewStart);
+  while(cur <= viewEnd){
+    const p = pct(cur);
+    if(p >= 0 && p <= 100){
+      const label = cur.toLocaleDateString('en-GB',{month:'short',year:'2-digit'});
+      axisHtml += `<div class="tl-month-label" style="left:${p.toFixed(2)}%">${label}</div>`;
     }
-    cur=new Date(cur.getFullYear(),cur.getMonth()+1,1);
+    cur = new Date(cur.getFullYear(), cur.getMonth()+1, 1);
   }
 
-  const todayPct=pct(today);
-  const showToday=todayPct>=0&&todayPct<=100;
+  /* ── Month gridlines ── */
+  let gridHtml = '';
+  cur = new Date(viewStart.getFullYear(), viewStart.getMonth()+1, 1);
+  while(cur <= viewEnd){
+    const p = pct(cur);
+    if(p > 0 && p < 100)
+      gridHtml += `<div class="tl-gridline" style="left:${p.toFixed(2)}%"></div>`;
+    cur = new Date(cur.getFullYear(), cur.getMonth()+1, 1);
+  }
 
-  let rowsHtml='';
-  HOUSES.forEach(h=>{
-    const hRows=data.filter(r=>r.house===h);
-    let blocks='';
-    if(showToday)
-      blocks+=`<div class="tl-today" style="left:${todayPct.toFixed(2)}%"><div class="tl-today-label">Today</div></div>`;
-    hRows.forEach(r=>{
-      const s=r.schedule, isC=conflictIds.has(r.id);
-      [
-        {cls:isC?'conflict':'vax1', s:s.vax1, e:s.vax1, label:'V1'},
-        {cls:isC?'conflict':'vax2', s:s.vax2, e:s.vax2, label:'V2'},
-        {cls:isC?'conflict':'load', s:s.loadStart, e:s.loadEnd, label:'Load'},
-        {cls:'clean', s:s.cleanStart, e:s.cleanEnd, label:'Clean'},
-      ].forEach(ev=>{
-        const isSingleDay = ev.s.toDateString()===ev.e.toDateString();
-        const p = isSingleDay
-          ? {left:Math.max(0,Math.min(100,pct(ev.s)-0.3)), width:Math.max(0.8,100/(Math.round((viewEnd-viewStart)/86400000)+1))}
-          : pctW(ev.s,ev.e);
-        if(!p||p.width<=0) return;
-        blocks+=`<div class="tl-block ${ev.cls}" style="left:${p.left.toFixed(2)}%;width:${p.width.toFixed(2)}%" title="${h} ${ev.label}: ${fmtDate(ev.s)}${!isSingleDay?' - '+fmtDate(ev.e):''}">${p.width>3?ev.label:''}</div>`;
-      });
+  /* ── Today line ── */
+  const todayPct = pct(today);
+  const showToday = todayPct >= 0 && todayPct <= 100;
+
+  /* ── Build rows: one row per placement cycle, A1 sub-row after each Θ4 cycle ── */
+  const sorted = data.slice().sort((a,b)=>new Date(a.doc_date)-new Date(b.doc_date));
+  let labelsHtml = '';
+  let rowsHtml   = '';
+  let rowCount   = 0;
+
+  function makeBlock(cls, pos, tooltip){
+    if(!pos) return '';
+    const label = pos.width > 3 ? cls.charAt(0).toUpperCase()+cls.slice(1) : '';
+    return `<div class="tl-block ${cls}"
+      style="left:${pos.left.toFixed(2)}%;width:${pos.width.toFixed(2)}%"
+      data-tip="${tooltip}">${label}</div>`;
+  }
+
+  HOUSES.forEach(h => {
+    const hRows = sorted.filter(r => r.house === h);
+    if(!hRows.length){
+      const isFirst = rowCount === 0;
+      labelsHtml += `<div class="tl-label-cell${isFirst?'':' group-sep'}">${h}</div>`;
+      rowsHtml   += `<div class="tl-row${isFirst?'':' group-sep'}"><div class="tl-row-track"><div class="tl-row-stripe"></div></div></div>`;
+      rowCount++;
+      return;
+    }
+
+    hRows.forEach((r, idx) => {
+      const s = r.schedule;
+      const isC = conflictIds.has(r.id);
+      const cycleLabel = hRows.length > 1 ? `${h} #${idx+1}` : h;
+      const isFirstInGroup = idx === 0;
+
+      labelsHtml += `<div class="tl-label-cell${(!isFirstInGroup||rowCount>0)?'':''}">${cycleLabel}</div>`;
+
+      /* rearing span (DOC → load end) */
+      const rearingPos = blockPos(r.doc_date, s.loadEnd);
+
+      let blocks = '';
+      if(rearingPos) blocks += makeBlock('rearing', rearingPos,
+        `${h} cycle — Rearing period\n${fmtDate(r.doc_date)} → ${fmtDate(s.loadEnd)}`);
+
+      blocks += makeBlock(isC?'conflict':'vax', singleDayPos(s.vax1),
+        `${cycleLabel} — Vaccination 1\n${fmtDate(s.vax1)}`);
+      blocks += makeBlock(isC?'conflict':'vax', singleDayPos(s.vax2),
+        `${cycleLabel} — Vaccination 2\n${fmtDate(s.vax2)}`);
+      blocks += makeBlock(isC?'conflict':'load', blockPos(s.loadStart, s.loadEnd),
+        `${cycleLabel} — Loading\n${fmtDate(s.loadStart)} → ${fmtDate(s.loadEnd)}`);
+      blocks += makeBlock('clean', blockPos(s.cleanStart, s.cleanEnd),
+        `${cycleLabel} — Cleaning\n${fmtDate(s.cleanStart)} → ${fmtDate(s.cleanEnd)}`);
+
+      rowsHtml += `<div class="tl-row"><div class="tl-row-track">
+        <div class="tl-row-stripe"></div>${blocks}</div></div>`;
+      rowCount++;
+
+      /* A1 sub-row for Θ4 */
+      if(h === 'Θ4'){
+        const a1 = getA1Schedule(r.doc_date);
+        const a1Label = hRows.length > 1 ? `A1 #${idx+1}` : 'A1';
+        labelsHtml += `<div class="tl-label-cell sub">${a1Label}</div>`;
+
+        let a1blocks = '';
+        a1blocks += makeBlock('transfer', blockPos(a1.transferStart, a1.transferEnd),
+          `A1 — Transfer\n${fmtDate(a1.transferStart)} → ${fmtDate(a1.transferEnd)}`);
+        a1blocks += makeBlock('vax', singleDayPos(a1.vax1),
+          `A1 — Vaccination 1\n${fmtDate(a1.vax1)}`);
+        a1blocks += makeBlock('vax', singleDayPos(a1.vax2),
+          `A1 — Vaccination 2\n${fmtDate(a1.vax2)}`);
+        a1blocks += makeBlock('load', blockPos(a1.loadStart, a1.loadEnd),
+          `A1 — Loading\n${fmtDate(a1.loadStart)} → ${fmtDate(a1.loadEnd)}`);
+
+        rowsHtml += `<div class="tl-row"><div class="tl-row-track">
+          <div class="tl-row-stripe"></div>${a1blocks}</div></div>`;
+        rowCount++;
+      }
     });
-    rowsHtml+=`<div class="tl-row"><div class="tl-row-label">${h}</div><div class="tl-row-track">${blocks}</div></div>`;
   });
 
-  const vmS=viewStart.toLocaleDateString('en-GB',{month:'short',year:'numeric'});
-  const vmE=viewEnd.toLocaleDateString('en-GB',{month:'short',year:'numeric'});
+  /* ── Today line spans full chart height ── */
+  const todayLine = showToday
+    ? `<div class="tl-today" style="left:${todayPct.toFixed(2)}%;height:${rowCount*30}px">
+         <div class="tl-today-label">Today</div></div>`
+    : '';
 
-  el.innerHTML=`<div class="timeline-wrap"><div class="timeline-inner">
-    <div class="tl-header">
-      <span class="tl-header-title">6-month view</span>
-      <div class="tl-nav">
-        <button onclick="tlNav(-1)">&#8592; Back</button>
-        <span class="tl-range-label">${vmS} &#8212; ${vmE}</span>
-        <button onclick="tlNav(1)">Forward &#8594;</button>
-        <button onclick="tlReset()">Today</button>
+  const vmS = viewStart.toLocaleDateString('en-GB',{month:'short',year:'numeric'});
+  const vmE = viewEnd.toLocaleDateString('en-GB',{month:'short',year:'numeric'});
+
+  el.innerHTML = `
+    <div class="tl-tooltip" id="tl-tooltip">
+      <div class="tl-tooltip-title" id="tl-tt-title"></div>
+      <div class="tl-tooltip-dates" id="tl-tt-dates"></div>
+    </div>
+    <div class="timeline-wrap"><div class="timeline-inner">
+      <div class="tl-header">
+        <span class="tl-header-title">12-month view</span>
+        <div class="tl-nav">
+          <button onclick="tlNav(-3)">&#8592;&#8592; -3m</button>
+          <button onclick="tlNav(-1)">&#8592; -1m</button>
+          <span class="tl-range-label">${vmS} &mdash; ${vmE}</span>
+          <button onclick="tlNav(1)">+1m &#8594;</button>
+          <button onclick="tlNav(3)">+3m &#8594;&#8594;</button>
+          <button onclick="tlReset()">Today</button>
+        </div>
       </div>
-    </div>
-    <div class="tl-axis">${axisHtml}</div>
-    <div>${rowsHtml}</div>
-    <div class="tl-legend">
-      <span class="tl-legend-item"><span class="tl-legend-swatch" style="background:rgba(56,139,253,0.3);border:1px solid rgba(56,139,253,0.5)"></span>Vaccination (V1/V2)</span>
-      <span class="tl-legend-item"><span class="tl-legend-swatch" style="background:rgba(46,160,67,0.2);border:1px solid rgba(63,185,80,0.4)"></span>Loading</span>
-      <span class="tl-legend-item"><span class="tl-legend-swatch" style="background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default)"></span>Cleaning</span>
-      <span class="tl-legend-item"><span class="tl-legend-swatch" style="background:rgba(248,81,73,0.2);border:1px solid rgba(248,81,73,0.4)"></span>Conflict</span>
-    </div>
-  </div></div>`;
+      <div class="tl-grid-wrap">
+        <div class="tl-labels">${labelsHtml}</div>
+        <div class="tl-chart">
+          <div class="tl-axis">${axisHtml}</div>
+          <div class="tl-gridlines">${gridHtml}${todayLine}</div>
+          <div class="tl-rows">${rowsHtml}</div>
+        </div>
+      </div>
+      <div class="tl-legend">
+        <span class="tl-legend-item"><span class="tl-legend-swatch" style="background:rgba(56,139,253,0.12);border:1px solid rgba(56,139,253,0.2)"></span>Rearing period</span>
+        <span class="tl-legend-item"><span class="tl-legend-swatch" style="background:rgba(56,139,253,0.35);border:1px solid rgba(56,139,253,0.6)"></span>Vaccination</span>
+        <span class="tl-legend-item"><span class="tl-legend-swatch" style="background:rgba(210,153,34,0.3);border:1px solid rgba(210,153,34,0.6)"></span>Transfer (A1)</span>
+        <span class="tl-legend-item"><span class="tl-legend-swatch" style="background:rgba(46,160,67,0.3);border:1px solid rgba(63,185,80,0.5)"></span>Loading</span>
+        <span class="tl-legend-item"><span class="tl-legend-swatch" style="background:var(--gh-canvas-inset);border:1px solid var(--gh-border-default)"></span>Cleaning</span>
+        <span class="tl-legend-item"><span class="tl-legend-swatch" style="background:rgba(248,81,73,0.25);border:1px solid rgba(248,81,73,0.55)"></span>Conflict</span>
+      </div>
+    </div></div>`;
+
+  /* ── Tooltip wiring ── */
+  const tip = document.getElementById('tl-tooltip');
+  el.querySelectorAll('.tl-block[data-tip]').forEach(block => {
+    block.addEventListener('mouseenter', e => {
+      const parts = block.dataset.tip.split('\n');
+      document.getElementById('tl-tt-title').textContent  = parts[0] || '';
+      document.getElementById('tl-tt-dates').textContent  = parts[1] || '';
+      tip.classList.add('visible');
+      positionTooltip(e);
+    });
+    block.addEventListener('mousemove', positionTooltip);
+    block.addEventListener('mouseleave', () => tip.classList.remove('visible'));
+  });
+  function positionTooltip(e){
+    const x = e.clientX+12, y = e.clientY+12;
+    tip.style.left = (x+220>window.innerWidth ? e.clientX-230 : x)+'px';
+    tip.style.top  = (y+60>window.innerHeight  ? e.clientY-70  : y)+'px';
+  }
 }
 
 function tlNav(dir){ tlOffset+=dir; renderTimeline(); }
