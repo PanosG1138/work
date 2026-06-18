@@ -122,6 +122,52 @@ header{
 .conflict-item strong{color:var(--gh-danger-fg)}
 .conflict-meta{font-size:11px;color:var(--gh-fg-muted);margin-top:1px}
 .tbl-outer{overflow:auto;border:1px solid var(--gh-border-default);border-radius:var(--rs)}
+.cycle-table-wrap{overflow-x:auto;border:1px solid var(--gh-border-default);border-radius:var(--rs)}
+.cycle-table{border-collapse:collapse;font-size:12px;white-space:nowrap;width:100%}
+.cycle-table thead tr:first-child{background:var(--gh-canvas-inset);border-bottom:1px solid var(--gh-border-default)}
+.cycle-table thead tr:last-child{background:var(--gh-canvas-subtle);border-bottom:2px solid var(--gh-border-default)}
+.ct-house-header{
+  padding:8px 12px;text-align:center;font-size:12px;font-weight:700;
+  color:var(--gh-fg-default);border-right:2px solid var(--gh-border-default);
+  border-left:2px solid var(--gh-border-default);letter-spacing:0.03em;
+}
+.ct-cycle-header{
+  padding:5px 8px;text-align:center;font-size:11px;font-weight:500;
+  color:var(--gh-fg-muted);border-right:1px solid var(--gh-border-muted);
+  min-width:130px;
+}
+.ct-row-label{
+  padding:7px 12px;font-size:11px;font-weight:600;color:var(--gh-fg-muted);
+  text-transform:uppercase;letter-spacing:0.05em;
+  background:var(--gh-canvas-subtle);
+  border-right:2px solid var(--gh-border-default);
+  border-bottom:1px solid var(--gh-border-muted);
+  position:sticky;left:0;z-index:2;white-space:nowrap;min-width:110px;
+}
+.ct-actions-label{color:var(--gh-fg-subtle)}
+.ct-cell{
+  padding:7px 10px;text-align:center;
+  border-right:1px solid var(--gh-border-muted);
+  border-bottom:1px solid var(--gh-border-muted);
+  color:var(--gh-fg-default);
+}
+.ct-cell.ct-empty{color:var(--gh-fg-subtle)}
+.cycle-table tbody tr:last-child .ct-cell{border-bottom:none}
+.cycle-table tbody tr:hover .ct-cell{background:var(--gh-canvas-subtle)}
+/* house group separator */
+.cycle-table th.ct-house-header:not(:last-child),
+.cycle-table th.ct-cycle-header{border-right:1px solid var(--gh-border-muted)}
+.cycle-table thead tr:first-child th.ct-house-header{border-right:2px solid var(--gh-border-default)}
+/* row type colours */
+.row-placement{font-weight:600;color:var(--gh-fg-default)}
+.row-vax{color:var(--gh-accent-fg)}
+.row-load{color:var(--gh-success-fg)}
+.row-clean{color:var(--gh-fg-muted)}
+.row-gap{font-weight:600;background:var(--gh-canvas-subtle)}
+/* status highlights */
+.ct-conflict{background:var(--gh-danger-subtle)!important;color:var(--gh-danger-fg)!important;font-weight:600}
+.ct-warn{background:var(--gh-attention-subtle)!important;color:var(--gh-attention-fg)!important;font-weight:600}
+.ct-actions{padding:5px 6px}
 table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap}
 thead tr{background:var(--gh-canvas-subtle);border-bottom:1px solid var(--gh-border-default)}
 th{
@@ -295,7 +341,7 @@ td{padding:7px 12px;color:var(--gh-fg-default);font-size:13px}
 <!-- Add modal -->
 <div class="modal-bg hidden" id="modal-bg">
   <div class="modal">
-    <h3>Add placement</h3>
+    <h3 id="modal-title">Add placement</h3>
     <div class="fgroup">
       <label>Rearing house</label>
       <select id="m-house">
@@ -367,10 +413,12 @@ async function sbFetch(path, opts={}){
 const sbSelect = ()      => sbFetch(`${TABLE}?order=doc_date.asc`);
 const sbInsert = row     => sbFetch(TABLE, {method:'POST', prefer:'return=representation', body:JSON.stringify(row)});
 const sbDelete = id      => sbFetch(`${TABLE}?id=eq.${id}`, {method:'DELETE'});
+const sbUpdate = (id,row)=> sbFetch(`${TABLE}?id=eq.${id}`, {method:'PATCH', prefer:'return=representation', body:JSON.stringify(row)});
 
 let data = [];
 let activeTab = 'table';
 let deleteId  = null;
+let editId    = null;
 let tlOffset  = 0;
 
 function setSyncStatus(state, msg){
@@ -403,7 +451,9 @@ function detectConflicts(rows){
       const d2=daysDiff(sa.vax2,sb.vax2);
       if(d2<=CONFLICT_WINDOW)
         out.push({type:'Vaccination 2 (day 90)',houses:[a.house,b.house],dateA:fmtDate(sa.vax2),dateB:fmtDate(sb.vax2),diff:d2,ids:[a.id,b.id],kind:'vax'});
-      if(datesOverlap(sa.loadStart,sa.loadEnd,sb.loadStart,sb.loadEnd))
+      const loadExempt = new Set(['Θ1','Θ2']);
+      if(datesOverlap(sa.loadStart,sa.loadEnd,sb.loadStart,sb.loadEnd)
+         && !(loadExempt.has(a.house) && loadExempt.has(b.house)))
         out.push({type:'Loading',houses:[a.house,b.house],
           dateA:`${fmtDate(sa.loadStart)}-${fmtDate(sa.loadEnd)}`,
           dateB:`${fmtDate(sb.loadStart)}-${fmtDate(sb.loadEnd)}`,
@@ -501,6 +551,7 @@ function renderTable(conflictIds){
         ${!isC&&!isW?'<span style="color:var(--gh-success-fg);font-size:12px">✓ Clear</span>':''}
       </td>
       <td><div class="row-actions">
+        <button class="row-btn" onclick="openEditModal('${r.id}')">Edit</button>
         <button class="row-btn del" onclick="askDelete('${r.id}','${r.house}','${r.doc_date}')">Delete</button>
       </div></td>
     </tr>`;
@@ -726,13 +777,34 @@ function switchTab(tab){
 }
 
 function openAddModal(){
+  editId=null;
+  document.getElementById('modal-title').textContent='Add placement';
   document.getElementById('m-house').value='';
+  document.getElementById('m-house').disabled=false;
   document.getElementById('m-date').value='';
   document.getElementById('m-warn').classList.remove('visible');
+  document.getElementById('m-save').textContent='Save';
   document.getElementById('m-save').disabled=true;
   document.getElementById('modal-bg').classList.remove('hidden');
 }
-function closeModal(){ document.getElementById('modal-bg').classList.add('hidden'); }
+function openEditModal(id){
+  const r = data.find(x=>x.id===id);
+  if(!r) return;
+  editId=id;
+  document.getElementById('modal-title').textContent='Edit placement';
+  document.getElementById('m-house').value=r.house;
+  document.getElementById('m-house').disabled=true;
+  document.getElementById('m-date').value=r.doc_date;
+  document.getElementById('m-warn').classList.remove('visible');
+  document.getElementById('m-save').textContent='Update';
+  document.getElementById('m-save').disabled=false;
+  document.getElementById('modal-bg').classList.remove('hidden');
+}
+function closeModal(){
+  document.getElementById('modal-bg').classList.add('hidden');
+  document.getElementById('m-house').disabled=false;
+  editId=null;
+}
 
 document.getElementById('m-house').addEventListener('change', checkModalWarn);
 document.getElementById('m-date').addEventListener('change',  checkModalWarn);
@@ -754,14 +826,23 @@ async function saveNew(){
   const date =document.getElementById('m-date').value;
   if(!house||!date) return;
   const btn=document.getElementById('m-save');
-  btn.disabled=true; btn.textContent='Saving...';
+  btn.disabled=true;
+  const origText=btn.textContent;
+  btn.textContent='Saving...';
   try{
-    const [inserted]=await sbInsert({house, doc_date:date});
-    data.push({...inserted, schedule:getSchedule(inserted.doc_date)});
+    if(editId){
+      const [updated]=await sbUpdate(editId,{doc_date:date});
+      const idx=data.findIndex(r=>r.id===editId);
+      if(idx>=0) data[idx]={...updated, schedule:getSchedule(updated.doc_date)};
+      setSyncStatus('ok','Updated');
+    } else {
+      const [inserted]=await sbInsert({house, doc_date:date});
+      data.push({...inserted, schedule:getSchedule(inserted.doc_date)});
+      setSyncStatus('ok','Saved');
+    }
     closeModal(); render();
-    setSyncStatus('ok','Saved');
   }catch(e){ setSyncStatus('err','Save failed: '+e.message); }
-  finally{ btn.disabled=false; btn.textContent='Save'; }
+  finally{ btn.disabled=false; btn.textContent=origText; }
 }
 
 function askDelete(id, house, docDate){
