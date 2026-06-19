@@ -784,6 +784,7 @@ function renderTimeline(){
         <button class="tl-zoom-btn" onclick="tlZoomStep(1)">+</button>
         <span class="tl-zoom-pct">${zoomPct}%</span>
         <button class="tl-zoom-btn" style="width:auto;padding:0 8px;font-size:11px" onclick="tlZoomFit()">Fit</button>
+        <span style="font-size:11px;color:var(--gh-fg-subtle);margin-left:8px">or Ctrl/⌘ + scroll to zoom</span>
       </div>
       <div class="tl-scroll-outer" id="tl-scroll">
         <div class="tl-grid-wrap">
@@ -808,7 +809,26 @@ function renderTimeline(){
   /* preserve horizontal scroll position across re-renders when possible */
   const scrollEl = document.getElementById('tl-scroll');
   if(scrollEl && tlScrollLeft !== null) scrollEl.scrollLeft = tlScrollLeft;
-  if(scrollEl) scrollEl.addEventListener('scroll', ()=>{ tlScrollLeft = scrollEl.scrollLeft; });
+  if(scrollEl){
+    scrollEl.addEventListener('scroll', ()=>{ tlScrollLeft = scrollEl.scrollLeft; });
+    scrollEl.addEventListener('wheel', e=>{
+      if(!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      const rect = scrollEl.getBoundingClientRect();
+      const labelsW = document.querySelector('.tl-labels')?.offsetWidth || 56;
+      const cursorX = e.clientX - rect.left - labelsW + scrollEl.scrollLeft;
+      const dayUnderCursor = cursorX / tlPxPerDay;
+
+      const dir = e.deltaY < 0 ? 1 : -1;
+      const newPx = Math.max(TL_MIN_PX, Math.min(TL_MAX_PX, tlPxPerDay + dir*Math.max(1,Math.round(tlPxPerDay*0.15))));
+      if(newPx === tlPxPerDay) return;
+
+      const newScrollLeft = dayUnderCursor*newPx - (cursorX - scrollEl.scrollLeft);
+      tlPxPerDay = newPx;
+      tlScrollLeft = Math.max(0, newScrollLeft);
+      renderTimeline();
+    }, {passive:false});
+  }
 
   /* ── Tooltip wiring ── */
   const tip = document.getElementById('tl-tooltip');
