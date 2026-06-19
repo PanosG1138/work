@@ -461,12 +461,15 @@ function getA1Schedule(hatchDate){
 
 /* ── Conflict engine ──────────────────────────────────────────────
    Build a flat list of "events" across all houses + A1 sub-houses.
-   Each event has: group (for exemption — Θ4 and its A1 share group 'Θ4'),
+   Each event has: group (for exemption — Θ4 and its A1 share group 'Θ4',
+   since A1 is a sub-house of Θ4 and uses the same hatch date),
    house (display label), recordId (for highlighting), kind, start, end.
-   Then cross-check every pair under these rules:
+   Conflict rules:
+     - placement vs placement only (within CONFLICT_WINDOW days) — placements
+       never conflict with vax/load/transfer, only with each other.
      - vax  vs vax   (within CONFLICT_WINDOW days, point events)
      - vax  vs load  (vax day falls inside load window, or within window of load edges)
-     - vax  vs placement (within CONFLICT_WINDOW days)
+     - load vs load  (range overlap, with Θ1/Θ2 exempt from each other)
      - transfer vs vax/load (range overlap, or within window)
    Same-group pairs (Θ4 <-> its own A1) are always skipped.
 -------------------------------------------------------------------- */
@@ -505,15 +508,17 @@ function eventsConflict(e1, e2){
 }
 
 function pairIsRelevant(e1, e2){
-  /* Skip same physical flock (Θ4 <-> its own A1) */
+  /* Skip same physical flock (Θ4 <-> its own A1, since A1 is a sub-house of Θ4) */
   if(e1.group === e2.group) return false;
-  /* Define which kind-pairs count as conflicts, per spec:
-     vax-vax, vax-load, vax-placement, transfer-vax, transfer-load (and reverses) */
+  /* DOC placement only conflicts with another DOC placement — nothing else. */
+  if(e1.kind==='placement' || e2.kind==='placement'){
+    return e1.kind==='placement' && e2.kind==='placement';
+  }
+  /* Remaining kind-pairs that count as conflicts: vax-vax, vax-load, transfer-vax, transfer-load, load-load */
   const kinds = [e1.kind, e2.kind].sort().join('-');
   const allowed = new Set([
     'vax-vax',
     'load-vax',
-    'placement-vax',
     'transfer-vax',
     'load-transfer',
     'load-load',
