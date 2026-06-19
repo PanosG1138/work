@@ -198,9 +198,9 @@ td{padding:7px 12px;color:var(--gh-fg-default);font-size:13px}
 .row-btn:hover{background:var(--gh-hover-bg);border-color:var(--gh-fg-subtle)}
 .row-btn.del:hover{border-color:rgba(248,81,73,0.5);background:var(--gh-danger-subtle);color:var(--gh-danger-fg)}
 .empty-state{padding:48px 20px;text-align:center;color:var(--gh-fg-muted);font-size:14px}
-.timeline-wrap{overflow-x:auto;border:1px solid var(--gh-border-default);border-radius:var(--rs)}
-.timeline-inner{min-width:900px;padding:16px 20px 20px}
-.tl-header{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.timeline-wrap{border:1px solid var(--gh-border-default);border-radius:var(--rs)}
+.timeline-inner{padding:16px 0 20px}
+.tl-header{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;padding:0 20px}
 .tl-header-title{font-size:12px;font-weight:600;color:var(--gh-fg-muted);text-transform:uppercase;letter-spacing:0.05em}
 .tl-nav{display:flex;align-items:center;gap:6px;margin-left:auto}
 .tl-nav button{
@@ -211,21 +211,39 @@ td{padding:7px 12px;color:var(--gh-fg-default);font-size:13px}
 }
 .tl-nav button:hover{background:var(--gh-hover-bg)}
 .tl-range-label{font-size:12px;color:var(--gh-fg-muted);min-width:180px;text-align:center}
-.tl-grid-wrap{display:flex;gap:0}
-.tl-labels{flex-shrink:0;width:56px;padding-top:32px;display:flex;flex-direction:column;gap:0}
+.tl-zoom{display:flex;align-items:center;gap:8px;padding:0 20px;margin-bottom:12px}
+.tl-zoom-label{font-size:11px;color:var(--gh-fg-muted);white-space:nowrap;min-width:80px}
+.tl-zoom input[type=range]{flex:0 0 160px;accent-color:var(--gh-accent-emphasis);cursor:pointer}
+.tl-zoom-pct{font-size:11px;color:var(--gh-fg-muted);min-width:42px;text-align:right}
+.tl-zoom-btn{
+  height:24px;width:24px;border-radius:var(--rs);border:1px solid var(--gh-border-default);
+  background:var(--gh-canvas-subtle);color:var(--gh-fg-default);cursor:pointer;
+  font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center;
+  transition:background 0.15s;
+}
+.tl-zoom-btn:hover{background:var(--gh-hover-bg)}
+.tl-scroll-outer{overflow-x:auto;overflow-y:hidden;padding-bottom:4px}
+.tl-grid-wrap{display:flex;gap:0;position:relative}
+.tl-labels{flex-shrink:0;width:56px;padding-top:32px;display:flex;flex-direction:column;gap:0;position:sticky;left:0;z-index:5;background:var(--gh-canvas-default);border-right:1px solid var(--gh-border-default)}
 .tl-label-cell{height:30px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;font-size:11px;font-weight:600;color:var(--gh-fg-default);white-space:nowrap}
 .tl-label-cell.sub{color:var(--gh-fg-muted);font-weight:400;font-size:10px}
 .tl-label-cell.group-sep{margin-top:6px}
-.tl-chart{flex:1;position:relative;overflow:hidden}
+.tl-chart{position:relative;flex-shrink:0}
 .tl-axis{height:32px;position:relative;border-bottom:1px solid var(--gh-border-default);margin-bottom:0}
 .tl-month-label{
-  position:absolute;font-size:11px;color:var(--gh-fg-muted);
-  white-space:nowrap;top:6px;transform:translateX(-50%);
-  border-left:1px solid var(--gh-border-muted);padding-left:4px;
+  position:absolute;font-size:11px;font-weight:600;color:var(--gh-fg-default);
+  white-space:nowrap;top:4px;
+  border-left:1px solid var(--gh-border-default);padding-left:5px;height:14px;
 }
 .tl-month-label:first-child{border-left:none}
+.tl-day-label{
+  position:absolute;font-size:9px;color:var(--gh-fg-subtle);
+  white-space:nowrap;top:19px;transform:translateX(-50%);
+}
 .tl-gridlines{position:absolute;top:32px;left:0;right:0;bottom:0;pointer-events:none;z-index:0}
-.tl-gridline{position:absolute;top:0;bottom:0;width:1px;background:var(--gh-border-muted);opacity:0.5}
+.tl-gridline{position:absolute;top:0;bottom:0;width:1px;background:var(--gh-border-muted);opacity:0.4}
+.tl-gridline.month{opacity:0.9;background:var(--gh-border-default)}
+.tl-gridline.weekend{background:var(--gh-canvas-subtle);opacity:0.5;width:auto}
 .tl-rows{position:relative;z-index:1}
 .tl-row{position:relative;height:30px;display:flex;align-items:center}
 .tl-row.group-sep{margin-top:6px}
@@ -420,6 +438,11 @@ let activeTab = 'table';
 let deleteId  = null;
 let editId    = null;
 let tlOffset  = 0;
+const TL_BASE_PX_PER_DAY = 6;
+const TL_MIN_PX = 2;
+const TL_MAX_PX = 40;
+let tlPxPerDay  = TL_BASE_PX_PER_DAY;
+let tlScrollLeft = null;
 
 function setSyncStatus(state, msg){
   const b = document.getElementById('sync-badge');
@@ -580,50 +603,77 @@ function renderTimeline(){
   const today = new Date(); today.setHours(0,0,0,0);
   const viewStart = new Date(today.getFullYear(), today.getMonth()+tlOffset, 1);
   const viewEnd   = new Date(viewStart.getFullYear(), viewStart.getMonth()+12, 0);
-  const totalMs   = viewEnd - viewStart;
+  const totalDays = Math.round((viewEnd-viewStart)/86400000)+1;
+  const chartWidth = totalDays * tlPxPerDay;
 
-  const MIN_BLOCK_PCT = 0.8;
+  const MIN_BLOCK_PX = 3;
 
-  function pct(d){ return (new Date(d)-viewStart)/totalMs*100; }
+  function dayOffset(d){ return Math.round((new Date(d)-viewStart)/86400000); }
+  function xPos(d){ return dayOffset(d)*tlPxPerDay; }
   function blockPos(s,e){
     const cs = new Date(Math.max(new Date(s), viewStart));
     const ce = new Date(Math.min(new Date(e), viewEnd));
     if(cs > ce) return null;
-    const left  = (cs - viewStart)/totalMs*100;
-    const width = Math.max(MIN_BLOCK_PCT, (ce - cs)/totalMs*100);
+    const left  = xPos(cs);
+    const width = Math.max(MIN_BLOCK_PX, (dayOffset(ce)-dayOffset(cs)+1)*tlPxPerDay);
     return {left, width};
   }
   function singleDayPos(d){
-    const p = pct(d);
-    if(p < -1 || p > 101) return null;
-    return {left: Math.max(0, p), width: Math.max(MIN_BLOCK_PCT, 100/Math.round(totalMs/86400000))};
+    const off = dayOffset(d);
+    if(off < -1 || off > totalDays+1) return null;
+    return {left: Math.max(0, xPos(d)), width: Math.max(MIN_BLOCK_PX, tlPxPerDay)};
   }
 
-  /* ── Month axis ── */
+  /* ── Month + day axis ── */
   let axisHtml = '';
   let cur = new Date(viewStart);
   while(cur <= viewEnd){
-    const p = pct(cur);
-    if(p >= 0 && p <= 100){
+    const x = xPos(cur);
+    if(x >= -2 && x <= chartWidth){
       const label = cur.toLocaleDateString('en-GB',{month:'short',year:'2-digit'});
-      axisHtml += `<div class="tl-month-label" style="left:${p.toFixed(2)}%">${label}</div>`;
+      axisHtml += `<div class="tl-month-label" style="left:${x.toFixed(1)}px">${label}</div>`;
     }
     cur = new Date(cur.getFullYear(), cur.getMonth()+1, 1);
   }
+  /* day-of-month labels when zoomed in enough to read them */
+  if(tlPxPerDay >= 18){
+    let dcur = new Date(viewStart);
+    while(dcur <= viewEnd){
+      const x = xPos(dcur);
+      if(x >= 0 && x <= chartWidth){
+        axisHtml += `<div class="tl-day-label" style="left:${(x+tlPxPerDay/2).toFixed(1)}px">${dcur.getDate()}</div>`;
+      }
+      dcur = addDays(dcur,1);
+    }
+  }
 
-  /* ── Month gridlines ── */
+  /* ── Gridlines: month lines always, weekend shading + day lines when zoomed ── */
   let gridHtml = '';
   cur = new Date(viewStart.getFullYear(), viewStart.getMonth()+1, 1);
   while(cur <= viewEnd){
-    const p = pct(cur);
-    if(p > 0 && p < 100)
-      gridHtml += `<div class="tl-gridline" style="left:${p.toFixed(2)}%"></div>`;
+    const x = xPos(cur);
+    if(x > 0 && x < chartWidth)
+      gridHtml += `<div class="tl-gridline month" style="left:${x.toFixed(1)}px"></div>`;
     cur = new Date(cur.getFullYear(), cur.getMonth()+1, 1);
+  }
+  if(tlPxPerDay >= 10){
+    let dcur = new Date(viewStart);
+    while(dcur <= viewEnd){
+      const dow = dcur.getDay();
+      const x = xPos(dcur);
+      if(dow===0 || dow===6){
+        gridHtml += `<div class="tl-gridline weekend" style="left:${x.toFixed(1)}px;width:${tlPxPerDay.toFixed(1)}px"></div>`;
+      } else if(tlPxPerDay >= 18){
+        gridHtml += `<div class="tl-gridline" style="left:${x.toFixed(1)}px"></div>`;
+      }
+      dcur = addDays(dcur,1);
+    }
   }
 
   /* ── Today line ── */
-  const todayPct = pct(today);
-  const showToday = todayPct >= 0 && todayPct <= 100;
+  const todayOff = dayOffset(today);
+  const showToday = todayOff >= 0 && todayOff <= totalDays;
+  const todayX = xPos(today);
 
   /* ── Build rows: one row per placement cycle, A1 sub-row after each Θ4 cycle ── */
   const sorted = data.slice().sort((a,b)=>new Date(a.doc_date)-new Date(b.doc_date));
@@ -633,9 +683,9 @@ function renderTimeline(){
 
   function makeBlock(cls, pos, tooltip){
     if(!pos) return '';
-    const label = pos.width > 3 ? cls.charAt(0).toUpperCase()+cls.slice(1) : '';
+    const label = pos.width > 32 ? cls.charAt(0).toUpperCase()+cls.slice(1) : '';
     return `<div class="tl-block ${cls}"
-      style="left:${pos.left.toFixed(2)}%;width:${pos.width.toFixed(2)}%"
+      style="left:${pos.left.toFixed(1)}px;width:${pos.width.toFixed(1)}px"
       data-tip="${tooltip}">${label}</div>`;
   }
 
@@ -644,7 +694,7 @@ function renderTimeline(){
     if(!hRows.length){
       const isFirst = rowCount === 0;
       labelsHtml += `<div class="tl-label-cell${isFirst?'':' group-sep'}">${h}</div>`;
-      rowsHtml   += `<div class="tl-row${isFirst?'':' group-sep'}"><div class="tl-row-track"><div class="tl-row-stripe"></div></div></div>`;
+      rowsHtml   += `<div class="tl-row${isFirst?'':' group-sep'}" style="width:${chartWidth}px"><div class="tl-row-track"><div class="tl-row-stripe"></div></div></div>`;
       rowCount++;
       return;
     }
@@ -673,7 +723,7 @@ function renderTimeline(){
       blocks += makeBlock('clean', blockPos(s.cleanStart, s.cleanEnd),
         `${cycleLabel} — Cleaning\n${fmtDate(s.cleanStart)} → ${fmtDate(s.cleanEnd)}`);
 
-      rowsHtml += `<div class="tl-row"><div class="tl-row-track">
+      rowsHtml += `<div class="tl-row" style="width:${chartWidth}px"><div class="tl-row-track">
         <div class="tl-row-stripe"></div>${blocks}</div></div>`;
       rowCount++;
 
@@ -693,7 +743,7 @@ function renderTimeline(){
         a1blocks += makeBlock('load', blockPos(a1.loadStart, a1.loadEnd),
           `A1 — Loading\n${fmtDate(a1.loadStart)} → ${fmtDate(a1.loadEnd)}`);
 
-        rowsHtml += `<div class="tl-row"><div class="tl-row-track">
+        rowsHtml += `<div class="tl-row" style="width:${chartWidth}px"><div class="tl-row-track">
           <div class="tl-row-stripe"></div>${a1blocks}</div></div>`;
         rowCount++;
       }
@@ -702,12 +752,13 @@ function renderTimeline(){
 
   /* ── Today line spans full chart height ── */
   const todayLine = showToday
-    ? `<div class="tl-today" style="left:${todayPct.toFixed(2)}%;height:${rowCount*30}px">
+    ? `<div class="tl-today" style="left:${todayX.toFixed(1)}px;height:${rowCount*30}px">
          <div class="tl-today-label">Today</div></div>`
     : '';
 
   const vmS = viewStart.toLocaleDateString('en-GB',{month:'short',year:'numeric'});
   const vmE = viewEnd.toLocaleDateString('en-GB',{month:'short',year:'numeric'});
+  const zoomPct = Math.round(tlPxPerDay/TL_BASE_PX_PER_DAY*100);
 
   el.innerHTML = `
     <div class="tl-tooltip" id="tl-tooltip">
@@ -726,12 +777,22 @@ function renderTimeline(){
           <button onclick="tlReset()">Today</button>
         </div>
       </div>
-      <div class="tl-grid-wrap">
-        <div class="tl-labels">${labelsHtml}</div>
-        <div class="tl-chart">
-          <div class="tl-axis">${axisHtml}</div>
-          <div class="tl-gridlines">${gridHtml}${todayLine}</div>
-          <div class="tl-rows">${rowsHtml}</div>
+      <div class="tl-zoom">
+        <span class="tl-zoom-label">Zoom</span>
+        <button class="tl-zoom-btn" onclick="tlZoomStep(-1)">&#8722;</button>
+        <input type="range" min="${TL_MIN_PX}" max="${TL_MAX_PX}" step="1" value="${tlPxPerDay}" oninput="tlSetZoom(this.value)">
+        <button class="tl-zoom-btn" onclick="tlZoomStep(1)">+</button>
+        <span class="tl-zoom-pct">${zoomPct}%</span>
+        <button class="tl-zoom-btn" style="width:auto;padding:0 8px;font-size:11px" onclick="tlZoomFit()">Fit</button>
+      </div>
+      <div class="tl-scroll-outer" id="tl-scroll">
+        <div class="tl-grid-wrap">
+          <div class="tl-labels">${labelsHtml}</div>
+          <div class="tl-chart" style="width:${chartWidth}px">
+            <div class="tl-axis" style="width:${chartWidth}px">${axisHtml}</div>
+            <div class="tl-gridlines" style="width:${chartWidth}px">${gridHtml}${todayLine}</div>
+            <div class="tl-rows">${rowsHtml}</div>
+          </div>
         </div>
       </div>
       <div class="tl-legend">
@@ -743,6 +804,11 @@ function renderTimeline(){
         <span class="tl-legend-item"><span class="tl-legend-swatch" style="background:rgba(248,81,73,0.25);border:1px solid rgba(248,81,73,0.55)"></span>Conflict</span>
       </div>
     </div></div>`;
+
+  /* preserve horizontal scroll position across re-renders when possible */
+  const scrollEl = document.getElementById('tl-scroll');
+  if(scrollEl && tlScrollLeft !== null) scrollEl.scrollLeft = tlScrollLeft;
+  if(scrollEl) scrollEl.addEventListener('scroll', ()=>{ tlScrollLeft = scrollEl.scrollLeft; });
 
   /* ── Tooltip wiring ── */
   const tip = document.getElementById('tl-tooltip');
@@ -765,7 +831,13 @@ function renderTimeline(){
 }
 
 function tlNav(dir){ tlOffset+=dir; renderTimeline(); }
-function tlReset(){ tlOffset=0; renderTimeline(); }
+function tlReset(){ tlOffset=0; tlScrollLeft=0; renderTimeline(); }
+function tlSetZoom(val){ tlPxPerDay=Number(val); renderTimeline(); }
+function tlZoomStep(dir){
+  tlPxPerDay = Math.max(TL_MIN_PX, Math.min(TL_MAX_PX, tlPxPerDay + dir*2));
+  renderTimeline();
+}
+function tlZoomFit(){ tlPxPerDay = TL_BASE_PX_PER_DAY; tlScrollLeft = 0; renderTimeline(); }
 
 function switchTab(tab){
   activeTab=tab;
