@@ -235,7 +235,7 @@ header{
   cursor:default;transition:filter .12s,box-shadow .12s;z-index:2;
 }
 .tl-block:hover{filter:brightness(1.2);box-shadow:0 0 0 1.5px rgba(255,255,255,0.2);z-index:9}
-.tl-block.rearing{background:var(--blue-soft);color:var(--blue);border:1px solid rgba(91,156,255,0.3)}
+.tl-block.rearing{background:var(--blue-soft);color:var(--blue);border:1px solid rgba(91,156,255,0.3);padding-left:14px}
 .tl-block.placement{background:#fff;color:#0a0c10;border:1px solid var(--text);font-weight:800;z-index:3}
 .tl-block.vax{background:rgba(91,156,255,0.4);color:#fff;border:1px solid var(--blue);z-index:3}
 .tl-block.transfer{background:rgba(167,139,250,0.4);color:#fff;border:1px solid var(--violet);z-index:3}
@@ -430,8 +430,15 @@ function setSyncStatus(state, msg){
 /* ── Date helpers ── */
 function addDays(date, n){ const d=new Date(date); d.setDate(d.getDate()+n); return d; }
 function fmtDate(d){ return new Date(d).toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric'}); }
-function daysDiff(a,b){ return Math.abs(Math.round((new Date(a)-new Date(b))/86400000)); }
-function datesOverlap(s1,e1,s2,e2){ return new Date(s1)<=new Date(e2) && new Date(e1)>=new Date(s2); }
+/* Gap in days between two date ranges (a point event has start===end).
+   Returns 0 if they overlap; otherwise the number of days between the nearest edges. */
+function rangeGapDays(s1,e1,s2,e2){
+  const a1=new Date(s1).getTime(), b1=new Date(e1).getTime();
+  const a2=new Date(s2).getTime(), b2=new Date(e2).getTime();
+  if(a1<=b2 && b1>=a2) return 0;
+  const gapMs = a1>b2 ? (a1-b2) : (a2-b1);
+  return Math.round(gapMs/86400000);
+}
 
 /* hatchDate is what the user types. Placement = hatch+2. Vax/load/clean still count from hatchDate. */
 function getSchedule(hatchDate){
@@ -495,16 +502,10 @@ function buildEvents(rows){
 }
 
 function eventsConflict(e1, e2){
-  /* point-in-range / range-overlap with a CONFLICT_WINDOW-day buffer on point events */
-  const isPoint = (e)=> e.start.getTime() === e.end.getTime();
-
-  if(isPoint(e1) && isPoint(e2)){
-    return daysDiff(e1.start, e2.start) <= CONFLICT_WINDOW;
-  }
-  /* one or both are ranges (load / transfer): widen the range by the window and check overlap */
-  const s1 = addDays(e1.start, -CONFLICT_WINDOW), e1e = addDays(e1.end, CONFLICT_WINDOW);
-  const s2 = addDays(e2.start, -CONFLICT_WINDOW), e2e = addDays(e2.end, CONFLICT_WINDOW);
-  return datesOverlap(s1, e1e, s2, e2e);
+  /* Unified rule: conflict if the gap between the nearest edges of the two
+     events (0 if they overlap) is within CONFLICT_WINDOW days. Works the same
+     whether either event is a single day (vax/placement) or a range (load/transfer). */
+  return rangeGapDays(e1.start, e1.end, e2.start, e2.end) <= CONFLICT_WINDOW;
 }
 
 function pairIsRelevant(e1, e2){
