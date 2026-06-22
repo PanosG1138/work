@@ -204,6 +204,34 @@ header{
 }
 .row-btn:hover{background:var(--hover);border-color:var(--text-subtle)}
 .row-btn.del:hover{border-color:#f55a5a;background:rgba(245,90,90,0.1);color:#f55a5a}
+.row-btn.fix{border-color:var(--amber-strong);color:var(--amber)}
+.row-btn.fix:hover{background:var(--amber-soft)}
+
+/* ── Resolver panel ── */
+.resolver-modal{width:480px}
+.resolver-summary{font-size:12.5px;color:var(--text-muted);margin-bottom:16px;line-height:1.6}
+.resolver-direction{margin-bottom:14px}
+.resolver-direction-label{font-size:11px;font-weight:700;color:var(--text-subtle);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.resolver-card{
+  background:var(--bg-elev2);border:1px solid var(--border);border-radius:var(--r-md);
+  padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.resolver-card-info{flex:1;min-width:0}
+.resolver-card-date{font-size:14px;font-weight:700;color:var(--text)}
+.resolver-card-shift{font-size:11.5px;color:var(--text-muted);margin-top:2px}
+.resolver-card-result{font-size:11.5px;margin-top:4px}
+.resolver-card-result.good{color:var(--green)}
+.resolver-card-result.partial{color:var(--amber)}
+.resolver-card-apply{
+  flex-shrink:0;height:32px;padding:0 14px;background:var(--blue);color:#fff;border:none;
+  border-radius:var(--r-md);font-family:'Inter',sans-serif;font-weight:600;font-size:12.5px;cursor:pointer;
+}
+.resolver-card-apply:hover{filter:brightness(1.1)}
+.resolver-card-apply:disabled{opacity:.5;cursor:not-allowed}
+.resolver-none{
+  background:var(--bg-elev2);border:1px solid var(--border);border-radius:var(--r-md);
+  padding:14px;font-size:12.5px;color:var(--text-muted);text-align:center;
+}
 
 /* ── Timeline ── */
 .timeline-wrap{border:1px solid var(--border);border-radius:var(--r-lg);background:var(--bg-elev1);overflow:hidden}
@@ -392,6 +420,17 @@ header{
   </div>
 </div>
 
+<!-- Resolver panel -->
+<div class="modal-bg hidden" id="resolver-bg">
+  <div class="modal resolver-modal">
+    <h3 id="resolver-title">Suggested fixes</h3>
+    <div id="resolver-body"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeResolverPanel()">Close</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const SB_URL  = 'https://oorhbrphdbigwgizejcc.supabase.co';
 const SB_KEY  = 'sb_publishable_1S3L1sNMOjr-YgwGAAD2Kg_X_3S4cTl';
@@ -507,34 +546,46 @@ function getA1Schedule(hatchDate){
 
 /* ── Conflict engine ──────────────────────────────────────────────
    Build a flat list of "events" across all houses + A1 sub-houses.
-   Each event has: group (for exemption — Θ4 and its A1 share group 'Θ4',
-   since A1 is a sub-house of Θ4 and uses the same hatch date),
-   house (display label), recordId (for highlighting), kind, start, end.
+   Each event has: group (for exemption — Θ4+A1 share group 'Θ4' since A1 is
+   a sub-house of Θ4 using the same hatch date; Θ1+Θ2 share group 'Θ1Θ2'
+   since they're operated as a linked pair), house (display label),
+   recordId (for highlighting), kind, start, end.
    Conflict rules:
      - placement vs placement only (within CONFLICT_WINDOW days) — placements
        never conflict with vax/load/transfer, only with each other.
      - vax  vs vax   (within CONFLICT_WINDOW days, point events)
      - vax  vs load  (vax day falls inside load window, or within window of load edges)
-     - load vs load  (range overlap, with Θ1/Θ2 exempt from each other)
+     - load vs load  (range overlap)
      - transfer vs vax/load (range overlap, or within window)
-   Same-group pairs (Θ4 <-> its own A1) are always skipped.
+   Same-group pairs (Θ4 <-> its own A1, Θ1 <-> Θ2) never conflict on any event type.
 -------------------------------------------------------------------- */
+/* Θ1 and Θ2 operate as a linked pair (same as A1 is linked to Θ4) — they never
+   conflict with each other on any event type, but still conflict normally with
+   every other house. This function maps a house label to its "conflict group". */
+function houseGroup(house){
+  if(house === 'Θ1' || house === 'Θ2') return 'Θ1Θ2';
+  if(house === 'Θ4' || house === 'A1') return 'Θ4';
+  return house;
+}
+
 function buildEvents(rows){
   const events = [];
   rows.forEach(r=>{
     const s = r.schedule;
-    events.push({recordId:r.id, group:r.house, house:r.house, kind:'placement', subkind:'placement', start:s.placement, end:s.placement, label:`${r.house} — DOC placement`});
-    events.push({recordId:r.id, group:r.house, house:r.house, kind:'vax', subkind:'vax1', start:s.vax1Start, end:s.vax1End, label:`${r.house} — Vaccination 1 (day 60)`});
-    events.push({recordId:r.id, group:r.house, house:r.house, kind:'vax', subkind:'vax2', start:s.vax2Start, end:s.vax2End, label:`${r.house} — Vaccination 2 (day 90)`});
-    events.push({recordId:r.id, group:r.house, house:r.house, kind:'load', subkind:'load', start:s.loadStart, end:s.loadEnd, label:`${r.house} — Loading`});
+    const grp = houseGroup(r.house);
+    events.push({recordId:r.id, group:grp, house:r.house, kind:'placement', subkind:'placement', start:s.placement, end:s.placement, label:`${r.house} — DOC placement`});
+    events.push({recordId:r.id, group:grp, house:r.house, kind:'vax', subkind:'vax1', start:s.vax1Start, end:s.vax1End, label:`${r.house} — Vaccination 1 (day 60)`});
+    events.push({recordId:r.id, group:grp, house:r.house, kind:'vax', subkind:'vax2', start:s.vax2Start, end:s.vax2End, label:`${r.house} — Vaccination 2 (day 90)`});
+    events.push({recordId:r.id, group:grp, house:r.house, kind:'load', subkind:'load', start:s.loadStart, end:s.loadEnd, label:`${r.house} — Loading`});
 
     if(r.house === 'Θ4'){
       const a1 = getA1Schedule(r.doc_date);
       const a1Label = 'A1';
-      events.push({recordId:r.id, group:'Θ4', house:a1Label, kind:'transfer', subkind:'a1transfer', start:a1.transferStart, end:a1.transferEnd, label:'A1 — Transfer'});
-      events.push({recordId:r.id, group:'Θ4', house:a1Label, kind:'vax', subkind:'a1vax1', start:a1.vax1Start, end:a1.vax1End, label:'A1 — Vaccination 1 (day 60)'});
-      events.push({recordId:r.id, group:'Θ4', house:a1Label, kind:'vax', subkind:'a1vax2', start:a1.vax2Start, end:a1.vax2End, label:'A1 — Vaccination 2 (day 90)'});
-      events.push({recordId:r.id, group:'Θ4', house:a1Label, kind:'load', subkind:'a1load', start:a1.loadStart, end:a1.loadEnd, label:'A1 — Loading'});
+      const a1Grp = houseGroup(a1Label);
+      events.push({recordId:r.id, group:a1Grp, house:a1Label, kind:'transfer', subkind:'a1transfer', start:a1.transferStart, end:a1.transferEnd, label:'A1 — Transfer'});
+      events.push({recordId:r.id, group:a1Grp, house:a1Label, kind:'vax', subkind:'a1vax1', start:a1.vax1Start, end:a1.vax1End, label:'A1 — Vaccination 1 (day 60)'});
+      events.push({recordId:r.id, group:a1Grp, house:a1Label, kind:'vax', subkind:'a1vax2', start:a1.vax2Start, end:a1.vax2End, label:'A1 — Vaccination 2 (day 90)'});
+      events.push({recordId:r.id, group:a1Grp, house:a1Label, kind:'load', subkind:'a1load', start:a1.loadStart, end:a1.loadEnd, label:'A1 — Loading'});
     }
   });
   return events;
@@ -548,7 +599,8 @@ function eventsConflict(e1, e2){
 }
 
 function pairIsRelevant(e1, e2){
-  /* Skip same physical flock (Θ4 <-> its own A1, since A1 is a sub-house of Θ4) */
+  /* Skip same conflict-group: Θ4 <-> its own A1 (sub-house, same hatch date),
+     and Θ1 <-> Θ2 (operated as a linked pair, never conflict with each other) */
   if(e1.group === e2.group) return false;
   /* DOC placement only conflicts with another DOC placement — nothing else. */
   if(e1.kind==='placement' || e2.kind==='placement'){
@@ -574,9 +626,6 @@ function detectConflicts(rows){
       const e1=events[i], e2=events[j];
       if(!pairIsRelevant(e1,e2)) continue;
       if(!eventsConflict(e1,e2)) continue;
-
-      const loadExempt = new Set(['Θ1','Θ2']);
-      if(e1.kind==='load' && e2.kind==='load' && loadExempt.has(e1.house) && loadExempt.has(e2.house)) continue;
 
       const fmtRange = (e)=> e.start.getTime()===e.end.getTime() ? fmtDate(e.start) : `${fmtDate(e.start)} – ${fmtDate(e.end)}`;
       const cellKeys = [`${e1.recordId}::${e1.subkind}`, `${e2.recordId}::${e2.subkind}`];
@@ -609,6 +658,222 @@ function checkCleaningOverlap(house, hatchDate){
       return `This hatch date falls during the loading/cleaning window of a previous cycle.`;
   }
   return null;
+}
+
+/* ── Conflict resolver ──────────────────────────────────────────────
+   Given a record, searches day-by-day in one direction (earlier/later)
+   for the smallest shift that:
+     - never lets the candidate hatch date fall inside ANY other cycle of
+       the same house's loading/cleaning window (bidirectional — checks
+       both "candidate lands inside another cycle" and "candidate's own
+       window would swallow another cycle's hatch date")
+     - never increases the TOTAL active-conflict count for the whole dataset
+     - reduces the number of conflicts involving this specific record
+   Returns the option with the greatest improvement (ties broken by
+   smallest shift), or null if no improving, safe shift exists.
+-------------------------------------------------------------------- */
+const RESOLVER_MAX_SHIFT_DAYS = 120;
+
+function wouldOverlapOwnCleaning(recordId, candidateHatchDate){
+  const rec = data.find(r=>r.id===recordId);
+  const sameHouse = data.filter(r=>r.house===rec.house && r.id!==recordId);
+  const cand = new Date(candidateHatchDate);
+  const candSchedule = getSchedule(cand);
+  for(const other of sameHouse){
+    const s = other.schedule;
+    if(cand >= s.loadStart && cand <= s.cleanEnd) return true;
+    const otherHatch = new Date(other.doc_date);
+    if(otherHatch >= candSchedule.loadStart && otherHatch <= candSchedule.cleanEnd) return true;
+  }
+  return false;
+}
+
+function findBestShiftInDirection(recordId, dir){
+  const recIdx = data.findIndex(r=>r.id===recordId);
+  if(recIdx===-1) return null;
+  const originalHatch = new Date(data[recIdx].doc_date);
+
+  const baselineConflicts = detectConflicts(data).filter(c=>!resolvedKeys.has(c.conflictKey));
+  const baselineTotal = baselineConflicts.length;
+  const baselineRecordCount = baselineConflicts.filter(c=>c.ids.includes(recordId)).length;
+  if(baselineRecordCount === 0) return null;
+
+  let best = null;
+  for(let shift=1; shift<=RESOLVER_MAX_SHIFT_DAYS; shift++){
+    const candidateHatch = addDays(originalHatch, dir*shift);
+    if(wouldOverlapOwnCleaning(recordId, candidateHatch)) continue;
+
+    const candidateIso = candidateHatch.toISOString().slice(0,10);
+    const hypoRows = data.map(r => r.id===recordId
+      ? {...r, doc_date: candidateIso, schedule: getSchedule(candidateHatch)}
+      : r
+    );
+    const hypoConflicts = detectConflicts(hypoRows).filter(c=>!resolvedKeys.has(c.conflictKey));
+    const hypoTotal = hypoConflicts.length;
+    if(hypoTotal > baselineTotal) continue;
+
+    const hypoRecordCount = hypoConflicts.filter(c=>c.ids.includes(recordId)).length;
+    const improvement = baselineRecordCount - hypoRecordCount;
+    if(improvement <= 0) continue;
+
+    if(!best || improvement > best.improvement ||
+       (improvement === best.improvement && Math.abs(shift) < Math.abs(best.shiftDays))){
+      best = {
+        shiftDays: dir*shift,
+        newHatch: candidateIso,
+        totalBefore: baselineTotal,
+        totalAfter: hypoTotal,
+        recordConflictsBefore: baselineRecordCount,
+        recordConflictsAfter: hypoRecordCount,
+        improvement,
+      };
+      if(hypoRecordCount === 0) break;
+    }
+  }
+  return best;
+}
+
+function suggestResolutionsForRecord(recordId){
+  return {
+    earlier: findBestShiftInDirection(recordId, -1),
+    later:   findBestShiftInDirection(recordId, 1),
+  };
+}
+
+/* ── Θ1/Θ2 paired resolver ──────────────────────────────────────────
+   Θ1 and Θ2 are operated as a linked pair: they never conflict with each
+   other, and when resolving conflicts against OTHER houses they must move
+   together, maintaining a gap of PAIR_MIN_GAP–PAIR_MAX_GAP days between
+   their hatch dates (in whichever order they currently have).
+
+   For performance, conflicts entirely among "other" houses are computed
+   once and reused; only the pair-vs-everyone-else delta is recomputed for
+   each candidate (shift, gap) — this is mathematically identical to
+   re-running full conflict detection each time, just far cheaper, and is
+   cross-validated against the naive approach in testing.
+-------------------------------------------------------------------- */
+const PAIR_MIN_GAP = 5;
+const PAIR_MAX_GAP = 14;
+const PAIR_MAX_SHIFT_DAYS = 150;
+
+/* If recordId belongs to Θ1 or Θ2, find its paired counterpart — the
+   Θ1/Θ2 record (of the other house) with the closest hatch date. Returns
+   {earlier, later} record objects (by hatch date) or null if no counterpart exists. */
+function findPairedRecord(recordId){
+  const rec = data.find(r=>r.id===recordId);
+  if(!rec || (rec.house!=='Θ1' && rec.house!=='Θ2')) return null;
+  const otherHouse = rec.house==='Θ1' ? 'Θ2' : 'Θ1';
+  const candidates = data.filter(r=>r.house===otherHouse);
+  if(!candidates.length) return null;
+  const recHatch = new Date(rec.doc_date);
+  let closest = candidates[0];
+  let closestDiff = Math.abs(new Date(closest.doc_date)-recHatch);
+  for(const c of candidates){
+    const diff = Math.abs(new Date(c.doc_date)-recHatch);
+    if(diff < closestDiff){ closest = c; closestDiff = diff; }
+  }
+  const recIsEarlier = recHatch <= new Date(closest.doc_date);
+  return recIsEarlier
+    ? {earlier: rec, later: closest}
+    : {earlier: closest, later: rec};
+}
+
+function countConflictsBetweenSets(eventsA, eventsB){
+  let count = 0;
+  for(const ea of eventsA){
+    for(const eb of eventsB){
+      if(pairIsRelevant(ea,eb) && eventsConflict(ea,eb)){
+        const key = [`${ea.recordId}::${ea.subkind}`, `${eb.recordId}::${eb.subkind}`].sort().join('|');
+        if(!resolvedKeys.has(key)) count++;
+      }
+    }
+  }
+  return count;
+}
+
+function countConflictsWithinSet(events){
+  let count = 0;
+  for(let i=0;i<events.length;i++){
+    for(let j=i+1;j<events.length;j++){
+      const e1=events[i], e2=events[j];
+      if(pairIsRelevant(e1,e2) && eventsConflict(e1,e2)){
+        const key = [`${e1.recordId}::${e1.subkind}`, `${e2.recordId}::${e2.subkind}`].sort().join('|');
+        if(!resolvedKeys.has(key)) count++;
+      }
+    }
+  }
+  return count;
+}
+
+function findBestPairShift(recordIdEarlier, recordIdLater){
+  const recEarlier = data.find(r=>r.id===recordIdEarlier);
+  const recLater   = data.find(r=>r.id===recordIdLater);
+  if(!recEarlier || !recLater) return null;
+  const origHatchEarlier = new Date(recEarlier.doc_date);
+
+  const otherRows = data.filter(r=>r.id!==recordIdEarlier && r.id!==recordIdLater);
+  const otherEvents = buildEvents(otherRows);
+  const othersOnlyCount = countConflictsWithinSet(otherEvents);
+
+  function pairVsRestCount(hatchEarlierIso, hatchLaterIso){
+    const pairRows = [
+      {...recEarlier, doc_date:hatchEarlierIso, schedule:getSchedule(hatchEarlierIso)},
+      {...recLater,   doc_date:hatchLaterIso,   schedule:getSchedule(hatchLaterIso)},
+    ];
+    const pairEvents = buildEvents(pairRows);
+    return countConflictsBetweenSets(pairEvents, otherEvents) + countConflictsWithinSet(pairEvents);
+  }
+
+  const baselinePairVsRest = pairVsRestCount(recEarlier.doc_date, recLater.doc_date);
+  const baselineTotal = othersOnlyCount + baselinePairVsRest;
+  if(baselinePairVsRest === 0) return null;
+
+  let best = null;
+
+  outer:
+  for(let shift=0; shift<=PAIR_MAX_SHIFT_DAYS; shift++){
+    for(const dir of (shift===0 ? [1] : [1,-1])){
+      const newEarlierDate = addDays(origHatchEarlier, dir*shift);
+      if(wouldOverlapOwnCleaning(recordIdEarlier, newEarlierDate)) continue;
+      const isoEarlier = newEarlierDate.toISOString().slice(0,10);
+
+      for(let gap=PAIR_MIN_GAP; gap<=PAIR_MAX_GAP; gap++){
+        const newLaterDate = addDays(newEarlierDate, gap);
+        if(wouldOverlapOwnCleaning(recordIdLater, newLaterDate)) continue;
+        const isoLater = newLaterDate.toISOString().slice(0,10);
+
+        const hypoPairVsRest = pairVsRestCount(isoEarlier, isoLater);
+        const hypoTotal = othersOnlyCount + hypoPairVsRest;
+        if(hypoTotal > baselineTotal) continue;
+
+        const improvement = baselinePairVsRest - hypoPairVsRest;
+        if(improvement <= 0) continue;
+
+        const totalMovement = Math.abs(shift);
+        if(!best || improvement > best.improvement ||
+           (improvement === best.improvement && totalMovement < best.totalMovement)){
+          best = {
+            shiftDays: dir*shift, gap,
+            newHatchEarlier: isoEarlier, newHatchLater: isoLater,
+            totalBefore: baselineTotal, totalAfter: hypoTotal,
+            pairConflictsBefore: baselinePairVsRest, pairConflictsAfter: hypoPairVsRest,
+            improvement,
+          };
+          if(hypoPairVsRest === 0 && shift > 3) break outer;
+        }
+      }
+    }
+  }
+  return best;
+}
+
+function suggestPairResolutions(recordId){
+  const pair = findPairedRecord(recordId);
+  if(!pair) return null;
+  return {
+    pair,
+    suggestion: findBestPairShift(pair.earlier.id, pair.later.id),
+  };
 }
 
 /* ── Load ── */
@@ -768,9 +1033,11 @@ function renderTable(conflictCellKeys){
     const cycles = houseData[h];
     if(!cycles.length){ html+=`<td class="ct-cell"></td>`; return; }
     cycles.forEach(r=>{
+      const hasConflict = [...conflictCellKeys].some(k=>k.startsWith(`${r.id}::`));
       html+=`<td class="ct-cell ct-actions">
         <button class="row-btn" onclick="openEditModal('${r.id}')">Edit</button>
         <button class="row-btn del" onclick="askDelete('${r.id}','${r.house}','${r.doc_date}')">Del</button>
+        ${hasConflict ? `<button class="row-btn fix" onclick="openResolverPanel('${r.id}')">Fix</button>` : ''}
       </td>`;
     });
   });
@@ -1131,6 +1398,134 @@ async function confirmDelete(){
     closeConfirm(); render();
     setSyncStatus('ok','Deleted');
   }catch(e){ setSyncStatus('err','Delete failed: '+e.message); closeConfirm(); }
+}
+
+/* ── Resolver panel UI ── */
+function openResolverPanel(recordId){
+  const rec = data.find(r=>r.id===recordId);
+  if(!rec) return;
+  renderResolverPanel(recordId);
+  document.getElementById('resolver-bg').classList.remove('hidden');
+}
+function closeResolverPanel(){
+  document.getElementById('resolver-bg').classList.add('hidden');
+}
+
+function renderResolverPanel(recordId){
+  const rec = data.find(r=>r.id===recordId);
+  if(!rec) return;
+
+  if(rec.house === 'Θ1' || rec.house === 'Θ2'){
+    renderPairResolverPanel(recordId);
+    return;
+  }
+
+  document.getElementById('resolver-title').textContent = `Suggested fixes — ${rec.house}`;
+
+  const suggestions = suggestResolutionsForRecord(recordId);
+  const body = document.getElementById('resolver-body');
+
+  const renderCard = (opt, label) => {
+    if(!opt){
+      return `<div class="resolver-direction">
+        <div class="resolver-direction-label">${label}</div>
+        <div class="resolver-none">No safe ${label.toLowerCase()} shift found within ${RESOLVER_MAX_SHIFT_DAYS} days.</div>
+      </div>`;
+    }
+    const fullyResolved = opt.recordConflictsAfter === 0;
+    const resultClass = fullyResolved ? 'good' : 'partial';
+    const resultText = fullyResolved
+      ? `Clears all ${opt.recordConflictsBefore} conflict${opt.recordConflictsBefore!==1?'s':''} for this cycle`
+      : `Reduces this cycle's conflicts from ${opt.recordConflictsBefore} to ${opt.recordConflictsAfter}`;
+    return `<div class="resolver-direction">
+      <div class="resolver-direction-label">${label}</div>
+      <div class="resolver-card">
+        <div class="resolver-card-info">
+          <div class="resolver-card-date">${fmtDate(opt.newHatch)}</div>
+          <div class="resolver-card-shift">${Math.abs(opt.shiftDays)} day${Math.abs(opt.shiftDays)!==1?'s':''} ${opt.shiftDays>0?'later':'earlier'} &middot; total conflicts ${opt.totalBefore} → ${opt.totalAfter}</div>
+          <div class="resolver-card-result ${resultClass}">${fullyResolved?'✓ ':'~ '}${resultText}</div>
+        </div>
+        <button class="resolver-card-apply" onclick="applyResolverSuggestion('${recordId}','${opt.newHatch}')">Apply</button>
+      </div>
+    </div>`;
+  };
+
+  let html = `<div class="resolver-summary">Hatch date is currently <strong>${fmtDate(rec.doc_date)}</strong>. Shifting it changes vaccination, loading, and cleaning dates for ${rec.house}${rec.house==='Θ4'?' and A1':''} accordingly. Suggestions below never overlap this house's own previous cleaning period, and never increase the total number of conflicts elsewhere.</div>`;
+  html += renderCard(suggestions.earlier, 'Move earlier');
+  html += renderCard(suggestions.later, 'Move later');
+  body.innerHTML = html;
+}
+
+function renderPairResolverPanel(recordId){
+  const result = suggestPairResolutions(recordId);
+  const body = document.getElementById('resolver-body');
+  document.getElementById('resolver-title').textContent = 'Suggested fixes — Θ1 + Θ2 (linked pair)';
+
+  if(!result){
+    body.innerHTML = `<div class="resolver-none">No paired Θ1/Θ2 cycle found to move together with.</div>`;
+    return;
+  }
+
+  const {pair, suggestion} = result;
+  const currentGap = Math.round((new Date(pair.later.doc_date) - new Date(pair.earlier.doc_date))/86400000);
+
+  let html = `<div class="resolver-summary">
+    Θ1 and Θ2 are operated as a linked pair and always move together, keeping a gap of
+    ${PAIR_MIN_GAP}–${PAIR_MAX_GAP} days between their hatch dates. Currently:
+    <strong>${pair.earlier.house}</strong> ${fmtDate(pair.earlier.doc_date)} →
+    <strong>${pair.later.house}</strong> ${fmtDate(pair.later.doc_date)} (${currentGap}-day gap).
+  </div>`;
+
+  if(!suggestion){
+    html += `<div class="resolver-none">No safe joint move found within ${PAIR_MAX_SHIFT_DAYS} days that improves this pair's conflicts without creating new ones elsewhere.</div>`;
+  } else {
+    const fullyResolved = suggestion.pairConflictsAfter === 0;
+    const resultClass = fullyResolved ? 'good' : 'partial';
+    const resultText = fullyResolved
+      ? `Clears all ${suggestion.pairConflictsBefore} conflict${suggestion.pairConflictsBefore!==1?'s':''} involving this pair`
+      : `Reduces this pair's conflicts from ${suggestion.pairConflictsBefore} to ${suggestion.pairConflictsAfter}`;
+    html += `<div class="resolver-direction">
+      <div class="resolver-direction-label">${suggestion.shiftDays===0 ? 'Adjust gap only' : (suggestion.shiftDays>0 ? 'Move later' : 'Move earlier')}</div>
+      <div class="resolver-card">
+        <div class="resolver-card-info">
+          <div class="resolver-card-date">${pair.earlier.house}: ${fmtDate(suggestion.newHatchEarlier)} &nbsp;→&nbsp; ${pair.later.house}: ${fmtDate(suggestion.newHatchLater)}</div>
+          <div class="resolver-card-shift">${Math.abs(suggestion.shiftDays)} day${Math.abs(suggestion.shiftDays)!==1?'s':''} ${suggestion.shiftDays>=0?'later':'earlier'} &middot; new gap ${suggestion.gap}d &middot; total conflicts ${suggestion.totalBefore} → ${suggestion.totalAfter}</div>
+          <div class="resolver-card-result ${resultClass}">${fullyResolved?'✓ ':'~ '}${resultText}</div>
+        </div>
+        <button class="resolver-card-apply" onclick="applyPairResolverSuggestion('${pair.earlier.id}','${suggestion.newHatchEarlier}','${pair.later.id}','${suggestion.newHatchLater}')">Apply to both</button>
+      </div>
+    </div>`;
+  }
+  body.innerHTML = html;
+}
+
+async function applyResolverSuggestion(recordId, newHatchDate){
+  try{
+    const [updated] = await sbUpdate(recordId, {doc_date:newHatchDate});
+    const idx = data.findIndex(r=>r.id===recordId);
+    if(idx>=0) data[idx] = {...updated, schedule:getSchedule(updated.doc_date)};
+    setSyncStatus('ok','Updated');
+    closeResolverPanel();
+    render();
+  }catch(e){
+    setSyncStatus('err','Update failed: '+e.message);
+  }
+}
+
+async function applyPairResolverSuggestion(recordIdEarlier, newHatchEarlier, recordIdLater, newHatchLater){
+  try{
+    const [updatedEarlier] = await sbUpdate(recordIdEarlier, {doc_date:newHatchEarlier});
+    const [updatedLater]   = await sbUpdate(recordIdLater,   {doc_date:newHatchLater});
+    const idxE = data.findIndex(r=>r.id===recordIdEarlier);
+    const idxL = data.findIndex(r=>r.id===recordIdLater);
+    if(idxE>=0) data[idxE] = {...updatedEarlier, schedule:getSchedule(updatedEarlier.doc_date)};
+    if(idxL>=0) data[idxL] = {...updatedLater,   schedule:getSchedule(updatedLater.doc_date)};
+    setSyncStatus('ok','Updated both');
+    closeResolverPanel();
+    render();
+  }catch(e){
+    setSyncStatus('err','Update failed: '+e.message);
+  }
 }
 
 load();
