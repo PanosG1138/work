@@ -235,7 +235,6 @@ header{
   cursor:default;transition:filter .12s,box-shadow .12s;z-index:2;
 }
 .tl-block:hover{filter:brightness(1.2);box-shadow:0 0 0 1.5px rgba(255,255,255,0.2);z-index:9}
-.tl-block.rearing{background:var(--blue-soft);color:var(--blue);border:1px solid rgba(91,156,255,0.3);padding-left:14px}
 .tl-block.placement{background:#fff;color:#0a0c10;border:1px solid var(--text);font-weight:800;z-index:3}
 .tl-block.vax{background:rgba(91,156,255,0.4);color:#fff;border:1px solid var(--blue);z-index:3}
 .tl-block.transfer{background:rgba(167,139,250,0.4);color:#fff;border:1px solid var(--violet);z-index:3}
@@ -802,10 +801,7 @@ function renderTimeline(){
 
       labelsHtml += `<div class="tl-label-cell${(!isFirstInGroup||rowCount>0)?'':''}">${cycleLabel}</div>`;
 
-      const rearingPos = blockPos(s.placement, s.loadEnd);
       let blocks = '';
-      if(rearingPos) blocks += makeBlock('rearing', rearingPos, `${h} cycle — Rearing period\\n${fmtDate(s.placement)} → ${fmtDate(s.loadEnd)}`);
-
       blocks += makeBlock(cKey('placement')?'conflict':'placement', singleDayPos(s.placement), `${cycleLabel} — DOC placement\\n${fmtDate(s.placement)}`);
       blocks += makeBlock(cKey('vax1')?'conflict':'vax', singleDayPos(s.vax1), `${cycleLabel} — Vaccination 1\\n${fmtDate(s.vax1)}`);
       blocks += makeBlock(cKey('vax2')?'conflict':'vax', singleDayPos(s.vax2), `${cycleLabel} — Vaccination 2\\n${fmtDate(s.vax2)}`);
@@ -877,7 +873,6 @@ function renderTimeline(){
         </div>
       </div>
       <div class="tl-legend">
-        <span class="tl-legend-item"><span class="tl-legend-swatch" style="background:var(--blue-soft);border:1px solid rgba(91,156,255,0.3)"></span>Rearing period</span>
         <span class="tl-legend-item"><span class="tl-legend-swatch" style="background:#fff;border:1px solid var(--text)"></span>DOC placement</span>
         <span class="tl-legend-item"><span class="tl-legend-swatch" style="background:rgba(91,156,255,0.4);border:1px solid var(--blue)"></span>Vaccination</span>
         <span class="tl-legend-item"><span class="tl-legend-swatch" style="background:rgba(167,139,250,0.4);border:1px solid var(--violet)"></span>Transfer (A1)</span>
