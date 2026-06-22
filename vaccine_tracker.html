@@ -616,6 +616,33 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
   tbody tr.row-arrived{background:#e6f4ea!important}
   @page{margin:1cm;size:landscape}
 }
+
+/* ── PRINT CARD — overrides the rule above when active ── */
+.printcard-doc{display:none}
+body.printing-card .printcard-doc{display:block}
+@media print{
+  body.printing-card .shell,
+  body.printing-card header,
+  body.printing-card .sidebar,
+  body.printing-card .main{display:none!important}
+  body.printing-card .printcard-doc{
+    display:block!important;
+    position:fixed;inset:0;background:#fff;color:#000;padding:24px;
+  }
+  body.printing-card .modal-bg{display:none!important}
+  .printcard-doc h2{font-size:20px;margin-bottom:2px}
+  .printcard-doc .pc-sub{font-size:13px;color:#444;margin-bottom:18px}
+  .printcard-doc table{width:100%;border-collapse:collapse;font-size:14px}
+  .printcard-doc th,.printcard-doc td{border:1px solid #999;padding:8px 10px;text-align:left}
+  .printcard-doc thead{background:#eee}
+  @page{margin:1.5cm;size:portrait}
+}
+.printcard-doc h2{margin:0 0 2px;font-size:18px;color:var(--gh-fg-default)}
+.printcard-doc .pc-sub{font-size:13px;color:var(--gh-fg-muted);margin-bottom:16px}
+.printcard-doc table{width:100%;border-collapse:collapse;font-size:13px}
+.printcard-doc th,.printcard-doc td{border:1px solid var(--gh-border-default);padding:7px 10px;text-align:left;color:var(--gh-fg-default)}
+.printcard-doc thead{background:var(--gh-canvas-subtle)}
+.printcard-doc .pc-empty{padding:20px;text-align:center;color:var(--gh-fg-muted);font-size:13px}
 </style>
 </head>
 <body>
@@ -781,6 +808,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
     <button class="btn-tool" id="btn-undo" onclick="undo()" disabled title="Undo (Ctrl+Z)">↩ Undo</button>
     <button class="btn-tool" id="btn-redo" onclick="redo()" disabled title="Redo (Ctrl+Y)">↪ Redo</button>
     <button class="btn-tool" onclick="exportCSV()">↓ CSV</button>
+    <button class="btn-tool" id="btn-print-card" onclick="openPrintCard()" style="display:none" title="Εκτύπωση καρτέλας αναθρεπτηρίου">🖨 Καρτέλα</button>
   </div>
 
   <!-- BATCH ACTION BAR -->
@@ -901,8 +929,34 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
   </div>
 </div>
 
+<!-- Hidden print-only document — populated by renderPrintCard(), shown only via body.printing-card during window.print() -->
+<div class="printcard-doc" id="printcard-doc"></div>
+
+<!-- PRINT CARD — simplified per-house vaccination schedule -->
+<div id="printcard-bg" class="modal-bg" style="display:none" onclick="if(event.target===this)closePrintCard()">
+  <div class="modal" style="width:520px;max-width:95vw">
+
+    <!-- Hatch-date picker (shown only when multiple hatch dates are visible) -->
+    <div id="printcard-picker" style="display:none;margin-bottom:16px">
+      <label style="display:block;font-size:12px;font-weight:500;color:var(--gh-fg-muted);margin-bottom:6px">
+        Επιλέξτε εκκόλαψη για εκτύπωση
+      </label>
+      <select id="printcard-select" onchange="renderPrintCard(this.value)" style="width:100%"></select>
+    </div>
+
+    <!-- The printable card itself -->
+    <div id="printcard-content"></div>
+
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closePrintCard()">Κλείσιμο</button>
+      <button class="btn-primary" onclick="window.print()">🖨 Εκτύπωση</button>
+    </div>
+  </div>
+</div>
+
 <!-- CHANGELOG MODAL -->
 <div id="changelog-bg" class="modal-bg" style="display:none">
+
   <div class="changelog-modal">
     <h3 id="changelog-title">Αλλαγές από την τελευταία σύνδεση</h3>
     <div class="changelog-sub" id="changelog-sub"></div>
@@ -1626,6 +1680,11 @@ function render() {
   document.getElementById('stat-total').textContent   = total;
   document.getElementById('stat-ordered').textContent = confirmed;
   document.getElementById('stat-pending').textContent = total-confirmed;
+
+  // show the print-card button only when the current view has at least
+  // one row with a hatch date (otherwise there's nothing to print a card for)
+  document.getElementById('btn-print-card').style.display =
+    rows.some(r => r.hm_ekk) ? '' : 'none';
 }
 
 function x(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -1650,6 +1709,99 @@ function exportCSV() {
   a.download = 'emvolia_export.csv'; a.click();
   toast('CSV εξαχθέν');
 }
+
+// ── PRINT CARD — simplified per-house vaccination schedule ────────
+// Triggered from the toolbar button, only enabled when the current
+// filtered view contains at least one identifiable hatch date.
+
+function getVisibleHatchDates() {
+  // returns unique { iso, anath, label } for every distinct hatch date
+  // present in the CURRENT filtered view (respects search + filters)
+  const rows = getFiltered();
+  const seen = new Map();
+  rows.forEach(r => {
+    if (!r.hm_ekk) return;
+    const key = r.hm_ekk + '|' + (r.anath || '');
+    if (!seen.has(key)) {
+      seen.set(key, { iso: r.hm_ekk, anath: r.anath || '', label: flockLabel(r) });
+    }
+  });
+  return [...seen.values()].sort((a,b) => a.iso < b.iso ? -1 : a.iso > b.iso ? 1 : 0);
+}
+
+function openPrintCard() {
+  const dates = getVisibleHatchDates();
+  if (!dates.length) { toast('Δεν υπάρχει εκκόλαψη στα τρέχοντα αποτελέσματα.', true); return; }
+
+  const picker = document.getElementById('printcard-picker');
+  const select = document.getElementById('printcard-select');
+
+  if (dates.length > 1) {
+    // multiple hatch dates visible — let the user choose which card to print
+    select.innerHTML = dates.map(d => `<option value="${d.iso}|${x(d.anath)}">${x(d.label)}</option>`).join('');
+    picker.style.display = 'block';
+    renderPrintCard(dates[0].iso + '|' + dates[0].anath);
+  } else {
+    picker.style.display = 'none';
+    renderPrintCard(dates[0].iso + '|' + dates[0].anath);
+  }
+  document.getElementById('printcard-bg').style.display = 'flex';
+}
+
+function renderPrintCard(key) {
+  const [iso, anath] = key.split('|');
+  // pull every row for this exact hatch date + flock from the FULL dataset
+  // (not just the current filtered view) — the card should be complete
+  // regardless of what other search terms happen to be active.
+  const rows = data
+    .filter(r => r.hm_ekk === iso && (r.anath || '') === anath)
+    .sort((a,b) => (a.hm_emv||'') < (b.hm_emv||'') ? -1 : (a.hm_emv||'') > (b.hm_emv||'') ? 1 : 0);
+
+  const title = `Εκκόλαψη: ${x(fmt(iso))}`;
+  const sub   = anath ? `Αναθρεπτήριο: ${x(anath)}` : '';
+
+  let bodyHtml;
+  if (!rows.length) {
+    bodyHtml = `<div class="pc-empty">Δεν υπάρχουν καταχωρημένα εμβόλια.</div>`;
+  } else {
+    bodyHtml = `
+      <table>
+        <thead><tr>
+          <th>Ημ. Εμβολιασμού</th><th>Εμβόλιο</th><th>Ποσότητα</th>
+        </tr></thead>
+        <tbody>
+          ${rows.map(r => `<tr>
+            <td>${x(fmt(r.hm_emv)) || '—'}</td>
+            <td>${x(r.emvolio)}</td>
+            <td>${fmtPosotita(r.posotita)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  const html = `<h2>${title}</h2>${sub ? `<div class="pc-sub">${sub}</div>` : ''}${bodyHtml}`;
+
+  // populate both the on-screen preview and the hidden print-only document
+  document.getElementById('printcard-content').innerHTML = html;
+  document.getElementById('printcard-doc').innerHTML = html;
+}
+
+function closePrintCard() {
+  document.getElementById('printcard-bg').style.display = 'none';
+}
+
+// activate the dedicated print-card stylesheet only while this modal's
+// print button triggers window.print() — restored immediately after
+window.addEventListener('beforeprint', () => {
+  if (document.getElementById('printcard-bg').style.display === 'flex') {
+    document.body.classList.add('printing-card');
+  }
+});
+window.addEventListener('afterprint', () => {
+  document.body.classList.remove('printing-card');
+});
+
+
 
 // ── TOAST ─────────────────────────────────────────────────────────
 let tt;
@@ -1756,6 +1908,9 @@ async function redo() {
 document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'z') { e.preventDefault(); undo(); }
   if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) { e.preventDefault(); redo(); }
+  if (e.key === 'Escape' && document.getElementById('printcard-bg').style.display === 'flex') {
+    closePrintCard();
+  }
 });
 
 // ── PASSWORD GATE ─────────────────────────────────────────────────
