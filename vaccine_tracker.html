@@ -1753,9 +1753,33 @@ function renderPrintCard(key) {
   // pull every row for this exact hatch date + flock from the FULL dataset
   // (not just the current filtered view) — the card should be complete
   // regardless of what other search terms happen to be active.
-  const rows = data
-    .filter(r => r.hm_ekk === iso && (r.anath || '') === anath)
-    .sort((a,b) => (a.hm_emv||'') < (b.hm_emv||'') ? -1 : (a.hm_emv||'') > (b.hm_emv||'') ? 1 : 0);
+  const rawRows = data.filter(r => r.hm_ekk === iso && (r.anath || '') === anath);
+
+  // ── Merge rows that share the same vaccination date + vaccine name ──
+  // Numeric quantities are summed. Non-numeric quantities (e.g. "5 ΚΙΛΑ")
+  // can't be meaningfully summed, so they're kept as separate comma-joined values.
+  const merged = new Map();
+  rawRows.forEach(r => {
+    const mkey = (r.hm_emv || '') + '|' + normalize(r.emvolio || '');
+    const qtyRaw = String(r.posotita || '').replace(/\./g, '').trim();
+    const qtyNum = parseInt(qtyRaw, 10);
+    const isNumeric = !isNaN(qtyNum) && String(qtyNum) === qtyRaw;
+
+    if (!merged.has(mkey)) {
+      merged.set(mkey, {
+        hm_emv: r.hm_emv, emvolio: r.emvolio,
+        numericTotal: 0, hasNumeric: false,
+        nonNumericParts: [],
+      });
+    }
+    const entry = merged.get(mkey);
+    if (isNumeric) { entry.numericTotal += qtyNum; entry.hasNumeric = true; }
+    else if (qtyRaw) { entry.nonNumericParts.push(qtyRaw); }
+  });
+
+  const rows = [...merged.values()].sort((a,b) =>
+    (a.hm_emv||'') < (b.hm_emv||'') ? -1 : (a.hm_emv||'') > (b.hm_emv||'') ? 1 : 0
+  );
 
   const title = `Εκκόλαψη: ${x(fmt(iso))}`;
   const sub   = anath ? `Αναθρεπτήριο: ${x(anath)}` : '';
@@ -1770,11 +1794,18 @@ function renderPrintCard(key) {
           <th>Ημ. Εμβολιασμού</th><th>Εμβόλιο</th><th>Ποσότητα</th>
         </tr></thead>
         <tbody>
-          ${rows.map(r => `<tr>
-            <td>${x(fmt(r.hm_emv)) || '—'}</td>
-            <td>${x(r.emvolio)}</td>
-            <td>${fmtPosotita(r.posotita)}</td>
-          </tr>`).join('')}
+          ${rows.map(r => {
+            // combine numeric total + any non-numeric parts (e.g. "5 ΚΙΛΑ")
+            const parts = [];
+            if (r.hasNumeric) parts.push(r.numericTotal.toLocaleString('el-GR'));
+            parts.push(...r.nonNumericParts);
+            const qtyDisplay = parts.length ? x(parts.join(' + ')) : '—';
+            return `<tr>
+              <td>${x(fmt(r.hm_emv)) || '—'}</td>
+              <td>${x(r.emvolio)}</td>
+              <td>${qtyDisplay}</td>
+            </tr>`;
+          }).join('')}
         </tbody>
       </table>`;
   }
