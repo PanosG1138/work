@@ -125,9 +125,39 @@ header{
 .conflict-item{
   background:var(--bg-elev1);border:1px solid var(--amber-strong);
   border-radius:var(--r-sm);padding:8px 12px;font-size:12.5px;color:var(--text);
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
 }
 .conflict-item strong{color:var(--amber)}
 .conflict-meta{font-size:11.5px;color:var(--text-muted);margin-top:2px}
+.conflict-item-main{cursor:pointer;flex:1;min-width:0}
+.conflict-item-main:hover{opacity:.85}
+.conflict-resolve-btn{
+  flex-shrink:0;height:26px;padding:0 10px;border-radius:var(--r-sm);
+  border:1px solid var(--amber-strong);background:var(--bg-elev2);color:var(--amber);
+  font-family:'Inter',sans-serif;font-size:11.5px;font-weight:600;cursor:pointer;
+  transition:background .12s;white-space:nowrap;
+}
+.conflict-resolve-btn:hover{background:var(--hover)}
+.conflict-item-resolved{
+  background:var(--bg-elev2);border:1px solid var(--border);opacity:.65;
+}
+.conflict-item-resolved strong{color:var(--text-muted)}
+.conflict-item-resolved .conflict-resolve-btn{border-color:var(--border);color:var(--text-muted)}
+.conflict-resolved-count{font-size:11.5px;font-weight:500;color:var(--text-muted)}
+.conflict-resolved-divider{
+  font-size:11px;font-weight:700;color:var(--text-subtle);text-transform:uppercase;
+  letter-spacing:.05em;margin:8px 2px 0;padding-top:8px;border-top:1px solid var(--border-soft);
+}
+.tl-jump-flash{
+  position:absolute;top:0;background:rgba(255,255,255,0.18);
+  border-left:2px solid var(--amber);border-right:2px solid var(--amber);
+  z-index:15;pointer-events:none;animation:tlJumpFade 1.8s ease-out forwards;
+}
+@keyframes tlJumpFade{
+  0%{opacity:1}
+  70%{opacity:1}
+  100%{opacity:0}
+}
 
 /* ── Cycle table ── */
 .cycle-table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--r-lg);background:var(--bg-elev1)}
@@ -366,6 +396,7 @@ header{
 const SB_URL  = 'https://oorhbrphdbigwgizejcc.supabase.co';
 const SB_KEY  = 'sb_publishable_1S3L1sNMOjr-YgwGAAD2Kg_X_3S4cTl';
 const TABLE   = 'placements';
+const RESOLVED_TABLE = 'resolved_conflicts';
 const CONFLICT_WINDOW = 6; /* days — events within this many days of each other conflict */
 const HOUSES  = ['Θ1','Θ2','Θ3','Θ4','Θ5'];
 const HATCH_TO_PLACEMENT_DAYS = 2;
@@ -407,8 +438,13 @@ const sbInsert = row     => sbFetch(TABLE, {method:'POST', prefer:'return=repres
 const sbDelete = id      => sbFetch(`${TABLE}?id=eq.${id}`, {method:'DELETE'});
 const sbUpdate = (id,row)=> sbFetch(`${TABLE}?id=eq.${id}`, {method:'PATCH', prefer:'return=representation', body:JSON.stringify(row)});
 
+const sbSelectResolved = ()   => sbFetch(`${RESOLVED_TABLE}?select=conflict_key`);
+const sbInsertResolved = key  => sbFetch(RESOLVED_TABLE, {method:'POST', prefer:'return=representation', body:JSON.stringify({conflict_key:key})});
+const sbDeleteResolved = key  => sbFetch(`${RESOLVED_TABLE}?conflict_key=eq.${encodeURIComponent(key)}`, {method:'DELETE'});
+
 /* ── State ── */
 let data = [];
+let resolvedKeys = new Set();
 let activeTab = 'table';
 let deleteId  = null;
 let editId    = null;
@@ -418,7 +454,7 @@ const TL_MIN_PX = 2;
 const TL_MAX_PX = 48;
 let tlPxPerDay  = TL_BASE_PX_PER_DAY;
 let tlScrollLeft = null;
-let conflictBarCollapsed = false;
+let conflictBarCollapsed = true;
 
 function setSyncStatus(state, msg){
   const b = document.getElementById('sync-badge');
@@ -445,8 +481,10 @@ function getSchedule(hatchDate){
   return {
     hatchDate:  base,
     placement:  addDays(base, HATCH_TO_PLACEMENT_DAYS),
-    vax1:       addDays(base, 59),
-    vax2:       addDays(base, 89),
+    vax1Start:  addDays(base, 59),
+    vax1End:    addDays(base, 68),
+    vax2Start:  addDays(base, 89),
+    vax2End:    addDays(base, 98),
     loadStart:  addDays(base, 104),
     loadEnd:    addDays(base, 121),
     cleanStart: addDays(base, 122),
@@ -458,8 +496,10 @@ function getA1Schedule(hatchDate){
   return {
     transferStart: addDays(base, 34),
     transferEnd:   addDays(base, 40),
-    vax1:          addDays(base, 59),
-    vax2:          addDays(base, 89),
+    vax1Start:     addDays(base, 59),
+    vax1End:       addDays(base, 68),
+    vax2Start:     addDays(base, 89),
+    vax2End:       addDays(base, 98),
     loadStart:     addDays(base, 104),
     loadEnd:       addDays(base, 121),
   };
@@ -484,16 +524,16 @@ function buildEvents(rows){
   rows.forEach(r=>{
     const s = r.schedule;
     events.push({recordId:r.id, group:r.house, house:r.house, kind:'placement', subkind:'placement', start:s.placement, end:s.placement, label:`${r.house} — DOC placement`});
-    events.push({recordId:r.id, group:r.house, house:r.house, kind:'vax', subkind:'vax1', start:s.vax1, end:s.vax1, label:`${r.house} — Vaccination 1 (day 60)`});
-    events.push({recordId:r.id, group:r.house, house:r.house, kind:'vax', subkind:'vax2', start:s.vax2, end:s.vax2, label:`${r.house} — Vaccination 2 (day 90)`});
+    events.push({recordId:r.id, group:r.house, house:r.house, kind:'vax', subkind:'vax1', start:s.vax1Start, end:s.vax1End, label:`${r.house} — Vaccination 1 (day 60)`});
+    events.push({recordId:r.id, group:r.house, house:r.house, kind:'vax', subkind:'vax2', start:s.vax2Start, end:s.vax2End, label:`${r.house} — Vaccination 2 (day 90)`});
     events.push({recordId:r.id, group:r.house, house:r.house, kind:'load', subkind:'load', start:s.loadStart, end:s.loadEnd, label:`${r.house} — Loading`});
 
     if(r.house === 'Θ4'){
       const a1 = getA1Schedule(r.doc_date);
       const a1Label = 'A1';
       events.push({recordId:r.id, group:'Θ4', house:a1Label, kind:'transfer', subkind:'a1transfer', start:a1.transferStart, end:a1.transferEnd, label:'A1 — Transfer'});
-      events.push({recordId:r.id, group:'Θ4', house:a1Label, kind:'vax', subkind:'a1vax1', start:a1.vax1, end:a1.vax1, label:'A1 — Vaccination 1 (day 60)'});
-      events.push({recordId:r.id, group:'Θ4', house:a1Label, kind:'vax', subkind:'a1vax2', start:a1.vax2, end:a1.vax2, label:'A1 — Vaccination 2 (day 90)'});
+      events.push({recordId:r.id, group:'Θ4', house:a1Label, kind:'vax', subkind:'a1vax1', start:a1.vax1Start, end:a1.vax1End, label:'A1 — Vaccination 1 (day 60)'});
+      events.push({recordId:r.id, group:'Θ4', house:a1Label, kind:'vax', subkind:'a1vax2', start:a1.vax2Start, end:a1.vax2End, label:'A1 — Vaccination 2 (day 90)'});
       events.push({recordId:r.id, group:'Θ4', house:a1Label, kind:'load', subkind:'a1load', start:a1.loadStart, end:a1.loadEnd, label:'A1 — Loading'});
     }
   });
@@ -539,12 +579,16 @@ function detectConflicts(rows){
       if(e1.kind==='load' && e2.kind==='load' && loadExempt.has(e1.house) && loadExempt.has(e2.house)) continue;
 
       const fmtRange = (e)=> e.start.getTime()===e.end.getTime() ? fmtDate(e.start) : `${fmtDate(e.start)} – ${fmtDate(e.end)}`;
+      const cellKeys = [`${e1.recordId}::${e1.subkind}`, `${e2.recordId}::${e2.subkind}`];
+      const conflictKey = cellKeys.slice().sort().join('|');
       out.push({
+        conflictKey,
         type: `${kindLabel(e1.kind)} ↔ ${kindLabel(e2.kind)}`,
         houses: [e1.house, e2.house],
         dateA: fmtRange(e1), dateB: fmtRange(e2),
         ids: [e1.recordId, e2.recordId],
-        cellKeys: [`${e1.recordId}::${e1.subkind}`, `${e2.recordId}::${e2.subkind}`],
+        cellKeys,
+        jumpTo: e1.start <= e2.start ? e1.start : e2.start,
       });
     }
   }
@@ -571,33 +615,66 @@ function checkCleaningOverlap(house, hatchDate){
 async function load(){
   setSyncStatus('loading','Loading...');
   try{
-    const rows = await sbSelect();
+    const [rows, resolvedRows] = await Promise.all([sbSelect(), sbSelectResolved()]);
     data = (rows||[]).map(r=>({...r, schedule:getSchedule(r.doc_date)}));
+    resolvedKeys = new Set((resolvedRows||[]).map(r=>r.conflict_key));
     setSyncStatus('ok','Synced');
     render();
   }catch(e){ setSyncStatus('err','Error: '+e.message); }
 }
 
+async function toggleResolved(conflictKey){
+  try{
+    if(resolvedKeys.has(conflictKey)){
+      await sbDeleteResolved(conflictKey);
+      resolvedKeys.delete(conflictKey);
+    } else {
+      await sbInsertResolved(conflictKey);
+      resolvedKeys.add(conflictKey);
+    }
+    setSyncStatus('ok','Updated');
+    render();
+  }catch(e){ setSyncStatus('err','Failed: '+e.message); }
+}
+
 /* ── Render ── */
 function render(){
-  const conflicts = detectConflicts(data);
-  const conflictRecordIds = new Set(conflicts.flatMap(c=>c.ids));
-  const conflictCellKeys  = new Set(conflicts.flatMap(c=>c.cellKeys));
+  const allConflicts = detectConflicts(data);
+  const activeConflicts   = allConflicts.filter(c => !resolvedKeys.has(c.conflictKey));
+  const resolvedConflicts = allConflicts.filter(c =>  resolvedKeys.has(c.conflictKey));
+
+  /* only ACTIVE (unresolved) conflicts drive amber highlighting on cells/blocks */
+  const conflictCellKeys = new Set(activeConflicts.flatMap(c=>c.cellKeys));
 
   const bar = document.getElementById('conflict-bar');
-  if(conflicts.length){
+  const totalCount = allConflicts.length;
+  if(totalCount){
     bar.classList.add('visible');
     document.getElementById('conflict-bar-title').innerHTML =
       `<span class="conflict-bar-toggle" onclick="toggleConflictBar()">
          <span id="conflict-bar-chevron">${conflictBarCollapsed?'▸':'▾'}</span>
-         ⚠️ ${conflicts.length} conflict${conflicts.length>1?'s':''} detected
+         ⚠️ ${activeConflicts.length} conflict${activeConflicts.length!==1?'s':''} detected
+         ${resolvedConflicts.length ? `<span class="conflict-resolved-count">· ${resolvedConflicts.length} resolved</span>` : ''}
        </span>`;
     document.getElementById('conflict-bar-title').style.marginBottom = conflictBarCollapsed ? '0' : '8px';
-    document.getElementById('conflict-list').innerHTML = conflicts.map(c=>`
-      <div class="conflict-item">
-        <strong>${c.type}</strong> — ${c.houses[0]} &amp; ${c.houses[1]}
-        <div class="conflict-meta">${c.houses[0]}: ${c.dateA} &nbsp;|&nbsp; ${c.houses[1]}: ${c.dateB}</div>
-      </div>`).join('');
+
+    const renderConflictItem = (c, isResolved) => `
+      <div class="conflict-item${isResolved?' conflict-item-resolved':''}" data-jump="${c.jumpTo.toISOString()}">
+        <div class="conflict-item-main" onclick="jumpToConflict('${c.jumpTo.toISOString()}')">
+          <strong>${c.type}</strong> — ${c.houses[0]} &amp; ${c.houses[1]}
+          <div class="conflict-meta">${c.houses[0]}: ${c.dateA} &nbsp;|&nbsp; ${c.houses[1]}: ${c.dateB}</div>
+        </div>
+        <button class="conflict-resolve-btn" onclick="event.stopPropagation(); toggleResolved('${c.conflictKey}')">
+          ${isResolved ? 'Reopen' : 'Mark resolved'}
+        </button>
+      </div>`;
+
+    let listHtml = activeConflicts.map(c=>renderConflictItem(c,false)).join('');
+    if(resolvedConflicts.length){
+      listHtml += `<div class="conflict-resolved-divider">Resolved (${resolvedConflicts.length})</div>`;
+      listHtml += resolvedConflicts.map(c=>renderConflictItem(c,true)).join('');
+    }
+    document.getElementById('conflict-list').innerHTML = listHtml;
     document.getElementById('conflict-list').style.display = conflictBarCollapsed ? 'none' : '';
   } else {
     bar.classList.remove('visible');
@@ -636,8 +713,8 @@ function renderTable(conflictCellKeys){
 
   const ROWS = [
     {label:'PLACEMENT',    cls:'row-placement', subkind:'placement', get:(r)=>fmtDate(r.schedule.placement)},
-    {label:'VAX 1 (d.60)', cls:'row-vax',       subkind:'vax1',      get:(r)=>fmtDate(r.schedule.vax1)},
-    {label:'VAX 2 (d.90)', cls:'row-vax',       subkind:'vax2',      get:(r)=>fmtDate(r.schedule.vax2)},
+    {label:'VAX 1 (d.60)', cls:'row-vax',       subkind:'vax1',      get:(r)=>`${fmtDate(r.schedule.vax1Start)} – ${fmtDate(r.schedule.vax1End)}`},
+    {label:'VAX 2 (d.90)', cls:'row-vax',       subkind:'vax2',      get:(r)=>`${fmtDate(r.schedule.vax2Start)} – ${fmtDate(r.schedule.vax2End)}`},
     {label:'LOADING',      cls:'row-load',      subkind:'load',      get:(r)=>`${fmtDate(r.schedule.loadStart)} – ${fmtDate(r.schedule.loadEnd)}`},
     {label:'CLEAN END',    cls:'row-clean',     subkind:null,        get:(r)=>fmtDate(r.schedule.cleanEnd)},
     {label:'GAP',          cls:'row-gap',       subkind:null,        get:(r,prev)=>{
@@ -803,8 +880,8 @@ function renderTimeline(){
 
       let blocks = '';
       blocks += makeBlock(cKey('placement')?'conflict':'placement', singleDayPos(s.placement), `${cycleLabel} — DOC placement\\n${fmtDate(s.placement)}`);
-      blocks += makeBlock(cKey('vax1')?'conflict':'vax', singleDayPos(s.vax1), `${cycleLabel} — Vaccination 1\\n${fmtDate(s.vax1)}`);
-      blocks += makeBlock(cKey('vax2')?'conflict':'vax', singleDayPos(s.vax2), `${cycleLabel} — Vaccination 2\\n${fmtDate(s.vax2)}`);
+      blocks += makeBlock(cKey('vax1')?'conflict':'vax', blockPos(s.vax1Start, s.vax1End), `${cycleLabel} — Vaccination 1\\n${fmtDate(s.vax1Start)} → ${fmtDate(s.vax1End)}`);
+      blocks += makeBlock(cKey('vax2')?'conflict':'vax', blockPos(s.vax2Start, s.vax2End), `${cycleLabel} — Vaccination 2\\n${fmtDate(s.vax2Start)} → ${fmtDate(s.vax2End)}`);
       blocks += makeBlock(cKey('load')?'conflict':'load', blockPos(s.loadStart, s.loadEnd), `${cycleLabel} — Loading\\n${fmtDate(s.loadStart)} → ${fmtDate(s.loadEnd)}`);
       blocks += makeBlock('clean', blockPos(s.cleanStart, s.cleanEnd), `${cycleLabel} — Cleaning\\n${fmtDate(s.cleanStart)} → ${fmtDate(s.cleanEnd)}`);
 
@@ -818,8 +895,8 @@ function renderTimeline(){
 
         let a1blocks = '';
         a1blocks += makeBlock(cKey('a1transfer')?'conflict':'transfer', blockPos(a1.transferStart, a1.transferEnd), `A1 — Transfer\\n${fmtDate(a1.transferStart)} → ${fmtDate(a1.transferEnd)}`);
-        a1blocks += makeBlock(cKey('a1vax1')?'conflict':'vax', singleDayPos(a1.vax1), `A1 — Vaccination 1\\n${fmtDate(a1.vax1)}`);
-        a1blocks += makeBlock(cKey('a1vax2')?'conflict':'vax', singleDayPos(a1.vax2), `A1 — Vaccination 2\\n${fmtDate(a1.vax2)}`);
+        a1blocks += makeBlock(cKey('a1vax1')?'conflict':'vax', blockPos(a1.vax1Start, a1.vax1End), `A1 — Vaccination 1\\n${fmtDate(a1.vax1Start)} → ${fmtDate(a1.vax1End)}`);
+        a1blocks += makeBlock(cKey('a1vax2')?'conflict':'vax', blockPos(a1.vax2Start, a1.vax2End), `A1 — Vaccination 2\\n${fmtDate(a1.vax2Start)} → ${fmtDate(a1.vax2End)}`);
         a1blocks += makeBlock(cKey('a1load')?'conflict':'load', blockPos(a1.loadStart, a1.loadEnd), `A1 — Loading\\n${fmtDate(a1.loadStart)} → ${fmtDate(a1.loadEnd)}`);
 
         rowsHtml += `<div class="tl-row" style="width:${chartWidth}px"><div class="tl-row-track"><div class="tl-row-stripe"></div>${a1blocks}</div></div>`;
@@ -936,6 +1013,38 @@ function switchTab(tab){
   document.getElementById('tab-table').classList.toggle('active',    tab==='table');
   document.getElementById('tab-timeline').classList.toggle('active', tab==='timeline');
   render();
+}
+
+function jumpToConflict(isoDate){
+  const target = new Date(isoDate);
+  const today = new Date(); today.setHours(0,0,0,0);
+  /* tlOffset is months relative to the current month, anchoring the 12-month window */
+  tlOffset = (target.getFullYear()-today.getFullYear())*12 + (target.getMonth()-today.getMonth());
+  tlPxPerDay = 18; /* readable zoom level with day gridlines visible */
+  conflictBarCollapsed = true;
+  switchTab('timeline');
+
+  requestAnimationFrame(()=>{
+    const scrollEl = document.getElementById('tl-scroll');
+    const chartEl  = document.querySelector('.tl-chart');
+    if(!scrollEl || !chartEl) return;
+    const viewStart = new Date(today.getFullYear(), today.getMonth()+tlOffset, 1);
+    const dayOff = Math.round((target-viewStart)/86400000);
+    const targetX = dayOff*tlPxPerDay;
+    scrollEl.scrollLeft = Math.max(0, targetX - scrollEl.clientWidth/2);
+    tlScrollLeft = scrollEl.scrollLeft;
+
+    /* brief highlight flash on the day column to help locate it visually */
+    const rowsEl = document.querySelector('.tl-rows');
+    const flashHeight = rowsEl ? rowsEl.offsetHeight : chartEl.offsetHeight;
+    const flash = document.createElement('div');
+    flash.className = 'tl-jump-flash';
+    flash.style.left = targetX+'px';
+    flash.style.width = Math.max(tlPxPerDay*2, 30)+'px';
+    flash.style.height = flashHeight+'px';
+    chartEl.appendChild(flash);
+    setTimeout(()=>flash.remove(), 1800);
+  });
 }
 
 /* ── Add/Edit modal ── */
