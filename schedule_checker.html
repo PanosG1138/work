@@ -525,32 +525,59 @@ function rangeGapDays(s1,e1,s2,e2){
 }
 
 /* hatchDate is what the user types. Placement = hatch+2. Vax/load/clean still count from hatchDate. */
+/* Builds a chain of events where each subsequent event's start is clamped to
+   never begin before the previous event's end + 1 day, even if its nominal
+   (day-count-from-hatch) start would otherwise have been earlier. This is a
+   defensive invariant: under the current fixed durations there is already
+   enough natural gap that no push ever triggers, but it guarantees events
+   can never silently overlap if a duration constant changes later. */
+function buildSequentialChain(defs){
+  const result = {};
+  let prevEnd = null;
+  defs.forEach(def=>{
+    let start = def.nominalStart;
+    if(prevEnd !== null){
+      const earliestAllowed = addDays(prevEnd, 1);
+      if(start < earliestAllowed) start = earliestAllowed;
+    }
+    const end = addDays(start, def.duration - 1);
+    result[def.key + 'Start'] = start;
+    result[def.key + 'End'] = end;
+    prevEnd = end;
+  });
+  return result;
+}
+
 function getSchedule(hatchDate){
   const base = new Date(hatchDate);
+  const chain = buildSequentialChain([
+    {key:'vax1', nominalStart: addDays(base, 59), duration: 10},
+    {key:'vax2', nominalStart: addDays(base, 89), duration: 10},
+    {key:'load', nominalStart: addDays(base, 104), duration: 18},
+    {key:'clean', nominalStart: addDays(base, 122), duration: 30},
+  ]);
   return {
     hatchDate:  base,
     placement:  addDays(base, HATCH_TO_PLACEMENT_DAYS),
-    vax1Start:  addDays(base, 59),
-    vax1End:    addDays(base, 68),
-    vax2Start:  addDays(base, 89),
-    vax2End:    addDays(base, 98),
-    loadStart:  addDays(base, 104),
-    loadEnd:    addDays(base, 121),
-    cleanStart: addDays(base, 122),
-    cleanEnd:   addDays(base, 151),
+    vax1Start:  chain.vax1Start,  vax1End:  chain.vax1End,
+    vax2Start:  chain.vax2Start,  vax2End:  chain.vax2End,
+    loadStart:  chain.loadStart,  loadEnd:  chain.loadEnd,
+    cleanStart: chain.cleanStart, cleanEnd: chain.cleanEnd,
   };
 }
 function getA1Schedule(hatchDate){
   const base = new Date(hatchDate);
+  const chain = buildSequentialChain([
+    {key:'transfer', nominalStart: addDays(base, 34), duration: 7},
+    {key:'vax1',     nominalStart: addDays(base, 59), duration: 10},
+    {key:'vax2',     nominalStart: addDays(base, 89), duration: 10},
+    {key:'load',     nominalStart: addDays(base, 104), duration: 18},
+  ]);
   return {
-    transferStart: addDays(base, 34),
-    transferEnd:   addDays(base, 40),
-    vax1Start:     addDays(base, 59),
-    vax1End:       addDays(base, 68),
-    vax2Start:     addDays(base, 89),
-    vax2End:       addDays(base, 98),
-    loadStart:     addDays(base, 104),
-    loadEnd:       addDays(base, 121),
+    transferStart: chain.transferStart, transferEnd: chain.transferEnd,
+    vax1Start:     chain.vax1Start,     vax1End:     chain.vax1End,
+    vax2Start:     chain.vax2Start,     vax2End:     chain.vax2End,
+    loadStart:     chain.loadStart,     loadEnd:     chain.loadEnd,
   };
 }
 
