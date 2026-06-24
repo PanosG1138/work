@@ -298,7 +298,11 @@ header{
 .tl-block.transfer{background:rgba(167,139,250,0.4);color:#fff;border:1px solid var(--violet);z-index:3}
 .tl-block.load{background:rgba(62,207,142,0.4);color:#0a1f15;border:1px solid var(--green);z-index:3}
 .tl-block.clean{background:var(--bg-inset);color:var(--text-subtle);border:1px solid var(--border)}
-.tl-block.conflict{background:var(--amber);color:#1a1206;border:1px solid #d6890f;z-index:4;font-weight:700}
+.tl-block.has-conflict{
+  outline:2px solid var(--amber);outline-offset:1px;
+  box-shadow:0 0 0 1px var(--amber), 0 0 6px rgba(245,166,35,0.5);
+  z-index:5;
+}
 .tl-today{position:absolute;top:0;bottom:0;width:2px;background:#f55a5a;opacity:.8;z-index:10;pointer-events:none}
 .tl-today-label{
   position:absolute;top:-20px;font-size:10px;font-weight:700;color:#f55a5a;
@@ -475,7 +479,13 @@ async function sbFetch(path, opts={}){
 const sbSelect = ()      => sbFetch(`${TABLE}?order=doc_date.asc`);
 const sbInsert = row     => sbFetch(TABLE, {method:'POST', prefer:'return=representation', body:JSON.stringify(row)});
 const sbDelete = id      => sbFetch(`${TABLE}?id=eq.${id}`, {method:'DELETE'});
-const sbUpdate = (id,row)=> sbFetch(`${TABLE}?id=eq.${id}`, {method:'PATCH', prefer:'return=representation', body:JSON.stringify(row)});
+async function sbUpdate(id, row){
+  const result = await sbFetch(`${TABLE}?id=eq.${id}`, {method:'PATCH', prefer:'return=representation', body:JSON.stringify(row)});
+  if(!result || !result.length){
+    throw new Error('Update was rejected by the database (0 rows returned) — check that the "placements" table has an UPDATE policy/grant for the anon role.');
+  }
+  return result;
+}
 
 const sbSelectResolved = ()   => sbFetch(`${RESOLVED_TABLE}?select=conflict_key`);
 const sbInsertResolved = key  => sbFetch(RESOLVED_TABLE, {method:'POST', prefer:'return=representation', body:JSON.stringify({conflict_key:key})});
@@ -1121,10 +1131,11 @@ function renderTimeline(){
   let rowsHtml   = '';
   let rowCount   = 0;
 
-  function makeBlock(cls, pos, tooltip){
+  function makeBlock(cls, pos, tooltip, isConflict){
     if(!pos) return '';
     const label = pos.width > 36 ? cls.charAt(0).toUpperCase()+cls.slice(1) : '';
-    return `<div class="tl-block ${cls}" style="left:${pos.left.toFixed(1)}px;width:${pos.width.toFixed(1)}px" data-tip="${tooltip}">${label}</div>`;
+    const conflictCls = isConflict ? ' has-conflict' : '';
+    return `<div class="tl-block ${cls}${conflictCls}" style="left:${pos.left.toFixed(1)}px;width:${pos.width.toFixed(1)}px" data-tip="${tooltip}">${label}</div>`;
   }
 
   HOUSES.forEach(h => {
@@ -1146,10 +1157,10 @@ function renderTimeline(){
       labelsHtml += `<div class="tl-label-cell${(!isFirstInGroup||rowCount>0)?'':''}">${cycleLabel}</div>`;
 
       let blocks = '';
-      blocks += makeBlock(cKey('placement')?'conflict':'placement', singleDayPos(s.placement), `${cycleLabel} — DOC placement\\n${fmtDate(s.placement)}`);
-      blocks += makeBlock(cKey('vax1')?'conflict':'vax', blockPos(s.vax1Start, s.vax1End), `${cycleLabel} — Vaccination 1\\n${fmtDate(s.vax1Start)} → ${fmtDate(s.vax1End)}`);
-      blocks += makeBlock(cKey('vax2')?'conflict':'vax', blockPos(s.vax2Start, s.vax2End), `${cycleLabel} — Vaccination 2\\n${fmtDate(s.vax2Start)} → ${fmtDate(s.vax2End)}`);
-      blocks += makeBlock(cKey('load')?'conflict':'load', blockPos(s.loadStart, s.loadEnd), `${cycleLabel} — Loading\\n${fmtDate(s.loadStart)} → ${fmtDate(s.loadEnd)}`);
+      blocks += makeBlock('placement', singleDayPos(s.placement), `${cycleLabel} — DOC placement\\n${fmtDate(s.placement)}`, cKey('placement'));
+      blocks += makeBlock('vax', blockPos(s.vax1Start, s.vax1End), `${cycleLabel} — Vaccination 1\\n${fmtDate(s.vax1Start)} → ${fmtDate(s.vax1End)}`, cKey('vax1'));
+      blocks += makeBlock('vax', blockPos(s.vax2Start, s.vax2End), `${cycleLabel} — Vaccination 2\\n${fmtDate(s.vax2Start)} → ${fmtDate(s.vax2End)}`, cKey('vax2'));
+      blocks += makeBlock('load', blockPos(s.loadStart, s.loadEnd), `${cycleLabel} — Loading\\n${fmtDate(s.loadStart)} → ${fmtDate(s.loadEnd)}`, cKey('load'));
       blocks += makeBlock('clean', blockPos(s.cleanStart, s.cleanEnd), `${cycleLabel} — Cleaning\\n${fmtDate(s.cleanStart)} → ${fmtDate(s.cleanEnd)}`);
 
       rowsHtml += `<div class="tl-row" style="width:${chartWidth}px"><div class="tl-row-track"><div class="tl-row-stripe"></div>${blocks}</div></div>`;
@@ -1161,10 +1172,10 @@ function renderTimeline(){
         labelsHtml += `<div class="tl-label-cell sub">${a1Label}</div>`;
 
         let a1blocks = '';
-        a1blocks += makeBlock(cKey('a1transfer')?'conflict':'transfer', blockPos(a1.transferStart, a1.transferEnd), `A1 — Transfer\\n${fmtDate(a1.transferStart)} → ${fmtDate(a1.transferEnd)}`);
-        a1blocks += makeBlock(cKey('a1vax1')?'conflict':'vax', blockPos(a1.vax1Start, a1.vax1End), `A1 — Vaccination 1\\n${fmtDate(a1.vax1Start)} → ${fmtDate(a1.vax1End)}`);
-        a1blocks += makeBlock(cKey('a1vax2')?'conflict':'vax', blockPos(a1.vax2Start, a1.vax2End), `A1 — Vaccination 2\\n${fmtDate(a1.vax2Start)} → ${fmtDate(a1.vax2End)}`);
-        a1blocks += makeBlock(cKey('a1load')?'conflict':'load', blockPos(a1.loadStart, a1.loadEnd), `A1 — Loading\\n${fmtDate(a1.loadStart)} → ${fmtDate(a1.loadEnd)}`);
+        a1blocks += makeBlock('transfer', blockPos(a1.transferStart, a1.transferEnd), `A1 — Transfer\\n${fmtDate(a1.transferStart)} → ${fmtDate(a1.transferEnd)}`, cKey('a1transfer'));
+        a1blocks += makeBlock('vax', blockPos(a1.vax1Start, a1.vax1End), `A1 — Vaccination 1\\n${fmtDate(a1.vax1Start)} → ${fmtDate(a1.vax1End)}`, cKey('a1vax1'));
+        a1blocks += makeBlock('vax', blockPos(a1.vax2Start, a1.vax2End), `A1 — Vaccination 2\\n${fmtDate(a1.vax2Start)} → ${fmtDate(a1.vax2End)}`, cKey('a1vax2'));
+        a1blocks += makeBlock('load', blockPos(a1.loadStart, a1.loadEnd), `A1 — Loading\\n${fmtDate(a1.loadStart)} → ${fmtDate(a1.loadEnd)}`, cKey('a1load'));
 
         rowsHtml += `<div class="tl-row" style="width:${chartWidth}px"><div class="tl-row-track"><div class="tl-row-stripe"></div>${a1blocks}</div></div>`;
         rowCount++;
@@ -1222,7 +1233,7 @@ function renderTimeline(){
         <span class="tl-legend-item"><span class="tl-legend-swatch" style="background:rgba(167,139,250,0.4);border:1px solid var(--violet)"></span>Transfer (A1)</span>
         <span class="tl-legend-item"><span class="tl-legend-swatch" style="background:rgba(62,207,142,0.4);border:1px solid var(--green)"></span>Loading</span>
         <span class="tl-legend-item"><span class="tl-legend-swatch" style="background:var(--bg-inset);border:1px solid var(--border)"></span>Cleaning</span>
-        <span class="tl-legend-item"><span class="tl-legend-swatch" style="background:var(--amber);border:1px solid #d6890f"></span>Conflict</span>
+        <span class="tl-legend-item"><span class="tl-legend-swatch" style="background:rgba(91,156,255,0.2);outline:2px solid var(--amber);outline-offset:1px;border:none"></span>Conflict (outline)</span>
       </div>
     </div></div>`;
 
