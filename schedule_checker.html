@@ -162,15 +162,10 @@ header{
 /* ── Cycle table ── */
 .cycle-table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--r-lg);background:var(--bg-elev1)}
 .cycle-table{border-collapse:collapse;font-size:12.5px;white-space:nowrap;width:100%}
-.cycle-table thead tr:first-child{background:var(--bg-inset)}
-.cycle-table thead tr:last-child{background:var(--bg-elev2);border-bottom:2px solid var(--border)}
+.cycle-table thead tr{background:var(--bg-elev2);border-bottom:2px solid var(--border)}
 .ct-house-header{
   padding:10px 14px;text-align:center;font-size:13px;font-weight:800;color:var(--text);
-  border-right:2px solid var(--border);border-left:2px solid var(--border);letter-spacing:.02em;
-}
-.ct-cycle-header{
-  padding:6px 10px;text-align:center;font-size:11px;font-weight:600;color:var(--text-muted);
-  border-right:1px solid var(--border-soft);min-width:140px;
+  border-right:1px solid var(--border-soft);letter-spacing:.02em;min-width:140px;
 }
 .ct-row-label{
   padding:9px 14px;font-size:11px;font-weight:700;color:var(--text-muted);
@@ -986,10 +981,22 @@ function renderTable(conflictCellKeys){
     }
   });
 
+  /* Build per-house cycle numbers (Θ3 #1, Θ3 #2, ...) BEFORE chronological sort,
+     so the cycle number still reflects "Nth placement in this house's history",
+     then flatten everything into one chronologically-sorted column list. */
   const houseData = {};
   HOUSES.forEach(h=>{
     houseData[h] = data.filter(r=>r.house===h).sort((a,b)=>new Date(a.doc_date)-new Date(b.doc_date));
   });
+
+  const columns = []; // {record, house, cycleLabel}
+  HOUSES.forEach(h=>{
+    houseData[h].forEach((r,i)=>{
+      const cycleLabel = houseData[h].length > 1 ? `${h} #${i+1}` : h;
+      columns.push({record:r, house:h, cycleLabel, prev: i>0 ? houseData[h][i-1] : null});
+    });
+  });
+  columns.sort((a,b)=> new Date(a.record.doc_date) - new Date(b.record.doc_date));
 
   const ROWS = [
     {label:'HATCH DATE',   cls:'row-hatch',     subkind:'placement', get:(r,prev,isC,isW)=>
@@ -1008,53 +1015,35 @@ function renderTable(conflictCellKeys){
   let html = '<div class="cycle-table-wrap"><table class="cycle-table">';
 
   html += '<thead><tr><th class="ct-row-label"></th>';
-  HOUSES.forEach(h=>{
-    const count = houseData[h].length;
-    html += count===0
-      ? `<th class="ct-house-header">${h}</th>`
-      : `<th colspan="${count}" class="ct-house-header">${h}</th>`;
-  });
-  html += '</tr>';
-
-  html += '<tr><th class="ct-row-label"></th>';
-  HOUSES.forEach(h=>{
-    const cycles = houseData[h];
-    if(!cycles.length){ html+=`<th class="ct-cycle-header">—</th>`; return; }
-    cycles.forEach((_,i)=>{ html+=`<th class="ct-cycle-header">#${i+1}</th>`; });
+  columns.forEach(col=>{
+    html += `<th class="ct-house-header">${col.cycleLabel}</th>`;
   });
   html += '</tr></thead><tbody>';
 
   ROWS.forEach(rowDef=>{
     html += `<tr><td class="ct-row-label">${rowDef.label}</td>`;
-    HOUSES.forEach(h=>{
-      const cycles = houseData[h];
-      if(!cycles.length){ html+=`<td class="ct-cell ct-empty">—</td>`; return; }
-      cycles.forEach((r,i)=>{
-        const prev = i>0 ? cycles[i-1] : null;
-        const isC  = rowDef.subkind ? conflictCellKeys.has(`${r.id}::${rowDef.subkind}`) : false;
-        const isW  = warnIds.has(r.id);
-        const val  = rowDef.get(r, prev, isC, isW);
-        let cellCls = `ct-cell ${rowDef.cls}`;
-        if(rowDef.label!=='HATCH DATE' && isC) cellCls += ' ct-conflict';
-        if(rowDef.label==='GAP' && val.startsWith('⚠️')) cellCls += ' ct-warn';
-        html += `<td class="${cellCls}">${val}</td>`;
-      });
+    columns.forEach(col=>{
+      const r = col.record, prev = col.prev;
+      const isC  = rowDef.subkind ? conflictCellKeys.has(`${r.id}::${rowDef.subkind}`) : false;
+      const isW  = warnIds.has(r.id);
+      const val  = rowDef.get(r, prev, isC, isW);
+      let cellCls = `ct-cell ${rowDef.cls}`;
+      if(rowDef.label!=='HATCH DATE' && isC) cellCls += ' ct-conflict';
+      if(rowDef.label==='GAP' && val.startsWith('⚠️')) cellCls += ' ct-warn';
+      html += `<td class="${cellCls}">${val}</td>`;
     });
     html += '</tr>';
   });
 
   html += '<tr><td class="ct-row-label ct-actions-label">Actions</td>';
-  HOUSES.forEach(h=>{
-    const cycles = houseData[h];
-    if(!cycles.length){ html+=`<td class="ct-cell"></td>`; return; }
-    cycles.forEach(r=>{
-      const hasConflict = [...conflictCellKeys].some(k=>k.startsWith(`${r.id}::`));
-      html+=`<td class="ct-cell ct-actions">
-        <button class="row-btn" onclick="openEditModal('${r.id}')">Edit</button>
-        <button class="row-btn del" onclick="askDelete('${r.id}','${r.house}','${r.doc_date}')">Del</button>
-        ${hasConflict ? `<button class="row-btn fix" onclick="openResolverPanel('${r.id}')">Fix</button>` : ''}
-      </td>`;
-    });
+  columns.forEach(col=>{
+    const r = col.record;
+    const hasConflict = [...conflictCellKeys].some(k=>k.startsWith(`${r.id}::`));
+    html+=`<td class="ct-cell ct-actions">
+      <button class="row-btn" onclick="openEditModal('${r.id}')">Edit</button>
+      <button class="row-btn del" onclick="askDelete('${r.id}','${r.house}','${r.doc_date}')">Del</button>
+      ${hasConflict ? `<button class="row-btn fix" onclick="openResolverPanel('${r.id}')">Fix</button>` : ''}
+    </td>`;
   });
   html += '</tr></tbody></table></div>';
   el.innerHTML = html;
@@ -1063,6 +1052,10 @@ function renderTable(conflictCellKeys){
 /* ── Timeline ── */
 function renderTimeline(){
   const el = document.getElementById('view-timeline');
+  if(!data.length){
+    el.innerHTML='<div class="empty-state">No placements yet. Add the first one.</div>';
+    return;
+  }
   const conflicts = detectConflicts(data);
   const conflictCellKeys = new Set(conflicts.flatMap(c=>c.cellKeys));
 
@@ -1143,49 +1136,48 @@ function renderTimeline(){
     return `<div class="tl-block ${cls}${conflictCls}" style="left:${pos.left.toFixed(1)}px;width:${pos.width.toFixed(1)}px" data-tip="${tooltip}">${label}</div>`;
   }
 
-  HOUSES.forEach(h => {
-    const hRows = sorted.filter(r => r.house === h);
-    if(!hRows.length){
-      const isFirst = rowCount === 0;
-      labelsHtml += `<div class="tl-label-cell${isFirst?'':' group-sep'}">${h}</div>`;
-      rowsHtml   += `<div class="tl-row${isFirst?'':' group-sep'}" style="width:${chartWidth}px"><div class="tl-row-track"><div class="tl-row-stripe"></div></div></div>`;
+  /* Pre-compute each house's own cycle index (Θ3 #1, Θ3 #2, ...) before the
+     global chronological sort, so cycle numbers reflect house history order. */
+  const cycleIndexByHouse = {};
+  HOUSES.forEach(h=>{
+    const hRows = sorted.filter(r=>r.house===h);
+    hRows.forEach((r,i)=>{ cycleIndexByHouse[r.id] = {idx:i, total:hRows.length}; });
+  });
+
+  sorted.forEach(r => {
+    const h = r.house;
+    const s = r.schedule;
+    const {idx, total} = cycleIndexByHouse[r.id];
+    const cycleLabel = total > 1 ? `${h} #${idx+1}` : h;
+    const cKey = (sub)=> conflictCellKeys.has(`${r.id}::${sub}`);
+
+    labelsHtml += `<div class="tl-label-cell">${cycleLabel}<span class="tl-label-hatch">${fmtDate(r.doc_date)}</span></div>`;
+
+    let blocks = '';
+    blocks += makeBlock('placement', singleDayPos(s.placement), `${cycleLabel} — DOC placement\\n${fmtDate(s.placement)}`, cKey('placement'));
+    blocks += makeBlock('vax', blockPos(s.vax1Start, s.vax1End), `${cycleLabel} — Vaccination 1\\n${fmtDate(s.vax1Start)} → ${fmtDate(s.vax1End)}`, cKey('vax1'));
+    blocks += makeBlock('vax', blockPos(s.vax2Start, s.vax2End), `${cycleLabel} — Vaccination 2\\n${fmtDate(s.vax2Start)} → ${fmtDate(s.vax2End)}`, cKey('vax2'));
+    blocks += makeBlock('load', blockPos(s.loadStart, s.loadEnd), `${cycleLabel} — Loading\\n${fmtDate(s.loadStart)} → ${fmtDate(s.loadEnd)}`, cKey('load'));
+    blocks += makeBlock('clean', blockPos(s.cleanStart, s.cleanEnd), `${cycleLabel} — Cleaning\\n${fmtDate(s.cleanStart)} → ${fmtDate(s.cleanEnd)}`);
+
+    rowsHtml += `<div class="tl-row" style="width:${chartWidth}px"><div class="tl-row-track"><div class="tl-row-stripe"></div>${blocks}</div></div>`;
+    rowCount++;
+
+    /* Θ4's A1 sub-row always immediately follows its parent Θ4 cycle, as one unit */
+    if(h === 'Θ4'){
+      const a1 = getA1Schedule(r.doc_date);
+      const a1Label = total > 1 ? `A1 #${idx+1}` : 'A1';
+      labelsHtml += `<div class="tl-label-cell sub">${a1Label}<span class="tl-label-hatch">${fmtDate(r.doc_date)}</span></div>`;
+
+      let a1blocks = '';
+      a1blocks += makeBlock('transfer', blockPos(a1.transferStart, a1.transferEnd), `A1 — Transfer\\n${fmtDate(a1.transferStart)} → ${fmtDate(a1.transferEnd)}`, cKey('a1transfer'));
+      a1blocks += makeBlock('vax', blockPos(a1.vax1Start, a1.vax1End), `A1 — Vaccination 1\\n${fmtDate(a1.vax1Start)} → ${fmtDate(a1.vax1End)}`, cKey('a1vax1'));
+      a1blocks += makeBlock('vax', blockPos(a1.vax2Start, a1.vax2End), `A1 — Vaccination 2\\n${fmtDate(a1.vax2Start)} → ${fmtDate(a1.vax2End)}`, cKey('a1vax2'));
+      a1blocks += makeBlock('load', blockPos(a1.loadStart, a1.loadEnd), `A1 — Loading\\n${fmtDate(a1.loadStart)} → ${fmtDate(a1.loadEnd)}`, cKey('a1load'));
+
+      rowsHtml += `<div class="tl-row" style="width:${chartWidth}px"><div class="tl-row-track"><div class="tl-row-stripe"></div>${a1blocks}</div></div>`;
       rowCount++;
-      return;
     }
-
-    hRows.forEach((r, idx) => {
-      const s = r.schedule;
-      const cycleLabel = hRows.length > 1 ? `${h} #${idx+1}` : h;
-      const isFirstInGroup = idx === 0;
-      const cKey = (sub)=> conflictCellKeys.has(`${r.id}::${sub}`);
-
-      labelsHtml += `<div class="tl-label-cell${(!isFirstInGroup||rowCount>0)?'':''}">${cycleLabel}<span class="tl-label-hatch">${fmtDate(r.doc_date)}</span></div>`;
-
-      let blocks = '';
-      blocks += makeBlock('placement', singleDayPos(s.placement), `${cycleLabel} — DOC placement\\n${fmtDate(s.placement)}`, cKey('placement'));
-      blocks += makeBlock('vax', blockPos(s.vax1Start, s.vax1End), `${cycleLabel} — Vaccination 1\\n${fmtDate(s.vax1Start)} → ${fmtDate(s.vax1End)}`, cKey('vax1'));
-      blocks += makeBlock('vax', blockPos(s.vax2Start, s.vax2End), `${cycleLabel} — Vaccination 2\\n${fmtDate(s.vax2Start)} → ${fmtDate(s.vax2End)}`, cKey('vax2'));
-      blocks += makeBlock('load', blockPos(s.loadStart, s.loadEnd), `${cycleLabel} — Loading\\n${fmtDate(s.loadStart)} → ${fmtDate(s.loadEnd)}`, cKey('load'));
-      blocks += makeBlock('clean', blockPos(s.cleanStart, s.cleanEnd), `${cycleLabel} — Cleaning\\n${fmtDate(s.cleanStart)} → ${fmtDate(s.cleanEnd)}`);
-
-      rowsHtml += `<div class="tl-row" style="width:${chartWidth}px"><div class="tl-row-track"><div class="tl-row-stripe"></div>${blocks}</div></div>`;
-      rowCount++;
-
-      if(h === 'Θ4'){
-        const a1 = getA1Schedule(r.doc_date);
-        const a1Label = hRows.length > 1 ? `A1 #${idx+1}` : 'A1';
-        labelsHtml += `<div class="tl-label-cell sub">${a1Label}<span class="tl-label-hatch">${fmtDate(r.doc_date)}</span></div>`;
-
-        let a1blocks = '';
-        a1blocks += makeBlock('transfer', blockPos(a1.transferStart, a1.transferEnd), `A1 — Transfer\\n${fmtDate(a1.transferStart)} → ${fmtDate(a1.transferEnd)}`, cKey('a1transfer'));
-        a1blocks += makeBlock('vax', blockPos(a1.vax1Start, a1.vax1End), `A1 — Vaccination 1\\n${fmtDate(a1.vax1Start)} → ${fmtDate(a1.vax1End)}`, cKey('a1vax1'));
-        a1blocks += makeBlock('vax', blockPos(a1.vax2Start, a1.vax2End), `A1 — Vaccination 2\\n${fmtDate(a1.vax2Start)} → ${fmtDate(a1.vax2End)}`, cKey('a1vax2'));
-        a1blocks += makeBlock('load', blockPos(a1.loadStart, a1.loadEnd), `A1 — Loading\\n${fmtDate(a1.loadStart)} → ${fmtDate(a1.loadEnd)}`, cKey('a1load'));
-
-        rowsHtml += `<div class="tl-row" style="width:${chartWidth}px"><div class="tl-row-track"><div class="tl-row-stripe"></div>${a1blocks}</div></div>`;
-        rowCount++;
-      }
-    });
   });
 
   const todayLine = showToday
