@@ -186,11 +186,14 @@ header{
 .ct-cell.ct-empty{color:var(--text-subtle)}
 .cycle-table tbody tr:last-child .ct-cell{border-bottom:none}
 .cycle-table tbody tr:hover .ct-cell{background:var(--bg-elev2)}
-.row-placement{font-weight:700;color:var(--text)}
+.row-hatch{font-weight:700;color:var(--text)}
 .row-vax{color:var(--blue)}
 .row-load{color:var(--green)}
 .row-clean{color:var(--text-muted)}
 .row-gap{font-weight:700;background:var(--bg-inset)}
+.ct-subline{font-size:10.5px;font-weight:500;color:var(--text-muted);margin-top:2px}
+.ct-subline-conflict{color:var(--amber);font-weight:700}
+.ct-subline-warn{color:#f55a5a;font-weight:700}
 .ct-conflict{background:var(--amber-soft)!important;color:var(--amber)!important;font-weight:700}
 .ct-warn{background:rgba(245,90,90,0.10)!important;color:#f55a5a!important;font-weight:700}
 .ct-actions{padding:6px 8px}
@@ -260,15 +263,17 @@ header{
 .tl-scroll-outer{overflow-x:auto;overflow-y:hidden;padding-bottom:6px}
 .tl-grid-wrap{display:flex;gap:0;position:relative}
 .tl-labels{
-  flex-shrink:0;width:84px;padding-top:42px;display:flex;flex-direction:column;gap:0;
+  flex-shrink:0;width:130px;padding-top:42px;display:flex;flex-direction:column;gap:0;
   position:sticky;left:0;z-index:8;background:var(--bg-elev1);border-right:2px solid var(--border);
   box-shadow:2px 0 8px rgba(0,0,0,0.15);
 }
 .tl-label-cell{
-  height:38px;display:flex;align-items:center;justify-content:flex-end;padding-right:12px;
-  font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;
+  height:38px;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;padding-right:12px;
+  font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;line-height:1.25;
 }
+.tl-label-cell .tl-label-hatch{font-size:10px;font-weight:500;color:var(--text-muted)}
 .tl-label-cell.sub{color:var(--violet);font-weight:600;font-size:11px}
+.tl-label-cell.sub .tl-label-hatch{color:rgba(167,139,250,0.7)}
 .tl-label-cell.group-sep{margin-top:8px}
 .tl-chart{position:relative;flex-shrink:0}
 .tl-axis{height:42px;position:relative;border-bottom:1px solid var(--border);margin-bottom:0;background:var(--bg-elev1);position:sticky;top:0;z-index:6}
@@ -987,7 +992,8 @@ function renderTable(conflictCellKeys){
   });
 
   const ROWS = [
-    {label:'PLACEMENT',    cls:'row-placement', subkind:'placement', get:(r)=>fmtDate(r.schedule.placement)},
+    {label:'HATCH DATE',   cls:'row-hatch',     subkind:'placement', get:(r,prev,isC,isW)=>
+      `${fmtDate(r.doc_date)}<div class="ct-subline${isC?' ct-subline-conflict':''}${isW?' ct-subline-warn':''}">Placement: ${fmtDate(r.schedule.placement)}</div>`},
     {label:'VAX 1 (d.60)', cls:'row-vax',       subkind:'vax1',      get:(r)=>`${fmtDate(r.schedule.vax1Start)} – ${fmtDate(r.schedule.vax1End)}`},
     {label:'VAX 2 (d.90)', cls:'row-vax',       subkind:'vax2',      get:(r)=>`${fmtDate(r.schedule.vax2Start)} – ${fmtDate(r.schedule.vax2End)}`},
     {label:'LOADING',      cls:'row-load',      subkind:'load',      get:(r)=>`${fmtDate(r.schedule.loadStart)} – ${fmtDate(r.schedule.loadEnd)}`},
@@ -1025,12 +1031,11 @@ function renderTable(conflictCellKeys){
       if(!cycles.length){ html+=`<td class="ct-cell ct-empty">—</td>`; return; }
       cycles.forEach((r,i)=>{
         const prev = i>0 ? cycles[i-1] : null;
-        const val  = rowDef.get(r, prev);
         const isC  = rowDef.subkind ? conflictCellKeys.has(`${r.id}::${rowDef.subkind}`) : false;
         const isW  = warnIds.has(r.id);
+        const val  = rowDef.get(r, prev, isC, isW);
         let cellCls = `ct-cell ${rowDef.cls}`;
-        if(isC) cellCls += ' ct-conflict';
-        if(rowDef.label==='PLACEMENT' && isW) cellCls += ' ct-warn';
+        if(rowDef.label!=='HATCH DATE' && isC) cellCls += ' ct-conflict';
         if(rowDef.label==='GAP' && val.startsWith('⚠️')) cellCls += ' ct-warn';
         html += `<td class="${cellCls}">${val}</td>`;
       });
@@ -1154,7 +1159,7 @@ function renderTimeline(){
       const isFirstInGroup = idx === 0;
       const cKey = (sub)=> conflictCellKeys.has(`${r.id}::${sub}`);
 
-      labelsHtml += `<div class="tl-label-cell${(!isFirstInGroup||rowCount>0)?'':''}">${cycleLabel}</div>`;
+      labelsHtml += `<div class="tl-label-cell${(!isFirstInGroup||rowCount>0)?'':''}">${cycleLabel}<span class="tl-label-hatch">${fmtDate(r.doc_date)}</span></div>`;
 
       let blocks = '';
       blocks += makeBlock('placement', singleDayPos(s.placement), `${cycleLabel} — DOC placement\\n${fmtDate(s.placement)}`, cKey('placement'));
@@ -1169,7 +1174,7 @@ function renderTimeline(){
       if(h === 'Θ4'){
         const a1 = getA1Schedule(r.doc_date);
         const a1Label = hRows.length > 1 ? `A1 #${idx+1}` : 'A1';
-        labelsHtml += `<div class="tl-label-cell sub">${a1Label}</div>`;
+        labelsHtml += `<div class="tl-label-cell sub">${a1Label}<span class="tl-label-hatch">${fmtDate(r.doc_date)}</span></div>`;
 
         let a1blocks = '';
         a1blocks += makeBlock('transfer', blockPos(a1.transferStart, a1.transferEnd), `A1 — Transfer\\n${fmtDate(a1.transferStart)} → ${fmtDate(a1.transferEnd)}`, cKey('a1transfer'));
