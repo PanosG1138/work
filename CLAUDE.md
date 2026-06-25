@@ -39,3 +39,4 @@ each other are exempt.
 - I review every diff before commit.
 - Test against the live file's actual functions, not reimplementations.
 - Push only after I explicitly say so.
+- Run /ponytail-review on every change before I confirm a commit.

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Feed Program — Poultry Nutrition Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 :root,[data-theme="dark"]{
   --gh-canvas-default:#0d1117;--gh-canvas-subtle:#161b22;--gh-canvas-inset:#010409;
@@ -125,6 +126,23 @@ select.cell-input option:disabled{color:var(--gh-fg-subtle);}
 </head>
 <body>
 
+<!-- AUTH GATE -->
+<div id="auth-gate" style="position:fixed;inset:0;background:#0d1117;display:flex;align-items:center;justify-content:center;z-index:9999;font-family:'Inter',system-ui,sans-serif">
+  <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:32px;width:360px;text-align:center">
+    <h2 style="font-weight:700;font-size:20px;color:#e6edf3;margin-bottom:8px">Feed Program</h2>
+    <p style="font-size:13px;color:#8b949e;margin-bottom:22px">Σύνδεση</p>
+    <input type="email" id="auth-email" placeholder="Email…" autocomplete="username"
+      style="width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e6edf3;font-family:inherit;font-size:14px;padding:8px 10px;outline:none;margin-bottom:10px;box-sizing:border-box;text-align:center"
+      onkeydown="if(event.key==='Enter')document.getElementById('auth-password').focus()">
+    <input type="password" id="auth-password" placeholder="Κωδικός…" autocomplete="current-password"
+      style="width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e6edf3;font-family:inherit;font-size:14px;padding:8px 10px;outline:none;margin-bottom:12px;box-sizing:border-box;text-align:center"
+      onkeydown="if(event.key==='Enter')signIn()">
+    <button id="auth-btn" onclick="signIn()"
+      style="width:100%;padding:8px 16px;background:#1f6feb;color:#fff;border:none;border-radius:6px;font-family:inherit;font-weight:500;font-size:14px;cursor:pointer">Είσοδος</button>
+    <div id="auth-error" style="font-size:12px;color:#f85149;margin-top:8px;min-height:18px"></div>
+  </div>
+</div>
+
 <!-- OFFLINE OVERLAY — shown when Supabase is unreachable -->
 <div class="offline-overlay" id="offline-overlay">
   <div class="offline-msg">
@@ -156,6 +174,7 @@ select.cell-input option:disabled{color:var(--gh-fg-subtle);}
       <span id="theme-icon">☀</span>
       <span id="theme-label">Light</span>
     </button>
+    <button class="theme-toggle" id="btn-logout" onclick="signOut()" style="display:none" title="Sign out">← Sign out</button>
   </div>
 </div>
 
@@ -181,6 +200,37 @@ select.cell-input option:disabled{color:var(--gh-fg-subtle);}
 // ── CONFIG ───────────────────────────────────────────────────────
 const SB_URL = 'https://oorhbrphdbigwgizejcc.supabase.co';
 const SB_KEY = 'sb_publishable_1S3L1sNMOjr-YgwGAAD2Kg_X_3S4cTl';
+
+// ── AUTH ──────────────────────────────────────────────────────────
+const _sb = supabase.createClient(SB_URL, SB_KEY);
+let _authSession = null;
+
+async function signIn() {
+  const email = document.getElementById('auth-email').value.trim();
+  const pw    = document.getElementById('auth-password').value;
+  const btn   = document.getElementById('auth-btn');
+  const errEl = document.getElementById('auth-error');
+  btn.disabled = true; btn.textContent = 'Σύνδεση…';
+  errEl.textContent = '';
+  const { error } = await _sb.auth.signInWithPassword({ email, password: pw });
+  if (error) {
+    errEl.textContent = 'Λάθος email ή κωδικός.';
+    btn.disabled = false; btn.textContent = 'Είσοδος';
+  }
+}
+
+async function signOut() { await _sb.auth.signOut(); }
+
+_sb.auth.onAuthStateChange((event, session) => {
+  _authSession = session;
+  document.getElementById('auth-gate').style.display = session ? 'none' : 'flex';
+  document.getElementById('btn-logout').style.display = session ? '' : 'none';
+  if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
+    loadFromSupabase();
+  } else if (!session) {
+    setTimeout(() => { const e = document.getElementById('auth-email'); if(e) e.focus(); }, 100);
+  }
+});
 
 // ── FEED SCHEDULES ───────────────────────────────────────────────
 const BREEDS = {
@@ -219,7 +269,7 @@ async function sbFetch(path, options = {}) {
     ...options,
     headers: {
       'apikey':        SB_KEY,
-      'Authorization': `Bearer ${SB_KEY}`,
+      'Authorization': `Bearer ${_authSession.access_token}`,
       'Content-Type':  'application/json',
       'Prefer':        options.prefer || '',
       ...(options.headers || {})
@@ -570,7 +620,7 @@ function showToast(msg) {
 applyZoom();
 applyTheme(localStorage.getItem('feed_theme') || 'dark');
 buildHeader();
-loadFromSupabase();
+// Data load triggered by onAuthStateChange after sign-in
 </script>
 </body>
 </html>
