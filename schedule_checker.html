@@ -112,53 +112,27 @@ header{
 .btn-primary:disabled{opacity:.4;cursor:not-allowed}
 .sep{width:1px;height:22px;background:var(--border);flex-shrink:0}
 
-/* ── Conflict banner ── */
-.conflict-bar{
-  background:var(--amber-soft);border:1px solid var(--amber-strong);
-  border-radius:var(--r-lg);padding:14px 16px;margin-bottom:16px;display:none;
+/* ── Conflict popover & resolve icons ── */
+.conflict-popover{
+  position:fixed;z-index:500;background:var(--bg-elev2);border:1px solid var(--border);
+  border-radius:var(--r-md);padding:6px;box-shadow:var(--shadow);min-width:220px;
 }
-.conflict-bar.visible{display:block}
-.conflict-bar-title{font-size:13px;font-weight:700;color:var(--amber);margin-bottom:8px;display:flex;align-items:center;gap:6px}
-.conflict-bar-toggle{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none}
-.conflict-bar-toggle:hover{opacity:.85}
-#conflict-bar-chevron{display:inline-block;width:12px;font-size:11px}
-.conflict-list{display:flex;flex-direction:column;gap:6px}
-.conflict-item{
-  background:var(--bg-elev1);border:1px solid var(--amber-strong);
-  border-radius:var(--r-sm);padding:8px 12px;font-size:12.5px;color:var(--text);
-  display:flex;align-items:center;justify-content:space-between;gap:10px;
+.conflict-popover.hidden{display:none}
+.cp-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 6px;font-size:12px;color:var(--text)}
+.cp-item+.cp-item{border-top:1px solid var(--border-soft)}
+.cp-btn{flex-shrink:0;height:22px;padding:0 8px;border-radius:var(--r-sm);border:1px solid var(--amber-strong);background:var(--bg-elev2);color:var(--amber);font-family:'Inter',sans-serif;font-size:11px;font-weight:600;cursor:pointer}
+.cp-btn.resolved{border-color:var(--border);color:var(--text-muted)}
+.cc-resolve-icon{font-size:10px;cursor:pointer;flex-shrink:0;color:var(--amber);line-height:1;padding:1px 3px;border-radius:2px;transition:opacity .12s;margin-left:auto}
+.cc-resolve-icon:hover{opacity:.65}
+.cc-resolve-icon.resolved{color:var(--text-subtle);font-size:9px}
+.tl-resolve-icon{
+  position:absolute;top:5px;width:13px;height:16px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:700;cursor:pointer;z-index:10;
+  color:var(--amber);background:rgba(245,166,35,0.25);border-radius:2px;
 }
-.conflict-item strong{color:var(--amber)}
-.conflict-meta{font-size:11.5px;color:var(--text-muted);margin-top:2px}
-.conflict-item-main{cursor:pointer;flex:1;min-width:0}
-.conflict-item-main:hover{opacity:.85}
-.conflict-resolve-btn{
-  flex-shrink:0;height:26px;padding:0 10px;border-radius:var(--r-sm);
-  border:1px solid var(--amber-strong);background:var(--bg-elev2);color:var(--amber);
-  font-family:'Inter',sans-serif;font-size:11.5px;font-weight:600;cursor:pointer;
-  transition:background .12s;white-space:nowrap;
-}
-.conflict-resolve-btn:hover{background:var(--hover)}
-.conflict-item-resolved{
-  background:var(--bg-elev2);border:1px solid var(--border);opacity:.65;
-}
-.conflict-item-resolved strong{color:var(--text-muted)}
-.conflict-item-resolved .conflict-resolve-btn{border-color:var(--border);color:var(--text-muted)}
-.conflict-resolved-count{font-size:11.5px;font-weight:500;color:var(--text-muted)}
-.conflict-resolved-divider{
-  font-size:11px;font-weight:700;color:var(--text-subtle);text-transform:uppercase;
-  letter-spacing:.05em;margin:8px 2px 0;padding-top:8px;border-top:1px solid var(--border-soft);
-}
-.tl-jump-flash{
-  position:absolute;top:0;background:rgba(255,255,255,0.18);
-  border-left:2px solid var(--amber);border-right:2px solid var(--amber);
-  z-index:15;pointer-events:none;animation:tlJumpFade 1.8s ease-out forwards;
-}
-@keyframes tlJumpFade{
-  0%{opacity:1}
-  70%{opacity:1}
-  100%{opacity:0}
-}
+.tl-resolve-icon:hover{background:var(--amber-soft)}
+.tl-resolve-icon.resolved{color:var(--text-subtle);background:rgba(255,255,255,0.06)}
 
 /* ── Card view ── */
 .cards-wrap{display:flex;flex-direction:column;gap:24px}
@@ -424,10 +398,6 @@ header{
     <button class="btn-tool active" id="tab-table" onclick="switchTab('table')">📋 Table</button>
     <button class="btn-tool" id="tab-timeline" onclick="switchTab('timeline')">📅 Timeline</button>
   </div>
-  <div class="conflict-bar" id="conflict-bar">
-    <div class="conflict-bar-title" id="conflict-bar-title"></div>
-    <div class="conflict-list" id="conflict-list"></div>
-  </div>
   <div class="table-legend" id="table-legend">
     <span class="table-legend-swatch"></span>
     Dashed columns = suggested next placement (not yet saved)
@@ -470,6 +440,9 @@ header{
     </div>
   </div>
 </div>
+
+<!-- Conflict popover -->
+<div id="conflict-popover" class="conflict-popover hidden"></div>
 
 <!-- Resolver panel -->
 <div class="modal-bg hidden" id="resolver-bg">
@@ -581,7 +554,7 @@ const TL_MIN_PX = 2;
 const TL_MAX_PX = 48;
 let tlPxPerDay  = TL_BASE_PX_PER_DAY;
 let tlScrollLeft = null;
-let conflictBarCollapsed = true;
+let _allConflicts = [];
 
 function setSyncStatus(state, msg){
   const b = document.getElementById('sync-badge');
@@ -1137,56 +1110,45 @@ async function toggleResolved(conflictKey){
   }catch(e){ setSyncStatus('err','Failed: '+e.message); }
 }
 
-/* ── Render ── */
-function render(){
-  const allConflicts = detectConflicts(data);
-  const activeConflicts   = allConflicts.filter(c => !resolvedKeys.has(c.conflictKey));
-  const resolvedConflicts = allConflicts.filter(c =>  resolvedKeys.has(c.conflictKey));
-
-  /* only ACTIVE (unresolved) conflicts drive amber highlighting on cells/blocks */
-  const conflictCellKeys = new Set(activeConflicts.flatMap(c=>c.cellKeys));
-
-  const bar = document.getElementById('conflict-bar');
-  const totalCount = allConflicts.length;
-  if(totalCount){
-    bar.classList.add('visible');
-    document.getElementById('conflict-bar-title').innerHTML =
-      `<span class="conflict-bar-toggle" onclick="toggleConflictBar()">
-         <span id="conflict-bar-chevron">${conflictBarCollapsed?'▸':'▾'}</span>
-         ⚠️ ${activeConflicts.length} conflict${activeConflicts.length!==1?'s':''} detected
-         ${resolvedConflicts.length ? `<span class="conflict-resolved-count">· ${resolvedConflicts.length} resolved</span>` : ''}
-       </span>`;
-    document.getElementById('conflict-bar-title').style.marginBottom = conflictBarCollapsed ? '0' : '8px';
-
-    const renderConflictItem = (c, isResolved) => `
-      <div class="conflict-item${isResolved?' conflict-item-resolved':''}" data-jump="${c.jumpTo.toISOString()}">
-        <div class="conflict-item-main" onclick="jumpToConflict('${c.jumpTo.toISOString()}')">
-          <strong>${c.type}</strong> — ${c.houses[0]} &amp; ${c.houses[1]}
-          <div class="conflict-meta">${c.houses[0]}: ${c.dateA} &nbsp;|&nbsp; ${c.houses[1]}: ${c.dateB}</div>
-        </div>
-        <button class="conflict-resolve-btn" onclick="event.stopPropagation(); toggleResolved('${c.conflictKey}')">
-          ${isResolved ? 'Reopen' : 'Mark resolved'}
-        </button>
-      </div>`;
-
-    let listHtml = activeConflicts.map(c=>renderConflictItem(c,false)).join('');
-    if(resolvedConflicts.length){
-      listHtml += `<div class="conflict-resolved-divider">Resolved (${resolvedConflicts.length})</div>`;
-      listHtml += resolvedConflicts.map(c=>renderConflictItem(c,true)).join('');
-    }
-    document.getElementById('conflict-list').innerHTML = listHtml;
-    document.getElementById('conflict-list').style.display = conflictBarCollapsed ? 'none' : '';
-  } else {
-    bar.classList.remove('visible');
-  }
-
-  if(activeTab==='table') renderTable(conflictCellKeys);
-  else renderTimeline();
+function handleResolveClick(event, cellKey){
+  event.stopPropagation();
+  const relevant = _allConflicts.filter(c=>c.cellKeys.includes(cellKey));
+  if(!relevant.length) return;
+  if(relevant.length===1){ toggleResolved(relevant[0].conflictKey); return; }
+  showConflictPopover(event, relevant);
 }
 
-function toggleConflictBar(){
-  conflictBarCollapsed = !conflictBarCollapsed;
-  render();
+function showConflictPopover(event, conflicts){
+  const pop = document.getElementById('conflict-popover');
+  pop.innerHTML = conflicts.map(c=>{
+    const isRes = resolvedKeys.has(c.conflictKey);
+    return `<div class="cp-item">` +
+      `<span>${c.type}: <strong>${c.houses[0]}</strong> &amp; <strong>${c.houses[1]}</strong></span>` +
+      `<button class="cp-btn${isRes?' resolved':''}" onclick="event.stopPropagation();closeConflictPopover();toggleResolved('${c.conflictKey}')">${isRes?'Reopen':'Resolve'}</button>` +
+      `</div>`;
+  }).join('');
+  const x = event.clientX+8, y = event.clientY+8;
+  pop.style.left = Math.min(x, window.innerWidth-240)+'px';
+  pop.style.top  = Math.min(y, window.innerHeight-160)+'px';
+  pop.classList.remove('hidden');
+}
+
+function closeConflictPopover(){
+  document.getElementById('conflict-popover').classList.add('hidden');
+}
+
+document.addEventListener('click', e=>{
+  const pop = document.getElementById('conflict-popover');
+  if(pop && !pop.classList.contains('hidden') && !pop.contains(e.target))
+    pop.classList.add('hidden');
+});
+
+/* ── Render ── */
+function render(){
+  _allConflicts = detectConflicts(data);
+  const conflictCellKeys = new Set(_allConflicts.filter(c=>!resolvedKeys.has(c.conflictKey)).flatMap(c=>c.cellKeys));
+  if(activeTab==='table') renderTable(conflictCellKeys);
+  else renderTimeline(conflictCellKeys);
 }
 
 function renderTable(conflictCellKeys){
@@ -1221,11 +1183,16 @@ function renderTable(conflictCellKeys){
   });
 
   function eRow(name, barCls, dateStr, subkind, r){
-    const isC = subkind && conflictCellKeys.has(`${r.id}::${subkind}`);
+    const cellKey = subkind ? `${r.id}::${subkind}` : null;
+    const isC = cellKey && conflictCellKeys.has(cellKey);
+    const hasAny = cellKey && _allConflicts.some(c=>c.cellKeys.includes(cellKey));
+    const icon = isC
+      ? `<span class="cc-resolve-icon" onclick="handleResolveClick(event,'${cellKey}')">⚠</span>`
+      : (hasAny ? `<span class="cc-resolve-icon resolved" onclick="handleResolveClick(event,'${cellKey}')">✓</span>` : '');
     return `<div class="cc-event-row${isC?' has-conflict':''}">` +
       `<span class="cc-event-name">${name}</span>` +
       `<span class="cc-event-bar ${barCls}"></span>` +
-      `<span class="cc-event-dates">${dateStr}</span></div>`;
+      `<span class="cc-event-dates">${dateStr}</span>${icon}</div>`;
   }
 
   function makeCard(col){
@@ -1277,14 +1244,12 @@ function renderTable(conflictCellKeys){
 }
 
 /* ── Timeline ── */
-function renderTimeline(){
+function renderTimeline(conflictCellKeys){
   const el = document.getElementById('view-timeline');
   if(!data.length){
     el.innerHTML='<div class="empty-state">No placements yet. Add the first one.</div>';
     return;
   }
-  const conflicts = detectConflicts(data);
-  const conflictCellKeys = new Set(conflicts.flatMap(c=>c.cellKeys));
 
   const today = new Date(); today.setHours(0,0,0,0);
   const viewStart = new Date(today.getFullYear(), today.getMonth()+tlOffset, 1);
@@ -1356,11 +1321,17 @@ function renderTimeline(){
   let rowsHtml   = '';
   let rowCount   = 0;
 
-  function makeBlock(cls, pos, tooltip, isConflict){
+  function makeBlock(cls, pos, tooltip, cellKey){
     if(!pos) return '';
+    const isC = cellKey && conflictCellKeys.has(cellKey);
+    const hasAny = cellKey && _allConflicts.some(c=>c.cellKeys.includes(cellKey));
     const label = pos.width > 36 ? cls.charAt(0).toUpperCase()+cls.slice(1) : '';
-    const conflictCls = isConflict ? ' has-conflict' : '';
-    return `<div class="tl-block ${cls}${conflictCls}" style="left:${pos.left.toFixed(1)}px;width:${pos.width.toFixed(1)}px" data-tip="${tooltip}">${label}</div>`;
+    let html = `<div class="tl-block ${cls}${isC?' has-conflict':''}" style="left:${pos.left.toFixed(1)}px;width:${pos.width.toFixed(1)}px" data-tip="${tooltip}">${label}</div>`;
+    if((isC || hasAny) && pos.width >= 14){
+      const iconLeft = (pos.left + pos.width - 13).toFixed(1);
+      html += `<div class="tl-resolve-icon${!isC?' resolved':''}" style="left:${iconLeft}px" onclick="handleResolveClick(event,'${cellKey}')">${isC?'⚠':'✓'}</div>`;
+    }
+    return html;
   }
 
   /* Pre-compute each house's own cycle index (Θ3 #1, Θ3 #2, ...) before the
@@ -1376,15 +1347,13 @@ function renderTimeline(){
     const s = r.schedule;
     const {idx, total} = cycleIndexByHouse[r.id];
     const cycleLabel = total > 1 ? `${h} #${idx+1}` : h;
-    const cKey = (sub)=> conflictCellKeys.has(`${r.id}::${sub}`);
-
     labelsHtml += `<div class="tl-label-cell">${cycleLabel}<span class="tl-label-hatch">${fmtDate(r.doc_date)}</span></div>`;
 
     let blocks = '';
-    blocks += makeBlock('placement', singleDayPos(s.placement), `${cycleLabel} — DOC placement\\n${fmtDate(s.placement)}`, cKey('placement'));
-    blocks += makeBlock('vax', blockPos(s.vax1Start, s.vax1End), `${cycleLabel} — Vaccination 1\\n${fmtDate(s.vax1Start)} → ${fmtDate(s.vax1End)}`, cKey('vax1'));
-    blocks += makeBlock('vax', blockPos(s.vax2Start, s.vax2End), `${cycleLabel} — Vaccination 2\\n${fmtDate(s.vax2Start)} → ${fmtDate(s.vax2End)}`, cKey('vax2'));
-    blocks += makeBlock('load', blockPos(s.loadStart, s.loadEnd), `${cycleLabel} — Loading\\n${fmtDate(s.loadStart)} → ${fmtDate(s.loadEnd)}`, cKey('load'));
+    blocks += makeBlock('placement', singleDayPos(s.placement), `${cycleLabel} — DOC placement\\n${fmtDate(s.placement)}`, `${r.id}::placement`);
+    blocks += makeBlock('vax', blockPos(s.vax1Start, s.vax1End), `${cycleLabel} — Vaccination 1\\n${fmtDate(s.vax1Start)} → ${fmtDate(s.vax1End)}`, `${r.id}::vax1`);
+    blocks += makeBlock('vax', blockPos(s.vax2Start, s.vax2End), `${cycleLabel} — Vaccination 2\\n${fmtDate(s.vax2Start)} → ${fmtDate(s.vax2End)}`, `${r.id}::vax2`);
+    blocks += makeBlock('load', blockPos(s.loadStart, s.loadEnd), `${cycleLabel} — Loading\\n${fmtDate(s.loadStart)} → ${fmtDate(s.loadEnd)}`, `${r.id}::load`);
     blocks += makeBlock('clean', blockPos(s.cleanStart, s.cleanEnd), `${cycleLabel} — Cleaning\\n${fmtDate(s.cleanStart)} → ${fmtDate(s.cleanEnd)}`);
 
     rowsHtml += `<div class="tl-row" style="width:${chartWidth}px"><div class="tl-row-track"><div class="tl-row-stripe"></div>${blocks}</div></div>`;
@@ -1397,10 +1366,10 @@ function renderTimeline(){
       labelsHtml += `<div class="tl-label-cell sub">${a1Label}<span class="tl-label-hatch">${fmtDate(r.doc_date)}</span></div>`;
 
       let a1blocks = '';
-      a1blocks += makeBlock('transfer', blockPos(a1.transferStart, a1.transferEnd), `A1 — Transfer\\n${fmtDate(a1.transferStart)} → ${fmtDate(a1.transferEnd)}`, cKey('a1transfer'));
-      a1blocks += makeBlock('vax', blockPos(a1.vax1Start, a1.vax1End), `A1 — Vaccination 1\\n${fmtDate(a1.vax1Start)} → ${fmtDate(a1.vax1End)}`, cKey('a1vax1'));
-      a1blocks += makeBlock('vax', blockPos(a1.vax2Start, a1.vax2End), `A1 — Vaccination 2\\n${fmtDate(a1.vax2Start)} → ${fmtDate(a1.vax2End)}`, cKey('a1vax2'));
-      a1blocks += makeBlock('load', blockPos(a1.loadStart, a1.loadEnd), `A1 — Loading\\n${fmtDate(a1.loadStart)} → ${fmtDate(a1.loadEnd)}`, cKey('a1load'));
+      a1blocks += makeBlock('transfer', blockPos(a1.transferStart, a1.transferEnd), `A1 — Transfer\\n${fmtDate(a1.transferStart)} → ${fmtDate(a1.transferEnd)}`, `${r.id}::a1transfer`);
+      a1blocks += makeBlock('vax', blockPos(a1.vax1Start, a1.vax1End), `A1 — Vaccination 1\\n${fmtDate(a1.vax1Start)} → ${fmtDate(a1.vax1End)}`, `${r.id}::a1vax1`);
+      a1blocks += makeBlock('vax', blockPos(a1.vax2Start, a1.vax2End), `A1 — Vaccination 2\\n${fmtDate(a1.vax2Start)} → ${fmtDate(a1.vax2End)}`, `${r.id}::a1vax2`);
+      a1blocks += makeBlock('load', blockPos(a1.loadStart, a1.loadEnd), `A1 — Loading\\n${fmtDate(a1.loadStart)} → ${fmtDate(a1.loadEnd)}`, `${r.id}::a1load`);
 
       rowsHtml += `<div class="tl-row" style="width:${chartWidth}px"><div class="tl-row-track"><div class="tl-row-stripe"></div>${a1blocks}</div></div>`;
       rowCount++;
@@ -1516,38 +1485,6 @@ function switchTab(tab){
   document.getElementById('tab-table').classList.toggle('active',    tab==='table');
   document.getElementById('tab-timeline').classList.toggle('active', tab==='timeline');
   render();
-}
-
-function jumpToConflict(isoDate){
-  const target = new Date(isoDate);
-  const today = new Date(); today.setHours(0,0,0,0);
-  /* tlOffset is months relative to the current month, anchoring the 12-month window */
-  tlOffset = (target.getFullYear()-today.getFullYear())*12 + (target.getMonth()-today.getMonth());
-  tlPxPerDay = 18; /* readable zoom level with day gridlines visible */
-  conflictBarCollapsed = true;
-  switchTab('timeline');
-
-  requestAnimationFrame(()=>{
-    const scrollEl = document.getElementById('tl-scroll');
-    const chartEl  = document.querySelector('.tl-chart');
-    if(!scrollEl || !chartEl) return;
-    const viewStart = new Date(today.getFullYear(), today.getMonth()+tlOffset, 1);
-    const dayOff = Math.round((target-viewStart)/86400000);
-    const targetX = dayOff*tlPxPerDay;
-    scrollEl.scrollLeft = Math.max(0, targetX - scrollEl.clientWidth/2);
-    tlScrollLeft = scrollEl.scrollLeft;
-
-    /* brief highlight flash on the day column to help locate it visually */
-    const rowsEl = document.querySelector('.tl-rows');
-    const flashHeight = rowsEl ? rowsEl.offsetHeight : chartEl.offsetHeight;
-    const flash = document.createElement('div');
-    flash.className = 'tl-jump-flash';
-    flash.style.left = targetX+'px';
-    flash.style.width = Math.max(tlPxPerDay*2, 30)+'px';
-    flash.style.height = flashHeight+'px';
-    chartEl.appendChild(flash);
-    setTimeout(()=>flash.remove(), 1800);
-  });
 }
 
 /* ── Add/Edit modal ── */
