@@ -1447,7 +1447,7 @@ function renderTimeline(conflictCellKeys){
       const newScrollLeft = dayUnderCursor*newPx - (cursorX - scrollEl.scrollLeft);
       tlPxPerDay = newPx;
       tlScrollLeft = Math.max(0, newScrollLeft);
-      renderTimeline();
+      render();
     }, {passive:false});
   }
 
@@ -1470,11 +1470,11 @@ function renderTimeline(conflictCellKeys){
   }
 }
 
-function tlNav(dir){ tlOffset+=dir; renderTimeline(); }
-function tlReset(){ tlOffset=0; tlScrollLeft=0; renderTimeline(); }
-function tlSetZoom(val){ tlPxPerDay=Number(val); renderTimeline(); }
-function tlZoomStep(dir){ tlPxPerDay = Math.max(TL_MIN_PX, Math.min(TL_MAX_PX, tlPxPerDay + dir*2)); renderTimeline(); }
-function tlZoomFit(){ tlPxPerDay = TL_BASE_PX_PER_DAY; tlScrollLeft = 0; renderTimeline(); }
+function tlNav(dir){ tlOffset+=dir; render(); }
+function tlReset(){ tlOffset=0; tlScrollLeft=0; render(); }
+function tlSetZoom(val){ tlPxPerDay=Number(val); render(); }
+function tlZoomStep(dir){ tlPxPerDay = Math.max(TL_MIN_PX, Math.min(TL_MAX_PX, tlPxPerDay + dir*2)); render(); }
+function tlZoomFit(){ tlPxPerDay = TL_BASE_PX_PER_DAY; tlScrollLeft = 0; render(); }
 
 /* ── Tabs ── */
 function switchTab(tab){
