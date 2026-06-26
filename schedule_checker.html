@@ -181,6 +181,8 @@ header{
 .cc-card-footer{display:flex;gap:6px;padding-top:10px;border-top:1px solid var(--border-soft);margin-top:auto}
 .cc-gap-empty{visibility:hidden}
 .cc-sub-placeholder{visibility:hidden}
+.cc-card-blank{border:1px dashed var(--border-soft);background:transparent;box-shadow:none;opacity:.4}
+.cc-gen-label{font-size:11px;font-weight:700;color:var(--text-subtle);text-transform:uppercase;letter-spacing:.06em;padding:4px 2px}
 .cc-suggest-label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;padding:4px 2px}
 .empty-state{padding:56px 20px;text-align:center;color:var(--text-muted);font-size:14px}
 
@@ -1166,14 +1168,19 @@ function renderTable(conflictCellKeys){
     houseData[h] = data.filter(r=>r.house===h).sort((a,b)=>new Date(a.doc_date)-new Date(b.doc_date));
   });
 
-  const columns = [];
-  HOUSES.forEach(h=>{
-    houseData[h].forEach((r,i)=>{
-      const cycleLabel = houseData[h].length > 1 ? `${h} #${i+1}` : h;
-      columns.push({record:r, house:h, cycleLabel, prev: i>0 ? houseData[h][i-1] : null, isSuggestion:false});
-    });
-  });
-  columns.sort((a,b)=> new Date(a.record.doc_date) - new Date(b.record.doc_date));
+  const maxGen = Math.max(0, ...HOUSES.map(h=>houseData[h].length));
+  const genRows = [];
+  for(let gen=0; gen<maxGen; gen++){
+    const realCols = HOUSES
+      .filter(h=>houseData[h][gen])
+      .map(h=>{
+        const r=houseData[h][gen];
+        return {record:r, house:h, cycleLabel:houseData[h].length>1?`${h} #${gen+1}`:h, prev:gen>0?houseData[h][gen-1]:null, isSuggestion:false};
+      })
+      .sort((a,b)=>new Date(a.record.doc_date)-new Date(b.record.doc_date));
+    const blankCount = HOUSES.filter(h=>!houseData[h][gen]).length;
+    genRows.push({realCols, blankCount});
+  }
 
   const nextSuggestions = suggestAllNextPlacements();
   const suggestionCols = [];
@@ -1244,7 +1251,12 @@ function renderTable(conflictCellKeys){
       `<div class="cc-card-footer">${footerHtml}</div></div>`;
   }
 
-  let html = `<div class="cards-wrap"><div class="cards-row">${columns.map(makeCard).join('')}</div>`;
+  const blankCard = `<div class="cc-card cc-card-blank"></div>`;
+  let html = `<div class="cards-wrap">`;
+  genRows.forEach((row, gi)=>{
+    html += `<div class="cc-gen-label">Cycle ${gi+1}</div>`;
+    html += `<div class="cards-row">${row.realCols.map(makeCard).join('')}${blankCard.repeat(row.blankCount)}</div>`;
+  });
   if(suggestionCols.length)
     html += `<div class="cc-suggest-label">Suggested next placements</div><div class="cards-row">${suggestionCols.map(makeCard).join('')}</div>`;
   el.innerHTML = html + '</div>';
