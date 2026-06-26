@@ -139,7 +139,7 @@ header{
 .cards-row{display:flex;flex-wrap:wrap;gap:14px}
 .cc-card{
   background:var(--bg-elev1);border:1px solid var(--border);border-radius:var(--r-lg);
-  padding:16px;min-width:230px;max-width:280px;flex:1 1 230px;
+  padding:16px;width:260px;flex:0 0 260px;
   display:flex;flex-direction:column;box-shadow:0 2px 8px rgba(0,0,0,0.18);
 }
 .cc-card-suggest{
@@ -159,7 +159,7 @@ header{
 .cc-events{display:flex;flex-direction:column;gap:3px;margin-bottom:10px;flex:1}
 .cc-event-row{
   display:flex;align-items:center;gap:8px;padding:4px 6px;
-  border-radius:var(--r-sm);
+  border-radius:var(--r-sm);min-height:32px;
 }
 .cc-event-row.has-conflict{
   outline:2px solid var(--amber);outline-offset:1px;
@@ -179,6 +179,8 @@ header{
 }
 .cc-sub-header{font-size:10.5px;font-weight:700;color:var(--violet);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em}
 .cc-card-footer{display:flex;gap:6px;padding-top:10px;border-top:1px solid var(--border-soft);margin-top:auto}
+.cc-gap-empty{visibility:hidden}
+.cc-sub-placeholder{visibility:hidden}
 .cc-suggest-label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;padding:4px 2px}
 .empty-state{padding:56px 20px;text-align:center;color:var(--text-muted);font-size:14px}
 
@@ -1199,10 +1201,12 @@ function renderTable(conflictCellKeys){
     const r = col.record, s = r.schedule;
     const hasConflict = !col.isSuggestion && ['placement','vax1','vax2','load','a1transfer','a1vax1','a1vax2','a1load'].some(k=>conflictCellKeys.has(`${r.id}::${k}`));
 
-    let gapHtml = '';
+    let gapHtml;
     if(col.prev){
       const gap = Math.round((new Date(r.doc_date) - col.prev.schedule.cleanEnd) / 86400000);
       gapHtml = `<div class="cc-gap-line">${gap>0 ? gap+'d gap from prev' : '⚠️ '+Math.abs(gap)+'d overlap'}</div>`;
+    } else {
+      gapHtml = `<div class="cc-gap-line cc-gap-empty">&nbsp;</div>`;
     }
 
     const eventsHtml =
@@ -1212,7 +1216,7 @@ function renderTable(conflictCellKeys){
       eRow('Load',   'load', fmtDate(s.loadStart)+' – '+fmtDate(s.loadEnd),   'load', r) +
       eRow('Clean',  'clean',fmtDate(s.cleanStart)+' – '+fmtDate(s.cleanEnd), null,   r);
 
-    let a1Html = '';
+    let a1Html;
     if(col.house === 'Θ4'){
       const a1 = getA1Schedule(r.doc_date);
       a1Html = `<div class="cc-sub-card"><div class="cc-sub-header">A1 sub-house</div><div class="cc-events">` +
@@ -1221,6 +1225,9 @@ function renderTable(conflictCellKeys){
         eRow('Vax 2','vax',fmtDate(a1.vax2Start)+' – '+fmtDate(a1.vax2End),'a1vax2',r) +
         eRow('Load','load',fmtDate(a1.loadStart)+' – '+fmtDate(a1.loadEnd),'a1load',r) +
         `</div></div>`;
+    } else {
+      a1Html = `<div class="cc-sub-card cc-sub-placeholder"><div class="cc-sub-header">A1 sub-house</div>` +
+        `<div class="cc-events">${'<div class="cc-event-row"></div>'.repeat(4)}</div></div>`;
     }
 
     const footerHtml = col.isSuggestion
