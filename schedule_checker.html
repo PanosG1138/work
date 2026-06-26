@@ -164,8 +164,13 @@ header{
 .cycle-table{border-collapse:collapse;font-size:12.5px;white-space:nowrap;width:100%}
 .cycle-table thead tr{background:var(--bg-elev2);border-bottom:2px solid var(--border)}
 .ct-house-header{
-  padding:10px 14px;text-align:center;font-size:13px;font-weight:800;color:var(--text);
+  padding:11px 14px;text-align:center;font-size:13px;font-weight:800;color:var(--text);
   border-right:1px solid var(--border-soft);letter-spacing:.02em;min-width:140px;
+}
+.ct-suggestion-header{
+  color:var(--text-muted);font-weight:700;font-style:italic;
+  background:repeating-linear-gradient(135deg, var(--bg-elev2) 0 8px, var(--bg-elev1) 8px 16px);
+  border-left:3px dashed var(--border);
 }
 .ct-row-label{
   padding:9px 14px;font-size:11px;font-weight:700;color:var(--text-muted);
@@ -175,12 +180,17 @@ header{
 }
 .ct-actions-label{color:var(--text-subtle)}
 .ct-cell{
-  padding:9px 12px;text-align:center;border-right:1px solid var(--border-soft);
+  padding:10px 12px;text-align:center;border-right:1px solid var(--border-soft);
   border-bottom:1px solid var(--border-soft);color:var(--text);
 }
 .ct-cell.ct-empty{color:var(--text-subtle)}
+.ct-suggestion-cell{
+  color:var(--text-muted);background:var(--bg-elev2);opacity:.85;
+  border-left:3px dashed var(--border);
+}
 .cycle-table tbody tr:last-child .ct-cell{border-bottom:none}
 .cycle-table tbody tr:hover .ct-cell{background:var(--bg-elev2)}
+.cycle-table tbody tr:hover .ct-suggestion-cell{background:var(--hover)}
 .row-hatch{font-weight:700;color:var(--text)}
 .row-vax{color:var(--blue)}
 .row-load{color:var(--green)}
@@ -191,12 +201,12 @@ header{
 .ct-subline-warn{color:#f55a5a;font-weight:700}
 .ct-conflict{background:var(--amber-soft)!important;color:var(--amber)!important;font-weight:700}
 .ct-warn{background:rgba(245,90,90,0.10)!important;color:#f55a5a!important;font-weight:700}
-.ct-actions{padding:6px 8px}
+.ct-actions{padding:7px 8px}
 .empty-state{padding:56px 20px;text-align:center;color:var(--text-muted);font-size:14px}
 
 /* ── Row action buttons ── */
 .row-btn{
-  height:26px;padding:0 11px;border-radius:var(--r-sm);border:1px solid var(--border);
+  height:27px;padding:0 11px;border-radius:var(--r-sm);border:1px solid var(--border);
   background:var(--bg-elev2);color:var(--text);font-family:'Inter',sans-serif;
   font-size:12px;font-weight:500;cursor:pointer;transition:background .12s,border-color .12s;
 }
@@ -204,6 +214,17 @@ header{
 .row-btn.del:hover{border-color:#f55a5a;background:rgba(245,90,90,0.1);color:#f55a5a}
 .row-btn.fix{border-color:var(--amber-strong);color:var(--amber)}
 .row-btn.fix:hover{background:var(--amber-soft)}
+.row-btn.accept{border-color:var(--green);color:var(--green);font-weight:600}
+.row-btn.accept:hover{background:var(--green-soft)}
+.table-legend{
+  display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);
+  margin-bottom:10px;
+}
+.table-legend-swatch{
+  width:20px;height:14px;border-radius:3px;flex-shrink:0;
+  background:repeating-linear-gradient(135deg, var(--bg-elev2) 0 5px, var(--bg-elev1) 5px 10px);
+  border-left:3px dashed var(--border);
+}
 
 /* ── Resolver panel ── */
 .resolver-modal{width:480px}
@@ -384,6 +405,10 @@ header{
   <div class="conflict-bar" id="conflict-bar">
     <div class="conflict-bar-title" id="conflict-bar-title"></div>
     <div class="conflict-list" id="conflict-list"></div>
+  </div>
+  <div class="table-legend" id="table-legend">
+    <span class="table-legend-swatch"></span>
+    Dashed columns = suggested next placement (not yet saved)
   </div>
   <div id="view-table"></div>
   <div id="view-timeline" style="display:none"></div>
@@ -913,6 +938,126 @@ function suggestPairResolutions(recordId){
   };
 }
 
+/* ── Next-placement suggester ──────────────────────────────────────
+   Separate from the resolver above: instead of moving an EXISTING record,
+   this finds the earliest fully conflict-free hatch date for a house's
+   NEXT (not-yet-entered) cycle. Existing placements are never modified —
+   this is purely additive and advisory.
+
+   The search floor for a house is always anchored to its MOST RECENT
+   cycle's cleaning end (the latest hatch date for that house), never an
+   earlier cycle — a placed date is treated as final regardless of any
+   conflicts it may have. For Θ4, the floor also respects A1's own loading
+   window, since A1 physically occupies that house too.
+
+   All four "slots" (Θ1+Θ2 pair, Θ3, Θ4, Θ5) are suggested in one pass,
+   ordered by whichever floor date comes soonest, and each later suggestion
+   in the pass treats earlier ones in the SAME pass as if they were real —
+   so the suggestions never conflict with each other, only ever with actual
+   committed data plus whatever's already been suggested this pass.
+-------------------------------------------------------------------- */
+const NEXT_PLACEMENT_MAX_SEARCH_DAYS = 720;
+
+function buildHypotheticalEvents(house, hatchIso, idSuffix){
+  const fakeRow = {id:'__hypo__'+house+(idSuffix||''), house, doc_date:hatchIso, schedule:getSchedule(hatchIso)};
+  return buildEvents([fakeRow]);
+}
+
+function getNextPlacementFloor(house, extraRecords){
+  const allForHouse = [...data, ...extraRecords].filter(r=>r.house===house);
+  if(!allForHouse.length){
+    const today = new Date(); today.setHours(0,0,0,0);
+    return today;
+  }
+  const latest = allForHouse.slice().sort((a,b)=>new Date(b.doc_date)-new Date(a.doc_date))[0];
+  let floor = addDays(latest.schedule.cleanEnd, 1);
+  if(house === 'Θ4'){
+    const a1 = getA1Schedule(latest.doc_date);
+    const a1Floor = addDays(a1.loadEnd, 1);
+    if(a1Floor > floor) floor = a1Floor;
+  }
+  return floor;
+}
+
+function findNextCleanHatchDate(house, extraRecords){
+  const floor = getNextPlacementFloor(house, extraRecords);
+  const otherEvents = buildEvents([...data, ...extraRecords]);
+  for(let i=0; i<=NEXT_PLACEMENT_MAX_SEARCH_DAYS; i++){
+    const candidateIso = addDays(floor, i).toISOString().slice(0,10);
+    const hypoEvents = buildHypotheticalEvents(house, candidateIso);
+    const conflictCount = countConflictsBetweenSets(hypoEvents, otherEvents) + countConflictsWithinSet(hypoEvents);
+    if(conflictCount === 0) return {house, hatchDate: candidateIso, daysFromFloor: i};
+  }
+  return null;
+}
+
+function findNextCleanPairDates(extraRecords){
+  const floor1 = getNextPlacementFloor('Θ1', extraRecords);
+  const floor2 = getNextPlacementFloor('Θ2', extraRecords);
+  const otherEvents = buildEvents([...data, ...extraRecords]);
+
+  function searchWithEarlierHouse(earlierHouse, laterHouse, earlierFloor, laterFloorIndependent){
+    for(let i=0; i<=NEXT_PLACEMENT_MAX_SEARCH_DAYS; i++){
+      const earlierDate = addDays(earlierFloor, i);
+      for(let gap=PAIR_MIN_GAP; gap<=PAIR_MAX_GAP; gap++){
+        const laterDate = addDays(earlierDate, gap);
+        if(laterDate < laterFloorIndependent) continue;
+        const earlierIso = earlierDate.toISOString().slice(0,10);
+        const laterIso = laterDate.toISOString().slice(0,10);
+        const combined = [
+          ...buildHypotheticalEvents(earlierHouse, earlierIso, 'E'),
+          ...buildHypotheticalEvents(laterHouse, laterIso, 'L'),
+        ];
+        const conflictCount = countConflictsBetweenSets(combined, otherEvents) + countConflictsWithinSet(combined);
+        if(conflictCount === 0) return {earlierHouse, laterHouse, earlierDate:earlierIso, laterDate:laterIso, gap, totalShift:i};
+      }
+    }
+    return null;
+  }
+
+  const optA = searchWithEarlierHouse('Θ1','Θ2', floor1, floor2);
+  const optB = searchWithEarlierHouse('Θ2','Θ1', floor2, floor1);
+  if(!optA) return optB;
+  if(!optB) return optA;
+  return optA.totalShift <= optB.totalShift ? optA : optB;
+}
+
+/* Returns a map: { 'Θ1': isoDate, 'Θ2': isoDate, 'Θ3': isoDate, 'Θ4': isoDate, 'Θ5': isoDate }
+   — the next suggested hatch date per house, all mutually conflict-free. */
+function suggestAllNextPlacements(){
+  const accepted = [];
+  const out = {};
+
+  const slots = [
+    {key:'Θ1Θ2', floor: new Date(Math.min(getNextPlacementFloor('Θ1',[]).getTime(), getNextPlacementFloor('Θ2',[]).getTime()))},
+    {key:'Θ3', floor: getNextPlacementFloor('Θ3', [])},
+    {key:'Θ4', floor: getNextPlacementFloor('Θ4', [])},
+    {key:'Θ5', floor: getNextPlacementFloor('Θ5', [])},
+  ];
+  slots.sort((a,b)=>a.floor-b.floor);
+
+  slots.forEach(slot=>{
+    if(slot.key === 'Θ1Θ2'){
+      const pair = findNextCleanPairDates(accepted);
+      if(pair){
+        const h1Date = pair.earlierHouse==='Θ1' ? pair.earlierDate : pair.laterDate;
+        const h2Date = pair.earlierHouse==='Θ2' ? pair.earlierDate : pair.laterDate;
+        accepted.push({id:'__hypo__Θ1', house:'Θ1', doc_date:h1Date, schedule:getSchedule(h1Date)});
+        accepted.push({id:'__hypo__Θ2', house:'Θ2', doc_date:h2Date, schedule:getSchedule(h2Date)});
+        out['Θ1'] = h1Date;
+        out['Θ2'] = h2Date;
+      }
+    } else {
+      const result = findNextCleanHatchDate(slot.key, accepted);
+      if(result){
+        accepted.push({id:'__hypo__'+slot.key, house:slot.key, doc_date:result.hatchDate, schedule:getSchedule(result.hatchDate)});
+        out[slot.key] = result.hatchDate;
+      }
+    }
+  });
+  return out;
+}
+
 /* ── Load ── */
 async function load(){
   setSyncStatus('loading','Loading...');
@@ -1016,14 +1161,26 @@ function renderTable(conflictCellKeys){
     houseData[h] = data.filter(r=>r.house===h).sort((a,b)=>new Date(a.doc_date)-new Date(b.doc_date));
   });
 
-  const columns = []; // {record, house, cycleLabel}
+  const columns = []; // {record, house, cycleLabel, isSuggestion}
   HOUSES.forEach(h=>{
     houseData[h].forEach((r,i)=>{
       const cycleLabel = houseData[h].length > 1 ? `${h} #${i+1}` : h;
-      columns.push({record:r, house:h, cycleLabel, prev: i>0 ? houseData[h][i-1] : null});
+      columns.push({record:r, house:h, cycleLabel, prev: i>0 ? houseData[h][i-1] : null, isSuggestion:false});
     });
   });
   columns.sort((a,b)=> new Date(a.record.doc_date) - new Date(b.record.doc_date));
+
+  /* Append next-placement suggestions as additional, visually distinct columns
+     at the end — purely advisory, never written to the database until the
+     person explicitly accepts one. */
+  const nextSuggestions = suggestAllNextPlacements();
+  HOUSES.forEach(h=>{
+    if(!nextSuggestions[h]) return;
+    const fakeRecord = {id:'__suggestion__'+h, house:h, doc_date:nextSuggestions[h], schedule:getSchedule(nextSuggestions[h])};
+    const cycleLabel = `${h} · Επόμενη`;
+    const lastReal = houseData[h].length ? houseData[h][houseData[h].length-1] : null;
+    columns.push({record:fakeRecord, house:h, cycleLabel, prev:lastReal, isSuggestion:true});
+  });
 
   const ROWS = [
     {label:'HATCH DATE',   cls:'row-hatch',     subkind:'placement', get:(r,prev,isC,isW)=>
@@ -1043,7 +1200,7 @@ function renderTable(conflictCellKeys){
 
   html += '<thead><tr><th class="ct-row-label"></th>';
   columns.forEach(col=>{
-    html += `<th class="ct-house-header">${col.cycleLabel}</th>`;
+    html += `<th class="ct-house-header${col.isSuggestion?' ct-suggestion-header':''}">${col.cycleLabel}</th>`;
   });
   html += '</tr></thead><tbody>';
 
@@ -1051,10 +1208,11 @@ function renderTable(conflictCellKeys){
     html += `<tr><td class="ct-row-label">${rowDef.label}</td>`;
     columns.forEach(col=>{
       const r = col.record, prev = col.prev;
-      const isC  = rowDef.subkind ? conflictCellKeys.has(`${r.id}::${rowDef.subkind}`) : false;
-      const isW  = warnIds.has(r.id);
+      const isC  = (!col.isSuggestion && rowDef.subkind) ? conflictCellKeys.has(`${r.id}::${rowDef.subkind}`) : false;
+      const isW  = col.isSuggestion ? false : warnIds.has(r.id);
       const val  = rowDef.get(r, prev, isC, isW);
       let cellCls = `ct-cell ${rowDef.cls}`;
+      if(col.isSuggestion) cellCls += ' ct-suggestion-cell';
       if(rowDef.label!=='HATCH DATE' && isC) cellCls += ' ct-conflict';
       if(rowDef.label==='GAP' && val.startsWith('⚠️')) cellCls += ' ct-warn';
       html += `<td class="${cellCls}">${val}</td>`;
@@ -1065,6 +1223,12 @@ function renderTable(conflictCellKeys){
   html += '<tr><td class="ct-row-label ct-actions-label">Actions</td>';
   columns.forEach(col=>{
     const r = col.record;
+    if(col.isSuggestion){
+      html += `<td class="ct-cell ct-actions ct-suggestion-cell">
+        <button class="row-btn accept" onclick="acceptSuggestion('${col.house}','${r.doc_date}')">Accept</button>
+      </td>`;
+      return;
+    }
     const hasConflict = [...conflictCellKeys].some(k=>k.startsWith(`${r.id}::`));
     html+=`<td class="ct-cell ct-actions">
       <button class="row-btn" onclick="openEditModal('${r.id}')">Edit</button>
@@ -1312,6 +1476,7 @@ function switchTab(tab){
   activeTab=tab;
   document.getElementById('view-table').style.display    = tab==='table'    ? '' : 'none';
   document.getElementById('view-timeline').style.display = tab==='timeline' ? '' : 'none';
+  document.getElementById('table-legend').style.display   = tab==='table'    ? '' : 'none';
   document.getElementById('tab-table').classList.toggle('active',    tab==='table');
   document.getElementById('tab-timeline').classList.toggle('active', tab==='timeline');
   render();
@@ -1361,6 +1526,18 @@ function openAddModal(){
   document.getElementById('m-save').disabled=true;
   document.getElementById('modal-bg').classList.remove('hidden');
 }
+function acceptSuggestion(house, hatchDate){
+  editId=null;
+  document.getElementById('modal-title').textContent='Confirm suggested placement';
+  document.getElementById('m-house').value=house;
+  document.getElementById('m-house').disabled=true;
+  document.getElementById('m-date').value=hatchDate;
+  document.getElementById('m-warn').classList.remove('visible');
+  document.getElementById('m-save').textContent='Save';
+  document.getElementById('m-save').disabled=false;
+  document.getElementById('modal-bg').classList.remove('hidden');
+}
+
 function openEditModal(id){
   const r = data.find(x=>x.id===id);
   if(!r) return;
