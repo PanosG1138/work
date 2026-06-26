@@ -8,6 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <title>ΕΜΒΟΛΙΑ</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 /* ── GITHUB DARK COLOUR SYSTEM ── */
 :root,[data-theme="dark"]{
@@ -647,32 +648,17 @@ body.printing-card .printcard-doc{display:block}
 </head>
 <body>
 
-<!-- PASSWORD GATE -->
-<div id="pw-gate-bg" class="modal-bg">
+<!-- AUTH GATE -->
+<div id="auth-gate" class="modal-bg" style="background:var(--gh-canvas-default)">
   <div class="name-gate">
     <h2>ΕΜΒΟΛΙΑ</h2>
-    <p>Παρακολούθηση Παραγγελιών<br>Εισάγετε τον κωδικό πρόσβασης.</p>
-    <div class="fgroup"><input type="password" id="pw-input" placeholder="Κωδικός…" onkeydown="if(event.key==='Enter')confirmPassword()"></div>
-    <button class="btn-primary" onclick="confirmPassword()">Είσοδος</button>
-    <div class="gate-error" id="pw-error"></div>
-  </div>
-</div>
-
-<!-- NAME GATE -->
-<div id="gate-bg" class="modal-bg">
-  <div class="name-gate">
-    <h2>ΕΜΒΟΛΙΑ</h2>
-    <p>Παρακολούθηση Παραγγελιών<br>Ποιος είσαι;</p>
-    <div class="name-options">
-      <button class="name-opt-btn" onclick="selectPresetName('Πάνος')">Πάνος</button>
-      <button class="name-opt-btn" onclick="selectPresetName('Ελένη')">Ελένη</button>
-      <button class="name-opt-btn" id="other-btn" onclick="toggleOtherName()">Άλλο…</button>
-    </div>
-    <div id="other-name-wrap" style="display:none;margin-top:10px">
-      <input type="text" id="gate-name" placeholder="Εισάγετε το όνομά σας…" onkeydown="if(event.key==='Enter')confirmOtherName()">
-      <button class="btn-primary" style="width:100%;margin-top:8px" onclick="confirmOtherName()">Είσοδος</button>
-    </div>
-    <div class="gate-error" id="name-error"></div>
+    <p>Παρακολούθηση Παραγγελιών<br>Σύνδεση</p>
+    <input type="email" id="auth-email" placeholder="Email…" autocomplete="username"
+           onkeydown="if(event.key==='Enter')document.getElementById('auth-password').focus()">
+    <input type="password" id="auth-password" placeholder="Κωδικός…"
+           autocomplete="current-password" onkeydown="if(event.key==='Enter')signIn()">
+    <button class="btn-primary" id="auth-btn" onclick="signIn()">Είσοδος</button>
+    <div class="gate-error" id="auth-error"></div>
   </div>
 </div>
 
@@ -707,7 +693,8 @@ body.printing-card .printcard-doc{display:block}
       <div class="hstat"><div class="hstat-val" id="stat-ordered" style="color:var(--gh-success-fg)">—</div><div class="hstat-label">Παραγγέλθηκαν</div></div>
       <div class="hstat"><div class="hstat-val" id="stat-pending" style="color:var(--gh-attention-fg)">—</div><div class="hstat-label">Εκκρεμείς</div></div>
     </div>
-    <div class="user-chip" id="user-chip" onclick="changeUser()">
+    <button class="theme-toggle" id="btn-logout" onclick="signOut()" style="display:none" title="Αποσύνδεση">← Έξοδος</button>
+    <div class="user-chip" id="user-chip">
       <div class="dot"></div>
       <span id="user-chip-name">—</span>
     </div>
@@ -979,13 +966,55 @@ const SB_KEY = 'sb_publishable_1S3L1sNMOjr-YgwGAAD2Kg_X_3S4cTl';
 const TABLE  = 'emvolia';
 const HTABLE = 'emvolia_history';
 
+// ── AUTH ──────────────────────────────────────────────────────────
+const _sb = supabase.createClient(SB_URL, SB_KEY);
+let _authSession = null;
+
+function emailToDisplayName(email) {
+  const m = {'panos@internal.local':'Πάνος','eleni@internal.local':'Ελένη'};
+  return m[email] || email.split('@')[0];
+}
+
+async function signIn() {
+  const email = document.getElementById('auth-email').value.trim();
+  const pw    = document.getElementById('auth-password').value;
+  const btn   = document.getElementById('auth-btn');
+  const errEl = document.getElementById('auth-error');
+  btn.disabled = true; btn.textContent = 'Σύνδεση…';
+  errEl.textContent = '';
+  const { error } = await _sb.auth.signInWithPassword({ email, password: pw });
+  if (error) {
+    errEl.textContent = 'Λάθος email ή κωδικός.';
+    btn.disabled = false; btn.textContent = 'Είσοδος';
+  }
+}
+
+async function signOut() { await _sb.auth.signOut(); }
+
+_sb.auth.onAuthStateChange((event, session) => {
+  _authSession = session;
+  document.getElementById('auth-gate').style.display = session ? 'none' : 'flex';
+  document.getElementById('btn-logout').style.display = session ? '' : 'none';
+  if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
+    initApp(emailToDisplayName(session.user.email));
+  } else if (!session) {
+    setTimeout(() => { const e = document.getElementById('auth-email'); if(e) e.focus(); }, 100);
+  }
+});
+
+function initApp(name) {
+  currentUser = name;
+  document.getElementById('user-chip-name').textContent = name;
+  loadData().then(() => showChangelog(name));
+}
+
 // ── SUPABASE ──────────────────────────────────────────────────────
 async function sbFetch(path, opts = {}) {
   const res = await fetch(`${SB_URL}/rest/v1/${path}`, {
     ...opts,
     headers: {
       'apikey': SB_KEY,
-      'Authorization': `Bearer ${SB_KEY}`,
+      'Authorization': `Bearer ${_authSession.access_token}`,
       'Content-Type': 'application/json',
       'Prefer': opts.prefer || '',
       ...opts.headers,
@@ -1014,43 +1043,7 @@ let data = [], sortCol = 'hm_emv', sortDir = 1;
 let editId = null, editLoadedAt = null, deleteId = null, orderedVal = '', fridgeVal = '';
 let currentUser = '';
 
-// ── NAME GATE & CHANGELOG ─────────────────────────────────────────
-function showNameGateOrProceed() {
-  document.getElementById('gate-bg').style.display = 'flex';
-  setTimeout(() => { const f = document.querySelector('.name-opt-btn'); if(f) f.focus(); }, 100);
-}
 
-function selectPresetName(name) {
-  sessionStorage.setItem('emvolia_user', name);
-  currentUser = name;
-  document.getElementById('user-chip-name').textContent = name;
-  document.getElementById('gate-bg').style.display = 'none';
-  loadData().then(() => showChangelog(name));
-}
-
-function toggleOtherName() {
-  const wrap = document.getElementById('other-name-wrap');
-  wrap.style.display = wrap.style.display === 'none' ? 'block' : 'none';
-  if (wrap.style.display === 'block') setTimeout(() => document.getElementById('gate-name').focus(), 50);
-}
-
-function confirmOtherName() {
-  const name = document.getElementById('gate-name').value.trim();
-  if (!name) {
-    document.getElementById('name-error').textContent = 'Εισάγετε ένα όνομα.';
-    setTimeout(() => { document.getElementById('name-error').textContent = ''; }, 2500);
-    return;
-  }
-  selectPresetName(name);
-}
-
-function changeUser() {
-  sessionStorage.removeItem('emvolia_user');
-  currentUser = '';
-  document.getElementById('other-name-wrap').style.display = 'none';
-  document.getElementById('gate-name').value = '';
-  document.getElementById('gate-bg').style.display = 'flex';
-}
 let sidebarOpen = true;
 function isMobile() { return window.innerWidth <= 768; }
 
@@ -1945,28 +1938,6 @@ document.addEventListener('keydown', e => {
 });
 
 // ── PASSWORD GATE ─────────────────────────────────────────────────
-const PW_HASH = '6a396c5a067a36c937ef23e9a6164280be68daa3df1a8d0cdee91c0492d98ef7';
-
-async function hashStr(str) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
-}
-
-async function confirmPassword() {
-  const val = document.getElementById('pw-input').value;
-  const hashed = await hashStr(val);
-  if (hashed === PW_HASH) {
-    sessionStorage.setItem('emvolia_pw', '1');
-    document.getElementById('pw-gate-bg').style.display = 'none';
-    showNameGateOrProceed();
-  } else {
-    const err = document.getElementById('pw-error');
-    err.textContent = 'Λάθος κωδικός. Προσπαθήστε ξανά.';
-    document.getElementById('pw-input').value = '';
-    document.getElementById('pw-input').focus();
-    setTimeout(() => { err.textContent = ''; }, 3000);
-  }
-}
 
 // ── BATCH SELECTION ───────────────────────────────────────────────
 let selectedIds = new Set();
@@ -2505,27 +2476,7 @@ updateUndoRedoBtns();
   if (dl) VACCINE_OPTIONS.forEach(v => { const o = document.createElement('option'); o.value = v; dl.appendChild(o); });
 })();
 
-// ── SESSION RESTORE ───────────────────────────────────────────────
-// If already authenticated this session (e.g. switching from inventory.html),
-// skip both gates entirely and go straight to the app.
-const _savedUser = sessionStorage.getItem('emvolia_user');
-if (sessionStorage.getItem('emvolia_pw') === '1' && _savedUser) {
-  // fully authenticated — restore user and load directly
-  currentUser = _savedUser;
-  document.getElementById('user-chip-name').textContent = _savedUser;
-  document.getElementById('pw-gate-bg').style.display = 'none';
-  document.getElementById('gate-bg').style.display = 'none';
-  loadData();
-} else if (sessionStorage.getItem('emvolia_pw') === '1') {
-  // password verified but no name yet — skip to name gate
-  document.getElementById('pw-gate-bg').style.display = 'none';
-  document.getElementById('gate-bg').style.display = 'flex';
-  setTimeout(() => { const f = document.querySelector('.name-opt-btn'); if(f) f.focus(); }, 100);
-} else {
-  // fresh visit — show password gate
-  document.getElementById('gate-bg').style.display = 'none';
-  setTimeout(() => document.getElementById('pw-input').focus(), 100);
-}
+// Auth is handled by onAuthStateChange above; no manual session restore needed.
 </script>
 
 </body>

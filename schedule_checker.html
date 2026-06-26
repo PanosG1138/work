@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rearing House Scheduler</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 :root,[data-theme="dark"]{
   --bg:#0f1115;
@@ -381,6 +382,23 @@ header{
 </head>
 <body>
 
+<!-- AUTH GATE -->
+<div id="auth-gate" style="position:fixed;inset:0;background:#0f1115;display:flex;align-items:center;justify-content:center;z-index:9999;font-family:'Inter',system-ui,sans-serif">
+  <div style="background:#161922;border:1px solid #2a2f3a;border-radius:12px;padding:32px;width:360px;text-align:center">
+    <h2 style="font-weight:700;font-size:20px;color:#e8eaef;margin-bottom:8px">Rearing House Scheduler</h2>
+    <p style="font-size:13px;color:#8b91a0;margin-bottom:22px">Σύνδεση</p>
+    <input type="email" id="auth-email" placeholder="Email…" autocomplete="username"
+      style="width:100%;background:#0a0b0e;border:1px solid #2a2f3a;border-radius:6px;color:#e8eaef;font-family:inherit;font-size:14px;padding:8px 10px;outline:none;margin-bottom:10px;box-sizing:border-box;text-align:center"
+      onkeydown="if(event.key==='Enter')document.getElementById('auth-password').focus()">
+    <input type="password" id="auth-password" placeholder="Κωδικός…" autocomplete="current-password"
+      style="width:100%;background:#0a0b0e;border:1px solid #2a2f3a;border-radius:6px;color:#e8eaef;font-family:inherit;font-size:14px;padding:8px 10px;outline:none;margin-bottom:12px;box-sizing:border-box;text-align:center"
+      onkeydown="if(event.key==='Enter')signIn()">
+    <button id="auth-btn" onclick="signIn()"
+      style="width:100%;padding:8px 16px;background:#5b9cff;color:#fff;border:none;border-radius:6px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer">Είσοδος</button>
+    <div id="auth-error" style="font-size:12px;color:#f55a5a;margin-top:8px;min-height:18px"></div>
+  </div>
+</div>
+
 <header>
   <div class="header-left">
     <span class="logo-title">🐔 Rearing House Scheduler</span>
@@ -392,6 +410,7 @@ header{
       <span id="theme-icon">☀️</span>
       <span id="theme-label">Light</span>
     </button>
+    <button class="theme-toggle" id="btn-logout" onclick="signOut()" style="display:none" title="Sign out">← Sign out</button>
   </div>
 </header>
 
@@ -464,6 +483,37 @@ header{
 const SB_URL  = 'https://oorhbrphdbigwgizejcc.supabase.co';
 const SB_KEY  = 'sb_publishable_1S3L1sNMOjr-YgwGAAD2Kg_X_3S4cTl';
 const TABLE   = 'placements';
+
+// ── AUTH ──────────────────────────────────────────────────────────
+const _sb = supabase.createClient(SB_URL, SB_KEY);
+let _authSession = null;
+
+async function signIn() {
+  const email = document.getElementById('auth-email').value.trim();
+  const pw    = document.getElementById('auth-password').value;
+  const btn   = document.getElementById('auth-btn');
+  const errEl = document.getElementById('auth-error');
+  btn.disabled = true; btn.textContent = 'Σύνδεση…';
+  errEl.textContent = '';
+  const { error } = await _sb.auth.signInWithPassword({ email, password: pw });
+  if (error) {
+    errEl.textContent = 'Λάθος email ή κωδικός.';
+    btn.disabled = false; btn.textContent = 'Είσοδος';
+  }
+}
+
+async function signOut() { await _sb.auth.signOut(); }
+
+_sb.auth.onAuthStateChange((event, session) => {
+  _authSession = session;
+  document.getElementById('auth-gate').style.display = session ? 'none' : 'flex';
+  document.getElementById('btn-logout').style.display = session ? '' : 'none';
+  if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
+    load();
+  } else if (!session) {
+    setTimeout(() => { const e = document.getElementById('auth-email'); if(e) e.focus(); }, 100);
+  }
+});
 const RESOLVED_TABLE = 'resolved_conflicts';
 const CONFLICT_WINDOW = 6; /* days — events within this many days of each other conflict */
 const HOUSES  = ['Θ1','Θ2','Θ3','Θ4','Θ5'];
@@ -492,7 +542,7 @@ async function sbFetch(path, opts={}){
   const res = await fetch(`${SB_URL}/rest/v1/${path}`, {
     ...opts,
     headers:{
-      'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`,
+      'apikey': SB_KEY, 'Authorization': `Bearer ${_authSession.access_token}`,
       'Content-Type': 'application/json', 'Prefer': opts.prefer||'',
       ...opts.headers,
     },
@@ -1740,7 +1790,7 @@ async function applyPairResolverSuggestion(recordIdEarlier, newHatchEarlier, rec
   }
 }
 
-load();
+// Data load triggered by onAuthStateChange after sign-in
 </script>
 </body>
 </html>
