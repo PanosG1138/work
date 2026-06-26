@@ -160,49 +160,52 @@ header{
   100%{opacity:0}
 }
 
-/* ── Cycle table ── */
-.cycle-table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--r-lg);background:var(--bg-elev1)}
-.cycle-table{border-collapse:collapse;font-size:12.5px;white-space:nowrap;width:100%}
-.cycle-table thead tr{background:var(--bg-elev2);border-bottom:2px solid var(--border)}
-.ct-house-header{
-  padding:11px 14px;text-align:center;font-size:13px;font-weight:800;color:var(--text);
-  border-right:1px solid var(--border-soft);letter-spacing:.02em;min-width:140px;
+/* ── Card view ── */
+.cards-wrap{display:flex;flex-direction:column;gap:24px}
+.cards-row{display:flex;flex-wrap:wrap;gap:14px}
+.cc-card{
+  background:var(--bg-elev1);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:16px;min-width:230px;max-width:280px;flex:1 1 230px;
+  display:flex;flex-direction:column;box-shadow:0 2px 8px rgba(0,0,0,0.18);
 }
-.ct-suggestion-header{
-  color:var(--text-muted);font-weight:700;font-style:italic;
-  background:repeating-linear-gradient(135deg, var(--bg-elev2) 0 8px, var(--bg-elev1) 8px 16px);
-  border-left:3px dashed var(--border);
+.cc-card-suggest{
+  background:repeating-linear-gradient(135deg,var(--bg-elev2) 0 8px,var(--bg-elev1) 8px 16px);
+  border:2px dashed var(--border);
 }
-.ct-row-label{
-  padding:9px 14px;font-size:11px;font-weight:700;color:var(--text-muted);
-  text-transform:uppercase;letter-spacing:.06em;background:var(--bg-elev2);
-  border-right:2px solid var(--border);border-bottom:1px solid var(--border-soft);
-  position:sticky;left:0;z-index:2;white-space:nowrap;min-width:120px;
+.cc-card-header{
+  display:flex;justify-content:space-between;align-items:baseline;
+  padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:10px;
 }
-.ct-actions-label{color:var(--text-subtle)}
-.ct-cell{
-  padding:10px 12px;text-align:center;border-right:1px solid var(--border-soft);
-  border-bottom:1px solid var(--border-soft);color:var(--text);
+.cc-card-label{font-weight:800;font-size:15px;letter-spacing:-.01em;color:var(--text)}
+.cc-card-date{font-size:12px;color:var(--text-muted)}
+.cc-gap-line{
+  font-size:11.5px;color:var(--text-muted);margin-bottom:8px;
+  padding:3px 8px;background:var(--bg-inset);border-radius:var(--r-sm);
 }
-.ct-cell.ct-empty{color:var(--text-subtle)}
-.ct-suggestion-cell{
-  color:var(--text-muted);background:var(--bg-elev2);opacity:.85;
-  border-left:3px dashed var(--border);
+.cc-events{display:flex;flex-direction:column;gap:3px;margin-bottom:10px;flex:1}
+.cc-event-row{
+  display:flex;align-items:center;gap:8px;padding:4px 6px;
+  border-radius:var(--r-sm);
 }
-.cycle-table tbody tr:last-child .ct-cell{border-bottom:none}
-.cycle-table tbody tr:hover .ct-cell{background:var(--bg-elev2)}
-.cycle-table tbody tr:hover .ct-suggestion-cell{background:var(--hover)}
-.row-hatch{font-weight:700;color:var(--text)}
-.row-vax{color:var(--blue)}
-.row-load{color:var(--green)}
-.row-clean{color:var(--text-muted)}
-.row-gap{font-weight:700;background:var(--bg-inset)}
-.ct-subline{font-size:10.5px;font-weight:500;color:var(--text-muted);margin-top:2px}
-.ct-subline-conflict{color:var(--amber);font-weight:700}
-.ct-subline-warn{color:#f55a5a;font-weight:700}
-.ct-conflict{background:var(--amber-soft)!important;color:var(--amber)!important;font-weight:700}
-.ct-warn{background:rgba(245,90,90,0.10)!important;color:#f55a5a!important;font-weight:700}
-.ct-actions{padding:7px 8px}
+.cc-event-row.has-conflict{
+  outline:2px solid var(--amber);outline-offset:1px;
+  box-shadow:0 0 0 1px var(--amber),0 0 6px rgba(245,166,35,0.5);
+}
+.cc-event-name{font-size:10.5px;font-weight:700;color:var(--text-muted);width:52px;flex-shrink:0;text-transform:uppercase;letter-spacing:.04em}
+.cc-event-bar{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.cc-event-bar.placement{background:#fff;border:1px solid var(--text)}
+.cc-event-bar.vax{background:rgba(91,156,255,0.6);border:1px solid var(--blue)}
+.cc-event-bar.load{background:rgba(62,207,142,0.5);border:1px solid var(--green)}
+.cc-event-bar.clean{background:var(--bg-inset);border:1px solid var(--border)}
+.cc-event-bar.transfer{background:rgba(167,139,250,0.5);border:1px solid var(--violet)}
+.cc-event-dates{font-size:11.5px;color:var(--text);flex:1;line-height:1.3}
+.cc-sub-card{
+  border:1px solid var(--violet);border-radius:var(--r-md);
+  padding:10px 10px 6px;margin-bottom:10px;background:var(--violet-soft);
+}
+.cc-sub-header{font-size:10.5px;font-weight:700;color:var(--violet);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em}
+.cc-card-footer{display:flex;gap:6px;padding-top:10px;border-top:1px solid var(--border-soft);margin-top:auto}
+.cc-suggest-label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;padding:4px 2px}
 .empty-state{padding:56px 20px;text-align:center;color:var(--text-muted);font-size:14px}
 
 /* ── Row action buttons ── */
@@ -1193,25 +1196,13 @@ function renderTable(conflictCellKeys){
     return;
   }
 
-  const warnIds = new Set();
-  HOUSES.forEach(h=>{
-    const byHouse = data.slice().sort((a,b)=>new Date(a.doc_date)-new Date(b.doc_date)).filter(r=>r.house===h);
-    for(let i=1;i<byHouse.length;i++){
-      const prev=byHouse[i-1],cur=byHouse[i];
-      const d=new Date(cur.doc_date);
-      if(d>=prev.schedule.cleanStart && d<=prev.schedule.cleanEnd) warnIds.add(cur.id);
-    }
-  });
-
-  /* Build per-house cycle numbers (Θ3 #1, Θ3 #2, ...) BEFORE chronological sort,
-     so the cycle number still reflects "Nth placement in this house's history",
-     then flatten everything into one chronologically-sorted column list. */
+  /* Build per-house sorted cycle lists for cycle numbering and gap calculation */
   const houseData = {};
   HOUSES.forEach(h=>{
     houseData[h] = data.filter(r=>r.house===h).sort((a,b)=>new Date(a.doc_date)-new Date(b.doc_date));
   });
 
-  const columns = []; // {record, house, cycleLabel, isSuggestion}
+  const columns = [];
   HOUSES.forEach(h=>{
     houseData[h].forEach((r,i)=>{
       const cycleLabel = houseData[h].length > 1 ? `${h} #${i+1}` : h;
@@ -1220,74 +1211,69 @@ function renderTable(conflictCellKeys){
   });
   columns.sort((a,b)=> new Date(a.record.doc_date) - new Date(b.record.doc_date));
 
-  /* Append next-placement suggestions as additional, visually distinct columns
-     at the end — purely advisory, never written to the database until the
-     person explicitly accepts one. */
   const nextSuggestions = suggestAllNextPlacements();
+  const suggestionCols = [];
   HOUSES.forEach(h=>{
     if(!nextSuggestions[h]) return;
     const fakeRecord = {id:'__suggestion__'+h, house:h, doc_date:nextSuggestions[h], schedule:getSchedule(nextSuggestions[h])};
-    const cycleLabel = `${h} · Επόμενη`;
     const lastReal = houseData[h].length ? houseData[h][houseData[h].length-1] : null;
-    columns.push({record:fakeRecord, house:h, cycleLabel, prev:lastReal, isSuggestion:true});
+    suggestionCols.push({record:fakeRecord, house:h, cycleLabel:`${h} · Επόμενη`, prev:lastReal, isSuggestion:true});
   });
 
-  const ROWS = [
-    {label:'HATCH DATE',   cls:'row-hatch',     subkind:'placement', get:(r,prev,isC,isW)=>
-      `${fmtDate(r.doc_date)}<div class="ct-subline${isC?' ct-subline-conflict':''}${isW?' ct-subline-warn':''}">Placement: ${fmtDate(r.schedule.placement)}</div>`},
-    {label:'VAX 1 (d.60)', cls:'row-vax',       subkind:'vax1',      get:(r)=>`${fmtDate(r.schedule.vax1Start)} – ${fmtDate(r.schedule.vax1End)}`},
-    {label:'VAX 2 (d.90)', cls:'row-vax',       subkind:'vax2',      get:(r)=>`${fmtDate(r.schedule.vax2Start)} – ${fmtDate(r.schedule.vax2End)}`},
-    {label:'LOADING',      cls:'row-load',      subkind:'load',      get:(r)=>`${fmtDate(r.schedule.loadStart)} – ${fmtDate(r.schedule.loadEnd)}`},
-    {label:'CLEAN END',    cls:'row-clean',     subkind:null,        get:(r)=>fmtDate(r.schedule.cleanEnd)},
-    {label:'GAP',          cls:'row-gap',       subkind:null,        get:(r,prev)=>{
-      if(!prev) return '—';
-      const gap = Math.round((new Date(r.doc_date)-prev.schedule.cleanEnd)/86400000);
-      return gap > 0 ? `${gap} days` : '⚠️ '+Math.abs(gap)+'d overlap';
-    }},
-  ];
+  function eRow(name, barCls, dateStr, subkind, r){
+    const isC = subkind && conflictCellKeys.has(`${r.id}::${subkind}`);
+    return `<div class="cc-event-row${isC?' has-conflict':''}">` +
+      `<span class="cc-event-name">${name}</span>` +
+      `<span class="cc-event-bar ${barCls}"></span>` +
+      `<span class="cc-event-dates">${dateStr}</span></div>`;
+  }
 
-  let html = '<div class="cycle-table-wrap"><table class="cycle-table">';
+  function makeCard(col){
+    const r = col.record, s = r.schedule;
+    const hasConflict = !col.isSuggestion && ['placement','vax1','vax2','load','a1transfer','a1vax1','a1vax2','a1load'].some(k=>conflictCellKeys.has(`${r.id}::${k}`));
 
-  html += '<thead><tr><th class="ct-row-label"></th>';
-  columns.forEach(col=>{
-    html += `<th class="ct-house-header${col.isSuggestion?' ct-suggestion-header':''}">${col.cycleLabel}</th>`;
-  });
-  html += '</tr></thead><tbody>';
-
-  ROWS.forEach(rowDef=>{
-    html += `<tr><td class="ct-row-label">${rowDef.label}</td>`;
-    columns.forEach(col=>{
-      const r = col.record, prev = col.prev;
-      const isC  = (!col.isSuggestion && rowDef.subkind) ? conflictCellKeys.has(`${r.id}::${rowDef.subkind}`) : false;
-      const isW  = col.isSuggestion ? false : warnIds.has(r.id);
-      const val  = rowDef.get(r, prev, isC, isW);
-      let cellCls = `ct-cell ${rowDef.cls}`;
-      if(col.isSuggestion) cellCls += ' ct-suggestion-cell';
-      if(rowDef.label!=='HATCH DATE' && isC) cellCls += ' ct-conflict';
-      if(rowDef.label==='GAP' && val.startsWith('⚠️')) cellCls += ' ct-warn';
-      html += `<td class="${cellCls}">${val}</td>`;
-    });
-    html += '</tr>';
-  });
-
-  html += '<tr><td class="ct-row-label ct-actions-label">Actions</td>';
-  columns.forEach(col=>{
-    const r = col.record;
-    if(col.isSuggestion){
-      html += `<td class="ct-cell ct-actions ct-suggestion-cell">
-        <button class="row-btn accept" onclick="acceptSuggestion('${col.house}','${r.doc_date}')">Accept</button>
-      </td>`;
-      return;
+    let gapHtml = '';
+    if(col.prev){
+      const gap = Math.round((new Date(r.doc_date) - col.prev.schedule.cleanEnd) / 86400000);
+      gapHtml = `<div class="cc-gap-line">${gap>0 ? gap+'d gap from prev' : '⚠️ '+Math.abs(gap)+'d overlap'}</div>`;
     }
-    const hasConflict = [...conflictCellKeys].some(k=>k.startsWith(`${r.id}::`));
-    html+=`<td class="ct-cell ct-actions">
-      <button class="row-btn" onclick="openEditModal('${r.id}')">Edit</button>
-      <button class="row-btn del" onclick="askDelete('${r.id}','${r.house}','${r.doc_date}')">Del</button>
-      ${hasConflict ? `<button class="row-btn fix" onclick="openResolverPanel('${r.id}')">Fix</button>` : ''}
-    </td>`;
-  });
-  html += '</tr></tbody></table></div>';
-  el.innerHTML = html;
+
+    const eventsHtml =
+      eRow('Hatch',  'placement', fmtDate(r.doc_date)+' · DOC: '+fmtDate(s.placement), 'placement', r) +
+      eRow('Vax 1',  'vax',  fmtDate(s.vax1Start)+' – '+fmtDate(s.vax1End),  'vax1', r) +
+      eRow('Vax 2',  'vax',  fmtDate(s.vax2Start)+' – '+fmtDate(s.vax2End),  'vax2', r) +
+      eRow('Load',   'load', fmtDate(s.loadStart)+' – '+fmtDate(s.loadEnd),   'load', r) +
+      eRow('Clean',  'clean',fmtDate(s.cleanStart)+' – '+fmtDate(s.cleanEnd), null,   r);
+
+    let a1Html = '';
+    if(col.house === 'Θ4'){
+      const a1 = getA1Schedule(r.doc_date);
+      a1Html = `<div class="cc-sub-card"><div class="cc-sub-header">A1 sub-house</div><div class="cc-events">` +
+        eRow('Transfer','transfer',fmtDate(a1.transferStart)+' – '+fmtDate(a1.transferEnd),'a1transfer',r) +
+        eRow('Vax 1','vax',fmtDate(a1.vax1Start)+' – '+fmtDate(a1.vax1End),'a1vax1',r) +
+        eRow('Vax 2','vax',fmtDate(a1.vax2Start)+' – '+fmtDate(a1.vax2End),'a1vax2',r) +
+        eRow('Load','load',fmtDate(a1.loadStart)+' – '+fmtDate(a1.loadEnd),'a1load',r) +
+        `</div></div>`;
+    }
+
+    const footerHtml = col.isSuggestion
+      ? `<button class="row-btn accept" onclick="acceptSuggestion('${col.house}','${r.doc_date}')">Accept</button>`
+      : `<button class="row-btn" onclick="openEditModal('${r.id}')">Edit</button>` +
+        `<button class="row-btn del" onclick="askDelete('${r.id}','${r.house}','${r.doc_date}')">Del</button>` +
+        (hasConflict ? `<button class="row-btn fix" onclick="openResolverPanel('${r.id}')">Fix</button>` : '');
+
+    return `<div class="cc-card${col.isSuggestion?' cc-card-suggest':''}">` +
+      `<div class="cc-card-header"><span class="cc-card-label">${col.cycleLabel}</span><span class="cc-card-date">${fmtDate(r.doc_date)}</span></div>` +
+      gapHtml +
+      `<div class="cc-events">${eventsHtml}</div>` +
+      a1Html +
+      `<div class="cc-card-footer">${footerHtml}</div></div>`;
+  }
+
+  let html = `<div class="cards-wrap"><div class="cards-row">${columns.map(makeCard).join('')}</div>`;
+  if(suggestionCols.length)
+    html += `<div class="cc-suggest-label">Suggested next placements</div><div class="cards-row">${suggestionCols.map(makeCard).join('')}</div>`;
+  el.innerHTML = html + '</div>';
 }
 
 /* ── Timeline ── */
