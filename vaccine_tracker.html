@@ -9,69 +9,8 @@
 <title>ΕΜΒΟΛΙΑ</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="stylesheet" href="theme.css">
 <style>
-/* ── GITHUB DARK COLOUR SYSTEM ── */
-:root,[data-theme="dark"]{
-  /* Canvas */
-  --gh-canvas-default:    #0d1117;
-  --gh-canvas-subtle:     #161b22;
-  --gh-canvas-inset:      #010409;
-  /* Borders */
-  --gh-border-default:    #30363d;
-  --gh-border-muted:      #21262d;
-  --gh-border-subtle:     rgba(240,246,252,0.1);
-  /* Foreground */
-  --gh-fg-default:        #e6edf3;
-  --gh-fg-muted:          #8b949e;
-  --gh-fg-subtle:         #6e7681;
-  --gh-fg-onEmphasis:     #ffffff;
-  /* Accent blue */
-  --gh-accent-fg:         #58a6ff;
-  --gh-accent-emphasis:   #1f6feb;
-  --gh-accent-subtle:     rgba(56,139,253,0.1);
-  /* Success green */
-  --gh-success-fg:        #3fb950;
-  --gh-success-subtle:    rgba(46,160,67,0.1);
-  /* Attention amber */
-  --gh-attention-fg:      #d29922;
-  --gh-attention-subtle:  rgba(187,128,9,0.1);
-  /* Danger red */
-  --gh-danger-fg:         #f85149;
-  --gh-danger-subtle:     rgba(248,81,73,0.1);
-  /* Hover */
-  --gh-hover-bg:          #21262d;
-  /* Radius */
-  --r:6px;--rs:6px;
-  /* Zoom */
-  --zoom:1;
-}
-
-/* ── GITHUB LIGHT THEME ── */
-[data-theme="light"]{
-  --gh-canvas-default:    #ffffff;
-  --gh-canvas-subtle:     #f6f8fa;
-  --gh-canvas-inset:      #f0f2f5;
-  --gh-border-default:    #d0d7de;
-  --gh-border-muted:      #d8dee4;
-  --gh-border-subtle:     rgba(31,35,40,0.06);
-  --gh-fg-default:        #1f2328;
-  --gh-fg-muted:          #636c76;
-  --gh-fg-subtle:         #6e7781;
-  --gh-fg-onEmphasis:     #ffffff;
-  --gh-accent-fg:         #0969da;
-  --gh-accent-emphasis:   #0969da;
-  --gh-accent-subtle:     rgba(9,105,218,0.08);
-  --gh-success-fg:        #1a7f37;
-  --gh-success-subtle:    rgba(26,127,55,0.08);
-  --gh-attention-fg:      #9a6700;
-  --gh-attention-subtle:  rgba(154,103,0,0.08);
-  --gh-danger-fg:         #d1242f;
-  --gh-danger-subtle:     rgba(209,36,47,0.08);
-  --gh-hover-bg:          #eaeef2;
-  --r:6px;--rs:6px;
-  --zoom:1;
-}
-
 /* theme toggle button */
 .theme-toggle{
   display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;
