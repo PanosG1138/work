@@ -1620,7 +1620,8 @@ function render() {
     document.getElementById('total-qty').textContent = total > 0 ? total.toLocaleString('el-GR') : '—';
   }
 
-  const total=data.length, confirmed=data.filter(r=>r.paragelia==='ΝΑΙ').length;
+  const active = showDone ? data : data.filter(r => r.emvoliasmos !== 'ΝΑΙ');
+  const total=active.length, confirmed=active.filter(r=>r.paragelia==='ΝΑΙ').length;
   document.getElementById('stat-total').textContent   = total;
   document.getElementById('stat-ordered').textContent = confirmed;
   document.getElementById('stat-pending').textContent = total-confirmed;
@@ -1647,7 +1648,10 @@ function setZoom(v) {
 function exportCSV() {
   const H = ['emvolio','hm_ekk','hm_emv','hm_par','anath','pelatis','posotita','sxolia_panos','promitheutis','paragelia','hm_paragelia','psygeio','emvoliasmos','sxolia_eleni','created_by','created_at','updated_by','updated_at'];
   const L = ['ΕΜΒΟΛΙΑ','ΗΜ.ΕΚΚ','ΗΜ.ΕΜΒ','ΗΜ.ΠΑΡ','ΑΝΑΘ.','ΠΕΛΑΤΗΣ','ΠΟΣΟΤΗΤΑ','ΣΧΟΛΙΑ ΠΑΝΟΣ','ΠΡΟΜΗΘΕΥΤΗΣ','ΠΑΡΑΓΓΕΛΙΑ','ΗΜ.ΠΑΡΑΓΓ.','ΨΥΓΕΙΟ','ΕΜΒΟΛΙΑΣΜΟΣ','ΣΧΟΛΙΑ ΕΛΕΝΗ','ΔΗΜΙΟΥΡΓΗΘΗΚΕ_ΑΠΟ','ΔΗΜΙΟΥΡΓΗΘΗΚΕ','ΕΠΕΞΕΡΓΑΣΤΗΚΕ_ΑΠΟ','ΕΠΕΞΕΡΓΑΣΤΗΚΕ'];
+  // always export vaccinated rows regardless of showDone — auto-hide is a view preference, not a data filter
+  const prev = showDone; showDone = true;
   const rows = getFiltered().map(r => H.map(h => '"'+(r[h]||'').toString().replace(/"/g,'""')+'"').join(','));
+  showDone = prev;
   const a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent([L.join(','),...rows].join('\n'));
   a.download = 'emvolia_export.csv'; a.click();
