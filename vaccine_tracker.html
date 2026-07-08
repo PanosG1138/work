@@ -703,6 +703,12 @@ body.printing-card .printcard-doc{display:block}
       </datalist>
     </div>
     <div class="fgroup"><label>Σχόλια Πάνος</label><textarea id="f-notes" placeholder="…"></textarea></div>
+    <div class="fgroup"><label>Εμβολιασμός</label>
+      <select id="f-emvoliasmos" onchange="emvoliasmosVal=this.value">
+        <option value="">ΟΧΙ</option>
+        <option value="ΝΑΙ">ΝΑΙ</option>
+      </select>
+    </div>
   </div>
   <div class="sidebar-footer">
     <button class="btn-submit" id="btn-add" onclick="addEntry()">+ Προσθήκη στον Πίνακα</button>
@@ -730,6 +736,7 @@ body.printing-card .printcard-doc{display:block}
       <option value="ΝΑΙ">Στο ψυγείο</option>
       <option value="-">Όχι στο ψυγείο</option>
     </select>
+    <button class="btn-tool" id="btn-show-done" onclick="toggleShowDone()">Εμφάνιση εμβολιασμένων</button>
     <button class="btn-tool" onclick="loadData()">↺ Ανανέωση</button>
     <button class="btn-tool" id="btn-undo" onclick="undo()" disabled title="Undo (Ctrl+Z)">↩ Undo</button>
     <button class="btn-tool" id="btn-redo" onclick="redo()" disabled title="Redo (Ctrl+Y)">↪ Redo</button>
@@ -762,6 +769,7 @@ body.printing-card .printcard-doc{display:block}
           <th onclick="sortBy('hm_par')">Ημ. Καταχώρησης Παραγγελίας<span class="arr" id="s-hm_par"></span></th>
           <th>Προμηθευτής</th>
           <th>Ψυγείο</th>
+          <th onclick="sortBy('emvoliasmos')">Εμβολιασμός<span class="arr" id="s-emvoliasmos"></span></th>
           <th>Σχόλια Ελένη</th>
           <th style="text-align:right">Ενέργειες</th>
         </tr></thead>
@@ -769,7 +777,7 @@ body.printing-card .printcard-doc{display:block}
         <tfoot id="tfoot" style="display:none"><tr>
           <td colspan="5" class="total-label">Σύνολο εκκρεμών ποσοτήτων</td>
           <td class="total-val" id="total-qty">—</td>
-          <td colspan="8"></td>
+          <td colspan="9"></td>
         </tr></tfoot>
       </table>
       <div id="empty-state" class="empty-state" style="display:none">💉 Δεν βρέθηκαν εγγραφές.</div>
@@ -799,6 +807,7 @@ body.printing-card .printcard-doc{display:block}
         <select id="m-ordered"><option value="">—</option><option value="ΝΑΙ">ΝΑΙ</option></select></div>
       <div class="fgroup"><label>Ψυγείο</label>
         <select id="m-fridge"><option value="">—</option><option value="ΝΑΙ">ΝΑΙ</option></select></div>
+      <div class="fgroup"><label>Εμβολιασμός</label><select id="m-emvoliasmos"><option value="">ΟΧΙ</option><option value="ΝΑΙ">ΝΑΙ</option></select></div>
       <div class="fgroup"><label>Προμηθευτής</label><input type="text" id="m-supplier" list="supplier-list"></div>
       <div class="fgroup"><label>Σχόλια Πάνος</label><input type="text" id="m-notes"></div>
       <div class="fgroup full"><label>Σχόλια Ελένη</label><input type="text" id="m-notes2"></div>
@@ -979,7 +988,8 @@ const sbChangelog = (since, user) =>
 
 // ── STATE ─────────────────────────────────────────────────────────
 let data = [], sortCol = 'hm_emv', sortDir = 1;
-let editId = null, editLoadedAt = null, deleteId = null, orderedVal = '', fridgeVal = '';
+let editId = null, editLoadedAt = null, deleteId = null, orderedVal = '', fridgeVal = '', emvoliasmosVal = '';
+let showDone = false;
 let currentUser = '';
 
 
@@ -1058,6 +1068,7 @@ async function loadData() {
   try {
     data = await sbSelect();
     selectedIds.clear();
+    showDone = false; updateShowDoneBtn();
     setSyncStatus('ok', 'Συνδέθηκε ✓');
     render();
   } catch (e) {
@@ -1227,7 +1238,7 @@ async function addEntry() {
     promitheutis: document.getElementById('f-supplier').value.trim()||null,
     paragelia: orderedVal||null,
     hm_paragelia: document.getElementById('f-orderdate').dataset.iso||null,
-    psygeio: fridgeVal||null, sxolia_eleni: null,
+    psygeio: fridgeVal||null, emvoliasmos: emvoliasmosVal||null, sxolia_eleni: null,
     created_by: currentUser, created_at: now, updated_by: currentUser, updated_at: now,
   };
 
@@ -1278,7 +1289,7 @@ async function editEntry(id) {
   set('m-vaccine',r.emvolio);
   setDate('m-hatch', r.hm_ekk); setDate('m-vacc', r.hm_emv); setDate('m-deliv', r.hm_par);
   set('m-flock',r.anath);  set('m-customer',r.pelatis);
-  set('m-qty',r.posotita); set('m-ordered',r.paragelia); set('m-fridge',r.psygeio);
+  set('m-qty',r.posotita); set('m-ordered',r.paragelia); set('m-fridge',r.psygeio); set('m-emvoliasmos',r.emvoliasmos);
   const mqty = document.getElementById('m-qty'); if (mqty) fmtQty(mqty);
   set('m-supplier',r.promitheutis); set('m-notes',r.sxolia_panos); set('m-notes2',r.sxolia_eleni);
   modalDateChange();
@@ -1354,7 +1365,7 @@ async function saveEdit() {
     emvolio: g('m-vaccine').trim(), hm_ekk: gd('m-hatch'), hm_emv: gd('m-vacc'),
     hm_par: gd('m-deliv'), anath: g('m-flock'),
     pelatis: g('m-customer').trim()||null, posotita: rawQty(g('m-qty')),
-    paragelia: g('m-ordered')||null, psygeio: g('m-fridge')||null,
+    paragelia: g('m-ordered')||null, psygeio: g('m-fridge')||null, emvoliasmos: g('m-emvoliasmos')||null,
     promitheutis: g('m-supplier').trim()||null,
     sxolia_panos: g('m-notes').trim()||null, sxolia_eleni: g('m-notes2').trim()||null,
     hm_paragelia: document.getElementById('m-orderdate').dataset.iso||null,
@@ -1365,7 +1376,7 @@ async function saveEdit() {
   const FIELD_LABELS = {
     emvolio:'Εμβόλιο', hm_ekk:'Ημ. Εκκόλαψης', hm_emv:'Ημ. Εμβολιασμού',
     hm_par:'Ημ. Καταχώρησης', anath:'Αναθρεπτήριο', pelatis:'Πελάτης',
-    posotita:'Ποσότητα', paragelia:'Παραγγελία', psygeio:'Ψυγείο',
+    posotita:'Ποσότητα', paragelia:'Παραγγελία', psygeio:'Ψυγείο', emvoliasmos:'Εμβολιασμός',
     promitheutis:'Προμηθευτής', sxolia_panos:'Σχόλια Πάνος',
     sxolia_eleni:'Σχόλια Ελένη', hm_paragelia:'Ημ. Παραγγελίας',
   };
@@ -1536,7 +1547,7 @@ function render() {
   populateFlockFilter();
   populateHatchList();
   populateCustomerList();
-  const SC = ['emvolio','hm_ekk','hm_emv','hm_paragelia','hm_par','pelatis','posotita','paragelia'];
+  const SC = ['emvolio','hm_ekk','hm_emv','hm_paragelia','hm_par','pelatis','posotita','paragelia','emvoliasmos'];
   SC.forEach(c => { const e=document.getElementById('s-'+c); if(e) e.textContent=sortCol===c?(sortDir===1?'↑':'↓'):''; });
 
   const rows = getFiltered().sort((a,b) => {
@@ -1551,7 +1562,7 @@ function render() {
   rows.forEach(r => {
     const tr = document.createElement('tr');
     if (r._new) { tr.classList.add('new-row'); delete r._new; }
-    const ord = r.paragelia==='ΝΑΙ', fri = r.psygeio==='ΝΑΙ';
+    const ord = r.paragelia==='ΝΑΙ', fri = r.psygeio==='ΝΑΙ', emv = r.emvoliasmos==='ΝΑΙ';
     if (fri) tr.classList.add('row-arrived');
     const fl = flockLabel(r);
 
@@ -1575,6 +1586,7 @@ function render() {
       `<td>${fmt(r.hm_par)||'—'}</td>`+
       `<td style="color:var(--gh-fg-muted);font-size:11px">${x(r.promitheutis||'—')}</td>`+
       `<td><span class="badge ${fri?'b-yes':'b-no'}">${fri?'ΝΑΙ':'—'}</span></td>`+
+      `<td><span class="badge ${emv?'b-yes':'b-no'}">${emv?'ΝΑΙ':'ΟΧΙ'}</span></td>`+
       `<td class="td-notes" style="color:var(--gh-fg-muted);font-size:11px">${x(r.sxolia_eleni||'—')}</td>`+
       `<td><div class="row-actions"><button class="row-btn" onclick="editEntry(${r.id})">Επεξ.</button></div></td>`;
     frag.appendChild(tr);
@@ -1585,11 +1597,11 @@ function render() {
   tbody.appendChild(frag);
 
   // totals footer — show when filtered or multiple rows selected
-  const isFiltered = getFiltered().length < data.length ||
-                     document.getElementById('search').value.trim() ||
+  const isFiltered = document.getElementById('search').value.trim() ||
                      document.getElementById('filt-flock').value ||
                      document.getElementById('filt-ordered').value ||
-                     document.getElementById('filt-fridge').value;
+                     document.getElementById('filt-fridge').value ||
+                     showDone;
   const showTotal = isFiltered || selectedIds.size > 1;
   const tfoot = document.getElementById('tfoot');
   tfoot.style.display = showTotal ? '' : 'none';
@@ -1633,8 +1645,8 @@ function setZoom(v) {
 
 // ── EXPORT ────────────────────────────────────────────────────────
 function exportCSV() {
-  const H = ['emvolio','hm_ekk','hm_emv','hm_par','anath','pelatis','posotita','sxolia_panos','promitheutis','paragelia','hm_paragelia','psygeio','sxolia_eleni','created_by','created_at','updated_by','updated_at'];
-  const L = ['ΕΜΒΟΛΙΑ','ΗΜ.ΕΚΚ','ΗΜ.ΕΜΒ','ΗΜ.ΠΑΡ','ΑΝΑΘ.','ΠΕΛΑΤΗΣ','ΠΟΣΟΤΗΤΑ','ΣΧΟΛΙΑ ΠΑΝΟΣ','ΠΡΟΜΗΘΕΥΤΗΣ','ΠΑΡΑΓΓΕΛΙΑ','ΗΜ.ΠΑΡΑΓΓ.','ΨΥΓΕΙΟ','ΣΧΟΛΙΑ ΕΛΕΝΗ','ΔΗΜΙΟΥΡΓΗΘΗΚΕ_ΑΠΟ','ΔΗΜΙΟΥΡΓΗΘΗΚΕ','ΕΠΕΞΕΡΓΑΣΤΗΚΕ_ΑΠΟ','ΕΠΕΞΕΡΓΑΣΤΗΚΕ'];
+  const H = ['emvolio','hm_ekk','hm_emv','hm_par','anath','pelatis','posotita','sxolia_panos','promitheutis','paragelia','hm_paragelia','psygeio','emvoliasmos','sxolia_eleni','created_by','created_at','updated_by','updated_at'];
+  const L = ['ΕΜΒΟΛΙΑ','ΗΜ.ΕΚΚ','ΗΜ.ΕΜΒ','ΗΜ.ΠΑΡ','ΑΝΑΘ.','ΠΕΛΑΤΗΣ','ΠΟΣΟΤΗΤΑ','ΣΧΟΛΙΑ ΠΑΝΟΣ','ΠΡΟΜΗΘΕΥΤΗΣ','ΠΑΡΑΓΓΕΛΙΑ','ΗΜ.ΠΑΡΑΓΓ.','ΨΥΓΕΙΟ','ΕΜΒΟΛΙΑΣΜΟΣ','ΣΧΟΛΙΑ ΕΛΕΝΗ','ΔΗΜΙΟΥΡΓΗΘΗΚΕ_ΑΠΟ','ΔΗΜΙΟΥΡΓΗΘΗΚΕ','ΕΠΕΞΕΡΓΑΣΤΗΚΕ_ΑΠΟ','ΕΠΕΞΕΡΓΑΣΤΗΚΕ'];
   const rows = getFiltered().map(r => H.map(h => '"'+(r[h]||'').toString().replace(/"/g,'""')+'"').join(','));
   const a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent([L.join(','),...rows].join('\n'));
@@ -1926,6 +1938,7 @@ const BATCH_FIELDS = [
   { key:'pelatis',      label:'Πελάτης',           type:'text'   },
   { key:'paragelia',    label:'Παραγγελία',        type:'select', options:['','ΝΑΙ'] },
   { key:'psygeio',      label:'Ψυγείο',            type:'select', options:['','ΝΑΙ'] },
+  { key:'emvoliasmos',  label:'Εμβολιασμός',       type:'select', options:['','ΝΑΙ'] },
   { key:'promitheutis', label:'Προμηθευτής',       type:'text'   },
   { key:'sxolia_panos', label:'Σχόλια Πάνος',      type:'text'   },
   { key:'sxolia_eleni', label:'Σχόλια Ελένη',      type:'text'   },
@@ -2363,8 +2376,21 @@ function getFiltered() {
     if (fo==='-'   && r.paragelia==='ΝΑΙ') return false;
     if (fr==='ΝΑΙ' && r.psygeio!=='ΝΑΙ') return false;
     if (fr==='-'   && r.psygeio==='ΝΑΙ') return false;
+    if (!showDone  && r.emvoliasmos==='ΝΑΙ') return false;
     return true;
   });
+}
+
+function toggleShowDone() {
+  showDone = !showDone;
+  updateShowDoneBtn();
+  render();
+}
+
+function updateShowDoneBtn() {
+  const btn = document.getElementById('btn-show-done');
+  if (!btn) return;
+  btn.textContent = showDone ? 'Απόκρυψη εμβολιασμένων' : 'Εμφάνιση εμβολιασμένων';
 }
 
 function resetForm() {
@@ -2375,6 +2401,8 @@ function resetForm() {
       e.value = ''; e.style.borderColor = '';
       if (e.dataset) e.dataset.iso = '';
     });
+  emvoliasmosVal = '';
+  const fe = document.getElementById('f-emvoliasmos'); if (fe) fe.value = '';
   // close any open vaccine dropdown
   document.getElementById('vac-dropdown').style.display = 'none';
   updateSteps();
@@ -2404,7 +2432,7 @@ function toggleTheme() {
   applyTheme(saved);
 })();
 
-orderedVal = ''; fridgeVal = '';
+orderedVal = ''; fridgeVal = ''; emvoliasmosVal = '';
 // On mobile, sidebar starts closed
 if (isMobile()) sidebarOpen = false;
 updateUndoRedoBtns();
