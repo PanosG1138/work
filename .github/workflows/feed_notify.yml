@@ -37,7 +37,7 @@ jobs:
               'ISA':     {'phases': ['0-5 Wks','6-10 Wks','11-16 Wks','17-2%'],             'days': [0,35,70,119]},
           }
 
-          DAYS_AHEAD = 3   # notify this many days before the feed change
+          REMINDER_DAYS = [7, 3]   # send a reminder this many days before the feed change
 
           def get_athens_today():
               import subprocess
@@ -84,9 +84,9 @@ jobs:
                   server.sendmail(GMAIL_USER, NOTIFY_EMAIL, msg.as_string())
 
           # ── Main logic ──
-          today = get_athens_today()
-          target = today + timedelta(days=DAYS_AHEAD)
-          print(f"Athens date: {today}  |  Checking for feed changes on: {target}")
+          today    = get_athens_today()
+          targets  = {n: today + timedelta(days=n) for n in REMINDER_DAYS}
+          print(f"Athens date: {today}  |  Checking for feed changes on: {targets}")
 
           records = supabase_get('feed_hatches?select=*&order=row_index.asc')
           print(f"Found {len(records)} records")
@@ -109,35 +109,37 @@ jobs:
                   raw_date              = hatch + timedelta(days=offset_days)
                   change_date, orig_day = adjust_for_weekend(raw_date)
 
-                  if change_date == target:
-                      due.append({
-                          'house':       house,
-                          'breed':       breed,
-                          'phase':       phase_label,
-                          'change_date': change_date.strftime('%d/%m/%Y'),
-                          'orig_day':    orig_day,
-                          'hatch_date':  hatch.strftime('%d/%m/%Y'),
-                      })
-                      note = f" (originally {orig_day})" if orig_day else ""
-                      print(f"DUE in {DAYS_AHEAD}d: {house} / {breed} → {phase_label} on {change_date}{note}")
+                  for days_ahead, target in targets.items():
+                      if change_date == target:
+                          due.append({
+                              'house':       house,
+                              'breed':       breed,
+                              'phase':       phase_label,
+                              'change_date': change_date.strftime('%d/%m/%Y'),
+                              'orig_day':    orig_day,
+                              'hatch_date':  hatch.strftime('%d/%m/%Y'),
+                              'days_ahead':  days_ahead,
+                          })
+                          note = f" (originally {orig_day})" if orig_day else ""
+                          print(f"DUE in {days_ahead}d: {house} / {breed} → {phase_label} on {change_date}{note}")
 
           if not due:
-              print("No feed changes due in 3 days.")
+              print(f"No feed changes due in {REMINDER_DAYS} days.")
           else:
               count   = len(due)
-              subject = f"🐔 Feed Change Reminder — {count} change{'s' if count > 1 else ''} in 3 days"
+              subject = f"🐔 Feed Change Reminder — {count} change{'s' if count > 1 else ''}"
 
               # ── Plain text body ──
               text_lines = [
                   f"Feed Change Reminder",
                   f"{'='*40}",
-                  f"The following feed change{'s are' if count > 1 else ' is'} due in 3 days ({due[0]['change_date'] if count == 1 else ''}):",
+                  f"The following feed change{'s are' if count > 1 else ' is'} coming up:",
                   "",
               ]
               for item in due:
                   text_lines.append(f"  House {item['house']} ({item['breed']})")
                   text_lines.append(f"  Switch to: {item['phase']}")
-                  text_lines.append(f"  Change date: {item['change_date']}")
+                  text_lines.append(f"  Change date: {item['change_date']} (in {item['days_ahead']} days)")
                   if item['orig_day']:
                       text_lines.append(f"  Note: Feed date was {item['orig_day']} — moved to avoid weekend")
                   text_lines.append("")
@@ -157,6 +159,7 @@ jobs:
                       <span style="background:#dbeafe;color:#1d4ed8;padding:2px 10px;border-radius:12px;font-size:13px;font-weight:500;">{item['phase']}</span>
                     </td>
                     <td style="padding:10px 12px;font-variant-numeric:tabular-nums;color:#1f2328;">{item['change_date']}</td>
+                    <td style="padding:10px 12px;color:#636c76;">{item['days_ahead']} days</td>
                   </tr>
                   {weekend_note}
                   """
@@ -178,7 +181,7 @@ jobs:
                       Feed Change Reminder
                     </p>
                     <p style="margin:0 0 16px;font-size:13px;color:#636c76;">
-                      The following feed change{'s are' if count > 1 else ' is'} due in <strong>3 days</strong>.
+                      The following feed change{'s are' if count > 1 else ' is'} coming up.
                     </p>
                     <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #d0d7de;border-radius:6px;border-collapse:collapse;overflow:hidden;">
                       <thead>
@@ -187,6 +190,7 @@ jobs:
                           <th style="padding:8px 12px;text-align:left;font-size:11px;color:#636c76;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #d0d7de;">Breed</th>
                           <th style="padding:8px 12px;text-align:left;font-size:11px;color:#636c76;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #d0d7de;">Switch To</th>
                           <th style="padding:8px 12px;text-align:left;font-size:11px;color:#636c76;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #d0d7de;">Change Date</th>
+                          <th style="padding:8px 12px;text-align:left;font-size:11px;color:#636c76;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #d0d7de;">Due In</th>
                         </tr>
                       </thead>
                       <tbody>
