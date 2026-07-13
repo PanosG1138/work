@@ -32,9 +32,11 @@ jobs:
 
           # ── Feed schedules — must match feed_tracker.html exactly ──
           SCHEDULES = {
-              'NOVOGEN': {'phases': ['0-5 Wks','6-10 Wks','11-15 Wks','16-2%'],              'days': [0,35,70,105]},
-              'HY-LINE': {'phases': ['0-3 Wks','4-6 Wks','7-12 Wks','13-15 Wks','PRELAY'],  'days': [0,22,42,84,105]},
-              'ISA':     {'phases': ['0-5 Wks','6-10 Wks','11-16 Wks','17-2%'],             'days': [0,35,70,119]},
+              'NOVOGEN':      {'phases': ['0-5 Wks','6-10 Wks','11-15 Wks','16-2%'],             'days': [0,35,70,105]},
+              'HY-LINE':      {'phases': ['0-3 Wks','4-6 Wks','7-12 Wks','13-15 Wks','16 -2%'], 'days': [0,22,42,84,105]},
+              'ISA':          {'phases': ['0-5 Wks','6-10 Wks','11-16 Wks','17-2%'],             'days': [0,35,70,119]},
+              'HN_WHITE':     {'phases': ['0-5 Wks','6-10 Wks','11-17 Wks','Prelay'],            'days': [0,36,71,120]},
+              'LOHMAN_BROWN': {'phases': ['1-3 Wks','4-8 Wks','9-17 Wks','18-5%'],               'days': [0,22,57,120]},
           }
 
           # Dropdown breed name → schedule key above. None = no schedule yet (skip).
@@ -46,8 +48,9 @@ jobs:
               'ISA Brown':      'ISA',
               'Dekalb White':   None,
               'H&N Brown':      None,
-              'H&N White':      None,
+              'H&N White':      'HN_WHITE',
               'H&N Coral':      None,
+              'Lohman Brown':   'LOHMAN_BROWN',
           }
 
           REMINDER_DAYS = [7, 3]   # send a reminder this many days before the feed change
