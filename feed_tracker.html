@@ -219,20 +219,34 @@ _sb.auth.onAuthStateChange((event, session) => {
 });
 
 // ── FEED SCHEDULES ───────────────────────────────────────────────
+// Real schedules — only these 3 exist. Do not invent numbers for breeds
+// that don't have a schedule key in BREED_SCHEDULE below.
 const BREEDS = {
   'NOVOGEN': { phases: ['0-5 Wks','6-10 Wks','11-15 Wks','16-2%'],            days: [0,35,70,105] },
   'HY-LINE': { phases: ['0-3 Wks','4-6 Wks','7-12 Wks','13-15 Wks','PRELAY'], days: [0,22,42,84,105] },
   'ISA':     { phases: ['0-5 Wks','6-10 Wks','11-16 Wks','17-2%'],            days: [0,35,70,119] }
 };
 
-const BREED_DISPLAY = { 'NOVOGEN':'Novogen', 'HY-LINE':'Hy-Line', 'ISA':'ISA' };
+// Dropdown breed name → schedule key above. null = no schedule yet (shows "—").
+const BREED_SCHEDULE = {
+  'Hy-Line Brown':  'HY-LINE',
+  'Novogen Brown':  'NOVOGEN',
+  'Novogen White':  'NOVOGEN',
+  'Novogen Tinted': 'NOVOGEN',
+  'ISA Brown':      'ISA',
+  'Dekalb White':   null,
+  'H&N Brown':      null,
+  'H&N White':      null,
+  'H&N Coral':      null
+};
 
+const REARING_TYPES = ['Cage', 'Barn'];
 const HOUSES     = ['Θ1','Θ2','Θ3','Θ4','Θ5','Θ6'];
 const NUM_ROWS   = 6;
 const MAX_PHASES = Math.max(...Object.values(BREEDS).map(b => b.phases.length));
 
 // ── STATE ────────────────────────────────────────────────────────
-let rows       = Array.from({length: NUM_ROWS}, () => ({id: null, house:'', breed:'', hatch:''}));
+let rows       = Array.from({length: NUM_ROWS}, () => ({id: null, house:'', breed:'', hatch:'', rearing_type:''}));
 let saveTimers = {};
 let isOnline   = false;   // gate — no edits until Supabase confirmed reachable
 
@@ -276,7 +290,7 @@ async function loadFromSupabase() {
   setSyncState('loading', 'Connecting…');
   try {
     const data = await sbFetch('feed_hatches?select=*&order=row_index.asc');
-    rows = Array.from({length: NUM_ROWS}, () => ({id: null, house:'', breed:'', hatch:''}));
+    rows = Array.from({length: NUM_ROWS}, () => ({id: null, house:'', breed:'', hatch:'', rearing_type:''}));
     for (const rec of data) {
       const idx = rec.row_index;
       if (idx >= 0 && idx < NUM_ROWS) {
@@ -284,7 +298,8 @@ async function loadFromSupabase() {
           id:    rec.id,
           house: rec.house || '',
           breed: rec.breed || '',
-          hatch: rec.hatch || ''
+          hatch: rec.hatch || '',
+          rearing_type: rec.rearing_type || ''
         };
       }
     }
@@ -316,7 +331,8 @@ async function persistRow(idx) {
       row_index: idx,
       house: r.house || null,
       breed: r.breed || null,
-      hatch: r.hatch || null
+      hatch: r.hatch || null,
+      rearing_type: r.rearing_type || null
     };
     if (r.id) {
       await sbFetch(`feed_hatches?id=eq.${r.id}`, {
@@ -417,7 +433,7 @@ function refreshHouseDropdowns() {
 
 // ── BUILD HEADER ─────────────────────────────────────────────────
 function buildHeader() {
-  let html = `<th style="min-width:130px">Hatch Date</th><th style="min-width:80px">House</th><th style="min-width:110px">Breed</th>`;
+  let html = `<th style="min-width:130px">Hatch Date</th><th style="min-width:80px">House</th><th style="min-width:110px">Breed</th><th style="min-width:90px">Type</th>`;
   for (let i = 0; i < MAX_PHASES; i++) {
     html += `<th class="phase-col" style="min-width:130px">Phase ${i+1}</th>`;
   }
@@ -457,7 +473,13 @@ function buildRows() {
     // Breed dropdown
     html += `<td><select class="cell-input" id="breed-${i}" onchange="onBreedChange(${i},this.value)" ${!isOnline ? 'disabled' : ''}>
       <option value="">—</option>
-      ${Object.keys(BREEDS).map(b => `<option value="${b}"${r.breed===b?' selected':''}>${b}</option>`).join('')}
+      ${Object.keys(BREED_SCHEDULE).map(b => `<option value="${b}"${r.breed===b?' selected':''}>${b}</option>`).join('')}
+    </select></td>`;
+
+    // Rearing type dropdown
+    html += `<td><select class="cell-input" id="type-${i}" onchange="onRearingTypeChange(${i},this.value)" ${!isOnline ? 'disabled' : ''}>
+      <option value="">—</option>
+      ${REARING_TYPES.map(t => `<option value="${t}"${r.rearing_type===t?' selected':''}>${t}</option>`).join('')}
     </select></td>`;
 
     // Phase cells
@@ -483,8 +505,10 @@ function buildRows() {
 // Returns null if the row is incomplete.
 function computeActivePhase(r) {
   if (!r.breed || !r.hatch) return null;
+  const scheduleKey = BREED_SCHEDULE[r.breed];
+  if (!scheduleKey) return null;   // breed has no schedule assigned yet
   const today = new Date(); today.setHours(0,0,0,0);
-  const breed = BREEDS[r.breed];
+  const breed = BREEDS[scheduleKey];
 
   // Build all phase Date objects once per row (not once per phase)
   const phaseDates = breed.days.map(d => {
@@ -547,13 +571,13 @@ function printSummary() {
   const lines = [];
   for (let i = 0; i < NUM_ROWS; i++) {
     const r = rows[i];
-    if (!r.house || !r.breed || !r.hatch) continue;
+    if (!r.house || !r.breed || !r.hatch || !r.rearing_type) continue;
     const active = computeActivePhase(r);
     if (!active || active.activeIdx < 0) continue;   // no phase currently active
     const phaseLabel = active.breed.phases[active.activeIdx];
     lines.push({
       house: r.house,
-      text: `Hatch Date: ${isoToDisplay(r.hatch)}, ${r.house}, ${BREED_DISPLAY[r.breed] || r.breed}, ${phaseLabel}`
+      text: `Hatch Date: ${isoToDisplay(r.hatch)}, ${r.house}, ${r.breed}, ${r.rearing_type}, ${phaseLabel}`
     });
   }
   lines.sort((a, b) => parseInt(a.house.slice(1), 10) - parseInt(b.house.slice(1), 10));
@@ -611,6 +635,12 @@ function onBreedChange(idx, val) {
   if (!isOnline) return;
   rows[idx].breed = val;
   updatePhaseDates(idx);
+  saveRow(idx);
+}
+
+function onRearingTypeChange(idx, val) {
+  if (!isOnline) return;
+  rows[idx].rearing_type = val;
   saveRow(idx);
 }
 

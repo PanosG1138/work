@@ -31,10 +31,23 @@ jobs:
           NOTIFY_EMAIL   = os.environ['NOTIFY_EMAIL']
 
           # ── Feed schedules — must match feed_tracker.html exactly ──
-          BREEDS = {
+          SCHEDULES = {
               'NOVOGEN': {'phases': ['0-5 Wks','6-10 Wks','11-15 Wks','16-2%'],              'days': [0,35,70,105]},
               'HY-LINE': {'phases': ['0-3 Wks','4-6 Wks','7-12 Wks','13-15 Wks','PRELAY'],  'days': [0,22,42,84,105]},
               'ISA':     {'phases': ['0-5 Wks','6-10 Wks','11-16 Wks','17-2%'],             'days': [0,35,70,119]},
+          }
+
+          # Dropdown breed name → schedule key above. None = no schedule yet (skip).
+          BREED_SCHEDULE = {
+              'Hy-Line Brown':  'HY-LINE',
+              'Novogen Brown':  'NOVOGEN',
+              'Novogen White':  'NOVOGEN',
+              'Novogen Tinted': 'NOVOGEN',
+              'ISA Brown':      'ISA',
+              'Dekalb White':   None,
+              'H&N Brown':      None,
+              'H&N White':      None,
+              'H&N Coral':      None,
           }
 
           REMINDER_DAYS = [7, 3]   # send a reminder this many days before the feed change
@@ -99,11 +112,12 @@ jobs:
               hatch_str = rec.get('hatch')
               if not breed or not hatch_str:
                   continue
-              if breed not in BREEDS:
+              schedule_key = BREED_SCHEDULE.get(breed)
+              if not schedule_key:
                   continue
 
               hatch    = date.fromisoformat(hatch_str)
-              schedule = BREEDS[breed]
+              schedule = SCHEDULES[schedule_key]
 
               for phase_label, offset_days in zip(schedule['phases'], schedule['days']):
                   raw_date              = hatch + timedelta(days=offset_days)
