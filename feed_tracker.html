@@ -152,6 +152,10 @@ select.cell-input option:disabled{color:var(--gh-fg-subtle);}
       <span class="zoom-label" id="zoom-label">100%</span>
       <button class="zoom-btn" onclick="changeZoom(0.1)" title="Zoom in">+</button>
     </div>
+    <button class="theme-toggle" onclick="printSummary()" title="Print summary">
+      <span>🖨</span>
+      <span>Print</span>
+    </button>
     <button class="theme-toggle" onclick="toggleTheme()">
       <span id="theme-icon">☀</span>
       <span id="theme-label">Light</span>
@@ -220,6 +224,8 @@ const BREEDS = {
   'HY-LINE': { phases: ['0-3 Wks','4-6 Wks','7-12 Wks','13-15 Wks','PRELAY'], days: [0,22,42,84,105] },
   'ISA':     { phases: ['0-5 Wks','6-10 Wks','11-16 Wks','17-2%'],            days: [0,35,70,119] }
 };
+
+const BREED_DISPLAY = { 'NOVOGEN':'Novogen', 'HY-LINE':'Hy-Line', 'ISA':'ISA' };
 
 const HOUSES     = ['Θ1','Θ2','Θ3','Θ4','Θ5','Θ6'];
 const NUM_ROWS   = 6;
@@ -472,19 +478,12 @@ function buildRows() {
 // Grey  = past phases already replaced
 // Orange = next phase due within 7 days
 // Blue  = future phases
-function updatePhaseDates(rowIdx) {
-  const r = rows[rowIdx];
+// Shared by updatePhaseDates (table) and printSummary (printout) so the
+// "current" phase is always computed the same way in both places.
+// Returns null if the row is incomplete.
+function computeActivePhase(r) {
+  if (!r.breed || !r.hatch) return null;
   const today = new Date(); today.setHours(0,0,0,0);
-
-  // Bail early if row is incomplete — clear all phase cells
-  if (!r.breed || !r.hatch) {
-    for (let p = 0; p < MAX_PHASES; p++) {
-      const cell = document.getElementById(`phase-${rowIdx}-${p}`);
-      if (cell) cell.innerHTML = `<span class="phase-empty">—</span>`;
-    }
-    return;
-  }
-
   const breed = BREEDS[r.breed];
 
   // Build all phase Date objects once per row (not once per phase)
@@ -499,6 +498,25 @@ function updatePhaseDates(rowIdx) {
   for (let i = 0; i < phaseDates.length; i++) {
     if (phaseDates[i] <= today) activeIdx = i;
   }
+
+  return { breed, phaseDates, activeIdx };
+}
+
+function updatePhaseDates(rowIdx) {
+  const r = rows[rowIdx];
+  const active = computeActivePhase(r);
+
+  // Bail early if row is incomplete — clear all phase cells
+  if (!active) {
+    for (let p = 0; p < MAX_PHASES; p++) {
+      const cell = document.getElementById(`phase-${rowIdx}-${p}`);
+      if (cell) cell.innerHTML = `<span class="phase-empty">—</span>`;
+    }
+    return;
+  }
+
+  const { breed, phaseDates, activeIdx } = active;
+  const today = new Date(); today.setHours(0,0,0,0);
 
   for (let p = 0; p < MAX_PHASES; p++) {
     const cell = document.getElementById(`phase-${rowIdx}-${p}`);
@@ -522,6 +540,39 @@ function updatePhaseDates(rowIdx) {
 
     cell.innerHTML = `<div class="phase-cell"><span class="phase-label">${breed.phases[p]}</span><span class="date-chip ${cls}">${fmtDate(phaseDate)||'—'}</span></div>`;
   }
+}
+
+// ── PRINT SUMMARY ─────────────────────────────────────────────────
+function printSummary() {
+  const lines = [];
+  for (let i = 0; i < NUM_ROWS; i++) {
+    const r = rows[i];
+    if (!r.house || !r.breed || !r.hatch) continue;
+    const active = computeActivePhase(r);
+    if (!active || active.activeIdx < 0) continue;   // no phase currently active
+    const phaseLabel = active.breed.phases[active.activeIdx];
+    lines.push({
+      house: r.house,
+      text: `Hatch Date: ${isoToDisplay(r.hatch)}, ${r.house}, ${BREED_DISPLAY[r.breed] || r.breed}, ${phaseLabel}`
+    });
+  }
+  lines.sort((a, b) => parseInt(a.house.slice(1), 10) - parseInt(b.house.slice(1), 10));
+
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><title>Feed Program — Current Status</title>
+<style>
+body{font-family:Arial,Helvetica,sans-serif;color:#000;background:#fff;padding:24px}
+h1{font-size:18px;margin-bottom:4px}
+.date{font-size:13px;color:#555;margin-bottom:20px}
+.line{font-size:14px;margin-bottom:8px}
+</style></head><body>
+<h1>Feed Program — Current Status</h1>
+<div class="date">${fmtDate(new Date())}</div>
+${lines.map(l => `<div class="line">${l.text}</div>`).join('')}
+</body></html>`);
+  win.document.close();
+  win.focus();
+  win.print();
 }
 
 // ── EVENT HANDLERS ────────────────────────────────────────────────
