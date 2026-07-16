@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ΚΑΜΠΟΣΟΣ — Φόρτωση Καρότσας</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #14171C;
+    --panel: #1B1F26;
+    --card: #20252D;
+    --card-hover: #262C35;
+    --border: #2E343D;
+    --border-strong: #3C4450;
+    --text: #EDEFF2;
+    --text-secondary: #9099A6;
+    --text-muted: #616B78;
+    --truck: #4FA3E3;
+    --trailer: #E8A33D;
+    --trailer-dark: #4A3517;
+    --crate-4: #D98B33;
+    --crate-3: #3E8E7E;
+    --crate-side: #6B7280;
+    --yellow: #F5D24A;
+    --yellow-text: #3A2E06;
+    --danger: #E35D5D;
+    --metal: #2B3542;
+    --box-h: 96px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    padding:28px 20px 60px;
+  }
+  .wrap{max-width:1180px;margin:0 auto;}
+  .top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;}
+  h1{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:700;
+    font-size:34px;
+    letter-spacing:0.5px;
+    margin:0;
+    color:var(--text);
+  }
+  .subtitle{color:var(--text-secondary);font-size:14px;margin:4px 0 28px;}
+  .print-btn{
+    background:var(--yellow);
+    color:var(--yellow-text);
+    border:none;
+    padding:12px 20px;
+    border-radius:10px;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
+    white-space:nowrap;
+  }
+  .print-btn:hover{filter:brightness(0.95);}
+  .section{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:20px 22px 22px;
+    margin-bottom:22px;
+  }
+  .section.disabled{opacity:0.4;}
+  .section-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:14px;
+    margin-bottom:18px;
+  }
+  .section-title-row{display:flex;align-items:center;gap:12px;}
+  .section-title{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:600;
+    font-size:24px;
+    letter-spacing:0.5px;
+  }
+  .section-title.truck{color:var(--truck);}
+  .section-title.trailer{color:var(--trailer);}
+  .cap-note{font-size:11px;color:var(--text-muted);}
+  .toggle-btn{
+    background:var(--card);
+    border:1px solid var(--border-strong);
+    color:var(--text-secondary);
+    font-size:12px;
+    font-weight:600;
+    padding:6px 12px;
+    border-radius:20px;
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
+  }
+  .toggle-btn.on{background:var(--trailer-dark);color:var(--trailer);border-color:var(--trailer);}
+  .controls{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end;}
+  .field{display:flex;flex-direction:column;gap:4px;}
+  .field label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;}
+  .field input{
+    width:64px;
+    background:var(--card);
+    border:1px solid var(--border-strong);
+    color:var(--text);
+    border-radius:8px;
+    padding:7px 8px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:14px;
+    font-weight:500;
+  }
+  .field input:focus{outline:2px solid var(--truck);outline-offset:1px;}
+  .apply-btn{
+    background:transparent;
+    border:1px solid var(--border-strong);
+    color:var(--text-secondary);
+    padding:8px 12px;
+    border-radius:8px;
+    font-size:12px;
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
+    height:34px;
+  }
+  .apply-btn:hover{background:var(--card-hover);color:var(--text);}
+  .rack{
+    display:flex;
+    align-items:flex-start;
+    gap:0;
+    overflow-x:auto;
+    padding:10px 4px 14px;
+    margin:0 0 18px;
+    border-top:1px solid var(--border);
+    border-bottom:1px solid var(--border);
+  }
+  .slot{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    flex-shrink:0;
+  }
+  .cell-col{
+    height:var(--box-h);
+    border:2px solid var(--border-strong);
+    box-sizing:border-box;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  .cell-col.w4{width:80px;}
+  .cell-col.w3{width:60px;}
+  .cell-col.wside{width:42px;}
+  .cell{
+    border-bottom:2px solid var(--border-strong);
+  }
+  .cell:last-child{border-bottom:none;}
+  .cell.c4{background:var(--crate-4);flex:1;}
+  .cell.c3{background:var(--crate-3);flex:3;}
+  .cell.cside{background:var(--crate-side);flex:1;}
+  .cell.gap{flex:1;}
+  .hatch-fill{
+    background-image:
+      repeating-linear-gradient(45deg, var(--text-muted) 0 1.5px, transparent 1.5px 8px),
+      repeating-linear-gradient(-45deg, var(--text-muted) 0 1.5px, transparent 1.5px 8px);
+    background-color:var(--card);
+  }
+  .heat-buffer{height:var(--box-h);width:38px;border:2px solid var(--border-strong);box-sizing:border-box;}
+  .slot-controls{display:flex;flex-direction:column;align-items:center;gap:6px;padding:0 3px;}
+  .type-btn{
+    font-family:'JetBrains Mono',monospace;
+    font-weight:700;
+    font-size:13px;
+    width:32px;
+    height:26px;
+    border-radius:6px;
+    border:1px solid var(--border-strong);
+    cursor:pointer;
+    background:var(--card);
+  }
+  .type-btn.w3{color:var(--crate-3);}
+  .type-btn.w4{color:var(--crate-4);}
+  .height-input{
+    width:44px;
+    background:var(--card);
+    border:1px solid var(--border-strong);
+    color:var(--text);
+    border-radius:6px;
+    padding:4px;
+    text-align:center;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+  }
+  .move-row{display:flex;gap:3px;}
+  .icon-btn{
+    background:transparent;
+    border:1px solid var(--border);
+    color:var(--text-muted);
+    width:22px;
+    height:22px;
+    border-radius:5px;
+    cursor:pointer;
+    font-size:11px;
+    line-height:1;
+    padding:0;
+  }
+  .icon-btn:hover{color:var(--text);border-color:var(--border-strong);}
+  .icon-btn.remove:hover{color:var(--danger);border-color:var(--danger);}
+  .icon-btn:disabled{opacity:0.3;cursor:not-allowed;}
+  .rig-label{font-size:9px;color:var(--text-muted);text-transform:uppercase;text-align:center;letter-spacing:0.5px;}
+  .cab{
+    width:70px;
+    height:var(--box-h);
+    background:var(--metal);
+    border:2px solid var(--border-strong);
+    box-sizing:border-box;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--text-secondary);
+    font-size:11px;
+    font-weight:600;
+    text-align:center;
+    padding:0 4px;
+  }
+  .hitch{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:5px;
+    width:34px;
+    height:var(--box-h);
+  }
+  .hitch-bar{width:24px;height:6px;background:var(--text-muted);border-radius:3px;}
+  .hitch-pin{width:15px;height:15px;border-radius:50%;background:var(--text-muted);border:3px solid var(--panel);}
+  .side-count-row{display:flex;align-items:center;gap:4px;}
+  .add-row{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;align-items:center;}
+  .add-btn{
+    background:var(--card);
+    border:1px dashed var(--border-strong);
+    color:var(--text-secondary);
+    padding:8px 16px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:13px;
+    font-weight:500;
+    font-family:'Inter',sans-serif;
+  }
+  .add-btn:hover{background:var(--card-hover);color:var(--text);}
+  .add-btn.w4{border-color:var(--crate-4);color:var(--crate-4);}
+  .add-btn.w3{border-color:var(--crate-3);color:var(--crate-3);}
+  .add-btn:disabled{opacity:0.35;cursor:not-allowed;border-style:solid;}
+  .totals{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+  }
+  .tcard{
+    background:var(--card);
+    border-radius:8px;
+    padding:10px 12px;
+  }
+  .tcard .tlabel{font-size:11px;color:var(--text-muted);margin-bottom:4px;}
+  .tcard .tval{font-family:'JetBrains Mono',monospace;font-size:19px;font-weight:700;}
+  .tcard.total{background:var(--yellow);}
+  .tcard.total .tlabel{color:var(--yellow-text);opacity:0.75;}
+  .tcard.total .tval{color:var(--yellow-text);}
+  .grand{
+    margin-top:8px;
+    background:var(--yellow);
+    border-radius:14px;
+    padding:20px 26px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .grand .glabel{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:700;
+    font-size:22px;
+    color:var(--yellow-text);
+    letter-spacing:0.5px;
+  }
+  .grand .gval{
+    font-family:'JetBrains Mono',monospace;
+    font-size:36px;
+    font-weight:700;
+    color:var(--yellow-text);
+  }
+  @media (max-width:640px){
+    .totals{grid-template-columns:repeat(2,1fr);}
+    h1{font-size:26px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top-row">
+    <div>
+      <h1>ΚΑΜΠΟΣΟΣ — Φόρτωση Καρότσας</h1>
+      <p class="subtitle">Κάτοψη καρότσας — κάθε κελί είναι μία ντάνα κλουβιών, σε πραγματική διάταξη.</p>
+    </div>
+    <button class="print-btn" onclick="printLoad()">Εκτύπωση φόρτωσης</button>
+  </div>
+
+  <div id="sections"></div>
+
+  <div class="grand">
+    <span class="glabel">Σύνολο Φόρτωσης</span>
+    <span class="gval" id="grandTotal">0</span>
+  </div>
+</div>
+
+<script>
+let uid = 1;
+function newPos(type, height){
+  return { id: uid++, type: type, height: height };
+}
+
+const LIMITS = {
+  truck: { maxPositions: 8, maxSide: 3 },
+  trailer: { maxPositions: 9, maxSide: 3 }
+};
+
+const state = {
+  truck: {
+    label: 'ΦΟΡΤΗΓΟ',
+    key: 'truck',
+    enabled: true,
+    baseHeight: 9,
+    sideHeight: 9,
+    sideCount: 2,
+    positions: [
+      newPos(4,9), newPos(3,9), newPos(4,9), newPos(3,9),
+      newPos(4,9), newPos(3,9), newPos(4,9), newPos(3,9)
+    ]
+  },
+  trailer: {
+    label: 'ΡΥΜΟΥΛΚΑ',
+    key: 'trailer',
+    enabled: true,
+    baseHeight: 9,
+    sideHeight: 9,
+    sideCount: 2,
+    positions: [
+      newPos(3,9), newPos(4,9), newPos(3,9), newPos(4,9),
+      newPos(4,9), newPos(4,9), newPos(4,9), newPos(4,9), newPos(4,9)
+    ]
+  }
+};
+
+function computeTotals(section){
+  let t3 = 0, t4 = 0;
+  section.positions.forEach(p => {
+    const crates = p.type * p.height;
+    if (p.type === 3) t3 += crates; else t4 += crates;
+  });
+  const side = section.sideCount * section.sideHeight;
+  const total = t3 + t4 + side;
+  return { t3, t4, side, total };
+}
+
+function positionBoxHTML(p){
+  if(p.type === 4){
+    return '<div class="cell-col w4">' +
+      '<div class="cell c4"></div><div class="cell c4"></div><div class="cell c4"></div><div class="cell c4"></div>' +
+    '</div>';
+  }
+  return '<div class="cell-col w3">' +
+    '<div class="cell c3"></div>' +
+    '<div class="cell gap hatch-fill"></div>' +
+    '<div class="cell c3"></div>' +
+    '<div class="cell gap hatch-fill"></div>' +
+    '<div class="cell c3"></div>' +
+  '</div>';
+}
+
+function sideColumnHTML(s){
+  if(s.sideCount <= 0) return '';
+  let cells = '';
+  for(let i=0;i<s.sideCount;i++){
+    cells += '<div class="cell cside"></div>';
+  }
+  return '<div class="slot"><div class="cell-col wside">' + cells + '</div><div class="slot-controls"><span class="rig-label">πλάγιες</span></div></div>';
+}
+
+function renderSection(key){
+  const s = state[key];
+  const lim = LIMITS[key];
+  const totals = computeTotals(s);
+
+  let slotsHTML = '';
+
+  if(key === 'truck'){
+    slotsHTML += '<div class="slot"><div class="cab">ΚΑΜΠΙΝΑ</div></div>';
+    slotsHTML += '<div class="slot"><div class="hatch-fill heat-buffer"></div><div class="slot-controls"><span class="rig-label">κενές</span></div></div>';
+  }
+  if(key === 'trailer'){
+    slotsHTML += '<div class="slot"><div class="hitch"><div class="hitch-bar"></div><div class="hitch-pin"></div></div></div>';
+  }
+
+  s.positions.forEach((p, idx) => {
+    const wClass = p.type === 4 ? 'w4' : 'w3';
+    slotsHTML += '<div class="slot">' +
+      positionBoxHTML(p) +
+      '<div class="slot-controls">' +
+        '<button class="type-btn ' + wClass + '" onclick="toggleType(\'' + key + '\',' + p.id + ')">' + p.type + '</button>' +
+        '<input class="height-input" type="number" min="0" value="' + p.height + '" onchange="setPosHeight(\'' + key + '\',' + p.id + ', this.value)">' +
+        '<div class="move-row">' +
+          '<button class="icon-btn" title="Μετακίνηση αριστερά" onclick="movePos(\'' + key + '\',' + p.id + ',-1)" ' + (idx===0?'disabled':'') + '>&#9664;</button>' +
+          '<button class="icon-btn remove" title="Αφαίρεση" onclick="removePos(\'' + key + '\',' + p.id + ')">&times;</button>' +
+          '<button class="icon-btn" title="Μετακίνηση δεξιά" onclick="movePos(\'' + key + '\',' + p.id + ',1)" ' + (idx===s.positions.length-1?'disabled':'') + '>&#9654;</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  });
+
+  slotsHTML += sideColumnHTML(s);
+
+  if(key === 'truck'){
+    slotsHTML += '<div class="slot"><div class="hitch"><div class="hitch-bar"></div><div class="hitch-pin"></div></div></div>';
+  }
+
+  const toggleBtn = key === 'trailer'
+    ? '<button class="toggle-btn ' + (s.enabled ? 'on' : '') + '" onclick="toggleEnabled(\'' + key + '\')">' + (s.enabled ? 'Ενεργή' : 'Ανενεργή') + '</button>'
+    : '';
+
+  const posAtMax = s.positions.length >= lim.maxPositions;
+  const sideAtMax = s.sideCount >= lim.maxSide;
+  const sideAtMin = s.sideCount <= 0;
+
+  return '<div class="section ' + (s.enabled ? '' : 'disabled') + '">' +
+    '<div class="section-head">' +
+      '<div class="section-title-row">' +
+        '<span class="section-title ' + key + '">' + s.label + '</span>' +
+        '<span class="cap-note">έως ' + lim.maxPositions + ' στήλες &middot; έως ' + lim.maxSide + ' πλάγιες</span>' +
+        toggleBtn +
+      '</div>' +
+      '<div class="controls">' +
+        '<div class="field"><label>Ύψος ντάνες</label><input type="number" min="0" value="' + s.baseHeight + '" onchange="setBaseHeight(\'' + key + '\', this.value)"></div>' +
+        '<div class="field"><label>Ύψος πλάγιας</label><input type="number" min="0" value="' + s.sideHeight + '" onchange="setSideHeight(\'' + key + '\', this.value)"></div>' +
+        '<button class="apply-btn" onclick="applyToAll(\'' + key + '\')">Εφαρμογή ύψους σε όλες</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rack">' + slotsHTML + '</div>' +
+    '<div class="add-row">' +
+      '<button class="add-btn w4" onclick="addPos(\'' + key + '\',4)" ' + (posAtMax?'disabled':'') + '>+ Θέση 4άδα</button>' +
+      '<button class="add-btn w3" onclick="addPos(\'' + key + '\',3)" ' + (posAtMax?'disabled':'') + '>+ Θέση 3άδα</button>' +
+      '<span class="cap-note">' + s.positions.length + '/' + lim.maxPositions + ' στήλες</span>' +
+      '<div class="side-count-row">' +
+        '<button class="icon-btn" onclick="changeSideCount(\'' + key + '\',-1)" ' + (sideAtMin?'disabled':'') + '>&#8722;</button>' +
+        '<span class="cap-note">' + s.sideCount + '/' + lim.maxSide + ' πλάγιες</span>' +
+        '<button class="icon-btn" onclick="changeSideCount(\'' + key + '\',1)" ' + (sideAtMax?'disabled':'') + '>&#43;</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="totals">' +
+      '<div class="tcard"><div class="tlabel">3άδες σύνολο</div><div class="tval">' + totals.t3 + '</div></div>' +
+      '<div class="tcard"><div class="tlabel">4άδες σύνολο</div><div class="tval">' + totals.t4 + '</div></div>' +
+      '<div class="tcard"><div class="tlabel">Πλάγιες σύνολο</div><div class="tval">' + totals.side + '</div></div>' +
+      '<div class="tcard total"><div class="tlabel">Σύνολο καρότσας</div><div class="tval">' + totals.total + '</div></div>' +
+    '</div>' +
+  '</div>';
+}
+
+function renderAll(){
+  document.getElementById('sections').innerHTML = renderSection('truck') + renderSection('trailer');
+  const truckTotal = state.truck.enabled ? computeTotals(state.truck).total : 0;
+  const trailerTotal = state.trailer.enabled ? computeTotals(state.trailer).total : 0;
+  document.getElementById('grandTotal').textContent = truckTotal + trailerTotal;
+}
+
+function toggleType(key, id){
+  const p = state[key].positions.find(p => p.id === id);
+  p.type = p.type === 4 ? 3 : 4;
+  renderAll();
+}
+function setPosHeight(key, id, val){
+  const p = state[key].positions.find(p => p.id === id);
+  p.height = Math.max(0, parseInt(val) || 0);
+  renderAll();
+}
+function movePos(key, id, dir){
+  const arr = state[key].positions;
+  const idx = arr.findIndex(p => p.id === id);
+  const newIdx = idx + dir;
+  if(newIdx < 0 || newIdx >= arr.length) return;
+  [arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]];
+  renderAll();
+}
+function removePos(key, id){
+  state[key].positions = state[key].positions.filter(p => p.id !== id);
+  renderAll();
+}
+function addPos(key, type){
+  const s = state[key];
+  if(s.positions.length >= LIMITS[key].maxPositions) return;
+  s.positions.push(newPos(type, s.baseHeight));
+  renderAll();
+}
+function changeSideCount(key, delta){
+  const s = state[key];
+  const next = s.sideCount + delta;
+  if(next < 0 || next > LIMITS[key].maxSide) return;
+  s.sideCount = next;
+  renderAll();
+}
+function setBaseHeight(key, val){
+  state[key].baseHeight = Math.max(0, parseInt(val) || 0);
+  renderAll();
+}
+function setSideHeight(key, val){
+  state[key].sideHeight = Math.max(0, parseInt(val) || 0);
+  renderAll();
+}
+function applyToAll(key){
+  const h = state[key].baseHeight;
+  state[key].positions.forEach(p => p.height = h);
+  state[key].sideHeight = h;
+  renderAll();
+}
+function toggleEnabled(key){
+  state[key].enabled = !state[key].enabled;
+  renderAll();
+}
+
+function printPositionBoxHTML(p){
+  if(p.type === 4){
+    return '<div class="pcol w4">' +
+      '<div class="pcell c4"></div><div class="pcell c4"></div><div class="pcell c4"></div><div class="pcell c4"></div>' +
+    '</div>';
+  }
+  return '<div class="pcol w3">' +
+    '<div class="pcell c3"></div>' +
+    '<div class="pcell pgap phatch"></div>' +
+    '<div class="pcell c3"></div>' +
+    '<div class="pcell pgap phatch"></div>' +
+    '<div class="pcell c3"></div>' +
+  '</div>';
+}
+
+function printSideColumnHTML(s){
+  if(s.sideCount <= 0) return '';
+  let cells = '';
+  for(let i=0;i<s.sideCount;i++){
+    cells += '<div class="pcell cside"></div>';
+  }
+  return '<div class="pslot"><div class="pcol wside">' + cells + '</div><div class="plabel">πλάγιες</div></div>';
+}
+
+function printSectionHTML(key){
+  const s = state[key];
+  if(!s.enabled) return '';
+  const totals = computeTotals(s);
+
+  let row = '';
+  if(key === 'truck'){
+    row += '<div class="pslot"><div class="pcab">ΚΑΜΠΙΝΑ</div></div>';
+    row += '<div class="pslot"><div class="phatch pbuffer"></div><div class="plabel">κενές</div></div>';
+  }
+  if(key === 'trailer'){
+    row += '<div class="pslot"><div class="phitch"><div class="bar"></div><div class="pin"></div></div></div>';
+  }
+  s.positions.forEach(p => {
+    row += '<div class="pslot">' + printPositionBoxHTML(p) + '</div>';
+  });
+  row += printSideColumnHTML(s);
+  if(key === 'truck'){
+    row += '<div class="pslot"><div class="phitch"><div class="bar"></div><div class="pin"></div></div></div>';
+  }
+
+  return '<div class="sectiontitle">' + s.label + '</div>' +
+    '<div class="prow">' + row + '</div>' +
+    '<div class="ptotals">' +
+      '<span>3άδες σύνολο: <b>' + totals.t3 + '</b></span>' +
+      '<span>4άδες σύνολο: <b>' + totals.t4 + '</b></span>' +
+      '<span>Πλάγιες σύνολο: <b>' + totals.side + '</b></span>' +
+      '<span>Σύνολο καρότσας: <b>' + totals.total + '</b></span>' +
+    '</div>';
+}
+
+function printLoad(){
+  const truckTotal = state.truck.enabled ? computeTotals(state.truck).total : 0;
+  const trailerTotal = state.trailer.enabled ? computeTotals(state.trailer).total : 0;
+  const grand = truckTotal + trailerTotal;
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('el-GR');
+
+  const html = '<!DOCTYPE html><html lang="el"><head><meta charset="UTF-8"><title>Φόρτωση Καρότσας</title>' +
+    '<style>' +
+    '@page{size:landscape;margin:14mm;}' +
+    '*{box-sizing:border-box;}' +
+    'body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:0;padding:20px;}' +
+    'h1{font-size:22px;margin:0 0 2px;}' +
+    '.meta{font-size:12px;color:#555;margin-bottom:6px;}' +
+    '.legend{display:flex;gap:16px;font-size:12px;margin-bottom:18px;}' +
+    '.legend span{display:inline-flex;align-items:center;gap:6px;}' +
+    '.swatch{width:14px;height:14px;border:1px solid #333;display:inline-block;}' +
+    '.sw4{background:#F7DDB0;} .sw3{background:#CDE9E0;} .swside{background:#DADDE1;}' +
+    '.sectiontitle{font-size:17px;font-weight:700;margin:18px 0 8px;border-bottom:2px solid #111;padding-bottom:4px;}' +
+    '.prow{display:flex;align-items:flex-start;gap:0;flex-wrap:wrap;margin-bottom:10px;}' +
+    '.pslot{display:flex;flex-direction:column;align-items:center;}' +
+    '.pcol{height:88px;border:2px solid #333;box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden;}' +
+    '.pcol.w4{width:76px;}' +
+    '.pcol.w3{width:58px;}' +
+    '.pcol.wside{width:40px;}' +
+    '.pcell{border-bottom:2px solid #333;flex:1;}' +
+    '.pcell:last-child{border-bottom:none;}' +
+    '.pcell.c4{background:#F7DDB0;}' +
+    '.pcell.c3{background:#CDE9E0;flex:3;}' +
+    '.pcell.cside{background:#DADDE1;}' +
+    '.pcell.pgap{flex:1;}' +
+    '.pcab{width:64px;height:88px;border:2px solid #333;background:#333;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;text-align:center;}' +
+    '.phitch{width:32px;height:88px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;}' +
+    '.phitch .bar{width:22px;height:5px;background:#333;border-radius:3px;}' +
+    '.phitch .pin{width:13px;height:13px;border-radius:50%;background:#333;}' +
+    '.phatch{background-color:#fff;background-image:repeating-linear-gradient(45deg,#333 0 1.5px,transparent 1.5px 8px),repeating-linear-gradient(-45deg,#333 0 1.5px,transparent 1.5px 8px);}' +
+    '.pbuffer{height:88px;width:34px;border:2px solid #333;box-sizing:border-box;}' +
+    '.plabel{font-size:9px;text-transform:uppercase;color:#555;margin-top:2px;text-align:center;}' +
+    '.ptotals{display:flex;gap:22px;flex-wrap:wrap;font-size:13px;color:#333;margin-bottom:6px;}' +
+    '.ptotals b{font-size:15px;color:#111;}' +
+    '.grandline{margin-top:22px;padding-top:14px;border-top:3px solid #111;font-size:22px;font-weight:700;display:flex;justify-content:space-between;}' +
+    '</style></head><body>' +
+    '<h1>ΚΑΜΠΟΣΟΣ — Φόρτωση Καρότσας</h1>' +
+    '<div class="meta">Εκτύπωση: ' + dateStr + '</div>' +
+    '<div class="legend">' +
+      '<span><span class="swatch sw4"></span>4άδα</span>' +
+      '<span><span class="swatch sw3"></span>3άδα</span>' +
+      '<span><span class="swatch swside"></span>πλάγια</span>' +
+    '</div>' +
+    printSectionHTML('truck') +
+    printSectionHTML('trailer') +
+    '<div class="grandline"><span>Σύνολο φόρτωσης</span><span>' + grand + '</span></div>' +
+    '</body></html>';
+
+  const win = window.open('', '_blank');
+  if(!win){ alert('Επίτρεψε τα pop-ups για να ανοίξει η εκτύπωση.'); return; }
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  setTimeout(() => { win.print(); }, 250);
+}
+
+renderAll();
+</script>
+</body>
+</html>
