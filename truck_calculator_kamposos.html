@@ -13,7 +13,6 @@
   :root{
     --crate-4: #D98B33;
     --crate-3: #3E8E7E;
-    --crate-side: #6B7280;
     --metal: #2B3542;
     --viz-panel: #20252D;
     --viz-border: #3C4450;
@@ -172,14 +171,12 @@
   }
   .cell-col.w4{width:80px;}
   .cell-col.w3{width:60px;}
-  .cell-col.wside{width:42px;}
   .cell{
     border-bottom:2px solid var(--viz-border);
   }
   .cell:last-child{border-bottom:none;}
   .cell.c4{background:var(--crate-4);flex:1;}
   .cell.c3{background:var(--crate-3);flex:3;}
-  .cell.cside{background:var(--crate-side);flex:1;}
   .cell.gap{flex:1;}
   .hatch-fill{
     background-image:
@@ -259,7 +256,6 @@
   .icon-btn:hover{color:var(--gh-fg-default);border-color:var(--gh-fg-subtle);}
   .icon-btn.remove:hover{color:var(--gh-danger-fg);border-color:var(--gh-danger-fg);}
   .icon-btn:disabled{opacity:0.3;cursor:not-allowed;}
-  .side-count-row{display:flex;align-items:center;gap:4px;}
   .add-row{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;align-items:center;}
   .add-btn{
     background:var(--gh-canvas-default);
@@ -280,7 +276,7 @@
   /* ── Totals cards (chrome) ── */
   .totals{
     display:grid;
-    grid-template-columns:repeat(4,1fr);
+    grid-template-columns:repeat(3,1fr);
     gap:10px;
   }
   .tcard{
@@ -438,7 +434,7 @@ function setSyncState(syncState, text) {
 // ── STATE ↔ SUPABASE ROW (single pinned row, id=1, last-write-wins) ─
 function stripSection(s) {
   return {
-    enabled: s.enabled, baseHeight: s.baseHeight, sideHeight: s.sideHeight, sideCount: s.sideCount,
+    enabled: s.enabled, baseHeight: s.baseHeight,
     positions: s.positions.map(p => ({ type: p.type, height: p.height }))
   };
 }
@@ -447,7 +443,7 @@ function applySnapshot(row) {
     const snap = row[key];
     if (!snap) return;
     Object.assign(state[key], {
-      enabled: snap.enabled, baseHeight: snap.baseHeight, sideHeight: snap.sideHeight, sideCount: snap.sideCount,
+      enabled: snap.enabled, baseHeight: snap.baseHeight,
       positions: snap.positions.map(p => newPos(p.type, p.height))
     });
   });
@@ -502,8 +498,8 @@ function newPos(type, height){
 }
 
 const LIMITS = {
-  truck: { maxPositions: 8, maxSide: 3 },
-  trailer: { maxPositions: 9, maxSide: 3 }
+  truck: { maxPositions: 9 },
+  trailer: { maxPositions: 9 }
 };
 
 const state = {
@@ -511,8 +507,6 @@ const state = {
     label: 'ΦΟΡΤΗΓΟ',
     enabled: true,
     baseHeight: 9,
-    sideHeight: 9,
-    sideCount: 2,
     positions: [
       newPos(4,9), newPos(3,9), newPos(4,9), newPos(3,9),
       newPos(4,9), newPos(3,9), newPos(4,9), newPos(3,9)
@@ -522,8 +516,6 @@ const state = {
     label: 'ΡΥΜΟΥΛΚΑ',
     enabled: true,
     baseHeight: 9,
-    sideHeight: 9,
-    sideCount: 2,
     positions: [
       newPos(3,9), newPos(4,9), newPos(3,9), newPos(4,9),
       newPos(4,9), newPos(4,9), newPos(4,9), newPos(4,9), newPos(4,9)
@@ -537,9 +529,8 @@ function computeTotals(section){
     const crates = p.type * p.height;
     if (p.type === 3) t3 += crates; else t4 += crates;
   });
-  const side = section.sideCount * section.sideHeight;
-  const total = t3 + t4 + side;
-  return { t3, t4, side, total };
+  const total = t3 + t4;
+  return { t3, t4, total };
 }
 
 function positionBoxHTML(p){
@@ -557,15 +548,6 @@ function positionBoxHTML(p){
   '</div>';
 }
 
-function sideColumnHTML(s){
-  if(s.sideCount <= 0) return '';
-  let cells = '';
-  for(let i=0;i<s.sideCount;i++){
-    cells += '<div class="cell cside"></div>';
-  }
-  return '<div class="slot"><div class="cell-col wside">' + cells + '</div><div class="slot-controls"><span class="rig-label">πλάγιες</span></div></div>';
-}
-
 function renderSection(key){
   const s = state[key];
   const lim = LIMITS[key];
@@ -579,6 +561,7 @@ function renderSection(key){
   }
   if(key === 'trailer'){
     slotsHTML += '<div class="slot"><div class="hitch"><div class="hitch-bar"></div><div class="hitch-pin"></div></div></div>';
+    slotsHTML += '<div class="slot"><div class="hatch-fill heat-buffer"></div><div class="slot-controls"><span class="rig-label">κενές</span></div></div>';
   }
 
   s.positions.forEach((p, idx) => {
@@ -597,8 +580,6 @@ function renderSection(key){
     '</div>';
   });
 
-  slotsHTML += sideColumnHTML(s);
-
   if(key === 'truck'){
     slotsHTML += '<div class="slot"><div class="hitch"><div class="hitch-bar"></div><div class="hitch-pin"></div></div></div>';
   }
@@ -608,19 +589,16 @@ function renderSection(key){
     : '';
 
   const posAtMax = s.positions.length >= lim.maxPositions;
-  const sideAtMax = s.sideCount >= lim.maxSide;
-  const sideAtMin = s.sideCount <= 0;
 
   return '<div class="section ' + (s.enabled ? '' : 'disabled') + '">' +
     '<div class="section-head">' +
       '<div class="section-title-row">' +
         '<span class="section-title">' + s.label + '</span>' +
-        '<span class="cap-note">έως ' + lim.maxPositions + ' στήλες &middot; έως ' + lim.maxSide + ' πλάγιες</span>' +
+        '<span class="cap-note">έως ' + lim.maxPositions + ' στήλες</span>' +
         toggleBtn +
       '</div>' +
       '<div class="controls">' +
         '<div class="field"><label>Ύψος ντάνες</label><input type="number" min="0" value="' + s.baseHeight + '" onchange="setBaseHeight(\'' + key + '\', this.value)"></div>' +
-        '<div class="field"><label>Ύψος πλάγιας</label><input type="number" min="0" value="' + s.sideHeight + '" onchange="setSideHeight(\'' + key + '\', this.value)"></div>' +
         '<button class="apply-btn" onclick="applyToAll(\'' + key + '\')">Εφαρμογή ύψους σε όλες</button>' +
       '</div>' +
     '</div>' +
@@ -629,16 +607,10 @@ function renderSection(key){
       '<button class="add-btn w4" onclick="addPos(\'' + key + '\',4)" ' + (posAtMax?'disabled':'') + '>+ Θέση 4άδα</button>' +
       '<button class="add-btn w3" onclick="addPos(\'' + key + '\',3)" ' + (posAtMax?'disabled':'') + '>+ Θέση 3άδα</button>' +
       '<span class="cap-note">' + s.positions.length + '/' + lim.maxPositions + ' στήλες</span>' +
-      '<div class="side-count-row">' +
-        '<button class="icon-btn" onclick="changeSideCount(\'' + key + '\',-1)" ' + (sideAtMin?'disabled':'') + '>&#8722;</button>' +
-        '<span class="cap-note">' + s.sideCount + '/' + lim.maxSide + ' πλάγιες</span>' +
-        '<button class="icon-btn" onclick="changeSideCount(\'' + key + '\',1)" ' + (sideAtMax?'disabled':'') + '>&#43;</button>' +
-      '</div>' +
     '</div>' +
     '<div class="totals">' +
       '<div class="tcard"><div class="tlabel">3άδες σύνολο</div><div class="tval">' + totals.t3 + '</div></div>' +
       '<div class="tcard"><div class="tlabel">4άδες σύνολο</div><div class="tval">' + totals.t4 + '</div></div>' +
-      '<div class="tcard"><div class="tlabel">Πλάγιες σύνολο</div><div class="tval">' + totals.side + '</div></div>' +
       '<div class="tcard total"><div class="tlabel">Σύνολο καρότσας</div><div class="tval">' + totals.total + '</div></div>' +
     '</div>' +
   '</div>';
@@ -680,25 +652,13 @@ function addPos(key, type){
   s.positions.push(newPos(type, s.baseHeight));
   renderAll();
 }
-function changeSideCount(key, delta){
-  const s = state[key];
-  const next = s.sideCount + delta;
-  if(next < 0 || next > LIMITS[key].maxSide) return;
-  s.sideCount = next;
-  renderAll();
-}
 function setBaseHeight(key, val){
   state[key].baseHeight = Math.max(0, parseInt(val) || 0);
-  renderAll();
-}
-function setSideHeight(key, val){
-  state[key].sideHeight = Math.max(0, parseInt(val) || 0);
   renderAll();
 }
 function applyToAll(key){
   const h = state[key].baseHeight;
   state[key].positions.forEach(p => p.height = h);
-  state[key].sideHeight = h;
   renderAll();
 }
 function toggleEnabled(key){
@@ -721,15 +681,6 @@ function printPositionBoxHTML(p){
   '</div>';
 }
 
-function printSideColumnHTML(s){
-  if(s.sideCount <= 0) return '';
-  let cells = '';
-  for(let i=0;i<s.sideCount;i++){
-    cells += '<div class="pcell cside"></div>';
-  }
-  return '<div class="pslot"><div class="pcol wside">' + cells + '</div><div class="plabel">πλάγιες</div></div>';
-}
-
 function printSectionHTML(key){
   const s = state[key];
   if(!s.enabled) return '';
@@ -742,11 +693,11 @@ function printSectionHTML(key){
   }
   if(key === 'trailer'){
     row += '<div class="pslot"><div class="phitch"><div class="bar"></div><div class="pin"></div></div></div>';
+    row += '<div class="pslot"><div class="phatch pbuffer"></div><div class="plabel">κενές</div></div>';
   }
   s.positions.forEach(p => {
     row += '<div class="pslot">' + printPositionBoxHTML(p) + '</div>';
   });
-  row += printSideColumnHTML(s);
   if(key === 'truck'){
     row += '<div class="pslot"><div class="phitch"><div class="bar"></div><div class="pin"></div></div></div>';
   }
@@ -756,7 +707,6 @@ function printSectionHTML(key){
     '<div class="ptotals">' +
       '<span>3άδες σύνολο: <b>' + totals.t3 + '</b></span>' +
       '<span>4άδες σύνολο: <b>' + totals.t4 + '</b></span>' +
-      '<span>Πλάγιες σύνολο: <b>' + totals.side + '</b></span>' +
       '<span>Σύνολο καρότσας: <b>' + totals.total + '</b></span>' +
     '</div>';
 }
@@ -778,19 +728,17 @@ function printLoad(){
     '.legend{display:flex;gap:16px;font-size:12px;margin-bottom:18px;}' +
     '.legend span{display:inline-flex;align-items:center;gap:6px;}' +
     '.swatch{width:14px;height:14px;border:1px solid #333;display:inline-block;}' +
-    '.sw4{background:#F7DDB0;} .sw3{background:#CDE9E0;} .swside{background:#DADDE1;}' +
+    '.sw4{background:#F7DDB0;} .sw3{background:#CDE9E0;}' +
     '.sectiontitle{font-size:17px;font-weight:700;margin:18px 0 8px;border-bottom:2px solid #111;padding-bottom:4px;}' +
     '.prow{display:flex;align-items:flex-start;gap:0;flex-wrap:wrap;margin-bottom:10px;}' +
     '.pslot{display:flex;flex-direction:column;align-items:center;}' +
     '.pcol{height:88px;border:2px solid #333;box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden;}' +
     '.pcol.w4{width:76px;}' +
     '.pcol.w3{width:58px;}' +
-    '.pcol.wside{width:40px;}' +
     '.pcell{border-bottom:2px solid #333;flex:1;}' +
     '.pcell:last-child{border-bottom:none;}' +
     '.pcell.c4{background:#F7DDB0;}' +
     '.pcell.c3{background:#CDE9E0;flex:3;}' +
-    '.pcell.cside{background:#DADDE1;}' +
     '.pcell.pgap{flex:1;}' +
     '.pcab{width:64px;height:88px;border:2px solid #333;background:#333;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;text-align:center;}' +
     '.phitch{width:32px;height:88px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;}' +
@@ -808,7 +756,6 @@ function printLoad(){
     '<div class="legend">' +
       '<span><span class="swatch sw4"></span>4άδα</span>' +
       '<span><span class="swatch sw3"></span>3άδα</span>' +
-      '<span><span class="swatch swside"></span>πλάγια</span>' +
     '</div>' +
     printSectionHTML('truck') +
     printSectionHTML('trailer') +
