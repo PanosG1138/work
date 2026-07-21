@@ -263,6 +263,8 @@
   .icon-btn:hover{color:var(--gh-fg-default);border-color:var(--gh-fg-subtle);}
   .icon-btn.remove:hover{color:var(--gh-danger-fg);border-color:var(--gh-danger-fg);}
   .icon-btn:disabled{opacity:0.3;cursor:not-allowed;}
+  .icon-btn.active{border-color:var(--gh-accent-emphasis);color:var(--gh-accent-fg);}
+  .height-input.single{width:34px;}
   .add-row{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;align-items:center;}
   .add-btn{
     background:var(--gh-canvas-default);
@@ -456,7 +458,10 @@ function applySnapshot(row) {
     if (!snap) return;
     Object.assign(state[key], {
       enabled: snap.enabled, baseHeight: snap.baseHeight,
-      positions: snap.positions.map(p => newPos(p.type, migrateHeights(p)))
+      positions: snap.positions.map(p => {
+        const heights = migrateHeights(p);
+        return newPos(p.type, heights, !heights.every(h => h === heights[0]));
+      })
     });
   });
 }
@@ -505,8 +510,9 @@ async function saveState() {
 
 // ── CRATE STATE ───────────────────────────────────────────────────
 let uid = 1;
-function newPos(type, heights){
-  return { id: uid++, type: type, heights: heights };
+// detailed is UI-only (which view is showing), never sent to Supabase — see stripSection.
+function newPos(type, heights, detailed){
+  return { id: uid++, type: type, heights: heights, detailed: !!detailed };
 }
 function mkHeights(type, h){
   return Array(type).fill(h);
@@ -581,14 +587,22 @@ function renderSection(key){
 
   s.positions.forEach((p, idx) => {
     const wClass = p.type === 4 ? 'w4' : 'w3';
-    const heightInputs = p.heights.map((h, si) =>
-      '<input class="height-input" type="number" min="0" value="' + h + '" onchange="setStackHeight(\'' + key + '\',' + p.id + ',' + si + ', this.value)">'
-    ).join('');
+    const heightStack = p.detailed
+      ? p.heights.map((h, si) =>
+          '<input class="height-input" type="number" min="0" value="' + h + '" onchange="setStackHeight(\'' + key + '\',' + p.id + ',' + si + ', this.value)">'
+        ).join('')
+      : '<input class="height-input single" type="number" min="0" value="' + p.heights[0] + '" onchange="setUniformHeight(\'' + key + '\',' + p.id + ', this.value)">';
+    const modeBtn = '<button class="icon-btn' + (p.detailed ? ' active' : '') + '" title="' +
+      (p.detailed ? 'Ανά ντάνα — πάτα για ενιαίο ύψος' : 'Ενιαίο ύψος — πάτα για ρύθμιση ανά ντάνα') + '" ' +
+      'onclick="toggleStackMode(\'' + key + '\',' + p.id + ')">' + (p.detailed ? 'N' : '1') + '</button>';
     slotsHTML += '<div class="slot">' +
       positionBoxHTML(p) +
       '<div class="slot-controls">' +
-        '<button class="type-btn ' + wClass + '" onclick="toggleType(\'' + key + '\',' + p.id + ')">' + p.type + '</button>' +
-        '<div class="height-stack">' + heightInputs + '</div>' +
+        '<div class="move-row">' +
+          '<button class="type-btn ' + wClass + '" onclick="toggleType(\'' + key + '\',' + p.id + ')">' + p.type + '</button>' +
+          modeBtn +
+        '</div>' +
+        '<div class="height-stack">' + heightStack + '</div>' +
         '<div class="move-row">' +
           '<button class="icon-btn" title="Μετακίνηση αριστερά" onclick="movePos(\'' + key + '\',' + p.id + ',-1)" ' + (idx===0?'disabled':'') + '>&#9664;</button>' +
           '<button class="icon-btn remove" title="Αφαίρεση" onclick="removePos(\'' + key + '\',' + p.id + ')">&times;</button>' +
@@ -649,13 +663,26 @@ function toggleType(key, id){
     p.heights = p.heights.slice(0, 3); // drop only the one stack that no longer fits
   } else {
     p.type = 4;
-    p.heights = p.heights.concat([state[key].baseHeight]);
+    // in uniform mode the new stack must match the rest, or the single input would lie
+    p.heights = p.heights.concat([p.detailed ? state[key].baseHeight : p.heights[0]]);
   }
   renderAll();
 }
 function setStackHeight(key, id, stackIdx, val){
   const p = state[key].positions.find(p => p.id === id);
   p.heights[stackIdx] = Math.max(0, parseInt(val) || 0);
+  renderAll();
+}
+function setUniformHeight(key, id, val){
+  const p = state[key].positions.find(p => p.id === id);
+  const h = Math.max(0, parseInt(val) || 0);
+  p.heights = mkHeights(p.type, h);
+  renderAll();
+}
+function toggleStackMode(key, id){
+  const p = state[key].positions.find(p => p.id === id);
+  p.detailed = !p.detailed;
+  if(!p.detailed) p.heights = mkHeights(p.type, p.heights[0]); // collapse to uniform
   renderAll();
 }
 function movePos(key, id, dir){
@@ -682,7 +709,7 @@ function setBaseHeight(key, val){
 }
 function applyToAll(key){
   const h = state[key].baseHeight;
-  state[key].positions.forEach(p => { p.heights = mkHeights(p.type, h); });
+  state[key].positions.forEach(p => { p.heights = mkHeights(p.type, h); p.detailed = false; });
   renderAll();
 }
 function toggleEnabled(key){
