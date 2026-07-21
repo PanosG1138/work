@@ -185,7 +185,7 @@
     background-color:var(--viz-panel);
   }
   .heat-buffer{height:var(--box-h);width:38px;border:2px solid var(--viz-border);box-sizing:border-box;}
-  .slot-controls{display:flex;flex-direction:column;align-items:center;gap:6px;padding:0 3px;}
+  .slot-controls{display:flex;flex-direction:column;align-items:center;gap:4px;padding:0 3px;}
   .rig-label{font-size:9px;color:var(--viz-muted);text-transform:uppercase;text-align:center;letter-spacing:0.5px;}
   .cab{
     width:70px;
@@ -229,17 +229,23 @@
   }
   .type-btn.w3{color:var(--crate-3);}
   .type-btn.w4{color:var(--crate-4);}
-  .height-stack{display:flex;gap:3px;flex-wrap:wrap;justify-content:center;max-width:76px;}
+  .height-stack{display:flex;gap:2px;justify-content:center;}
   .height-input{
-    width:30px;
+    width:18px;
     background:var(--gh-canvas-default);
     border:1px solid var(--gh-border-default);
     color:var(--gh-fg-default);
-    border-radius:6px;
-    padding:3px 2px;
+    border-radius:var(--rs);
+    padding:2px 0;
     text-align:center;
     font-family:'Inter',sans-serif;
-    font-size:11px;
+    font-size:10px;
+    -moz-appearance:textfield;
+  }
+  .height-input::-webkit-outer-spin-button,
+  .height-input::-webkit-inner-spin-button{
+    -webkit-appearance:none;
+    margin:0;
   }
   .move-row{display:flex;gap:3px;}
   .icon-btn{
