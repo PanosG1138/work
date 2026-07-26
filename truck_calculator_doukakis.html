@@ -447,21 +447,28 @@ function setSyncState(syncState, text) {
 }
 
 // ── STATE ↔ SUPABASE ROW (single pinned row, id=1, last-write-wins) ─
-// Truck section only also carries sideHeight/sideCount (πλάγιες) — the
-// trailer never has these fields, matching how it has no πλάγιες UI at all.
+// Truck section only also carries sideHeights (πλάγιες) — the trailer
+// never has this field, matching how it has no πλάγιες UI at all.
 function stripSection(key) {
   const s = state[key];
   const base = {
     enabled: s.enabled, baseHeight: s.baseHeight,
     positions: s.positions.map(p => ({ type: p.type, heights: p.heights }))
   };
-  if (key === 'truck') { base.sideHeight = s.sideHeight; base.sideCount = s.sideCount; }
+  if (key === 'truck') { base.sideHeights = s.sideHeights; }
   return base;
 }
 // One-time read-time upgrade: old saved rows have {height} (one value for the
 // whole position); expand to a {heights} array so every stack has its own value.
 function migrateHeights(p) {
   return p.heights || mkHeights(p.type, p.height);
+}
+// Same upgrade for πλάγιες: old rows have {sideHeight,sideCount} (one uniform
+// value + a count); expand to a sideHeights array, one value per stack.
+function migrateSideHeights(snap) {
+  if (snap.sideHeights) return snap.sideHeights;
+  if (snap.sideCount != null) return mkHeights(snap.sideCount, snap.sideHeight || 0);
+  return [];
 }
 function applySnapshot(row) {
   ['truck', 'trailer'].forEach(key => {
@@ -474,7 +481,10 @@ function applySnapshot(row) {
         return newPos(p.type, heights, !heights.every(h => h === heights[0]));
       })
     });
-    if (key === 'truck') Object.assign(state[key], { sideHeight: snap.sideHeight, sideCount: snap.sideCount });
+    if (key === 'truck') {
+      const sideHeights = migrateSideHeights(snap);
+      Object.assign(state[key], { sideHeights, sideDetailed: !sideHeights.every(h => h === sideHeights[0]) });
+    }
   });
 }
 
@@ -531,7 +541,7 @@ function mkHeights(type, h){
 }
 
 const LIMITS = {
-  truck: { maxPositions: 10, maxSide: 3 },
+  truck: { maxPositions: 9, maxSide: 3 },
   trailer: { maxPositions: 9 }
 };
 
@@ -540,8 +550,8 @@ const state = {
     label: 'ΦΟΡΤΗΓΟ',
     enabled: true,
     baseHeight: 9,
-    sideHeight: 9,
-    sideCount: 2,
+    sideHeights: [9, 9],
+    sideDetailed: false,
     positions: [
       newPos(4,mkHeights(4,9)), newPos(3,mkHeights(3,9)), newPos(4,mkHeights(4,9)), newPos(3,mkHeights(3,9)),
       newPos(4,mkHeights(4,9)), newPos(3,mkHeights(3,9)), newPos(4,mkHeights(4,9)), newPos(3,mkHeights(3,9))
@@ -564,7 +574,7 @@ function computeTotals(section){
     const crates = p.heights.reduce((a, b) => a + b, 0);
     if (p.type === 3) t3 += crates; else t4 += crates;
   });
-  const side = (section.sideCount || 0) * (section.sideHeight || 0);
+  const side = (section.sideHeights || []).reduce((a, b) => a + b, 0);
   const total = t3 + t4 + side;
   return { t3, t4, side, total };
 }
@@ -584,13 +594,27 @@ function positionBoxHTML(p){
   '</div>';
 }
 
-function sideColumnHTML(s){
-  if(s.sideCount <= 0) return '';
+function sideColumnHTML(key, s){
+  const n = s.sideHeights.length;
+  if(n <= 0) return '';
   let cells = '';
-  for(let i=0;i<s.sideCount;i++){
+  for(let i=0;i<n;i++){
     cells += '<div class="cell cside"></div>';
   }
-  return '<div class="slot"><div class="cell-col wside">' + cells + '</div><div class="slot-controls"><span class="rig-label">πλάγιες</span></div></div>';
+  const heightStack = s.sideDetailed
+    ? s.sideHeights.map((h, si) =>
+        '<input class="height-input" type="number" min="0" value="' + h + '" onchange="setSideStackHeight(\'' + key + '\',' + si + ', this.value)">'
+      ).join('')
+    : '<input class="height-input single" type="number" min="0" value="' + s.sideHeights[0] + '" onchange="setSideUniformHeight(\'' + key + '\', this.value)">';
+  const modeBtn = '<button class="icon-btn' + (s.sideDetailed ? ' active' : '') + '" title="' +
+    (s.sideDetailed ? 'Ανά ντάνα — πάτα για ενιαίο ύψος' : 'Ενιαίο ύψος — πάτα για ρύθμιση ανά ντάνα') + '" ' +
+    'onclick="toggleSideStackMode(\'' + key + '\')">' + (s.sideDetailed ? 'N' : '1') + '</button>';
+  return '<div class="slot"><div class="cell-col wside">' + cells + '</div>' +
+    '<div class="slot-controls">' +
+      '<span class="rig-label">πλάγιες</span>' +
+      modeBtn +
+      '<div class="height-stack">' + heightStack + '</div>' +
+    '</div></div>';
 }
 
 function renderSection(key){
@@ -634,7 +658,7 @@ function renderSection(key){
     '</div>';
   });
 
-  if(key === 'truck') slotsHTML += sideColumnHTML(s);
+  if(key === 'truck') slotsHTML += sideColumnHTML(key, s);
 
   if(key === 'truck'){
     slotsHTML += '<div class="slot"><div class="hitch"><div class="hitch-bar"></div><div class="hitch-pin"></div></div></div>';
@@ -645,17 +669,13 @@ function renderSection(key){
     : '';
 
   const posAtMax = s.positions.length >= lim.maxPositions;
-  const sideAtMax = key === 'truck' && s.sideCount >= lim.maxSide;
-  const sideAtMin = key === 'truck' && s.sideCount <= 0;
-
-  const sideHeightField = key === 'truck'
-    ? '<div class="field"><label>Ύψος πλάγιας</label><input type="number" min="0" value="' + s.sideHeight + '" onchange="setSideHeight(\'' + key + '\', this.value)"></div>'
-    : '';
+  const sideAtMax = key === 'truck' && s.sideHeights.length >= lim.maxSide;
+  const sideAtMin = key === 'truck' && s.sideHeights.length <= 0;
 
   const sideCountRow = key === 'truck'
     ? '<div class="side-count-row">' +
         '<button class="icon-btn" onclick="changeSideCount(\'' + key + '\',-1)" ' + (sideAtMin?'disabled':'') + '>&#8722;</button>' +
-        '<span class="cap-note">' + s.sideCount + '/' + lim.maxSide + ' πλάγιες</span>' +
+        '<span class="cap-note">' + s.sideHeights.length + '/' + lim.maxSide + ' πλάγιες</span>' +
         '<button class="icon-btn" onclick="changeSideCount(\'' + key + '\',1)" ' + (sideAtMax?'disabled':'') + '>&#43;</button>' +
       '</div>'
     : '';
@@ -673,7 +693,6 @@ function renderSection(key){
       '</div>' +
       '<div class="controls">' +
         '<div class="field"><label>Ύψος ντάνες</label><input type="number" min="0" value="' + s.baseHeight + '" onchange="setBaseHeight(\'' + key + '\', this.value)"></div>' +
-        sideHeightField +
         '<button class="apply-btn" onclick="applyToAll(\'' + key + '\')">Εφαρμογή ύψους σε όλες</button>' +
       '</div>' +
     '</div>' +
@@ -752,21 +771,40 @@ function setBaseHeight(key, val){
   state[key].baseHeight = Math.max(0, parseInt(val) || 0);
   renderAll();
 }
-function setSideHeight(key, val){
-  state[key].sideHeight = Math.max(0, parseInt(val) || 0);
+function setSideStackHeight(key, idx, val){
+  state[key].sideHeights[idx] = Math.max(0, parseInt(val) || 0);
+  renderAll();
+}
+function setSideUniformHeight(key, val){
+  const s = state[key];
+  const h = Math.max(0, parseInt(val) || 0);
+  s.sideHeights = mkHeights(s.sideHeights.length, h);
+  renderAll();
+}
+function toggleSideStackMode(key){
+  const s = state[key];
+  s.sideDetailed = !s.sideDetailed;
+  if(!s.sideDetailed) s.sideHeights = mkHeights(s.sideHeights.length, s.sideHeights[0]); // collapse to uniform
   renderAll();
 }
 function changeSideCount(key, delta){
   const s = state[key];
-  const next = s.sideCount + delta;
+  const next = s.sideHeights.length + delta;
   if(next < 0 || next > LIMITS[key].maxSide) return;
-  s.sideCount = next;
+  if(next > s.sideHeights.length){
+    s.sideHeights = s.sideHeights.concat([s.sideDetailed ? s.baseHeight : (s.sideHeights[0] ?? s.baseHeight)]);
+  } else {
+    s.sideHeights = s.sideHeights.slice(0, next); // drop only the one stack that no longer fits
+  }
   renderAll();
 }
 function applyToAll(key){
   const h = state[key].baseHeight;
   state[key].positions.forEach(p => { p.heights = mkHeights(p.type, h); p.detailed = false; });
-  if (key === 'truck') state[key].sideHeight = h;
+  if (key === 'truck') {
+    state[key].sideHeights = mkHeights(state[key].sideHeights.length, h);
+    state[key].sideDetailed = false;
+  }
   renderAll();
 }
 function toggleEnabled(key){
@@ -787,11 +825,8 @@ function printPositionBoxHTML(p){
 }
 
 function printSideColumnHTML(s){
-  if(s.sideCount <= 0) return '';
-  let cells = '';
-  for(let i=0;i<s.sideCount;i++){
-    cells += '<div class="pcell cside">' + s.sideHeight + '</div>';
-  }
+  if(s.sideHeights.length <= 0) return '';
+  const cells = s.sideHeights.map(h => '<div class="pcell cside">' + h + '</div>').join('');
   return '<div class="pslot"><div class="pcol wside">' + cells + '</div><div class="ptype-label">Π</div></div>';
 }
 
@@ -824,7 +859,7 @@ function printSectionHTML(key){
     '<div class="ptotals">' +
       '<div>3άδες: <b>' + count3 + '</b> - κλούβες: <b>' + totals.t3 + '</b></div>' +
       '<div>4άδες: <b>' + count4 + '</b> - κλούβες: <b>' + totals.t4 + '</b></div>' +
-      (key === 'truck' ? '<div>Πλάγιες: <b>' + s.sideCount + '</b> - κλούβες: <b>' + totals.side + '</b></div>' : '') +
+      (key === 'truck' ? '<div>Πλάγιες: <b>' + s.sideHeights.length + '</b> - κλούβες: <b>' + totals.side + '</b></div>' : '') +
       '<div>Σύνολο ' + sectionWord + ': <b>' + totals.total + '</b> κλούβες</div>' +
     '</div>' +
   '</div>';
