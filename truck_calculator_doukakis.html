@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ΚΑΜΠΟΣΟΣ — Φόρτωση Καρότσας</title>
+<title>ΔΟΥΚΑΚΗΣ — Φόρτωση Καρότσας</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link rel="stylesheet" href="theme.css">
@@ -13,6 +13,7 @@
   :root{
     --crate-4: #D98B33;
     --crate-3: #3E8E7E;
+    --crate-side: #6B7280;
     --metal: #2B3542;
     --viz-panel: #20252D;
     --viz-border: #3C4450;
@@ -172,12 +173,14 @@
   }
   .cell-col.w4{width:80px;}
   .cell-col.w3{width:60px;}
+  .cell-col.wside{width:42px;}
   .cell{
     border-bottom:2px solid var(--viz-border);
   }
   .cell:last-child{border-bottom:none;}
   .cell.c4{background:var(--crate-4);flex:1;}
   .cell.c3{background:var(--crate-3);flex:3;}
+  .cell.cside{background:var(--crate-side);flex:1;}
   .cell.gap{flex:1;}
   .hatch-fill{
     background-image:
@@ -266,6 +269,7 @@
   .icon-btn:disabled{opacity:0.3;cursor:not-allowed;}
   .icon-btn.active{border-color:var(--gh-accent-emphasis);color:var(--gh-accent-fg);}
   .height-input.single{width:34px;}
+  .side-count-row{display:flex;align-items:center;gap:4px;}
   .add-row{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;align-items:center;}
   .add-btn{
     background:var(--gh-canvas-default);
@@ -289,6 +293,7 @@
     grid-template-columns:repeat(3,1fr);
     gap:10px;
   }
+  .totals.side4{grid-template-columns:repeat(4,1fr);}
   .tcard{
     background:var(--gh-canvas-default);
     border:1px solid var(--gh-border-default);
@@ -333,7 +338,7 @@
 <!-- AUTH GATE -->
 <div id="auth-gate" class="modal-bg">
   <div class="name-gate">
-    <h2>ΚΑΜΠΟΣΟΣ</h2>
+    <h2>ΔΟΥΚΑΚΗΣ</h2>
     <p>Φόρτωση Καρότσας<br>Σύνδεση</p>
     <input type="email" id="auth-email" placeholder="Email…" autocomplete="username"
            onkeydown="if(event.key==='Enter')document.getElementById('auth-password').focus()">
@@ -353,13 +358,13 @@
 <div class="wrap">
   <div class="top-row">
     <div>
-      <h1>ΚΑΜΠΟΣΟΣ — Φόρτωση Καρότσας</h1>
+      <h1>ΔΟΥΚΑΚΗΣ — Φόρτωση Καρότσας</h1>
       <p class="subtitle">Κάτοψη καρότσας — κάθε κελί είναι μία ντάνα κλουβιών, σε πραγματική διάταξη.</p>
     </div>
     <div class="top-actions">
       <div class="sync-badge loading" id="sync-badge"><div class="sync-dot"></div><span id="sync-text">Σύνδεση…</span></div>
       <button class="btn-tool" id="btn-logout" onclick="signOut()" style="display:none">← Έξοδος</button>
-      <a href="truck_calculator_doukakis.html" class="btn-tool" title="Φόρτωση Δουκάκη">🚛 ΔΟΥΚΑΚΗΣ</a>
+      <a href="truck_calculator_kamposos.html" class="btn-tool" title="Φόρτωση Καμπόσου">🚚 ΚΑΜΠΟΣΟΣ</a>
       <button class="btn-tool" onclick="printLoad()">🖨 Εκτύπωση φόρτωσης</button>
     </div>
   </div>
@@ -376,7 +381,7 @@
 // ── CONFIG ────────────────────────────────────────────────────────
 const SB_URL = 'https://oorhbrphdbigwgizejcc.supabase.co';
 const SB_KEY = 'sb_publishable_1S3L1sNMOjr-YgwGAAD2Kg_X_3S4cTl';
-const TABLE  = 'truck_load';
+const TABLE  = 'truck_load_doukakis';
 
 // ── AUTH ──────────────────────────────────────────────────────────
 const _sb = supabase.createClient(SB_URL, SB_KEY);
@@ -443,11 +448,16 @@ function setSyncState(syncState, text) {
 }
 
 // ── STATE ↔ SUPABASE ROW (single pinned row, id=1, last-write-wins) ─
-function stripSection(s) {
-  return {
+// Truck section only also carries sideHeight/sideCount (πλάγιες) — the
+// trailer never has these fields, matching how it has no πλάγιες UI at all.
+function stripSection(key) {
+  const s = state[key];
+  const base = {
     enabled: s.enabled, baseHeight: s.baseHeight,
     positions: s.positions.map(p => ({ type: p.type, heights: p.heights }))
   };
+  if (key === 'truck') { base.sideHeight = s.sideHeight; base.sideCount = s.sideCount; }
+  return base;
 }
 // One-time read-time upgrade: old saved rows have {height} (one value for the
 // whole position); expand to a {heights} array so every stack has its own value.
@@ -465,6 +475,7 @@ function applySnapshot(row) {
         return newPos(p.type, heights, !heights.every(h => h === heights[0]));
       })
     });
+    if (key === 'truck') Object.assign(state[key], { sideHeight: snap.sideHeight, sideCount: snap.sideCount });
   });
 }
 
@@ -498,8 +509,8 @@ async function saveState() {
       prefer: 'resolution=merge-duplicates,return=minimal',
       body: JSON.stringify({
         id: 1,
-        truck: stripSection(state.truck),
-        trailer: stripSection(state.trailer),
+        truck: stripSection('truck'),
+        trailer: stripSection('trailer'),
         updated_by: currentUser,
         updated_at: new Date().toISOString()
       })
@@ -521,7 +532,7 @@ function mkHeights(type, h){
 }
 
 const LIMITS = {
-  truck: { maxPositions: 9 },
+  truck: { maxPositions: 10, maxSide: 3 },
   trailer: { maxPositions: 9 }
 };
 
@@ -530,6 +541,8 @@ const state = {
     label: 'ΦΟΡΤΗΓΟ',
     enabled: true,
     baseHeight: 9,
+    sideHeight: 9,
+    sideCount: 2,
     positions: [
       newPos(4,mkHeights(4,9)), newPos(3,mkHeights(3,9)), newPos(4,mkHeights(4,9)), newPos(3,mkHeights(3,9)),
       newPos(4,mkHeights(4,9)), newPos(3,mkHeights(3,9)), newPos(4,mkHeights(4,9)), newPos(3,mkHeights(3,9))
@@ -552,8 +565,9 @@ function computeTotals(section){
     const crates = p.heights.reduce((a, b) => a + b, 0);
     if (p.type === 3) t3 += crates; else t4 += crates;
   });
-  const total = t3 + t4;
-  return { t3, t4, total };
+  const side = (section.sideCount || 0) * (section.sideHeight || 0);
+  const total = t3 + t4 + side;
+  return { t3, t4, side, total };
 }
 
 function positionBoxHTML(p){
@@ -569,6 +583,15 @@ function positionBoxHTML(p){
     '<div class="cell gap hatch-fill"></div>' +
     '<div class="cell c3"></div>' +
   '</div>';
+}
+
+function sideColumnHTML(s){
+  if(s.sideCount <= 0) return '';
+  let cells = '';
+  for(let i=0;i<s.sideCount;i++){
+    cells += '<div class="cell cside"></div>';
+  }
+  return '<div class="slot"><div class="cell-col wside">' + cells + '</div><div class="slot-controls"><span class="rig-label">πλάγιες</span></div></div>';
 }
 
 function renderSection(key){
@@ -614,6 +637,8 @@ function renderSection(key){
     '</div>';
   });
 
+  if(key === 'truck') slotsHTML += sideColumnHTML(s);
+
   if(key === 'truck'){
     slotsHTML += '<div class="slot"><div class="hitch"><div class="hitch-bar"></div><div class="hitch-pin"></div></div></div>';
   }
@@ -623,16 +648,35 @@ function renderSection(key){
     : '';
 
   const posAtMax = s.positions.length >= lim.maxPositions;
+  const sideAtMax = key === 'truck' && s.sideCount >= lim.maxSide;
+  const sideAtMin = key === 'truck' && s.sideCount <= 0;
+
+  const sideHeightField = key === 'truck'
+    ? '<div class="field"><label>Ύψος πλάγιας</label><input type="number" min="0" value="' + s.sideHeight + '" onchange="setSideHeight(\'' + key + '\', this.value)"></div>'
+    : '';
+
+  const sideCountRow = key === 'truck'
+    ? '<div class="side-count-row">' +
+        '<button class="icon-btn" onclick="changeSideCount(\'' + key + '\',-1)" ' + (sideAtMin?'disabled':'') + '>&#8722;</button>' +
+        '<span class="cap-note">' + s.sideCount + '/' + lim.maxSide + ' πλάγιες</span>' +
+        '<button class="icon-btn" onclick="changeSideCount(\'' + key + '\',1)" ' + (sideAtMax?'disabled':'') + '>&#43;</button>' +
+      '</div>'
+    : '';
+
+  const sideTotalCard = key === 'truck'
+    ? '<div class="tcard"><div class="tlabel">Πλάγιες σύνολο</div><div class="tval">' + totals.side + '</div></div>'
+    : '';
 
   return '<div class="section ' + (s.enabled ? '' : 'disabled') + '">' +
     '<div class="section-head">' +
       '<div class="section-title-row">' +
         '<span class="section-title">' + s.label + '</span>' +
-        '<span class="cap-note">έως ' + lim.maxPositions + ' στήλες</span>' +
+        '<span class="cap-note">έως ' + lim.maxPositions + ' στήλες' + (key === 'truck' ? ' · έως ' + lim.maxSide + ' πλάγιες' : '') + '</span>' +
         toggleBtn +
       '</div>' +
       '<div class="controls">' +
         '<div class="field"><label>Ύψος ντάνες</label><input type="number" min="0" value="' + s.baseHeight + '" onchange="setBaseHeight(\'' + key + '\', this.value)"></div>' +
+        sideHeightField +
         '<button class="apply-btn" onclick="applyToAll(\'' + key + '\')">Εφαρμογή ύψους σε όλες</button>' +
       '</div>' +
     '</div>' +
@@ -641,10 +685,12 @@ function renderSection(key){
       '<button class="add-btn w4" onclick="addPos(\'' + key + '\',4)" ' + (posAtMax?'disabled':'') + '>+ Θέση 4άδα</button>' +
       '<button class="add-btn w3" onclick="addPos(\'' + key + '\',3)" ' + (posAtMax?'disabled':'') + '>+ Θέση 3άδα</button>' +
       '<span class="cap-note">' + s.positions.length + '/' + lim.maxPositions + ' στήλες</span>' +
+      sideCountRow +
     '</div>' +
-    '<div class="totals">' +
+    '<div class="totals' + (key === 'truck' ? ' side4' : '') + '">' +
       '<div class="tcard"><div class="tlabel">3άδες σύνολο</div><div class="tval">' + totals.t3 + '</div></div>' +
       '<div class="tcard"><div class="tlabel">4άδες σύνολο</div><div class="tval">' + totals.t4 + '</div></div>' +
+      sideTotalCard +
       '<div class="tcard total"><div class="tlabel">Σύνολο καρότσας</div><div class="tval">' + totals.total + '</div></div>' +
     '</div>' +
   '</div>';
@@ -709,9 +755,21 @@ function setBaseHeight(key, val){
   state[key].baseHeight = Math.max(0, parseInt(val) || 0);
   renderAll();
 }
+function setSideHeight(key, val){
+  state[key].sideHeight = Math.max(0, parseInt(val) || 0);
+  renderAll();
+}
+function changeSideCount(key, delta){
+  const s = state[key];
+  const next = s.sideCount + delta;
+  if(next < 0 || next > LIMITS[key].maxSide) return;
+  s.sideCount = next;
+  renderAll();
+}
 function applyToAll(key){
   const h = state[key].baseHeight;
   state[key].positions.forEach(p => { p.heights = mkHeights(p.type, h); p.detailed = false; });
+  if (key === 'truck') state[key].sideHeight = h;
   renderAll();
 }
 function toggleEnabled(key){
@@ -729,6 +787,15 @@ function printPositionBoxHTML(p){
       '<div class="pcell c3">' + p.heights[2] + '</div>';
   return '<div class="pcol ' + (p.type === 4 ? 'w4' : 'w3') + '">' + cells + '</div>' +
     '<div class="ptype-label">' + p.type + '</div>';
+}
+
+function printSideColumnHTML(s){
+  if(s.sideCount <= 0) return '';
+  let cells = '';
+  for(let i=0;i<s.sideCount;i++){
+    cells += '<div class="pcell cside">' + s.sideHeight + '</div>';
+  }
+  return '<div class="pslot"><div class="pcol wside">' + cells + '</div><div class="ptype-label">Π</div></div>';
 }
 
 function printSectionHTML(key){
@@ -751,6 +818,7 @@ function printSectionHTML(key){
   s.positions.forEach(p => {
     row += '<div class="pslot">' + printPositionBoxHTML(p) + '</div>';
   });
+  if(key === 'truck') row += printSideColumnHTML(s);
   if(key === 'truck'){
     row += '<div class="pslot"><div class="phitch"><div class="bar"></div><div class="pin"></div></div></div>';
   }
@@ -761,6 +829,7 @@ function printSectionHTML(key){
     '<div class="ptotals">' +
       '<div>3άδες: <b>' + count3 + '</b> - κλούβες: <b>' + totals.t3 + '</b></div>' +
       '<div>4άδες: <b>' + count4 + '</b> - κλούβες: <b>' + totals.t4 + '</b></div>' +
+      (key === 'truck' ? '<div>Πλάγιες: <b>' + s.sideCount + '</b> - κλούβες: <b>' + totals.side + '</b></div>' : '') +
       '<div>Σύνολο ' + sectionWord + ': <b>' + totals.total + '</b> κλούβες</div>' +
     '</div>' +
   '</div>';
@@ -787,6 +856,7 @@ function printLoad(){
     '.pcol{height:88px;border:2px solid #333;box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden;}' +
     '.pcol.w4{width:76px;}' +
     '.pcol.w3{width:58px;}' +
+    '.pcol.wside{width:40px;}' +
     '.pcell{border-bottom:2px solid #333;flex:1;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:#fff;}' +
     '.pcell:last-child{border-bottom:none;}' +
     '.pcell.c3{flex:3;}' +
@@ -803,7 +873,7 @@ function printLoad(){
     '.ptotals b{font-size:15px;color:#111;}' +
     '.grandline{margin-top:22px;padding-top:14px;border-top:3px solid #111;font-size:22px;font-weight:700;display:flex;justify-content:space-between;break-inside:avoid;page-break-inside:avoid;}' +
     '</style></head><body>' +
-    '<h1>ΚΑΜΠΟΣΟΣ — Φόρτωση Καρότσας</h1>' +
+    '<h1>ΔΟΥΚΑΚΗΣ — Φόρτωση Καρότσας</h1>' +
     '<div class="meta">Εκτύπωση: ' + dateStr + '</div>' +
     printSectionHTML('truck') +
     printSectionHTML('trailer') +
