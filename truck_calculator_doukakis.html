@@ -8,7 +8,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link rel="stylesheet" href="theme.css">
 <style>
-  /* Crate-visualization palette — kept exact, not themed (cell layout, gap/heat-buffer
+  /* Crate-visualization palette — kept exact, not themed (cell layout, gap
      graphics, cab/hitch icons must render identically regardless of chrome restyle). */
   :root{
     --crate-4: #D98B33;
@@ -188,7 +188,6 @@
       repeating-linear-gradient(-45deg, var(--viz-muted) 0 1.5px, transparent 1.5px 8px);
     background-color:var(--viz-panel);
   }
-  .heat-buffer{height:var(--box-h);width:38px;border:2px solid var(--viz-border);box-sizing:border-box;}
   .slot-controls{display:flex;flex-direction:column;align-items:center;gap:4px;padding:0 3px;}
   .rig-label{font-size:9px;color:var(--viz-muted);text-transform:uppercase;text-align:center;letter-spacing:0.5px;}
   .cab{
@@ -603,11 +602,9 @@ function renderSection(key){
 
   if(key === 'truck'){
     slotsHTML += '<div class="slot"><div class="cab">ΚΑΜΠΙΝΑ</div></div>';
-    slotsHTML += '<div class="slot"><div class="hatch-fill heat-buffer"></div><div class="slot-controls"><span class="rig-label">κενές</span></div></div>';
   }
   if(key === 'trailer'){
     slotsHTML += '<div class="slot"><div class="hitch"><div class="hitch-bar"></div><div class="hitch-pin"></div></div></div>';
-    slotsHTML += '<div class="slot"><div class="hatch-fill heat-buffer"></div><div class="slot-controls"><span class="rig-label">κενές</span></div></div>';
   }
 
   s.positions.forEach((p, idx) => {
@@ -809,11 +806,9 @@ function printSectionHTML(key){
   let row = '';
   if(key === 'truck'){
     row += '<div class="pslot"><div class="pcab">ΚΑΜΠΙΝΑ</div></div>';
-    row += '<div class="pslot"><div class="phatch pbuffer"></div><div class="plabel">κενές</div></div>';
   }
   if(key === 'trailer'){
     row += '<div class="pslot"><div class="phitch"><div class="bar"></div><div class="pin"></div></div></div>';
-    row += '<div class="pslot"><div class="phatch pbuffer"></div><div class="plabel">κενές</div></div>';
   }
   s.positions.forEach(p => {
     row += '<div class="pslot">' + printPositionBoxHTML(p) + '</div>';
@@ -867,8 +862,6 @@ function printLoad(){
     '.phitch .bar{width:22px;height:5px;background:#333;border-radius:3px;}' +
     '.phitch .pin{width:13px;height:13px;border-radius:50%;background:#333;}' +
     '.phatch{background-color:#fff;background-image:repeating-linear-gradient(45deg,#333 0 1.5px,transparent 1.5px 8px),repeating-linear-gradient(-45deg,#333 0 1.5px,transparent 1.5px 8px);}' +
-    '.pbuffer{height:88px;width:34px;border:2px solid #333;box-sizing:border-box;}' +
-    '.plabel{font-size:9px;text-transform:uppercase;color:#555;margin-top:2px;text-align:center;}' +
     '.ptotals{display:flex;flex-direction:column;gap:3px;font-size:13px;color:#333;margin-bottom:6px;}' +
     '.ptotals b{font-size:15px;color:#111;}' +
     '.grandline{margin-top:22px;padding-top:14px;border-top:3px solid #111;font-size:22px;font-weight:700;display:flex;justify-content:space-between;break-inside:avoid;page-break-inside:avoid;}' +
