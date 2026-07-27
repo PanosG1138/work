@@ -1067,6 +1067,7 @@ async function loadData() {
   setSyncStatus('loading', 'Φόρτωση…');
   try {
     data = await sbSelect();
+    await autoMarkVaccinated();
     selectedIds.clear();
     showDone = false; updateShowDoneBtn();
     setSyncStatus('ok', 'Συνδέθηκε ✓');
@@ -1075,6 +1076,17 @@ async function loadData() {
     setSyncStatus('err', 'Σφάλμα σύνδεσης');
     toast('Σφάλμα φόρτωσης: ' + e.message, true);
   }
+}
+
+// rows whose Ημ. Εμβολιασμού has already passed get auto-flagged ΝΑΙ
+async function autoMarkVaccinated() {
+  const today = new Date().toISOString().slice(0,10);
+  const due = data.filter(r => r.hm_emv && r.hm_emv <= today && r.emvoliasmos !== 'ΝΑΙ');
+  if (!due.length) return;
+  await sbFetch(`${TABLE}?id=in.(${due.map(r => r.id).join(',')})`, {
+    method: 'PATCH', body: JSON.stringify({ emvoliasmos: 'ΝΑΙ' }),
+  });
+  due.forEach(r => r.emvoliasmos = 'ΝΑΙ');
 }
 
 // ── DATES ─────────────────────────────────────────────────────────
