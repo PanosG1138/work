@@ -7,12 +7,10 @@
   /* Borders */
   --gh-border-default:    #30363d;
   --gh-border-muted:      #21262d;
-  --gh-border-subtle:     rgba(240,246,252,0.1);
   /* Foreground */
   --gh-fg-default:        #e6edf3;
   --gh-fg-muted:          #8b949e;
   --gh-fg-subtle:         #6e7681;
-  --gh-fg-onEmphasis:     #ffffff;
   /* Accent blue */
   --gh-accent-fg:         #58a6ff;
   --gh-accent-emphasis:   #1f6feb;
@@ -40,11 +38,9 @@
   --gh-canvas-inset:      #f0f2f5;
   --gh-border-default:    #d0d7de;
   --gh-border-muted:      #d8dee4;
-  --gh-border-subtle:     rgba(31,35,40,0.06);
   --gh-fg-default:        #1f2328;
   --gh-fg-muted:          #636c76;
   --gh-fg-subtle:         #6e7781;
-  --gh-fg-onEmphasis:     #ffffff;
   --gh-accent-fg:         #0969da;
   --gh-accent-emphasis:   #0969da;
   --gh-accent-subtle:     rgba(9,105,218,0.08);

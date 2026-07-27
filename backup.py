@@ -74,7 +74,7 @@ def cleanup_old_history():
     return deleted_total
 
 # ── WRITE SHEET TAB ───────────────────────────────────────────────
-def write_tab(sh, title, columns, headers, rows, header_col_count):
+def write_tab(sh, title, columns, headers, rows):
     try:
         ws = sh.worksheet(title)
     except gspread.WorksheetNotFound:
@@ -84,7 +84,7 @@ def write_tab(sh, title, columns, headers, rows, header_col_count):
     ws.clear()
     ws.update("A1", data, value_input_option="RAW")
 
-    col_letter = chr(ord('A') + header_col_count - 1)
+    col_letter = gspread.utils.rowcol_to_a1(1, len(columns))[:-1]  # "A1" -> "A" (row is always 1)
     ws.format(f"A1:{col_letter}1", {
         "textFormat": {"bold": True},
         "backgroundColor": {"red": 0.13, "green": 0.11, "blue": 0.14},
@@ -116,10 +116,10 @@ def run_backup():
     inv_hist  = fetch("inventory_history", "ts.desc")
 
     print("\nWriting to Google Sheets…")
-    n_data    = write_tab(sh, "Δεδομένα",         DATA_COLUMNS,        DATA_HEADERS,        emvolia,   len(DATA_COLUMNS))
-    n_history = write_tab(sh, "Ιστορικό",         HISTORY_COLUMNS,     HISTORY_HEADERS,     history,   len(HISTORY_COLUMNS))
-    n_inv     = write_tab(sh, "Απόθεμα",          INVENTORY_COLUMNS,   INVENTORY_HEADERS,   inventory, len(INVENTORY_COLUMNS))
-    n_inv_h   = write_tab(sh, "Ιστορικό Αποθέματος", INV_HISTORY_COLUMNS, INV_HISTORY_HEADERS, inv_hist,  len(INV_HISTORY_COLUMNS))
+    n_data    = write_tab(sh, "Δεδομένα",         DATA_COLUMNS,        DATA_HEADERS,        emvolia)
+    n_history = write_tab(sh, "Ιστορικό",         HISTORY_COLUMNS,     HISTORY_HEADERS,     history)
+    n_inv     = write_tab(sh, "Απόθεμα",          INVENTORY_COLUMNS,   INVENTORY_HEADERS,   inventory)
+    n_inv_h   = write_tab(sh, "Ιστορικό Αποθέματος", INV_HISTORY_COLUMNS, INV_HISTORY_HEADERS, inv_hist)
 
     # ── LOG ───────────────────────────────────────────────────────
     try:
