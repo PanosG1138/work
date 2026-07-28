@@ -124,7 +124,7 @@
   <div class="top-row">
     <div>
       <h1>Κόστος Διαδρομής</h1>
-      <p class="subtitle">Χλμ και διόδια από <a href="https://vriskoapostasi.gr/el/" target="_blank" rel="noopener" style="color:var(--gh-accent-fg)">vriskoapostasi.gr</a> · καύσιμα υπολογισμένα αυτόματα.</p>
+      <p class="subtitle">Χλμ αυτόματα (OpenStreetMap) · διόδια συμπληρώνονται μία φορά ανά διαδρομή και θυμούνται στο εξής. Έλεγχος στο <a href="https://vriskoapostasi.gr/el/" target="_blank" rel="noopener" style="color:var(--gh-accent-fg)">vriskoapostasi.gr</a>.</p>
     </div>
     <div class="top-actions">
       <div class="sync-badge loading" id="sync-badge"><div class="sync-dot"></div><span id="sync-text">Σύνδεση…</span></div>
@@ -223,6 +223,7 @@ function setSyncState(syncState, text) {
 // ── STATE ↔ SUPABASE ROW (single pinned row, id=1, last-write-wins) ─
 function applySnapshot(row) {
   if (row.fuel_price_per_km != null) state.fuel_price_per_km = row.fuel_price_per_km;
+  if (row.tolls_by_route) state.tolls_by_route = row.tolls_by_route;
   if (row.destinations) {
     row.destinations.forEach((d, i) => { if (state.destinations[i]) Object.assign(state.destinations[i], d); });
   }
@@ -232,12 +233,17 @@ let stateReady = false; // gates autosave until the initial load has resolved
 async function loadState() {
   setSyncState('loading', 'Σύνδεση…');
   try {
-    const rows = await sbFetch(`${TABLE}?id=eq.1&select=fuel_price_per_km,destinations`);
+    const rows = await sbFetch(`${TABLE}?id=eq.1&select=fuel_price_per_km,tolls_by_route,destinations`);
     if (rows && rows.length) applySnapshot(rows[0]);
     setSyncState('ok', 'Συγχρονισμένο');
     document.getElementById('offline-overlay').classList.remove('active');
     stateReady = true;
     renderAll();
+    // Recompute km on load (sequentially — see throttle() — instead of on-save
+    // values, so distance always reflects the live routing service.
+    for (const [i, d] of state.destinations.entries()) {
+      if (d.start.trim() && d.end.trim()) await updateRoute(i);
+    }
   } catch (e) {
     setSyncState('err', 'Σφάλμα φόρτωσης');
     document.getElementById('offline-detail').textContent = e.message;
@@ -259,7 +265,8 @@ async function saveState() {
       body: JSON.stringify({
         id: 1,
         fuel_price_per_km: state.fuel_price_per_km,
-        destinations: state.destinations,
+        tolls_by_route: state.tolls_by_route,
+        destinations: state.destinations.map(stripDestination),
         updated_by: currentUser,
         updated_at: new Date().toISOString()
       })
@@ -271,12 +278,18 @@ async function saveState() {
 }
 
 // ── CALCULATOR STATE ──────────────────────────────────────────────
+// kmStatus/kmNote are UI-only (routing lookup progress), never sent to
+// Supabase — see stripDestination.
 function newDestination(label) {
-  return { label, start: '', end: '', trips: 1, km: 0, tolls: 0 };
+  return { label, start: '', end: '', trips: 1, km: 0, tolls: 0, kmStatus: 'idle', kmNote: '' };
+}
+function stripDestination(d) {
+  return { label: d.label, start: d.start, end: d.end, trips: d.trips, km: d.km, tolls: d.tolls };
 }
 
 const state = {
   fuel_price_per_km: 0.75,
+  tolls_by_route: {},
   destinations: [ newDestination('Προορισμός 1'), newDestination('Προορισμός 2') ]
 };
 
@@ -286,12 +299,75 @@ function computeDestination(d) {
   return { fuel, tolls, total: fuel + tolls };
 }
 
+function routeKey(start, end) {
+  const norm = s => s.trim().toLowerCase().replace(/\s+/g, ' ');
+  return norm(start) + '→' + norm(end);
+}
+
+// ── AUTOMATIC DISTANCE (free OSM services — no API key, no billing) ──
+// ponytail: shared 1.1s gate in front of every geocode/route call, so the
+// two destinations' lookups on page load don't hammer Nominatim's public
+// server past its 1 req/sec usage policy. Swap for a paid routing API if
+// this ever needs to be faster or more reliable than the public demo servers.
+let _lastApiCall = 0;
+async function throttle() {
+  const wait = Math.max(0, 1100 - (Date.now() - _lastApiCall));
+  if (wait > 0) await new Promise(r => setTimeout(r, wait));
+  _lastApiCall = Date.now();
+}
+
+async function geocode(address) {
+  await throttle();
+  const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=gr&q=${encodeURIComponent(address)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Σφάλμα γεωκωδικοποίησης');
+  const data = await res.json();
+  if (!data.length) throw new Error('Δεν βρέθηκε η διεύθυνση');
+  return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+}
+
+async function routeKm(a, b) {
+  await throttle();
+  const url = `https://router.project-osrm.org/route/v1/driving/${a.lon},${a.lat};${b.lon},${b.lat}?overview=false`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Σφάλμα δρομολόγησης');
+  const data = await res.json();
+  if (!data.routes || !data.routes.length) throw new Error('Δεν βρέθηκε διαδρομή');
+  return data.routes[0].distance / 1000;
+}
+
+async function updateRoute(idx) {
+  const d = state.destinations[idx];
+  if (!d.start.trim() || !d.end.trim()) return;
+  d.kmStatus = 'loading'; d.kmNote = '';
+  renderAll();
+  try {
+    const a = await geocode(d.start);
+    const b = await geocode(d.end);
+    d.km = Math.round(await routeKm(a, b) * 10) / 10;
+    d.kmStatus = 'ok';
+    d.tolls = state.tolls_by_route[routeKey(d.start, d.end)] ?? 0;
+  } catch (e) {
+    d.kmStatus = 'error';
+    d.kmNote = e.message;
+  }
+  renderAll();
+}
+
 function eur(v) { return v.toFixed(2) + ' €'; }
 function x(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+const KM_STATUS_TEXT = {
+  loading: '🔄 υπολογισμός…',
+  error: '⚠ ',
+  ok: '✓ αυτόματο'
+};
 
 function renderDestination(idx) {
   const d = state.destinations[idx];
   const t = computeDestination(d);
+  const statusText = d.kmStatus === 'error' ? KM_STATUS_TEXT.error + x(d.kmNote) : (KM_STATUS_TEXT[d.kmStatus] || '');
+  const statusColor = d.kmStatus === 'error' ? 'var(--gh-danger-fg)' : 'var(--gh-fg-muted)';
   return '<div class="section">' +
     '<div class="section-head"><span class="section-title">' + d.label + '</span></div>' +
     '<div class="controls">' +
@@ -300,8 +376,13 @@ function renderDestination(idx) {
       '<div class="field"><label>Δρομολόγια</label><input type="number" class="trips" min="0" step="1" value="' + d.trips + '" onchange="setField(' + idx + ',\'trips\',this.value)"></div>' +
     '</div>' +
     '<div class="controls">' +
-      '<div class="field"><label>Απόσταση ανά δρομολόγιο (χλμ)</label><input type="number" class="num" min="0" step="0.1" value="' + d.km + '" onchange="setField(' + idx + ',\'km\',this.value)"></div>' +
+      '<div class="field">' +
+        '<label>Απόσταση ανά δρομολόγιο (χλμ)</label>' +
+        '<input type="number" class="num" min="0" step="0.1" value="' + d.km + '" onchange="setField(' + idx + ',\'km\',this.value)">' +
+        '<span class="cap-note" style="color:' + statusColor + '">' + statusText + '</span>' +
+      '</div>' +
       '<div class="field"><label>Διόδια ανά δρομολόγιο (€)</label><input type="number" class="num" min="0" step="0.01" value="' + d.tolls + '" onchange="setField(' + idx + ',\'tolls\',this.value)"></div>' +
+      '<button class="btn-tool" title="Επανυπολογισμός χλμ" onclick="updateRoute(' + idx + ')">↻ Ανανέωση χλμ</button>' +
     '</div>' +
     '<div class="totals">' +
       '<div class="tcard"><div class="tlabel">Κόστος καυσίμου</div><div class="tval">' + eur(t.fuel) + '</div></div>' +
@@ -323,6 +404,13 @@ function setField(idx, key, val) {
   const d = state.destinations[idx];
   if (key === 'start' || key === 'end') {
     d[key] = val;
+    renderAll();
+    updateRoute(idx);
+    return;
+  }
+  if (key === 'tolls') {
+    d.tolls = Math.max(0, parseFloat(val) || 0);
+    if (d.start.trim() && d.end.trim()) state.tolls_by_route[routeKey(d.start, d.end)] = d.tolls;
   } else {
     d[key] = Math.max(0, parseFloat(val) || 0);
   }
