@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Κόστος Διαδρομής</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="stylesheet" href="theme.css">
+<style>
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--gh-canvas-default);
+    color:var(--gh-fg-default);
+    font-family:'Inter',system-ui,sans-serif;
+    padding:28px 20px 60px;
+  }
+  .wrap{max-width:900px;margin:0 auto;}
+  .top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;}
+  h1{font-family:'Inter',system-ui,sans-serif;font-weight:600;font-size:22px;margin:0;color:var(--gh-fg-default);}
+  .subtitle{color:var(--gh-fg-muted);font-size:14px;margin:4px 0 28px;}
+  .top-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+
+  /* ── Shared chrome controls (buttons, badges, gate) ── */
+  .btn-tool{
+    height:32px;padding:0 14px;
+    background:var(--gh-canvas-subtle);
+    border:1px solid var(--gh-border-default);
+    color:var(--gh-fg-default);
+    border-radius:var(--rs);
+    font-family:'Inter',system-ui,sans-serif;
+    font-size:13px;font-weight:500;
+    cursor:pointer;white-space:nowrap;
+    display:inline-flex;align-items:center;gap:6px;
+    transition:background 0.15s,border-color 0.15s;
+    text-decoration:none;
+  }
+  .btn-tool:hover{background:var(--gh-hover-bg);border-color:var(--gh-fg-subtle)}
+  .sync-badge{display:flex;align-items:center;gap:5px;font-size:12px;padding:0 10px;height:28px;border-radius:99px;border:1px solid var(--gh-border-default);background:var(--gh-canvas-subtle);color:var(--gh-fg-muted);white-space:nowrap;transition:all 0.25s}
+  .sync-badge.ok{border-color:rgba(63,185,80,0.4);color:var(--gh-success-fg);background:var(--gh-success-subtle)}
+  .sync-badge.err{border-color:rgba(248,81,73,0.4);color:var(--gh-danger-fg);background:var(--gh-danger-subtle)}
+  .sync-badge.loading{border-color:rgba(210,153,34,0.4);color:var(--gh-attention-fg);background:var(--gh-attention-subtle)}
+  .sync-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+  .sync-badge.loading .sync-dot{animation:pulse 1.2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.2}}
+
+  .modal-bg{position:fixed;inset:0;background:var(--gh-canvas-default);display:flex;align-items:center;justify-content:center;z-index:200}
+  .name-gate{background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:var(--r);padding:32px;width:360px;text-align:center}
+  .name-gate h2{font-weight:700;font-size:20px;color:var(--gh-fg-default);margin-bottom:8px}
+  .name-gate p{font-size:13px;color:var(--gh-fg-muted);margin-bottom:22px;line-height:1.6}
+  .name-gate input{width:100%;background:var(--gh-canvas-default);border:1px solid var(--gh-border-default);border-radius:var(--rs);color:var(--gh-fg-default);font-family:inherit;font-size:15px;padding:8px;margin-bottom:12px;text-align:center;outline:none}
+  .name-gate input:focus{border-color:var(--gh-accent-emphasis);box-shadow:0 0 0 3px rgba(31,111,235,0.3)}
+  .btn-primary{width:100%;height:36px;background:var(--gh-accent-emphasis);color:#fff;border:1px solid rgba(240,246,252,0.1);border-radius:var(--rs);font-family:inherit;font-weight:500;font-size:14px;cursor:pointer}
+  .btn-primary:hover{background:#388bfd}
+  .btn-primary:disabled{opacity:0.4;cursor:not-allowed}
+  .gate-error{font-size:12px;color:var(--gh-danger-fg);margin-top:8px;min-height:18px}
+
+  .offline-overlay{display:none;position:fixed;inset:0;background:rgba(1,4,9,0.85);z-index:150;align-items:center;justify-content:center;flex-direction:column;gap:12px;backdrop-filter:blur(3px)}
+  .offline-overlay.active{display:flex}
+  .offline-msg{font-size:15px;font-weight:600;color:var(--gh-danger-fg);text-align:center;line-height:1.6}
+  .offline-msg span{display:block;font-size:12px;font-weight:400;color:var(--gh-fg-muted);margin-top:6px}
+
+  /* ── Section panels (chrome) ── */
+  .section{background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:var(--r);padding:20px 22px 22px;margin-bottom:22px;}
+  .section-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:18px;}
+  .section-title{font-family:'Inter',system-ui,sans-serif;font-weight:600;font-size:17px;color:var(--gh-fg-default);}
+  .cap-note{font-size:11px;color:var(--gh-fg-muted);}
+  .controls{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end;margin-bottom:18px;}
+  .field{display:flex;flex-direction:column;gap:4px;}
+  .field.grow{flex:1;min-width:200px;}
+  .field label{font-size:11px;color:var(--gh-fg-muted);text-transform:uppercase;letter-spacing:0.5px;}
+  .field input{
+    background:var(--gh-canvas-default);
+    border:1px solid var(--gh-border-default);
+    color:var(--gh-fg-default);
+    border-radius:var(--rs);
+    padding:7px 8px;
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    font-weight:500;
+  }
+  .field input:focus{outline:none;border-color:var(--gh-accent-emphasis);box-shadow:0 0 0 3px rgba(31,111,235,0.3);}
+  .field input.num{width:110px;}
+  .field input.trips{width:80px;}
+
+  /* ── Totals cards (chrome) ── */
+  .totals{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .tcard{background:var(--gh-canvas-default);border:1px solid var(--gh-border-default);border-radius:var(--rs);padding:10px 12px;}
+  .tcard .tlabel{font-size:11px;color:var(--gh-fg-muted);margin-bottom:4px;}
+  .tcard .tval{font-family:'Inter',sans-serif;font-size:19px;font-weight:700;color:var(--gh-fg-default);}
+  .tcard.total{background:var(--gh-accent-subtle);border-color:var(--gh-accent-emphasis);}
+  .tcard.total .tlabel{color:var(--gh-accent-fg);opacity:0.8;}
+  .tcard.total .tval{color:var(--gh-accent-fg);}
+  .grand{margin-top:8px;background:var(--gh-accent-subtle);border:1px solid var(--gh-accent-emphasis);border-radius:var(--r);padding:20px 26px;display:flex;align-items:center;justify-content:space-between;}
+  .grand .glabel{font-family:'Inter',sans-serif;font-weight:600;font-size:16px;color:var(--gh-fg-default);}
+  .grand .gval{font-family:'Inter',sans-serif;font-size:32px;font-weight:700;color:var(--gh-accent-fg);}
+  @media (max-width:640px){.totals{grid-template-columns:repeat(2,1fr);}h1{font-size:18px;}}
+</style>
+</head>
+<body>
+
+<!-- AUTH GATE -->
+<div id="auth-gate" class="modal-bg">
+  <div class="name-gate">
+    <h2>Κόστος Διαδρομής</h2>
+    <p>Σύνδεση</p>
+    <input type="email" id="auth-email" placeholder="Email…" autocomplete="username"
+           onkeydown="if(event.key==='Enter')document.getElementById('auth-password').focus()">
+    <input type="password" id="auth-password" placeholder="Κωδικός…"
+           autocomplete="current-password" onkeydown="if(event.key==='Enter')signIn()">
+    <button class="btn-primary" id="auth-btn" onclick="signIn()">Είσοδος</button>
+    <div class="gate-error" id="auth-error"></div>
+  </div>
+</div>
+
+<!-- OFFLINE OVERLAY — shown only if the initial state load fails -->
+<div class="offline-overlay" id="offline-overlay">
+  <div class="offline-msg">⚠ Αδύνατη η σύνδεση με τη βάση<span id="offline-detail">Ανανεώστε τη σελίδα για να ξαναδοκιμάσετε.</span></div>
+  <button class="btn-tool" onclick="location.reload()">↺ Ανανέωση</button>
+</div>
+
+<div class="wrap">
+  <div class="top-row">
+    <div>
+      <h1>Κόστος Διαδρομής</h1>
+      <p class="subtitle">Χλμ και διόδια από <a href="https://vriskoapostasi.gr/el/" target="_blank" rel="noopener" style="color:var(--gh-accent-fg)">vriskoapostasi.gr</a> · καύσιμα υπολογισμένα αυτόματα.</p>
+    </div>
+    <div class="top-actions">
+      <div class="sync-badge loading" id="sync-badge"><div class="sync-dot"></div><span id="sync-text">Σύνδεση…</span></div>
+      <button class="btn-tool" id="btn-logout" onclick="signOut()" style="display:none">← Έξοδος</button>
+      <a class="btn-tool" href="https://vriskoapostasi.gr/el/" target="_blank" rel="noopener">🗺 VriskoApostasi ↗</a>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <span class="section-title">Ρυθμίσεις</span>
+    </div>
+    <div class="controls">
+      <div class="field"><label>Τιμή καυσίμου (€/χλμ)</label><input type="number" class="num" min="0" step="0.01" id="fuelPrice" onchange="setFuelPrice(this.value)"></div>
+    </div>
+  </div>
+
+  <div id="destinations"></div>
+
+  <div class="grand">
+    <span class="glabel">Συνολικό Κόστος</span>
+    <span class="gval" id="grandTotal">0.00 €</span>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────
+const SB_URL = 'https://oorhbrphdbigwgizejcc.supabase.co';
+const SB_KEY = 'sb_publishable_1S3L1sNMOjr-YgwGAAD2Kg_X_3S4cTl';
+const TABLE  = 'road_cost_calculator';
+
+// ── AUTH ──────────────────────────────────────────────────────────
+const _sb = supabase.createClient(SB_URL, SB_KEY);
+let _authSession = null;
+let currentUser = '';
+
+function emailToDisplayName(email) {
+  const m = {'panos@internal.local':'Πάνος','eleni@internal.local':'Ελένη'};
+  return m[email] || email.split('@')[0];
+}
+
+async function signIn() {
+  const email = document.getElementById('auth-email').value.trim();
+  const pw    = document.getElementById('auth-password').value;
+  const btn   = document.getElementById('auth-btn');
+  const errEl = document.getElementById('auth-error');
+  btn.disabled = true; btn.textContent = 'Σύνδεση…';
+  errEl.textContent = '';
+  const { error } = await _sb.auth.signInWithPassword({ email, password: pw });
+  if (error) {
+    errEl.textContent = 'Λάθος email ή κωδικός.';
+    btn.disabled = false; btn.textContent = 'Είσοδος';
+  }
+}
+
+async function signOut() { await _sb.auth.signOut(); }
+
+_sb.auth.onAuthStateChange((event, session) => {
+  _authSession = session;
+  document.getElementById('auth-gate').style.display = session ? 'none' : 'flex';
+  document.getElementById('btn-logout').style.display = session ? '' : 'none';
+  if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
+    currentUser = emailToDisplayName(session.user.email);
+    loadState();
+  } else if (!session) {
+    setTimeout(() => { const e = document.getElementById('auth-email'); if(e) e.focus(); }, 100);
+  }
+});
+
+// ── SUPABASE ──────────────────────────────────────────────────────
+async function sbFetch(path, opts = {}) {
+  const res = await fetch(`${SB_URL}/rest/v1/${path}`, {
+    ...opts,
+    headers: {
+      'apikey': SB_KEY,
+      'Authorization': `Bearer ${_authSession.access_token}`,
+      'Content-Type': 'application/json',
+      'Prefer': opts.prefer || '',
+      ...opts.headers,
+    },
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || err.hint || `HTTP ${res.status}`);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+function setSyncState(syncState, text) {
+  const b = document.getElementById('sync-badge');
+  b.className = 'sync-badge ' + syncState;
+  document.getElementById('sync-text').textContent = text;
+}
+
+// ── STATE ↔ SUPABASE ROW (single pinned row, id=1, last-write-wins) ─
+function applySnapshot(row) {
+  if (row.fuel_price_per_km != null) state.fuel_price_per_km = row.fuel_price_per_km;
+  if (row.destinations) {
+    row.destinations.forEach((d, i) => { if (state.destinations[i]) Object.assign(state.destinations[i], d); });
+  }
+}
+
+let stateReady = false; // gates autosave until the initial load has resolved
+async function loadState() {
+  setSyncState('loading', 'Σύνδεση…');
+  try {
+    const rows = await sbFetch(`${TABLE}?id=eq.1&select=fuel_price_per_km,destinations`);
+    if (rows && rows.length) applySnapshot(rows[0]);
+    setSyncState('ok', 'Συγχρονισμένο');
+    document.getElementById('offline-overlay').classList.remove('active');
+    stateReady = true;
+    renderAll();
+  } catch (e) {
+    setSyncState('err', 'Σφάλμα φόρτωσης');
+    document.getElementById('offline-detail').textContent = e.message;
+    document.getElementById('offline-overlay').classList.add('active');
+  }
+}
+
+let saveTimer = null;
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveState, 500);
+}
+async function saveState() {
+  setSyncState('loading', 'Αποθήκευση…');
+  try {
+    await sbFetch(TABLE, {
+      method: 'POST',
+      prefer: 'resolution=merge-duplicates,return=minimal',
+      body: JSON.stringify({
+        id: 1,
+        fuel_price_per_km: state.fuel_price_per_km,
+        destinations: state.destinations,
+        updated_by: currentUser,
+        updated_at: new Date().toISOString()
+      })
+    });
+    setSyncState('ok', 'Συγχρονισμένο');
+  } catch (e) {
+    setSyncState('err', 'Σφάλμα αποθήκευσης: ' + e.message);
+  }
+}
+
+// ── CALCULATOR STATE ──────────────────────────────────────────────
+function newDestination(label) {
+  return { label, start: '', end: '', trips: 1, km: 0, tolls: 0 };
+}
+
+const state = {
+  fuel_price_per_km: 0.75,
+  destinations: [ newDestination('Προορισμός 1'), newDestination('Προορισμός 2') ]
+};
+
+function computeDestination(d) {
+  const fuel = d.trips * d.km * state.fuel_price_per_km;
+  const tolls = d.trips * d.tolls;
+  return { fuel, tolls, total: fuel + tolls };
+}
+
+function eur(v) { return v.toFixed(2) + ' €'; }
+function x(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function renderDestination(idx) {
+  const d = state.destinations[idx];
+  const t = computeDestination(d);
+  return '<div class="section">' +
+    '<div class="section-head"><span class="section-title">' + d.label + '</span></div>' +
+    '<div class="controls">' +
+      '<div class="field grow"><label>Από</label><input type="text" value="' + x(d.start) + '" onchange="setField(' + idx + ',\'start\',this.value)"></div>' +
+      '<div class="field grow"><label>Προς</label><input type="text" value="' + x(d.end) + '" onchange="setField(' + idx + ',\'end\',this.value)"></div>' +
+      '<div class="field"><label>Δρομολόγια</label><input type="number" class="trips" min="0" step="1" value="' + d.trips + '" onchange="setField(' + idx + ',\'trips\',this.value)"></div>' +
+    '</div>' +
+    '<div class="controls">' +
+      '<div class="field"><label>Απόσταση ανά δρομολόγιο (χλμ)</label><input type="number" class="num" min="0" step="0.1" value="' + d.km + '" onchange="setField(' + idx + ',\'km\',this.value)"></div>' +
+      '<div class="field"><label>Διόδια ανά δρομολόγιο (€)</label><input type="number" class="num" min="0" step="0.01" value="' + d.tolls + '" onchange="setField(' + idx + ',\'tolls\',this.value)"></div>' +
+    '</div>' +
+    '<div class="totals">' +
+      '<div class="tcard"><div class="tlabel">Κόστος καυσίμου</div><div class="tval">' + eur(t.fuel) + '</div></div>' +
+      '<div class="tcard"><div class="tlabel">Κόστος διοδίων</div><div class="tval">' + eur(t.tolls) + '</div></div>' +
+      '<div class="tcard total"><div class="tlabel">Σύνολο προορισμού</div><div class="tval">' + eur(t.total) + '</div></div>' +
+    '</div>' +
+  '</div>';
+}
+
+function renderAll() {
+  document.getElementById('fuelPrice').value = state.fuel_price_per_km;
+  document.getElementById('destinations').innerHTML = state.destinations.map((_, i) => renderDestination(i)).join('');
+  const grand = state.destinations.reduce((sum, d) => sum + computeDestination(d).total, 0);
+  document.getElementById('grandTotal').textContent = eur(grand);
+  if (stateReady) scheduleSave();
+}
+
+function setField(idx, key, val) {
+  const d = state.destinations[idx];
+  if (key === 'start' || key === 'end') {
+    d[key] = val;
+  } else {
+    d[key] = Math.max(0, parseFloat(val) || 0);
+  }
+  renderAll();
+}
+
+function setFuelPrice(val) {
+  state.fuel_price_per_km = Math.max(0, parseFloat(val) || 0);
+  renderAll();
+}
+</script>
+</body>
+</html>
