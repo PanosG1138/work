@@ -70,7 +70,7 @@
   .field{display:flex;flex-direction:column;gap:4px;}
   .field.grow{flex:1;min-width:200px;}
   .field label{font-size:11px;color:var(--gh-fg-muted);text-transform:uppercase;letter-spacing:0.5px;}
-  .field input{
+  .field input,.field select{
     background:var(--gh-canvas-default);
     border:1px solid var(--gh-border-default);
     color:var(--gh-fg-default);
@@ -80,9 +80,13 @@
     font-size:14px;
     font-weight:500;
   }
-  .field input:focus{outline:none;border-color:var(--gh-accent-emphasis);box-shadow:0 0 0 3px rgba(31,111,235,0.3);}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--gh-accent-emphasis);box-shadow:0 0 0 3px rgba(31,111,235,0.3);}
   .field input.num{width:110px;}
   .field input.trips{width:80px;}
+
+  /* ── Leg sub-blocks (outbound / return within a trip) ── */
+  .leg{border-top:1px solid var(--gh-border-default);padding-top:16px;margin-top:2px;margin-bottom:16px;}
+  .leg-title{font-size:12px;font-weight:600;color:var(--gh-fg-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;}
 
   /* ── Totals cards (chrome) ── */
   .totals{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
@@ -124,7 +128,7 @@
   <div class="top-row">
     <div>
       <h1>Κόστος Διαδρομής</h1>
-      <p class="subtitle">Χλμ αυτόματα (OpenStreetMap) · διόδια συμπληρώνονται μία φορά ανά διαδρομή και θυμούνται στο εξής. Έλεγχος στο <a href="https://vriskoapostasi.gr/el/" target="_blank" rel="noopener" style="color:var(--gh-accent-fg)">vriskoapostasi.gr</a>.</p>
+      <p class="subtitle">Χλμ αυτόματα (OpenStreetMap) · η επιστροφή γεμίζει μόνη της από τον προορισμό · διόδια θυμούνται ανά διαδρομή. Έλεγχος στο <a href="https://vriskoapostasi.gr/el/" target="_blank" rel="noopener" style="color:var(--gh-accent-fg)">vriskoapostasi.gr</a>.</p>
     </div>
     <div class="top-actions">
       <div class="sync-badge loading" id="sync-badge"><div class="sync-dot"></div><span id="sync-text">Σύνδεση…</span></div>
@@ -133,16 +137,7 @@
     </div>
   </div>
 
-  <div class="section">
-    <div class="section-head">
-      <span class="section-title">Ρυθμίσεις</span>
-    </div>
-    <div class="controls">
-      <div class="field"><label>Τιμή καυσίμου (€/χλμ)</label><input type="number" class="num" min="0" step="0.01" id="fuelPrice" onchange="setFuelPrice(this.value)"></div>
-    </div>
-  </div>
-
-  <div id="destinations"></div>
+  <div id="trips"></div>
 
   <div class="grand">
     <span class="glabel">Συνολικό Κόστος</span>
@@ -222,10 +217,15 @@ function setSyncState(syncState, text) {
 
 // ── STATE ↔ SUPABASE ROW (single pinned row, id=1, last-write-wins) ─
 function applySnapshot(row) {
-  if (row.fuel_price_per_km != null) state.fuel_price_per_km = row.fuel_price_per_km;
-  if (row.tolls_by_route) state.tolls_by_route = row.tolls_by_route;
-  if (row.destinations) {
-    row.destinations.forEach((d, i) => { if (state.destinations[i]) Object.assign(state.destinations[i], d); });
+  if (row.saved_routes) state.saved_routes = row.saved_routes;
+  if (row.trips) {
+    row.trips.forEach((t, i) => {
+      const trip = state.trips[i];
+      if (!trip) return;
+      if (t.count != null) trip.count = t.count;
+      if (t.outbound) Object.assign(trip.outbound, t.outbound);
+      if (t.return) Object.assign(trip.return, t.return);
+    });
   }
 }
 
@@ -233,16 +233,17 @@ let stateReady = false; // gates autosave until the initial load has resolved
 async function loadState() {
   setSyncState('loading', 'Σύνδεση…');
   try {
-    const rows = await sbFetch(`${TABLE}?id=eq.1&select=fuel_price_per_km,tolls_by_route,destinations`);
+    const rows = await sbFetch(`${TABLE}?id=eq.1&select=saved_routes,trips`);
     if (rows && rows.length) applySnapshot(rows[0]);
     setSyncState('ok', 'Συγχρονισμένο');
     document.getElementById('offline-overlay').classList.remove('active');
     stateReady = true;
     renderAll();
-    // Recompute km on load (sequentially — see throttle() — instead of on-save
-    // values, so distance always reflects the live routing service.
-    for (const [i, d] of state.destinations.entries()) {
-      if (d.start.trim() && d.end.trim()) await updateRoute(i);
+    // Recompute km on load (sequentially — see throttle()) so distance always
+    // reflects the live routing service instead of a possibly-stale saved value.
+    for (const [i, trip] of state.trips.entries()) {
+      if (trip.outbound.start.trim() && trip.outbound.end.trim()) await updateRoute(i, 'outbound');
+      if (trip.return.start.trim() && trip.return.end.trim()) await updateRoute(i, 'return');
     }
   } catch (e) {
     setSyncState('err', 'Σφάλμα φόρτωσης');
@@ -264,9 +265,8 @@ async function saveState() {
       prefer: 'resolution=merge-duplicates,return=minimal',
       body: JSON.stringify({
         id: 1,
-        fuel_price_per_km: state.fuel_price_per_km,
-        tolls_by_route: state.tolls_by_route,
-        destinations: state.destinations.map(stripDestination),
+        saved_routes: state.saved_routes,
+        trips: state.trips.map(stripTrip),
         updated_by: currentUser,
         updated_at: new Date().toISOString()
       })
@@ -279,24 +279,37 @@ async function saveState() {
 
 // ── CALCULATOR STATE ──────────────────────────────────────────────
 // kmStatus/kmNote are UI-only (routing lookup progress), never sent to
-// Supabase — see stripDestination.
-function newDestination(label) {
-  return { label, start: '', end: '', trips: 1, km: 0, tolls: 0, kmStatus: 'idle', kmNote: '' };
+// Supabase — see stripLeg.
+function newLeg(fuelPrice) {
+  return { start: '', end: '', km: 0, tolls: 0, fuel_price_per_km: fuelPrice, kmStatus: 'idle', kmNote: '' };
 }
-function stripDestination(d) {
-  return { label: d.label, start: d.start, end: d.end, trips: d.trips, km: d.km, tolls: d.tolls };
+function newTrip(label, outboundLabel) {
+  return { label, outboundLabel, count: 1, outbound: newLeg(0.75), return: newLeg(0.65) };
+}
+function stripLeg(leg) {
+  return { start: leg.start, end: leg.end, km: leg.km, tolls: leg.tolls, fuel_price_per_km: leg.fuel_price_per_km };
+}
+function stripTrip(trip) {
+  return { label: trip.label, outboundLabel: trip.outboundLabel, count: trip.count, outbound: stripLeg(trip.outbound), return: stripLeg(trip.return) };
 }
 
 const state = {
-  fuel_price_per_km: 0.75,
-  tolls_by_route: {},
-  destinations: [ newDestination('Προορισμός 1'), newDestination('Προορισμός 2') ]
+  saved_routes: {}, // routeKey -> {start,end,km,tolls} — address book of every route ever used
+  trips: [
+    newTrip('Ταξίδι 1', 'Προορισμός 1'),
+    newTrip('Ταξίδι 2', 'Προορισμός 2')
+  ]
 };
 
-function computeDestination(d) {
-  const fuel = d.trips * d.km * state.fuel_price_per_km;
-  const tolls = d.trips * d.tolls;
+function computeLeg(leg, count) {
+  const fuel = count * leg.km * leg.fuel_price_per_km;
+  const tolls = count * leg.tolls;
   return { fuel, tolls, total: fuel + tolls };
+}
+function computeTrip(trip) {
+  const out = computeLeg(trip.outbound, trip.count);
+  const ret = computeLeg(trip.return, trip.count);
+  return { out, ret, total: out.total + ret.total };
 }
 
 function routeKey(start, end) {
@@ -304,11 +317,32 @@ function routeKey(start, end) {
   return norm(start) + '→' + norm(end);
 }
 
+function upsertSavedRoute(leg) {
+  if (!leg.start.trim() || !leg.end.trim()) return;
+  state.saved_routes[routeKey(leg.start, leg.end)] = { start: leg.start, end: leg.end, km: leg.km, tolls: leg.tolls };
+}
+
+// The return leg mirrors the outbound leg in reverse — same round trip, opposite direction.
+function syncReturnLeg(tripIdx) {
+  const trip = state.trips[tripIdx];
+  trip.return.start = trip.outbound.end;
+  trip.return.end = trip.outbound.start;
+}
+
+function applySavedRoute(tripIdx, legKey, key) {
+  const r = state.saved_routes[key];
+  if (!r) return;
+  const leg = state.trips[tripIdx][legKey];
+  Object.assign(leg, { start: r.start, end: r.end, km: r.km, tolls: r.tolls, kmStatus: 'ok', kmNote: '' });
+  if (legKey === 'outbound') syncReturnLeg(tripIdx);
+  renderAll();
+}
+
 // ── AUTOMATIC DISTANCE (free OSM services — no API key, no billing) ──
 // ponytail: shared 1.1s gate in front of every geocode/route call, so the
-// two destinations' lookups on page load don't hammer Nominatim's public
-// server past its 1 req/sec usage policy. Swap for a paid routing API if
-// this ever needs to be faster or more reliable than the public demo servers.
+// legs' lookups on page load don't hammer Nominatim's public server past
+// its 1 req/sec usage policy. Swap for a paid routing API if this ever
+// needs to be faster or more reliable than the public demo servers.
 let _lastApiCall = 0;
 async function throttle() {
   const wait = Math.max(0, 1100 - (Date.now() - _lastApiCall));
@@ -336,20 +370,21 @@ async function routeKm(a, b) {
   return data.routes[0].distance / 1000;
 }
 
-async function updateRoute(idx) {
-  const d = state.destinations[idx];
-  if (!d.start.trim() || !d.end.trim()) return;
-  d.kmStatus = 'loading'; d.kmNote = '';
+async function updateRoute(tripIdx, legKey) {
+  const leg = state.trips[tripIdx][legKey];
+  if (!leg.start.trim() || !leg.end.trim()) return;
+  leg.kmStatus = 'loading'; leg.kmNote = '';
   renderAll();
   try {
-    const a = await geocode(d.start);
-    const b = await geocode(d.end);
-    d.km = Math.round(await routeKm(a, b) * 10) / 10;
-    d.kmStatus = 'ok';
-    d.tolls = state.tolls_by_route[routeKey(d.start, d.end)] ?? 0;
+    const a = await geocode(leg.start);
+    const b = await geocode(leg.end);
+    leg.km = Math.round(await routeKm(a, b) * 10) / 10;
+    leg.kmStatus = 'ok';
+    leg.tolls = state.saved_routes[routeKey(leg.start, leg.end)]?.tolls ?? 0;
+    upsertSavedRoute(leg);
   } catch (e) {
-    d.kmStatus = 'error';
-    d.kmNote = e.message;
+    leg.kmStatus = 'error';
+    leg.kmNote = e.message;
   }
   renderAll();
 }
@@ -363,62 +398,90 @@ const KM_STATUS_TEXT = {
   ok: '✓ αυτόματο'
 };
 
-function renderDestination(idx) {
-  const d = state.destinations[idx];
-  const t = computeDestination(d);
-  const statusText = d.kmStatus === 'error' ? KM_STATUS_TEXT.error + x(d.kmNote) : (KM_STATUS_TEXT[d.kmStatus] || '');
-  const statusColor = d.kmStatus === 'error' ? 'var(--gh-danger-fg)' : 'var(--gh-fg-muted)';
-  return '<div class="section">' +
-    '<div class="section-head"><span class="section-title">' + d.label + '</span></div>' +
+function savedRouteOptions(currentKey) {
+  const keys = Object.keys(state.saved_routes);
+  if (!keys.length) return '';
+  const opts = keys.map(k => {
+    const r = state.saved_routes[k];
+    return '<option value="' + x(k) + '"' + (k === currentKey ? ' selected' : '') + '>' + x(r.start) + ' → ' + x(r.end) + '</option>';
+  }).join('');
+  return '<option value="">— Επιλογή αποθηκευμένης διαδρομής —</option>' + opts;
+}
+
+function renderLeg(tripIdx, legKey, title) {
+  const leg = state.trips[tripIdx][legKey];
+  const statusText = leg.kmStatus === 'error' ? KM_STATUS_TEXT.error + x(leg.kmNote) : (KM_STATUS_TEXT[leg.kmStatus] || '');
+  const statusColor = leg.kmStatus === 'error' ? 'var(--gh-danger-fg)' : 'var(--gh-fg-muted)';
+  const savedOpts = savedRouteOptions(routeKey(leg.start, leg.end));
+  const savedPicker = savedOpts
+    ? '<div class="controls"><div class="field grow"><label>Αποθηκευμένη διαδρομή</label><select onchange="applySavedRoute(' + tripIdx + ',\'' + legKey + '\', this.value)">' + savedOpts + '</select></div></div>'
+    : '';
+  return '<div class="leg">' +
+    '<div class="leg-title">' + x(title) + '</div>' +
+    savedPicker +
     '<div class="controls">' +
-      '<div class="field grow"><label>Από</label><input type="text" value="' + x(d.start) + '" onchange="setField(' + idx + ',\'start\',this.value)"></div>' +
-      '<div class="field grow"><label>Προς</label><input type="text" value="' + x(d.end) + '" onchange="setField(' + idx + ',\'end\',this.value)"></div>' +
-      '<div class="field"><label>Δρομολόγια</label><input type="number" class="trips" min="0" step="1" value="' + d.trips + '" onchange="setField(' + idx + ',\'trips\',this.value)"></div>' +
+      '<div class="field grow"><label>Από</label><input type="text" value="' + x(leg.start) + '" onchange="setField(' + tripIdx + ',\'' + legKey + '\',\'start\',this.value)"></div>' +
+      '<div class="field grow"><label>Προς</label><input type="text" value="' + x(leg.end) + '" onchange="setField(' + tripIdx + ',\'' + legKey + '\',\'end\',this.value)"></div>' +
     '</div>' +
     '<div class="controls">' +
       '<div class="field">' +
-        '<label>Απόσταση ανά δρομολόγιο (χλμ)</label>' +
-        '<input type="number" class="num" min="0" step="0.1" value="' + d.km + '" onchange="setField(' + idx + ',\'km\',this.value)">' +
+        '<label>Απόσταση (χλμ)</label>' +
+        '<input type="number" class="num" min="0" step="0.1" value="' + leg.km + '" onchange="setField(' + tripIdx + ',\'' + legKey + '\',\'km\',this.value)">' +
         '<span class="cap-note" style="color:' + statusColor + '">' + statusText + '</span>' +
       '</div>' +
-      '<div class="field"><label>Διόδια ανά δρομολόγιο (€)</label><input type="number" class="num" min="0" step="0.01" value="' + d.tolls + '" onchange="setField(' + idx + ',\'tolls\',this.value)"></div>' +
-      '<button class="btn-tool" title="Επανυπολογισμός χλμ" onclick="updateRoute(' + idx + ')">↻ Ανανέωση χλμ</button>' +
+      '<div class="field"><label>Διόδια (€)</label><input type="number" class="num" min="0" step="0.01" value="' + leg.tolls + '" onchange="setField(' + tripIdx + ',\'' + legKey + '\',\'tolls\',this.value)"></div>' +
+      '<div class="field"><label>Τιμή καυσίμου (€/χλμ)</label><input type="number" class="num" min="0" step="0.01" value="' + leg.fuel_price_per_km + '" onchange="setField(' + tripIdx + ',\'' + legKey + '\',\'fuel_price_per_km\',this.value)"></div>' +
+      '<button class="btn-tool" title="Επανυπολογισμός χλμ" onclick="updateRoute(' + tripIdx + ',\'' + legKey + '\')">↻ Ανανέωση χλμ</button>' +
     '</div>' +
+  '</div>';
+}
+
+function renderTrip(tripIdx) {
+  const trip = state.trips[tripIdx];
+  const t = computeTrip(trip);
+  return '<div class="section">' +
+    '<div class="section-head"><span class="section-title">' + x(trip.label) + '</span></div>' +
+    '<div class="controls"><div class="field"><label>Δρομολόγια (πήγαινε-έλα)</label><input type="number" class="trips" min="0" step="1" value="' + trip.count + '" onchange="setTripCount(' + tripIdx + ', this.value)"></div></div>' +
+    renderLeg(tripIdx, 'outbound', trip.outboundLabel) +
+    renderLeg(tripIdx, 'return', 'Επιστροφή') +
     '<div class="totals">' +
-      '<div class="tcard"><div class="tlabel">Κόστος καυσίμου</div><div class="tval">' + eur(t.fuel) + '</div></div>' +
-      '<div class="tcard"><div class="tlabel">Κόστος διοδίων</div><div class="tval">' + eur(t.tolls) + '</div></div>' +
-      '<div class="tcard total"><div class="tlabel">Σύνολο προορισμού</div><div class="tval">' + eur(t.total) + '</div></div>' +
+      '<div class="tcard"><div class="tlabel">Κόστος καυσίμου</div><div class="tval">' + eur(t.out.fuel + t.ret.fuel) + '</div></div>' +
+      '<div class="tcard"><div class="tlabel">Κόστος διοδίων</div><div class="tval">' + eur(t.out.tolls + t.ret.tolls) + '</div></div>' +
+      '<div class="tcard total"><div class="tlabel">Σύνολο ' + x(trip.label) + '</div><div class="tval">' + eur(t.total) + '</div></div>' +
     '</div>' +
   '</div>';
 }
 
 function renderAll() {
-  document.getElementById('fuelPrice').value = state.fuel_price_per_km;
-  document.getElementById('destinations').innerHTML = state.destinations.map((_, i) => renderDestination(i)).join('');
-  const grand = state.destinations.reduce((sum, d) => sum + computeDestination(d).total, 0);
+  document.getElementById('trips').innerHTML = state.trips.map((_, i) => renderTrip(i)).join('');
+  const grand = state.trips.reduce((sum, trip) => sum + computeTrip(trip).total, 0);
   document.getElementById('grandTotal').textContent = eur(grand);
   if (stateReady) scheduleSave();
 }
 
-function setField(idx, key, val) {
-  const d = state.destinations[idx];
-  if (key === 'start' || key === 'end') {
-    d[key] = val;
-    renderAll();
-    updateRoute(idx);
-    return;
-  }
-  if (key === 'tolls') {
-    d.tolls = Math.max(0, parseFloat(val) || 0);
-    if (d.start.trim() && d.end.trim()) state.tolls_by_route[routeKey(d.start, d.end)] = d.tolls;
-  } else {
-    d[key] = Math.max(0, parseFloat(val) || 0);
-  }
+function setTripCount(tripIdx, val) {
+  state.trips[tripIdx].count = Math.max(0, parseInt(val) || 0);
   renderAll();
 }
 
-function setFuelPrice(val) {
-  state.fuel_price_per_km = Math.max(0, parseFloat(val) || 0);
+async function setField(tripIdx, legKey, field, val) {
+  const leg = state.trips[tripIdx][legKey];
+  if (field === 'start' || field === 'end') {
+    leg[field] = val;
+    if (legKey === 'outbound') syncReturnLeg(tripIdx);
+    renderAll();
+    await updateRoute(tripIdx, legKey);
+    if (legKey === 'outbound') await updateRoute(tripIdx, 'return');
+    return;
+  }
+  if (field === 'tolls') {
+    leg.tolls = Math.max(0, parseFloat(val) || 0);
+    upsertSavedRoute(leg);
+    renderAll();
+    return;
+  }
+  // km or fuel_price_per_km
+  leg[field] = Math.max(0, parseFloat(val) || 0);
   renderAll();
 }
 </script>
