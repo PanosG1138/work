@@ -443,11 +443,24 @@ function buildHeader() {
   document.getElementById('header-row').innerHTML = html;
 }
 
+// ── SORT ─────────────────────────────────────────────────────────
+// Display order only — row identity (index, id, persistence) never changes.
+// Oldest hatch date first; blanks always sort last; ties keep original order.
+function sortedIndices() {
+  return Array.from({length: NUM_ROWS}, (_, i) => i).sort((a, b) => {
+    const ha = rows[a].hatch, hb = rows[b].hatch;
+    if (!ha && !hb) return 0;
+    if (!ha) return 1;
+    if (!hb) return -1;
+    return ha < hb ? -1 : ha > hb ? 1 : 0;
+  });
+}
+
 // ── BUILD ROWS ────────────────────────────────────────────────────
 function buildRows() {
   const tbody = document.getElementById('table-body');
   let html = '';
-  for (let i = 0; i < NUM_ROWS; i++) {
+  for (const i of sortedIndices()) {
     const r = rows[i];
     const displayHatch = isoToDisplay(r.hatch);
 
@@ -610,8 +623,8 @@ function onHatchBlur(idx, input) {
     // Cleared
     input.classList.remove('invalid');
     rows[idx].hatch = '';
-    updatePhaseDates(idx);
     saveRow(idx);
+    buildRows();   // re-render — this row now sorts to the bottom
     return;
   }
   const iso = parseFlexDate(raw);
@@ -621,10 +634,9 @@ function onHatchBlur(idx, input) {
     return;
   }
   input.classList.remove('invalid');
-  input.value = isoToDisplay(iso);   // normalise display to dd/mm/yyyy
   rows[idx].hatch = iso;
-  updatePhaseDates(idx);
   saveRow(idx);
+  buildRows();   // re-render in chronological order (also normalises display to dd/mm/yyyy)
 }
 
 function onHouseChange(idx, val) {
