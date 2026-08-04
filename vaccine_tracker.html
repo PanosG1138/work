@@ -993,7 +993,7 @@ let showDone = false;
 let currentUser = '';
 
 
-let sidebarOpen = true;
+let sidebarOpen = false;   // collapsed by default on every device — see INIT
 function isMobile() { return window.innerWidth <= 768; }
 
 function toggleSidebar() {
@@ -1018,11 +1018,12 @@ function openSidebarMobile() {
 }
 
 window.addEventListener('resize', () => {
+  // only clean up mobile-drawer state on the desktop breakpoint — leave the
+  // desktop collapsed/expanded choice (sidebarOpen, .shell.collapsed) alone
   if (!isMobile()) {
     document.getElementById('sidebar').classList.remove('mobile-open');
     document.getElementById('mobile-backdrop').classList.remove('visible');
     document.body.style.overflow = '';
-    sidebarOpen = true;
   }
 });
 
@@ -2449,8 +2450,9 @@ function toggleTheme() {
 })();
 
 orderedVal = ''; fridgeVal = ''; emvoliasmosVal = '';
-// On mobile, sidebar starts closed
-if (isMobile()) sidebarOpen = false;
+// sidebarOpen already defaults to false — collapse the desktop shell to match
+// (mobile ignores .shell.collapsed; it hides the drawer via .sidebar.mobile-open instead)
+document.getElementById('shell').classList.add('collapsed');
 updateUndoRedoBtns();
 
 // Populate vaccine datalist from VACCINE_OPTIONS (datalist is in HTML above this script)
