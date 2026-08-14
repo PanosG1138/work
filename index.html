@@ -24,14 +24,6 @@ header{
 }
 .header-left{display:flex;align-items:center;gap:10px}
 .logo{font-weight:600;font-size:15px;color:var(--gh-fg-default)}
-.theme-toggle{
-  display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;
-  border:1px solid var(--gh-border-default);border-radius:var(--rs);
-  background:var(--gh-canvas-subtle);color:var(--gh-fg-muted);
-  font-family:'Inter',system-ui,sans-serif;font-size:12px;font-weight:500;
-  cursor:pointer;transition:background 0.15s,border-color 0.15s,color 0.15s;user-select:none;
-}
-.theme-toggle:hover{background:var(--gh-hover-bg);color:var(--gh-fg-default);border-color:var(--gh-fg-subtle)}
 main{
   flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:40px 24px;
@@ -93,10 +85,6 @@ footer{
   <div class="header-left">
     <span class="logo">🐔 Poultry Operations</span>
   </div>
-  <button class="theme-toggle" onclick="toggleTheme()">
-    <span id="theme-icon">☀️</span>
-    <span id="theme-label">Light</span>
-  </button>
 </header>
 
 <main>
@@ -162,23 +150,5 @@ footer{
 
 <footer>PanosG1138 · Internal use only</footer>
 
-<script>
-(function(){
-  const t = localStorage.getItem('theme') || 'dark';
-  document.documentElement.setAttribute('data-theme', t);
-  updateBtn(t);
-})();
-function toggleTheme(){
-  const cur = document.documentElement.getAttribute('data-theme') || 'dark';
-  const next = cur === 'dark' ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', next);
-  localStorage.setItem('theme', next);
-  updateBtn(next);
-}
-function updateBtn(t){
-  document.getElementById('theme-icon').textContent  = t === 'dark' ? '☀️' : '🌙';
-  document.getElementById('theme-label').textContent = t === 'dark' ? 'Light' : 'Dark';
-}
-</script>
 </body>
 </html>

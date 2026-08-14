@@ -294,10 +294,6 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
       <input type="range" id="zoom-range" min="0.5" max="1.2" step="0.05" value="1" oninput="setZoom(this.value)">
       <span class="zoom-val" id="zoom-label">100%</span>
     </div>
-    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">
-      <span id="theme-icon">☀</span>
-      <span id="theme-label">Φωτεινό</span>
-    </button>
     <button class="theme-toggle" id="btn-logout" onclick="signOut()" style="display:none" title="Αποσύνδεση">← Έξοδος</button>
     <div class="user-chip">
       <div class="dot"></div>
@@ -429,17 +425,8 @@ function initApp(name) {
 }
 
 // ── THEME ─────────────────────────────────────────────────────────
-function applyTheme(t) {
-  document.documentElement.setAttribute('data-theme', t);
-  const d = t === 'dark';
-  document.getElementById('theme-icon').textContent  = d ? '☀' : '☾';
-  document.getElementById('theme-label').textContent = d ? 'Φωτεινό' : 'Σκοτεινό';
-}
-function toggleTheme() {
-  const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-  applyTheme(next);
-  try { localStorage.setItem('emvolia_theme', next); } catch(e) {}
-}
+// Single dark theme only — no toggle, no stored preference.
+document.documentElement.setAttribute('data-theme', 'dark');
 
 // ── SYNC STATUS ───────────────────────────────────────────────────
 function setSyncStatus(state, text) {
@@ -706,9 +693,6 @@ document.addEventListener('keydown', e => {
 
 // ── INIT ──────────────────────────────────────────────────────────
 (function(){
-  let saved = 'dark';
-  try { saved = localStorage.getItem('emvolia_theme') || 'dark'; } catch(e) {}
-  applyTheme(saved);
   // restore zoom
   try {
     const z = parseFloat(localStorage.getItem('emvolia_inv_zoom') || '1');

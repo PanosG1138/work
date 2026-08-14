@@ -156,10 +156,6 @@ select.cell-input option:disabled{color:var(--gh-fg-subtle);}
       <span>🖨</span>
       <span>Print</span>
     </button>
-    <button class="theme-toggle" onclick="toggleTheme()">
-      <span id="theme-icon">☀</span>
-      <span id="theme-label">Light</span>
-    </button>
     <button class="theme-toggle" id="btn-logout" onclick="signOut()" style="display:none" title="Sign out">← Sign out</button>
   </div>
 </div>
@@ -672,17 +668,6 @@ function applyZoom() {
 }
 function changeZoom(delta) { zoom += delta; applyZoom(); }
 
-// ── THEME ─────────────────────────────────────────────────────────
-function applyTheme(theme) {
-  document.documentElement.setAttribute('data-theme', theme);
-  const isDark = theme === 'dark';
-  document.getElementById('theme-icon').textContent  = isDark ? '☀' : '☾';
-  document.getElementById('theme-label').textContent = isDark ? 'Light' : 'Dark';
-  localStorage.setItem('feed_theme', theme);
-}
-function toggleTheme() {
-  applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
-}
 
 // ── TOAST ─────────────────────────────────────────────────────────
 let toastTimer;
@@ -696,7 +681,6 @@ function showToast(msg) {
 
 // ── INIT ──────────────────────────────────────────────────────────
 applyZoom();
-applyTheme(localStorage.getItem('feed_theme') || 'dark');
 buildHeader();
 // Data load triggered by onAuthStateChange after sign-in
 </script>

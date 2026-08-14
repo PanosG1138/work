@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
-:root,[data-theme="dark"]{
+:root{
   --bg:#0f1115;
   --bg-elev1:#161922;
   --bg-elev2:#1d212c;
@@ -28,29 +28,6 @@
   --violet-soft:rgba(167,139,250,0.16);
   --hover:#22262f;
   --shadow:0 8px 24px rgba(0,0,0,0.4);
-  --r-sm:6px;--r-md:8px;--r-lg:12px;
-}
-[data-theme="light"]{
-  --bg:#f7f8fa;
-  --bg-elev1:#ffffff;
-  --bg-elev2:#eef0f3;
-  --bg-inset:#e7e9ed;
-  --border:#dde1e7;
-  --border-soft:#e6e9ed;
-  --text:#1a1d23;
-  --text-muted:#6b7280;
-  --text-subtle:#9aa1ad;
-  --blue:#2563eb;
-  --blue-soft:rgba(37,99,235,0.10);
-  --green:#0d9c6e;
-  --green-soft:rgba(13,156,110,0.10);
-  --amber:#b45309;
-  --amber-soft:rgba(217,119,6,0.14);
-  --amber-strong:rgba(217,119,6,0.30);
-  --violet:#7c3aed;
-  --violet-soft:rgba(124,58,237,0.10);
-  --hover:#eef0f3;
-  --shadow:0 8px 24px rgba(0,0,0,0.08);
   --r-sm:6px;--r-md:8px;--r-lg:12px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -387,10 +364,6 @@ header{
   </div>
   <div class="header-right">
     <div class="sync-badge loading" id="sync-badge"><div class="sync-dot"></div><span id="sync-text">Loading…</span></div>
-    <button class="theme-toggle" onclick="toggleTheme()">
-      <span id="theme-icon">☀️</span>
-      <span id="theme-label">Light</span>
-    </button>
     <button class="theme-toggle" id="btn-logout" onclick="signOut()" style="display:none" title="Sign out">← Sign out</button>
   </div>
 </header>
@@ -500,22 +473,8 @@ const HOUSES  = ['Θ1','Θ2','Θ3','Θ4','Θ5'];
 const HATCH_TO_PLACEMENT_DAYS = 2;
 
 /* ── Theme ── */
-(function(){
-  const t = localStorage.getItem('theme') || 'dark';
-  document.documentElement.setAttribute('data-theme', t);
-  updateThemeBtn(t);
-})();
-function toggleTheme(){
-  const cur = document.documentElement.getAttribute('data-theme') || 'dark';
-  const next = cur === 'dark' ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', next);
-  localStorage.setItem('theme', next);
-  updateThemeBtn(next);
-}
-function updateThemeBtn(t){
-  document.getElementById('theme-icon').textContent  = t==='dark' ? '☀️' : '🌙';
-  document.getElementById('theme-label').textContent = t==='dark' ? 'Light' : 'Dark';
-}
+// Single dark theme only — no toggle, no stored preference.
+document.documentElement.setAttribute('data-theme', 'dark');
 
 /* ── Supabase ── */
 async function sbFetch(path, opts={}){
