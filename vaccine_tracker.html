@@ -78,9 +78,9 @@ header{
 .hstat-label{font-size:11px;color:var(--gh-fg-muted)}
 
 /* Zoom */
-.zoom-ctrl{display:flex;align-items:center;gap:6px;padding:0 8px;height:28px;border:1px solid var(--gh-border-default);border-radius:var(--rs);background:var(--gh-canvas-subtle)}
-.zoom-ctrl label{font-size:11px;color:var(--gh-fg-muted);white-space:nowrap}
-.zoom-ctrl input[type=range]{width:72px;accent-color:var(--gh-accent-fg);cursor:pointer}
+.zoom-ctrl{display:flex;align-items:center;gap:6px;padding:0 6px;height:28px;border:1px solid var(--gh-border-default);border-radius:var(--rs);background:var(--gh-canvas-subtle)}
+.zoom-btn{width:20px;height:20px;display:flex;align-items:center;justify-content:center;border:none;border-radius:4px;background:transparent;color:var(--gh-fg-muted);font-size:13px;font-weight:600;cursor:pointer;transition:background 0.15s,color 0.15s}
+.zoom-btn:hover{background:var(--gh-hover-bg);color:var(--gh-fg-default)}
 .zoom-val{font-size:11px;color:var(--gh-fg-default);min-width:30px;text-align:right}
 
 /* Sync badge */
@@ -92,10 +92,6 @@ header{
 .sync-badge.loading .sync-dot{animation:pulse 1.2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.2}}
 
-/* User chip */
-.user-chip{display:flex;align-items:center;gap:6px;height:28px;padding:0 12px;border:1px solid var(--gh-border-default);border-radius:99px;background:var(--gh-canvas-subtle);font-size:12px;color:var(--gh-fg-default);cursor:pointer;transition:background 0.15s,border-color 0.15s;font-weight:500}
-.user-chip:hover{background:var(--gh-canvas-subtle);border-color:var(--gh-accent-fg);color:var(--gh-accent-fg)}
-.user-chip .dot{width:7px;height:7px;border-radius:50%;background:var(--gh-success-fg);flex-shrink:0}
 
 /* ── SIDEBAR ── */
 .sidebar{
@@ -297,7 +293,7 @@ th.sticky-l0,th.sticky-l1{z-index:3;background:var(--gh-canvas-subtle)}
 .hv-chip.today{background:var(--gh-success-subtle);color:var(--gh-success-fg);border:1px solid rgba(63,185,80,0.3)}
 .hv-chip.soon{background:var(--gh-attention-subtle);color:var(--gh-attention-fg);border:1px solid rgba(210,153,34,0.3)}
 .hv-chip.future{background:var(--gh-accent-subtle);color:var(--gh-accent-fg);border:1px solid rgba(56,139,253,0.3)}
-.hv-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.hv-dot{display:inline-block;width:5px;height:5px;border-radius:50%;flex-shrink:0}
 .hv-dot.yes{background:var(--gh-success-fg)}
 .hv-dot.no{background:var(--gh-fg-subtle)}
 
@@ -504,7 +500,6 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
   .hstats{gap:8px}
   .hstat-val{font-size:13px}
   .hstat-label{font-size:10px}
-  .theme-toggle span:last-child{display:none}
   .theme-toggle{padding:0 8px;min-width:unset}
   #btn-changelog{display:none!important}
   /* hide Απόθεμα text, keep emoji */
@@ -662,26 +657,25 @@ body.printing-card .printcard-doc{display:block}
   </div>
   <div class="header-right">
     <div id="sync-badge" class="sync-badge loading"><div class="sync-dot"></div><span id="sync-text">Σύνδεση…</span></div>
-    <button class="btn-tool" id="btn-changelog" onclick="reopenChangelog()" title="Εμφάνιση αλλαγών από άλλους χρήστες" style="display:none">📋 Αλλαγές</button>
     <a href="inventory.html" class="btn-tool" title="Απόθεμα εμβολίων">📦 Απόθεμα</a>
-    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Εναλλαγή θέματος">
-      <span id="theme-icon">☀</span>
-      <span id="theme-label">Φωτεινό</span>
-    </button>
     <div class="zoom-ctrl">
-      <label>Μέγεθος</label>
-      <input type="range" id="zoom-range" min="0.5" max="1.2" step="0.05" value="1" oninput="setZoom(this.value)">
+      <button class="zoom-btn" onclick="changeZoom(-0.05)" title="Σμίκρυνση">−</button>
       <span class="zoom-val" id="zoom-label">100%</span>
+      <button class="zoom-btn" onclick="changeZoom(0.05)" title="Μεγέθυνση">+</button>
     </div>
     <div class="hstats">
       <div class="hstat"><div class="hstat-val" id="stat-total">—</div><div class="hstat-label">Σύνολο</div></div>
       <div class="hstat"><div class="hstat-val" id="stat-ordered" style="color:var(--gh-success-fg)">—</div><div class="hstat-label">Παραγγέλθηκαν</div></div>
       <div class="hstat"><div class="hstat-val" id="stat-pending" style="color:var(--gh-attention-fg)">—</div><div class="hstat-label">Εκκρεμείς</div></div>
     </div>
-    <button class="theme-toggle" id="btn-logout" onclick="signOut()" style="display:none" title="Αποσύνδεση">← Έξοδος</button>
-    <div class="user-chip" id="user-chip">
-      <div class="dot"></div>
-      <span id="user-chip-name">—</span>
+    <button class="theme-toggle" id="btn-logout" onclick="confirmSignOut()" style="display:none" title="Αποσύνδεση">← Έξοδος</button>
+    <div class="tb-menu-wrap">
+      <button class="btn-tool" onclick="toggleTbMenu('header-menu',event)" title="Περισσότερα">
+        ⋯ <span class="tb-badge" id="changelog-badge" style="display:none">!</span>
+      </button>
+      <div class="tb-menu" id="header-menu" style="display:none;right:0;left:auto" onclick="event.stopPropagation()">
+        <button class="btn-tool" id="btn-changelog" onclick="reopenChangelog()" title="Εμφάνιση αλλαγών από άλλους χρήστες" style="display:none;width:100%">📋 Αλλαγές</button>
+      </div>
     </div>
   </div>
 </header>
@@ -775,7 +769,7 @@ body.printing-card .printcard-doc{display:block}
     </div>
 
     <div class="tb-menu-wrap">
-      <button class="btn-tool" id="btn-filters" onclick="toggleFiltersMenu(event)">
+      <button class="btn-tool" id="btn-filters" onclick="toggleTbMenu('filters-menu',event)">
         Φίλτρα <span class="tb-badge" id="filters-badge" style="display:none">0</span> ▾
       </button>
       <div class="tb-menu" id="filters-menu" style="display:none" onclick="event.stopPropagation()">
@@ -802,7 +796,7 @@ body.printing-card .printcard-doc{display:block}
     <div class="tb-spacer"></div>
 
     <div class="tb-menu-wrap">
-      <button class="btn-tool" onclick="toggleActionsMenu(event)" title="Περισσότερες ενέργειες">⋯</button>
+      <button class="btn-tool" onclick="toggleTbMenu('actions-menu',event)" title="Περισσότερες ενέργειες">⋯</button>
       <div class="tb-menu" id="actions-menu" style="display:none;right:0;left:auto" onclick="event.stopPropagation()">
         <button class="btn-tool" onclick="exportCSV()" style="width:100%">↓ CSV</button>
         <button class="btn-tool" id="btn-print-card" onclick="openPrintCard()" style="display:none;width:100%" title="Εκτύπωση καρτέλας αναθρεπτηρίου">🖨 Καρτέλα</button>
@@ -1066,6 +1060,7 @@ async function signIn() {
 }
 
 async function signOut() { await _sb.auth.signOut(); }
+function confirmSignOut() { if (confirm('Αποσύνδεση;')) signOut(); }
 
 _sb.auth.onAuthStateChange((event, session) => {
   _authSession = session;
@@ -1080,7 +1075,6 @@ _sb.auth.onAuthStateChange((event, session) => {
 
 function initApp(name) {
   currentUser = name;
-  document.getElementById('user-chip-name').textContent = name;
   loadData().then(() => showChangelog(name));
 }
 
@@ -2006,6 +2000,11 @@ function setZoom(v) {
   s.style.width  = (100/v)+'%';
   s.style.height = (100/v)+'%';
 }
+let zoomVal = 1;
+function changeZoom(delta) {
+  zoomVal = Math.min(1.2, Math.max(0.5, +(zoomVal + delta).toFixed(2)));
+  setZoom(zoomVal);
+}
 
 // ── EXPORT ────────────────────────────────────────────────────────
 function exportCSV() {
@@ -2543,8 +2542,9 @@ async function showChangelog(user) {
 
     document.getElementById('changelog-title').textContent =
       hist.length + ' αλλαγ' + (hist.length === 1 ? 'ή' : 'ές') + ' από άλλους χρήστες';
-    // show the replay button in the header for this session
+    // show the replay button (in the ⋯ menu) for this session, and flag the menu itself
     document.getElementById('btn-changelog').style.display = '';
+    document.getElementById('changelog-badge').style.display = '';
 
   } catch(e) {
     list.innerHTML = `<div class="cl-empty">Σφάλμα φόρτωσης: ${x(e.message)}</div>`;
@@ -2558,6 +2558,7 @@ function closeChangelog() {
 // Re-opens the changelog from the cached content of the current session
 function reopenChangelog() {
   document.getElementById('changelog-bg').style.display = 'flex';
+  document.getElementById('changelog-badge').style.display = 'none';
 }
 
 // ── MONTH SEARCH MAP ─────────────────────────────────────────────
@@ -2660,20 +2661,13 @@ function updateShowDoneBtn() {
 }
 
 // ── TOOLBAR MENUS (Φίλτρα / ⋯) ──────────────────────────────────────
+const TB_MENU_IDS = ['filters-menu', 'actions-menu', 'header-menu'];
 function closeAllTbMenus() {
-  document.getElementById('filters-menu').style.display = 'none';
-  document.getElementById('actions-menu').style.display = 'none';
+  TB_MENU_IDS.forEach(id => { document.getElementById(id).style.display = 'none'; });
 }
-function toggleFiltersMenu(e) {
+function toggleTbMenu(id, e) {
   e.stopPropagation();
-  const menu = document.getElementById('filters-menu');
-  const opening = menu.style.display === 'none';
-  closeAllTbMenus();
-  if (opening) menu.style.display = 'flex';
-}
-function toggleActionsMenu(e) {
-  e.stopPropagation();
-  const menu = document.getElementById('actions-menu');
+  const menu = document.getElementById(id);
   const opening = menu.style.display === 'none';
   closeAllTbMenus();
   if (opening) menu.style.display = 'flex';
@@ -2707,28 +2701,11 @@ function resetForm() {
 }
 
 // ── THEME ─────────────────────────────────────────────────────────
-function applyTheme(theme) {
-  document.documentElement.setAttribute('data-theme', theme);
-  const isDark = theme === 'dark';
-  document.getElementById('theme-icon').textContent  = isDark ? '☀' : '☾';
-  document.getElementById('theme-label').textContent = isDark ? 'Φωτεινό' : 'Σκοτεινό';
-}
-
-function toggleTheme() {
-  const current = document.documentElement.getAttribute('data-theme') || 'dark';
-  const next = current === 'dark' ? 'light' : 'dark';
-  applyTheme(next);
-  // persist per-browser (not per-session — survives page reloads)
-  try { localStorage.setItem('emvolia_theme', next); } catch(e) {}
-}
+// Single dark theme only — no toggle, no stored preference (a full
+// theme overhaul is planned separately; this just removes the switch).
+document.documentElement.setAttribute('data-theme', 'dark');
 
 // ── INIT ──────────────────────────────────────────────────────────
-// Apply saved theme immediately (before render) to avoid flash
-(function(){
-  let saved = 'dark';
-  try { saved = localStorage.getItem('emvolia_theme') || 'dark'; } catch(e) {}
-  applyTheme(saved);
-})();
 
 orderedVal = ''; fridgeVal = ''; emvoliasmosVal = '';
 // sidebarOpen already defaults to false — collapse the desktop shell to match
