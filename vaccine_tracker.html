@@ -253,14 +253,16 @@ tbody tr.new-row{animation:rowIn 0.4s ease}
 @keyframes rowIn{from{background:rgba(56,139,253,0.15)}to{background:transparent}}
 td{padding:7px 12px;color:var(--gh-fg-default);max-width:160px;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;font-size:13px}
 td.vacc{font-weight:600;color:var(--gh-fg-default)}
-td.td-notes{max-width:200px;overflow:visible;text-overflow:unset;white-space:normal;word-break:break-word;line-height:1.4}
+td.td-notes{max-width:220px}
+.sticky-l0,.sticky-l1{position:sticky;background:var(--gh-canvas-default)}
+.sticky-l0{left:0}
+.sticky-l1{left:36px}
+td.sticky-l0,td.sticky-l1{z-index:1}
+th.sticky-l0,th.sticky-l1{z-index:3;background:var(--gh-canvas-subtle)}
 
 /* Badges */
 .badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500;line-height:18px}
-.b-yes{background:var(--gh-success-subtle);color:var(--gh-success-fg);border:1px solid rgba(63,185,80,0.3)}
-.b-no{background:var(--gh-canvas-subtle);color:var(--gh-fg-subtle);border:1px solid var(--gh-border-muted)}
 .b-flock{background:var(--gh-accent-subtle);color:var(--gh-accent-fg);border:1px solid rgba(56,139,253,0.45);font-weight:700;font-size:12px;letter-spacing:0.01em}
-.b-pending{background:var(--gh-attention-subtle);color:var(--gh-attention-fg);border:1px solid rgba(210,153,34,0.3)}
 
 /* Row action buttons */
 .row-actions{display:flex;gap:4px;justify-content:flex-end}
@@ -821,19 +823,19 @@ body.printing-card .printcard-doc{display:block}
     <div class="tbl-scaler" id="tbl-scaler">
       <table>
         <thead><tr>
-          <th class="cb-cell"><input type="checkbox" id="cb-all" onchange="toggleSelectAll(this.checked)" title="Επιλογή όλων"></th>
-          <th onclick="sortBy('hm_ekk')">Εκκόλαψη — Αναθρεπτήριο<span class="arr" id="s-hm_ekk"></span></th>
-          <th onclick="sortBy('hm_emv')">Ημ. Εμβολιασμού<span class="arr" id="s-hm_emv"></span></th>
-          <th onclick="sortBy('hm_paragelia')">Ημ. Παραγγελίας<span class="arr" id="s-hm_paragelia"></span></th>
+          <th class="cb-cell sticky-l0"><input type="checkbox" id="cb-all" onchange="toggleSelectAll(this.checked)" title="Επιλογή όλων"></th>
+          <th class="sticky-l1" onclick="sortBy('hm_ekk')">Εκκόλαψη — Αναθρεπτήριο<span class="arr" id="s-hm_ekk"></span></th>
+          <th style="min-width:65px" onclick="sortBy('hm_emv')">Ημ. Εμβολιασμού<span class="arr" id="s-hm_emv"></span></th>
+          <th style="min-width:65px" onclick="sortBy('hm_paragelia')">Ημ. Παραγγελίας<span class="arr" id="s-hm_paragelia"></span></th>
           <th onclick="sortBy('emvolio')">Εμβόλιο<span class="arr" id="s-emvolio"></span></th>
           <th onclick="sortBy('posotita')">Ποσότητα<span class="arr" id="s-posotita"></span></th>
           <th onclick="sortBy('pelatis')">Πελάτης<span class="arr" id="s-pelatis"></span></th>
           <th>Σχόλια Πάνος</th>
-          <th onclick="sortBy('paragelia')">Παραγγελία<span class="arr" id="s-paragelia"></span></th>
-          <th onclick="sortBy('hm_par')">Ημ. Καταχώρησης Παραγγελίας<span class="arr" id="s-hm_par"></span></th>
+          <th style="min-width:50px;text-align:center" onclick="sortBy('paragelia')" title="Παραγγελία">Παρ.<span class="arr" id="s-paragelia"></span></th>
+          <th style="min-width:65px" onclick="sortBy('hm_par')">Ημ. Καταχώρησης Παραγγελίας<span class="arr" id="s-hm_par"></span></th>
           <th>Προμηθευτής</th>
-          <th>Ψυγείο</th>
-          <th onclick="sortBy('emvoliasmos')">Εμβολιασμός<span class="arr" id="s-emvoliasmos"></span></th>
+          <th style="min-width:50px;text-align:center" title="Ψυγείο">Ψυγ.</th>
+          <th style="min-width:50px;text-align:center" onclick="sortBy('emvoliasmos')" title="Εμβολιασμός">Εμβ.<span class="arr" id="s-emvoliasmos"></span></th>
           <th>Σχόλια Ελένη</th>
           <th style="text-align:right">Ενέργειες</th>
         </tr></thead>
@@ -1867,20 +1869,20 @@ function render() {
       editEntry(r.id);
     });
     tr.innerHTML =
-      `<td class="cb-cell"><input type="checkbox" class="row-cb" data-id="${r.id}" onchange="onRowCheck(${r.id},this.checked)"></td>`+
-      `<td><span class="badge b-flock" title="${x(fl)}">${x(fl)}</span></td>`+
+      `<td class="cb-cell sticky-l0"><input type="checkbox" class="row-cb" data-id="${r.id}" onchange="onRowCheck(${r.id},this.checked)"></td>`+
+      `<td class="sticky-l1"><span class="badge b-flock" title="${x(fl)}">${x(fl)}</span></td>`+
       `<td>${fmt(r.hm_emv)}</td>`+
       `<td style="color:${r.hm_paragelia?'var(--gh-attention-fg)':'var(--gh-fg-subtle)'}">${fmt(r.hm_paragelia)||'—'}</td>`+
       `<td class="vacc" title="${x(r.emvolio)}">${x(r.emvolio)}</td>`+
       `<td>${fmtPosotita(r.posotita)}</td>`+
       `<td style="color:var(--gh-fg-muted)">${x(r.pelatis||'—')}</td>`+
-      `<td class="td-notes" style="color:var(--gh-fg-muted);font-size:11px">${x(r.sxolia_panos||'—')}</td>`+
-      `<td><span class="badge ${ord?'b-yes':'b-pending'}">${ord?'ΝΑΙ':'—'}</span></td>`+
+      `<td class="td-notes" style="color:var(--gh-fg-muted);font-size:11px" title="${x(r.sxolia_panos||'')}">${x(r.sxolia_panos||'—')}</td>`+
+      `<td style="text-align:center"><span class="hv-dot ${ord?'yes':'no'}" title="Παραγγελία: ${ord?'ΝΑΙ':'ΟΧΙ'}"></span></td>`+
       `<td>${fmt(r.hm_par)||'—'}</td>`+
       `<td style="color:var(--gh-fg-muted);font-size:11px">${x(r.promitheutis||'—')}</td>`+
-      `<td><span class="badge ${fri?'b-yes':'b-no'}">${fri?'ΝΑΙ':'—'}</span></td>`+
-      `<td><span class="badge ${emv?'b-yes':'b-no'}">${emv?'ΝΑΙ':'ΟΧΙ'}</span></td>`+
-      `<td class="td-notes" style="color:var(--gh-fg-muted);font-size:11px">${x(r.sxolia_eleni||'—')}</td>`+
+      `<td style="text-align:center"><span class="hv-dot ${fri?'yes':'no'}" title="Ψυγείο: ${fri?'ΝΑΙ':'ΟΧΙ'}"></span></td>`+
+      `<td style="text-align:center"><span class="hv-dot ${emv?'yes':'no'}" title="Εμβολιασμός: ${emv?'ΝΑΙ':'ΟΧΙ'}"></span></td>`+
+      `<td class="td-notes" style="color:var(--gh-fg-muted);font-size:11px" title="${x(r.sxolia_eleni||'')}">${x(r.sxolia_eleni||'—')}</td>`+
       `<td><div class="row-actions"><button class="row-btn" onclick="editEntry(${r.id})">Επεξ.</button></div></td>`;
     frag.appendChild(tr);
   });
