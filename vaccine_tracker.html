@@ -350,6 +350,15 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
 }
 .btn-secondary:hover{background:var(--gh-hover-bg);border-color:var(--gh-fg-subtle)}
 
+/* Wizard (step-through add) */
+.wizard-context-chip{font-size:11px;color:var(--gh-fg-muted);text-align:center;margin-bottom:12px}
+#wz-field-input{height:40px;font-size:16px;text-align:center}
+.wizard-hint{font-size:11px;color:var(--gh-fg-subtle);text-align:center;margin-top:6px}
+.wizard-queue{margin-top:16px;display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto}
+.wizard-queue-row{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--gh-canvas-default);border:1px solid var(--gh-border-muted);border-radius:var(--rs);font-size:12px}
+.wizard-queue-row .wq-main{flex:1;color:var(--gh-fg-default);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wizard-queue-row .wq-sub{color:var(--gh-fg-muted);white-space:nowrap}
+
 /* Confirm dialog */
 .confirm-box{background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:var(--r);padding:24px;width:340px;text-align:center}
 .confirm-box p{color:var(--gh-fg-muted);font-size:14px;margin-bottom:16px;line-height:1.6}
@@ -738,6 +747,7 @@ body.printing-card .printcard-doc{display:block}
 <main class="main">
   <div class="toolbar">
     <button class="btn-tool" id="btn-house-view" onclick="toggleHouseView()">🏠 Προβολή Αναθρεπτηρίων</button>
+    <button class="btn-tool" onclick="openWizard()">➕ Βήμα-προς-βήμα</button>
     <div class="search-wrap">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <input type="text" id="search" placeholder="Αναζήτηση…" oninput="render()">
@@ -880,6 +890,66 @@ body.printing-card .printcard-doc{display:block}
       <button class="btn-secondary" onclick="closeBatchDel()">Ακύρωση</button>
       <button class="btn-primary" style="background:var(--gh-danger-fg);color:#fff" id="btn-batch-del-confirm" onclick="confirmBatchDelete()">Διαγραφή όλων</button>
     </div>
+  </div>
+</div>
+
+<!-- STEP-THROUGH WIZARD — alternate way to add entries, one field at a time -->
+<div id="wizard-bg" class="modal-bg" style="display:none" onclick="if(event.target===this)closeWizard()">
+  <div class="modal" style="width:420px">
+    <h3>Βήμα-προς-βήμα καταχώρηση</h3>
+
+    <!-- STEP 0 — flock context, asked once -->
+    <div id="wz-context">
+      <div class="fgroup">
+        <label>Ημ. Εκκόλαψης</label>
+        <input type="text" id="wz-hatch" placeholder="ηη/μμ ή ηη/μμ/εε" autocomplete="off" onkeydown="if(event.key==='Enter')wizardStartLoop()">
+      </div>
+      <div class="fgroup">
+        <label>Αναθρεπτήριο</label>
+        <select id="wz-flock">
+          <option value="">— επιλογή —</option>
+          <option>Θ1</option><option>Θ2</option><option>Θ3</option><option>Θ4</option><option>Α1</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeWizard()">Ακύρωση</button>
+        <button class="btn-submit" onclick="wizardStartLoop()">Έναρξη →</button>
+      </div>
+    </div>
+
+    <!-- LOOP — one field at a time per vaccine -->
+    <div id="wz-loop" style="display:none">
+      <div class="wizard-context-chip" id="wz-context-chip"></div>
+      <div class="steps">
+        <div class="step-dot" id="wz-dot-date">1</div><div class="step-line" id="wz-line-1"></div>
+        <div class="step-dot" id="wz-dot-vaccine">2</div><div class="step-line" id="wz-line-2"></div>
+        <div class="step-dot" id="wz-dot-customer">3</div><div class="step-line" id="wz-line-3"></div>
+        <div class="step-dot" id="wz-dot-qty">4</div>
+      </div>
+      <div class="fgroup">
+        <label id="wz-field-label">Ημ. Εμβολιασμού;</label>
+        <input type="text" id="wz-field-input" autocomplete="off" onkeydown="if(event.key==='Enter')wizardAdvance()">
+        <datalist id="wz-customer-dl"></datalist>
+      </div>
+      <div class="wizard-hint" id="wz-hint">Enter ↵ για συνέχεια</div>
+
+      <div class="wizard-queue" id="wizard-queue"></div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeWizard()">Ακύρωση</button>
+        <button class="btn-primary" id="wz-finish-btn" onclick="wizardShowReview()" disabled>Ολοκλήρωση κι έλεγχος</button>
+      </div>
+    </div>
+
+    <!-- REVIEW — full batch, nothing saved until confirmed here -->
+    <div id="wz-review" style="display:none">
+      <div class="wizard-queue" id="wizard-review-list"></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="wizardBackToLoop()">← Πίσω</button>
+        <button class="btn-primary" id="wz-save-btn" onclick="wizardSaveAll()">Αποθήκευση όλων</button>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1286,11 +1356,7 @@ async function addEntry() {
   btn.textContent = combos.length > 1 ? `Αποθήκευση ${combos.length}…` : 'Αποθήκευση…';
   setSyncStatus('loading', 'Αποθήκευση…');
   try {
-    for (const row of combos) {
-      const [inserted] = await sbInsert(row);
-      await sbHInsert({ row_id: inserted.id, action: 'created', user_name: currentUser, ts: now });
-      data.unshift({ ...inserted, _new: true });
-    }
+    await insertRows(combos, now);
     resetForm(); render();
     // on mobile, close the drawer so the user sees the new row in the table
     if (isMobile() && sidebarOpen) toggleSidebar();
@@ -1301,6 +1367,168 @@ async function addEntry() {
     toast('Σφάλμα: ' + e.message, true);
   } finally {
     btn.disabled = false; btn.textContent = '+ Προσθήκη στον Πίνακα';
+  }
+}
+
+// shared by addEntry() and the wizard — insert rows + log history + prepend locally
+async function insertRows(rows, now) {
+  for (const row of rows) {
+    const [inserted] = await sbInsert(row);
+    await sbHInsert({ row_id: inserted.id, action: 'created', user_name: currentUser, ts: now });
+    data.unshift({ ...inserted, _new: true });
+  }
+}
+
+// ── WIZARD (step-through add, one field at a time) ──────────────────
+const WIZARD_STAGES = ['date', 'vaccine', 'customer', 'qty'];
+const WIZARD_LABELS = { date: 'Ημ. Εμβολιασμού;', vaccine: 'Όνομα εμβολίου;', customer: 'Πελάτης;', qty: 'Ποσότητα;' };
+let wizardHatchIso = '', wizardFlock = '', wizardStage = 'date', wizardDraft = {}, wizardQueue = [];
+
+function openWizard() {
+  if (!guardConnected()) return;
+  wizardHatchIso = ''; wizardFlock = ''; wizardQueue = []; wizardDraft = {};
+  document.getElementById('wz-hatch').value = '';
+  document.getElementById('wz-flock').value = '';
+  document.getElementById('wz-context').style.display = '';
+  document.getElementById('wz-loop').style.display = 'none';
+  document.getElementById('wz-review').style.display = 'none';
+  document.getElementById('wizard-bg').style.display = 'flex';
+  setTimeout(() => document.getElementById('wz-hatch').focus(), 50);
+}
+
+function closeWizard() {
+  if (wizardQueue.length && !confirm(`Θα χαθούν ${wizardQueue.length} μη αποθηκευμένες εγγραφές. Κλείσιμο;`)) return;
+  document.getElementById('wizard-bg').style.display = 'none';
+}
+
+function wizardStartLoop() {
+  const hatchIso = parseSmartDate(document.getElementById('wz-hatch').value.trim());
+  const flock = document.getElementById('wz-flock').value;
+  if (!hatchIso) { toast('Εισάγετε έγκυρη ημερομηνία εκκόλαψης', true); return; }
+  if (!flock)    { toast('Επιλέξτε αναθρεπτήριο', true); return; }
+  wizardHatchIso = hatchIso; wizardFlock = flock;
+  document.getElementById('wz-context-chip').textContent = flock + ' · Εκκόλαψη ' + fmt(hatchIso);
+  document.getElementById('wz-context').style.display = 'none';
+  document.getElementById('wz-loop').style.display = '';
+  wizardStage = 'date'; wizardDraft = {};
+  wizardRenderStage();
+}
+
+function wizardRenderStage() {
+  const idx = WIZARD_STAGES.indexOf(wizardStage);
+  WIZARD_STAGES.forEach((s, i) => {
+    document.getElementById('wz-dot-' + s).className = 'step-dot' + (i < idx ? ' done' : i === idx ? ' active' : '');
+    const line = document.getElementById('wz-line-' + (i + 1));
+    if (line) line.className = 'step-line' + (i < idx ? ' done' : '');
+  });
+  document.getElementById('wz-field-label').textContent = WIZARD_LABELS[wizardStage];
+  const input = document.getElementById('wz-field-input');
+  input.value = '';
+  input.removeAttribute('list');
+  if (wizardStage === 'vaccine') input.setAttribute('list', 'vaccine-list');
+  if (wizardStage === 'customer') { wizardPopulateCustomerList(); input.setAttribute('list', 'wz-customer-dl'); }
+  document.getElementById('wz-hint').textContent =
+    (wizardStage === 'customer' || wizardStage === 'qty') ? 'Enter ↵ για συνέχεια (προαιρετικό)' : 'Enter ↵ για συνέχεια';
+  input.focus();
+}
+
+function wizardPopulateCustomerList() {
+  const dl = document.getElementById('wz-customer-dl');
+  dl.innerHTML = '';
+  [...new Set(data.map(r => r.pelatis).filter(Boolean))].forEach(c => {
+    const o = document.createElement('option'); o.value = c; dl.appendChild(o);
+  });
+}
+
+function wizardAdvance() {
+  const val = document.getElementById('wz-field-input').value.trim();
+  if (wizardStage === 'date') {
+    const iso = parseSmartDate(val);
+    if (!iso) { toast('Μη έγκυρη ημερομηνία', true); return; }
+    wizardDraft.vaccDate = iso;
+    wizardStage = 'vaccine';
+  } else if (wizardStage === 'vaccine') {
+    if (!val) { toast('Εισάγετε όνομα εμβολίου', true); return; }
+    wizardDraft.vaccine = val;
+    wizardStage = 'customer';
+  } else if (wizardStage === 'customer') {
+    wizardDraft.customer = val || null;
+    wizardStage = 'qty';
+  } else if (wizardStage === 'qty') {
+    wizardDraft.qty = rawQty(val);
+    wizardQueue.push({ ...wizardDraft });
+    wizardDraft = {};
+    renderWizardQueue();
+    document.getElementById('wz-finish-btn').disabled = false;
+    wizardStage = 'date';
+  }
+  wizardRenderStage();
+}
+
+function wizardQueueRowHTML(q, i, onRemove) {
+  return '<div class="wizard-queue-row">' +
+    '<span class="wq-main">' + fmt(q.vaccDate) + ' · ' + x(q.vaccine) + '</span>' +
+    '<span class="wq-sub">' + (q.qty ? fmtPosotita(q.qty) : '—') + (q.customer ? ' · ' + x(q.customer) : '') + '</span>' +
+    '<button class="row-btn del" onclick="' + onRemove + '(' + i + ')">×</button>' +
+  '</div>';
+}
+
+function renderWizardQueue() {
+  document.getElementById('wizard-queue').innerHTML =
+    wizardQueue.map((q, i) => wizardQueueRowHTML(q, i, 'wizardRemoveQueued')).join('');
+}
+
+function wizardRemoveQueued(i) {
+  wizardQueue.splice(i, 1);
+  renderWizardQueue();
+  if (!wizardQueue.length) document.getElementById('wz-finish-btn').disabled = true;
+}
+
+function wizardShowReview() {
+  document.getElementById('wz-loop').style.display = 'none';
+  document.getElementById('wz-review').style.display = '';
+  document.getElementById('wizard-review-list').innerHTML =
+    wizardQueue.map((q, i) => wizardQueueRowHTML(q, i, 'wizardRemoveFromReview')).join('');
+}
+
+function wizardRemoveFromReview(i) {
+  wizardQueue.splice(i, 1);
+  if (!wizardQueue.length) { wizardBackToLoop(); return; }
+  wizardShowReview();
+}
+
+function wizardBackToLoop() {
+  document.getElementById('wz-review').style.display = 'none';
+  document.getElementById('wz-loop').style.display = '';
+  wizardStage = 'date'; wizardDraft = {};
+  wizardRenderStage();
+}
+
+async function wizardSaveAll() {
+  if (!guardConnected()) return;
+  if (!wizardQueue.length) return;
+  const now = new Date().toISOString();
+  const rows = wizardQueue.map(q => ({
+    hm_ekk: wizardHatchIso, hm_emv: q.vaccDate, hm_par: null, anath: wizardFlock,
+    sxolia_panos: null, promitheutis: null, paragelia: null,
+    hm_paragelia: subDays(q.vaccDate, 30), psygeio: null, emvoliasmos: null, sxolia_eleni: null,
+    created_by: currentUser, created_at: now, updated_by: currentUser, updated_at: now,
+    emvolio: q.vaccine, pelatis: q.customer, posotita: q.qty,
+  }));
+  const btn = document.getElementById('wz-save-btn');
+  btn.disabled = true; btn.textContent = 'Αποθήκευση…';
+  setSyncStatus('loading', 'Αποθήκευση…');
+  try {
+    await insertRows(rows, now);
+    render();
+    document.getElementById('wizard-bg').style.display = 'none';
+    setSyncStatus('ok', 'Αποθηκεύτηκε ✓');
+    toast(`${rows.length} εγγραφές προστέθηκαν!`);
+  } catch (e) {
+    setSyncStatus('err', 'Σφάλμα');
+    toast('Σφάλμα: ' + e.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Αποθήκευση όλων';
   }
 }
 
