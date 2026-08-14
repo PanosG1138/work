@@ -111,6 +111,9 @@ header{
 /* Form */
 .form-heading{font-weight:600;font-size:12px;color:var(--gh-fg-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:14px}
 .form-heading span{color:var(--gh-fg-default)}
+.btn-wizard-entry{width:100%;height:34px;background:var(--gh-accent-subtle);border:1px solid var(--gh-accent-emphasis);border-radius:var(--rs);color:var(--gh-accent-fg);font-family:'Inter',system-ui,sans-serif;font-weight:600;font-size:13px;cursor:pointer;transition:background 0.15s}
+.btn-wizard-entry:hover{background:rgba(56,139,253,0.2)}
+.wizard-entry-sub{text-align:center;font-size:11px;color:var(--gh-fg-subtle);margin-top:6px}
 
 /* Steps */
 .steps{display:flex;align-items:center;margin-bottom:16px}
@@ -189,6 +192,20 @@ tfoot td{padding:7px 12px;font-size:13px;font-weight:600;color:var(--gh-fg-defau
 .search-wrap svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--gh-fg-muted);pointer-events:none}
 .search-wrap input{padding-left:32px;height:32px}
 .filter-sel{width:auto;min-width:120px;height:32px;font-size:13px;padding:0 28px 0 10px}
+.tb-spacer{flex:1}
+.tb-menu-wrap{position:relative}
+#btn-filters.active{border-color:var(--gh-accent-emphasis);color:var(--gh-accent-fg)}
+.tb-badge{display:inline-flex;align-items:center;justify-content:center;min-width:15px;height:15px;padding:0 4px;border-radius:8px;background:var(--gh-accent-emphasis);color:#fff;font-size:10px;font-weight:700;line-height:1}
+.tb-menu{
+  position:absolute;top:calc(100% + 4px);left:0;z-index:400;
+  background:var(--gh-canvas-subtle);
+  border:1px solid var(--gh-border-default);
+  border-radius:var(--r);
+  padding:10px;width:200px;
+  display:flex;flex-direction:column;gap:8px;
+  box-shadow:0 6px 16px rgba(0,0,0,0.4);
+}
+.tb-menu-divider{height:1px;background:var(--gh-border-muted);margin:2px 0}
 .btn-tool{
   height:32px;padding:0 12px;
   background:var(--gh-canvas-subtle);
@@ -676,6 +693,9 @@ body.printing-card .printcard-doc{display:block}
     <button class="btn-tool" style="margin-top:4px" onclick="loadData()">↺ Ανανέωση</button>
   </div>
   <div class="sidebar-inner">
+    <button class="btn-wizard-entry" onclick="openWizard()">➕ Βήμα-προς-βήμα καταχώρηση</button>
+    <div class="wizard-entry-sub">ή συμπληρώστε τη φόρμα από κάτω</div>
+    <div class="divider"></div>
     <div class="form-heading">+ <span>Νέα Παραγγελία</span></div>
     <div class="steps">
       <div class="step-dot active" id="step1">1</div>
@@ -747,28 +767,45 @@ body.printing-card .printcard-doc{display:block}
 <main class="main">
   <div class="toolbar">
     <button class="btn-tool" id="btn-house-view" onclick="toggleHouseView()">🏠 Προβολή Αναθρεπτηρίων</button>
-    <button class="btn-tool" onclick="openWizard()">➕ Βήμα-προς-βήμα</button>
     <div class="search-wrap">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <input type="text" id="search" placeholder="Αναζήτηση…" oninput="render()">
     </div>
-    <select class="filter-sel" id="filt-flock" onchange="render()" style="min-width:160px">
-      <option value="">Όλα τα αναθρεπτήρια</option>
-    </select>
-    <select class="filter-sel" id="filt-ordered" onchange="render()">
-      <option value="">Όλες οι καταστάσεις</option>
-      <option value="ΝΑΙ">Παραγγελθέντα</option>
-      <option value="-">Εκκρεμείς</option>
-    </select>
-    <select class="filter-sel" id="filt-fridge" onchange="render()">
-      <option value="">Όλα τα ψυγεία</option>
-      <option value="ΝΑΙ">Στο ψυγείο</option>
-      <option value="-">Όχι στο ψυγείο</option>
-    </select>
-    <button class="btn-tool" id="btn-show-done" onclick="toggleShowDone()">Εμφάνιση εμβολιασμένων</button>
+
+    <div class="tb-menu-wrap">
+      <button class="btn-tool" id="btn-filters" onclick="toggleFiltersMenu(event)">
+        Φίλτρα <span class="tb-badge" id="filters-badge" style="display:none">0</span> ▾
+      </button>
+      <div class="tb-menu" id="filters-menu" style="display:none" onclick="event.stopPropagation()">
+        <select class="filter-sel" id="filt-flock" onchange="render()" style="width:100%">
+          <option value="">Όλα τα αναθρεπτήρια</option>
+        </select>
+        <select class="filter-sel" id="filt-ordered" onchange="render()" style="width:100%">
+          <option value="">Όλες οι καταστάσεις</option>
+          <option value="ΝΑΙ">Παραγγελθέντα</option>
+          <option value="-">Εκκρεμείς</option>
+        </select>
+        <select class="filter-sel" id="filt-fridge" onchange="render()" style="width:100%">
+          <option value="">Όλα τα ψυγεία</option>
+          <option value="ΝΑΙ">Στο ψυγείο</option>
+          <option value="-">Όχι στο ψυγείο</option>
+        </select>
+        <div class="tb-menu-divider"></div>
+        <button class="btn-tool" id="btn-show-done" onclick="toggleShowDone()" style="width:100%">Εμφάνιση εμβολιασμένων</button>
+      </div>
+    </div>
+
     <button class="btn-tool" onclick="loadData()">↺ Ανανέωση</button>
-    <button class="btn-tool" onclick="exportCSV()">↓ CSV</button>
-    <button class="btn-tool" id="btn-print-card" onclick="openPrintCard()" style="display:none" title="Εκτύπωση καρτέλας αναθρεπτηρίου">🖨 Καρτέλα</button>
+
+    <div class="tb-spacer"></div>
+
+    <div class="tb-menu-wrap">
+      <button class="btn-tool" onclick="toggleActionsMenu(event)" title="Περισσότερες ενέργειες">⋯</button>
+      <div class="tb-menu" id="actions-menu" style="display:none;right:0;left:auto" onclick="event.stopPropagation()">
+        <button class="btn-tool" onclick="exportCSV()" style="width:100%">↓ CSV</button>
+        <button class="btn-tool" id="btn-print-card" onclick="openPrintCard()" style="display:none;width:100%" title="Εκτύπωση καρτέλας αναθρεπτηρίου">🖨 Καρτέλα</button>
+      </div>
+    </div>
   </div>
 
   <!-- BATCH ACTION BAR -->
@@ -1802,6 +1839,7 @@ function render() {
   populateFlockFilter();
   populateHatchList();
   populateCustomerList();
+  updateFiltersBadge();
   const SC = ['emvolio','hm_ekk','hm_emv','hm_paragelia','hm_par','pelatis','posotita','paragelia','emvoliasmos'];
   SC.forEach(c => { const e=document.getElementById('s-'+c); if(e) e.textContent=sortCol===c?(sortDir===1?'↑':'↓'):''; });
 
@@ -2617,6 +2655,38 @@ function updateShowDoneBtn() {
   const btn = document.getElementById('btn-show-done');
   if (!btn) return;
   btn.textContent = showDone ? 'Απόκρυψη εμβολιασμένων' : 'Εμφάνιση εμβολιασμένων';
+}
+
+// ── TOOLBAR MENUS (Φίλτρα / ⋯) ──────────────────────────────────────
+function closeAllTbMenus() {
+  document.getElementById('filters-menu').style.display = 'none';
+  document.getElementById('actions-menu').style.display = 'none';
+}
+function toggleFiltersMenu(e) {
+  e.stopPropagation();
+  const menu = document.getElementById('filters-menu');
+  const opening = menu.style.display === 'none';
+  closeAllTbMenus();
+  if (opening) menu.style.display = 'flex';
+}
+function toggleActionsMenu(e) {
+  e.stopPropagation();
+  const menu = document.getElementById('actions-menu');
+  const opening = menu.style.display === 'none';
+  closeAllTbMenus();
+  if (opening) menu.style.display = 'flex';
+}
+document.addEventListener('click', closeAllTbMenus);
+
+// how many filters (incl. "show vaccinated") are currently narrowing the view
+function updateFiltersBadge() {
+  const count = ['filt-flock', 'filt-ordered', 'filt-fridge']
+    .filter(id => document.getElementById(id).value)
+    .length + (showDone ? 1 : 0);
+  const badge = document.getElementById('filters-badge');
+  badge.style.display = count ? '' : 'none';
+  badge.textContent = count;
+  document.getElementById('btn-filters').classList.toggle('active', count > 0);
 }
 
 function resetForm() {
