@@ -1,33 +1,41 @@
-/* ── GITHUB DARK COLOUR SYSTEM ── */
+/* ── SLATE INDIGO COLOUR SYSTEM ── */
 :root{
   /* Canvas */
-  --gh-canvas-default:    #0d1117;
-  --gh-canvas-subtle:     #161b22;
-  --gh-canvas-inset:      #010409;
+  --gh-canvas-default:    #10131a;
+  --gh-canvas-subtle:     #171b24;
+  --gh-canvas-elev2:      #1c2129;
+  --gh-canvas-inset:      #0a0c11;
   /* Borders */
-  --gh-border-default:    #30363d;
-  --gh-border-muted:      #21262d;
+  --gh-border-default:    #262b36;
+  --gh-border-muted:      #1e222b;
   /* Foreground */
-  --gh-fg-default:        #e6edf3;
-  --gh-fg-muted:          #8b949e;
-  --gh-fg-subtle:         #6e7681;
-  /* Accent blue */
-  --gh-accent-fg:         #58a6ff;
-  --gh-accent-emphasis:   #1f6feb;
-  --gh-accent-subtle:     rgba(56,139,253,0.1);
+  --gh-fg-default:        #e4e6eb;
+  --gh-fg-muted:          #9096a3;
+  --gh-fg-subtle:         #656b78;
+  /* Accent indigo */
+  --gh-accent-fg:         #6e8fff;
+  --gh-accent-emphasis:   #3d63e0;
+  --gh-accent-subtle:     rgba(110,143,255,0.1);
   /* Success green */
-  --gh-success-fg:        #3fb950;
-  --gh-success-subtle:    rgba(46,160,67,0.1);
+  --gh-success-fg:        #4fd18b;
+  --gh-success-subtle:    rgba(79,209,139,0.1);
   /* Attention amber */
-  --gh-attention-fg:      #d29922;
-  --gh-attention-subtle:  rgba(187,128,9,0.1);
+  --gh-attention-fg:      #f0b429;
+  --gh-attention-subtle:  rgba(240,180,41,0.1);
+  --gh-attention-strong:  rgba(240,180,41,0.35);
   /* Danger red */
-  --gh-danger-fg:         #f85149;
-  --gh-danger-subtle:     rgba(248,81,73,0.1);
+  --gh-danger-fg:         #ff6b6b;
+  --gh-danger-subtle:     rgba(255,107,107,0.1);
+  /* Transfer violet (used by schedule_checker.html) */
+  --gh-violet-fg:         #b18aff;
+  --gh-violet-subtle:     rgba(177,138,255,0.14);
   /* Hover */
-  --gh-hover-bg:          #21262d;
+  --gh-hover-bg:          #232832;
+  /* Shadow */
+  --gh-shadow:            0 8px 24px rgba(0,0,0,0.45);
   /* Radius */
   --r:6px;--rs:6px;
+  --gh-r-sm:6px;--gh-r-md:8px;--gh-r-lg:12px;
   /* Zoom */
   --zoom:1;
 }

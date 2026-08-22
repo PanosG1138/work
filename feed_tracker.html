@@ -25,11 +25,11 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--gh-canvas-default
 .sync-badge{display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:1px solid var(--gh-border-default);border-radius:var(--rs);font-size:12px;font-weight:500;color:var(--gh-fg-muted);background:var(--gh-canvas-subtle);white-space:nowrap;}
 .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--gh-fg-subtle);flex-shrink:0;}
 .sync-badge.ok .sync-dot{background:var(--gh-success-fg);}
-.sync-badge.ok{color:var(--gh-success-fg);border-color:rgba(63,185,80,0.3);}
+.sync-badge.ok{color:var(--gh-success-fg);border-color:rgba(79,209,139,0.3);}
 .sync-badge.err .sync-dot{background:var(--gh-danger-fg);}
-.sync-badge.err{color:var(--gh-danger-fg);border-color:rgba(248,81,73,0.3);}
+.sync-badge.err{color:var(--gh-danger-fg);border-color:rgba(255,107,107,0.3);}
 .sync-badge.loading .sync-dot{background:var(--gh-accent-fg);animation:pulse 1s infinite;}
-.sync-badge.loading{color:var(--gh-accent-fg);border-color:rgba(56,139,253,0.3);}
+.sync-badge.loading{color:var(--gh-accent-fg);border-color:rgba(110,143,255,0.3);}
 .sync-badge.saving .sync-dot{background:var(--gh-attention-fg);animation:pulse 1s infinite;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
 
@@ -44,7 +44,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--gh-canvas-default
 .theme-toggle:hover{background:var(--gh-hover-bg);color:var(--gh-fg-default);border-color:var(--gh-fg-subtle)}
 
 /* OFFLINE OVERLAY */
-.offline-overlay{display:none;position:fixed;inset:0;background:rgba(1,4,9,0.85);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:12px;backdrop-filter:blur(3px);}
+.offline-overlay{display:none;position:fixed;inset:0;background:rgba(10,12,17,0.85);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:12px;backdrop-filter:blur(3px);}
 .offline-overlay.active{display:flex;}
 .offline-msg{font-size:15px;font-weight:600;color:var(--gh-danger-fg);text-align:center;line-height:1.6;}
 .offline-msg span{display:block;font-size:12px;font-weight:400;color:var(--gh-fg-muted);margin-top:6px;}
@@ -71,7 +71,7 @@ tbody td.phase-col{text-align:center}
 /* INPUTS */
 .cell-input{background:transparent;border:1px solid transparent;border-radius:4px;color:var(--gh-fg-default);font-family:'Inter',system-ui,sans-serif;font-size:13px;padding:3px 6px;width:100%;transition:border-color 0.15s,background 0.15s;outline:none;}
 .cell-input:hover{border-color:var(--gh-border-default);background:var(--gh-canvas-default)}
-.cell-input:focus{border-color:var(--gh-accent-emphasis);background:var(--gh-canvas-default);box-shadow:0 0 0 3px rgba(31,111,235,0.3)}
+.cell-input:focus{border-color:var(--gh-accent-emphasis);background:var(--gh-canvas-default);box-shadow:0 0 0 3px rgba(61,99,224,0.3)}
 .cell-input:disabled{opacity:0.45;cursor:not-allowed;}
 select.cell-input{cursor:pointer;padding-right:4px}
 select.cell-input option{background:var(--gh-canvas-subtle);color:var(--gh-fg-default)}
@@ -80,7 +80,7 @@ select.cell-input option:disabled{color:var(--gh-fg-subtle);}
 /* DATE TEXT INPUT */
 .date-text-input{background:transparent;border:1px solid transparent;border-radius:4px;color:var(--gh-fg-default);font-family:'Inter',system-ui,sans-serif;font-size:13px;padding:3px 6px;width:115px;transition:border-color 0.15s,background 0.15s;outline:none;}
 .date-text-input:hover{border-color:var(--gh-border-default);background:var(--gh-canvas-default)}
-.date-text-input:focus{border-color:var(--gh-accent-emphasis);background:var(--gh-canvas-default);box-shadow:0 0 0 3px rgba(31,111,235,0.3)}
+.date-text-input:focus{border-color:var(--gh-accent-emphasis);background:var(--gh-canvas-default);box-shadow:0 0 0 3px rgba(61,99,224,0.3)}
 .date-text-input:disabled{opacity:0.45;cursor:not-allowed;}
 .date-text-input::placeholder{color:var(--gh-fg-subtle);}
 .date-text-input.invalid{border-color:var(--gh-danger-fg) !important;box-shadow:0 0 0 3px var(--gh-danger-subtle) !important;}
@@ -91,10 +91,10 @@ select.cell-input option:disabled{color:var(--gh-fg-subtle);}
 .phase-empty{font-size:12px;color:var(--gh-border-default);}
 
 /* DATE CHIPS */
-.date-chip{display:inline-block;padding:2px 9px;border-radius:12px;font-size:12px;font-weight:500;background:var(--gh-accent-subtle);color:var(--gh-accent-fg);border:1px solid rgba(56,139,253,0.2);font-variant-numeric:tabular-nums;}
+.date-chip{display:inline-block;padding:2px 9px;border-radius:12px;font-size:12px;font-weight:500;background:var(--gh-accent-subtle);color:var(--gh-accent-fg);border:1px solid rgba(110,143,255,0.2);font-variant-numeric:tabular-nums;}
 .date-chip.past{background:var(--gh-canvas-inset);color:var(--gh-fg-subtle);border-color:var(--gh-border-muted);}
-.date-chip.today{background:var(--gh-success-subtle);color:var(--gh-success-fg);border-color:rgba(63,185,80,0.3);}
-.date-chip.soon{background:var(--gh-attention-subtle);color:var(--gh-attention-fg);border-color:rgba(210,153,34,0.3);}
+.date-chip.today{background:var(--gh-success-subtle);color:var(--gh-success-fg);border-color:rgba(79,209,139,0.3);}
+.date-chip.soon{background:var(--gh-attention-subtle);color:var(--gh-attention-fg);border-color:rgba(240,180,41,0.3);}
 
 /* LEGEND */
 .legend{display:flex;gap:16px;align-items:center;padding:10px 16px;font-size:12px;color:var(--gh-fg-muted);flex-wrap:wrap;}
@@ -109,19 +109,19 @@ select.cell-input option:disabled{color:var(--gh-fg-subtle);}
 <body>
 
 <!-- AUTH GATE -->
-<div id="auth-gate" style="position:fixed;inset:0;background:#0d1117;display:flex;align-items:center;justify-content:center;z-index:9999;font-family:'Inter',system-ui,sans-serif">
-  <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:32px;width:360px;text-align:center">
-    <h2 style="font-weight:700;font-size:20px;color:#e6edf3;margin-bottom:8px">Feed Program</h2>
-    <p style="font-size:13px;color:#8b949e;margin-bottom:22px">Σύνδεση</p>
+<div id="auth-gate" style="position:fixed;inset:0;background:var(--gh-canvas-default);display:flex;align-items:center;justify-content:center;z-index:9999;font-family:'Inter',system-ui,sans-serif">
+  <div style="background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:8px;padding:32px;width:360px;text-align:center">
+    <h2 style="font-weight:700;font-size:20px;color:var(--gh-fg-default);margin-bottom:8px">Feed Program</h2>
+    <p style="font-size:13px;color:var(--gh-fg-muted);margin-bottom:22px">Σύνδεση</p>
     <input type="email" id="auth-email" placeholder="Email…" autocomplete="username"
-      style="width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e6edf3;font-family:inherit;font-size:14px;padding:8px 10px;outline:none;margin-bottom:10px;box-sizing:border-box;text-align:center"
+      style="width:100%;background:var(--gh-canvas-default);border:1px solid var(--gh-border-default);border-radius:6px;color:var(--gh-fg-default);font-family:inherit;font-size:14px;padding:8px 10px;outline:none;margin-bottom:10px;box-sizing:border-box;text-align:center"
       onkeydown="if(event.key==='Enter')document.getElementById('auth-password').focus()">
     <input type="password" id="auth-password" placeholder="Κωδικός…" autocomplete="current-password"
-      style="width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e6edf3;font-family:inherit;font-size:14px;padding:8px 10px;outline:none;margin-bottom:12px;box-sizing:border-box;text-align:center"
+      style="width:100%;background:var(--gh-canvas-default);border:1px solid var(--gh-border-default);border-radius:6px;color:var(--gh-fg-default);font-family:inherit;font-size:14px;padding:8px 10px;outline:none;margin-bottom:12px;box-sizing:border-box;text-align:center"
       onkeydown="if(event.key==='Enter')signIn()">
     <button id="auth-btn" onclick="signIn()"
-      style="width:100%;padding:8px 16px;background:#1f6feb;color:#fff;border:none;border-radius:6px;font-family:inherit;font-weight:500;font-size:14px;cursor:pointer">Είσοδος</button>
-    <div id="auth-error" style="font-size:12px;color:#f85149;margin-top:8px;min-height:18px"></div>
+      style="width:100%;padding:8px 16px;background:var(--gh-accent-emphasis);color:#fff;border:none;border-radius:6px;font-family:inherit;font-weight:500;font-size:14px;cursor:pointer">Είσοδος</button>
+    <div id="auth-error" style="font-size:12px;color:var(--gh-danger-fg);margin-top:8px;min-height:18px"></div>
   </div>
 </div>
 
