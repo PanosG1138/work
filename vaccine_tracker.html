@@ -1200,10 +1200,11 @@ async function loadData() {
   }
 }
 
-// rows whose Ημ. Εμβολιασμού has already passed get auto-flagged ΝΑΙ
+// rows whose Ημ. Εμβολιασμού was at least 4 days ago get auto-flagged ΝΑΙ
 async function autoMarkVaccinated() {
   const today = new Date().toISOString().slice(0,10);
-  const due = data.filter(r => r.hm_emv && r.hm_emv <= today && r.emvoliasmos !== 'ΝΑΙ');
+  const cutoff = subDays(today, 4);
+  const due = data.filter(r => r.hm_emv && r.hm_emv <= cutoff && r.emvoliasmos !== 'ΝΑΙ');
   if (!due.length) return;
   await sbFetch(`${TABLE}?id=in.(${due.map(r => r.id).join(',')})`, {
     method: 'PATCH', body: JSON.stringify({ emvoliasmos: 'ΝΑΙ' }),
