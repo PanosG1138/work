@@ -202,6 +202,21 @@ tfoot td{padding:7px 12px;font-size:13px;font-weight:600;color:var(--gh-fg-defau
   box-shadow:0 6px 16px rgba(0,0,0,0.4);
 }
 .tb-menu-divider{height:1px;background:var(--gh-border-muted);margin:2px 0}
+.filter-house-label{font-size:11px;color:var(--gh-fg-muted);display:block;margin-bottom:6px}
+.house-chip-row{display:flex;flex-wrap:wrap;gap:6px}
+.house-chip{
+  height:28px;padding:0 10px;
+  background:var(--gh-canvas-default);
+  border:1px solid var(--gh-border-default);
+  color:var(--gh-fg-muted);
+  border-radius:99px;
+  font-family:'Inter',system-ui,sans-serif;
+  font-size:12px;font-weight:600;
+  cursor:pointer;
+  transition:background 0.15s,border-color 0.15s,color 0.15s;
+}
+.house-chip:hover{border-color:var(--gh-fg-subtle);color:var(--gh-fg-default)}
+.house-chip.active{background:var(--gh-accent-subtle);border-color:var(--gh-accent-emphasis);color:var(--gh-accent-fg)}
 .btn-tool{
   height:32px;padding:0 12px;
   background:var(--gh-canvas-subtle);
@@ -383,6 +398,13 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
 .history-section{margin-top:18px;padding-top:16px;border-top:1px solid var(--gh-border-muted)}
 .history-title{font-size:11px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;color:var(--gh-fg-muted);margin-bottom:10px}
 .history-list{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto}
+
+/* Edit modal: history as a right-side column instead of stacked below */
+.modal-history-layout{display:flex;gap:24px}
+.modal-main{flex:1;min-width:0}
+.modal-side{width:200px;flex-shrink:0;border-left:1px solid var(--gh-border-muted);padding-left:20px;display:flex;flex-direction:column;min-height:0}
+.modal-side .history-section{margin-top:0;padding-top:0;border-top:none;display:flex;flex-direction:column;flex:1;min-height:0}
+.modal-side .history-list{flex:1;max-height:none;min-height:0}
 .history-item{background:var(--gh-canvas-default);border:1px solid var(--gh-border-muted);border-radius:var(--rs);padding:10px 12px}
 .history-item-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
 .hi-user{font-size:13px;font-weight:600;color:var(--gh-fg-default)}
@@ -565,6 +587,11 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
     padding:20px 16px 32px;
   }
   .confirm-box{width:90%;border-radius:var(--r)}
+  /* history column reverts to stacked below the form on narrow screens */
+  .modal-history-layout{flex-direction:column;gap:0}
+  .modal-side{width:100%;border-left:none;padding-left:0}
+  .modal-side .history-section{margin-top:18px;padding-top:16px;border-top:1px solid var(--gh-border-muted);flex:none}
+  .modal-side .history-list{max-height:260px;overflow-y:auto}
 }
 
 .toast{
@@ -778,9 +805,16 @@ body.printing-card .printcard-doc{display:block}
         Φίλτρα <span class="tb-badge" id="filters-badge" style="display:none">0</span> ▾
       </button>
       <div class="tb-menu" id="filters-menu" style="display:none" onclick="event.stopPropagation()">
-        <select class="filter-sel" id="filt-flock" onchange="render()" style="width:100%">
-          <option value="">Όλα τα αναθρεπτήρια</option>
-        </select>
+        <div>
+          <label class="filter-house-label">Αναθρεπτήριο</label>
+          <div class="house-chip-row" id="house-filter-row">
+            <button type="button" class="house-chip" onclick="toggleHouseFilter('Θ1')">Θ1</button>
+            <button type="button" class="house-chip" onclick="toggleHouseFilter('Θ2')">Θ2</button>
+            <button type="button" class="house-chip" onclick="toggleHouseFilter('Θ3')">Θ3</button>
+            <button type="button" class="house-chip" onclick="toggleHouseFilter('Θ4')">Θ4</button>
+            <button type="button" class="house-chip" onclick="toggleHouseFilter('Α1')">Α1</button>
+          </div>
+        </div>
         <select class="filter-sel" id="filt-ordered" onchange="render()" style="width:100%">
           <option value="">Όλες οι καταστάσεις</option>
           <option value="ΝΑΙ">Παραγγελθέντα</option>
@@ -858,39 +892,45 @@ body.printing-card .printcard-doc{display:block}
 
 <!-- EDIT MODAL -->
 <div id="modal-bg" class="modal-bg" style="display:none" onclick="if(event.target===this)closeModal()">
-  <div class="modal">
+  <div class="modal" style="width:780px;max-width:95vw">
     <h3>Επεξεργασία Παραγγελίας</h3>
-    <div class="mgrid">
-      <div class="fgroup full"><label>Εμβόλιο</label><input type="text" id="m-vaccine" list="vaccine-list"></div>
-      <div class="fgroup"><label>Ημ. Εκκόλαψης</label><input type="text" id="m-hatch" placeholder="ηη/μμ ή ηη/μμ/εε" onblur="onSmartDateBlur(this)" autocomplete="off"></div>
-      <div class="fgroup"><label>Ημ. Εμβολιασμού</label><input type="text" id="m-vacc" placeholder="ηη/μμ ή ηη/μμ/εε" onblur="onSmartDateBlur(this)" autocomplete="off"></div>
-      <div class="fgroup"><label>Ημ. Παραγγελίας <span class="calc-badge">ΑΥΤΟ</span></label><input type="text" id="m-orderdate" class="calc-field" readonly></div>
-      <div class="fgroup"><label>Ημ. Καταχώρησης Παραγγελίας</label><input type="text" id="m-deliv" placeholder="ηη/μμ ή ηη/μμ/εε" onblur="onSmartDateBlur(this)" autocomplete="off"></div>
-      <div class="fgroup"><label>Αναθρεπτήριο</label>
-        <select id="m-flock"><option value="">—</option><option>Θ1</option><option>Θ2</option><option>Θ3</option><option>Θ4</option><option>Α1</option></select></div>
-      <div class="fgroup"><label>Πελάτης</label><input type="text" id="m-customer"></div>
-      <div class="fgroup"><label>Ποσότητα</label><input type="text" id="m-qty" onblur="fmtQty(this)" onfocus="stripQty(this)"></div>
-      <div class="fgroup"><label>Παραγγελία</label>
-        <select id="m-ordered"><option value="">—</option><option value="ΝΑΙ">ΝΑΙ</option></select></div>
-      <div class="fgroup"><label>Ψυγείο</label>
-        <select id="m-fridge"><option value="">—</option><option value="ΝΑΙ">ΝΑΙ</option></select></div>
-      <div class="fgroup"><label>Εμβολιασμός</label><select id="m-emvoliasmos"><option value="">ΟΧΙ</option><option value="ΝΑΙ">ΝΑΙ</option></select></div>
-      <div class="fgroup"><label>Προμηθευτής</label><input type="text" id="m-supplier" list="supplier-list"></div>
-      <div class="fgroup"><label>Σχόλια Πάνος</label><input type="text" id="m-notes"></div>
-      <div class="fgroup full"><label>Σχόλια Ελένη</label><input type="text" id="m-notes2"></div>
-    </div>
-    <!-- HISTORY -->
-    <div class="history-section">
-      <div class="history-title">Ιστορικό αλλαγών</div>
-      <div class="history-list" id="history-list">
-        <div style="color:var(--gh-fg-muted);font-size:11px">Φόρτωση…</div>
+    <div class="modal-history-layout">
+      <div class="modal-main">
+        <div class="mgrid">
+          <div class="fgroup full"><label>Εμβόλιο</label><input type="text" id="m-vaccine" list="vaccine-list"></div>
+          <div class="fgroup"><label>Ημ. Εκκόλαψης</label><input type="text" id="m-hatch" placeholder="ηη/μμ ή ηη/μμ/εε" onblur="onSmartDateBlur(this)" autocomplete="off"></div>
+          <div class="fgroup"><label>Ημ. Εμβολιασμού</label><input type="text" id="m-vacc" placeholder="ηη/μμ ή ηη/μμ/εε" onblur="onSmartDateBlur(this)" autocomplete="off"></div>
+          <div class="fgroup"><label>Ημ. Παραγγελίας <span class="calc-badge">ΑΥΤΟ</span></label><input type="text" id="m-orderdate" class="calc-field" readonly></div>
+          <div class="fgroup"><label>Ημ. Καταχώρησης Παραγγελίας</label><input type="text" id="m-deliv" placeholder="ηη/μμ ή ηη/μμ/εε" onblur="onSmartDateBlur(this)" autocomplete="off"></div>
+          <div class="fgroup"><label>Αναθρεπτήριο</label>
+            <select id="m-flock"><option value="">—</option><option>Θ1</option><option>Θ2</option><option>Θ3</option><option>Θ4</option><option>Α1</option></select></div>
+          <div class="fgroup"><label>Πελάτης</label><input type="text" id="m-customer"></div>
+          <div class="fgroup"><label>Ποσότητα</label><input type="text" id="m-qty" onblur="fmtQty(this)" onfocus="stripQty(this)"></div>
+          <div class="fgroup"><label>Παραγγελία</label>
+            <select id="m-ordered"><option value="">—</option><option value="ΝΑΙ">ΝΑΙ</option></select></div>
+          <div class="fgroup"><label>Ψυγείο</label>
+            <select id="m-fridge"><option value="">—</option><option value="ΝΑΙ">ΝΑΙ</option></select></div>
+          <div class="fgroup"><label>Εμβολιασμός</label><select id="m-emvoliasmos"><option value="">ΟΧΙ</option><option value="ΝΑΙ">ΝΑΙ</option></select></div>
+          <div class="fgroup"><label>Προμηθευτής</label><input type="text" id="m-supplier" list="supplier-list"></div>
+          <div class="fgroup"><label>Σχόλια Πάνος</label><input type="text" id="m-notes"></div>
+          <div class="fgroup full"><label>Σχόλια Ελένη</label><input type="text" id="m-notes2"></div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-danger" id="btn-modal-delete" onclick="modalDelete()">Διαγραφή</button>
+          <div style="flex:1"></div>
+          <button class="btn-secondary" onclick="closeModal()">Ακύρωση</button>
+          <button class="btn-primary" id="btn-save" onclick="saveEdit()">Αποθήκευση</button>
+        </div>
       </div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-danger" id="btn-modal-delete" onclick="modalDelete()">Διαγραφή</button>
-      <div style="flex:1"></div>
-      <button class="btn-secondary" onclick="closeModal()">Ακύρωση</button>
-      <button class="btn-primary" id="btn-save" onclick="saveEdit()">Αποθήκευση</button>
+      <!-- HISTORY -->
+      <div class="modal-side">
+        <div class="history-section">
+          <div class="history-title">Ιστορικό αλλαγών</div>
+          <div class="history-list" id="history-list">
+            <div style="color:var(--gh-fg-muted);font-size:11px">Φόρτωση…</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1122,6 +1162,15 @@ const sbChangelog = (since, user) =>
 let data = [], sortCol = 'hm_emv', sortDir = 1;
 let editId = null, editLoadedAt = null, deleteId = null, orderedVal = '', fridgeVal = '', emvoliasmosVal = '';
 let showDone = false;
+let filterHouses = new Set();
+
+function toggleHouseFilter(house) {
+  if (filterHouses.has(house)) filterHouses.delete(house); else filterHouses.add(house);
+  document.querySelectorAll('#house-filter-row .house-chip').forEach(btn => {
+    btn.classList.toggle('active', filterHouses.has(btn.textContent.trim()));
+  });
+  render();
+}
 let currentUser = '';
 
 
@@ -1916,29 +1965,6 @@ function flockLabel(r) {
   return fmt(r.hm_ekk) + ' – ' + r.anath;
 }
 
-// rebuild the dynamic flock filter from current data
-function populateFlockFilter() {
-  const sel = document.getElementById('filt-flock');
-  const cur = sel.value;
-  // collect unique flock keys sorted
-  const keys = [...new Map(
-    data.map(r => [flockLabel(r), { hm_ekk: r.hm_ekk, anath: r.anath }])
-  ).entries()]
-    .filter(([k]) => k !== '—')
-    .sort((a, b) => {
-      // sort by hm_ekk date asc, then anath
-      const da = a[1].hm_ekk || '', db = b[1].hm_ekk || '';
-      return da < db ? -1 : da > db ? 1 : (a[1].anath||'').localeCompare(b[1].anath||'');
-    });
-  sel.innerHTML = '<option value="">Όλα τα αναθρεπτήρια</option>';
-  keys.forEach(([label]) => {
-    const o = document.createElement('option');
-    o.value = label; o.textContent = label;
-    sel.appendChild(o);
-  });
-  sel.value = cur; // restore selection if still valid
-}
-
 function sortBy(col) { if(sortCol===col) sortDir*=-1; else{sortCol=col;sortDir=1;} render(); }
 
 function modalDelete() {
@@ -1981,7 +2007,6 @@ function populateCustomerList() {
 }
 
 function render() {
-  populateFlockFilter();
   populateHatchList();
   populateCustomerList();
   updateFiltersBadge();
@@ -2036,7 +2061,7 @@ function render() {
 
   // totals footer — show when filtered or multiple rows selected
   const isFiltered = document.getElementById('search').value.trim() ||
-                     document.getElementById('filt-flock').value ||
+                     filterHouses.size ||
                      document.getElementById('filt-ordered').value ||
                      document.getElementById('filt-fridge').value ||
                      showDone;
@@ -2766,7 +2791,6 @@ function getFiltered() {
   const terms = raw
     ? raw.split(/,\s*/).map(t => parseTerm(t.trim())).filter(t => t.value)
     : [];
-  const ff = document.getElementById('filt-flock').value;
   const fo = document.getElementById('filt-ordered').value;
   const fr = document.getElementById('filt-fridge').value;
   return data.filter(r => {
@@ -2787,7 +2811,7 @@ function getFiltered() {
         if (!match) return false;
       }
     }
-    if (ff && flockLabel(r) !== ff) return false;
+    if (filterHouses.size && !filterHouses.has(r.anath)) return false;
     if (fo==='ΝΑΙ' && r.paragelia!=='ΝΑΙ') return false;
     if (fo==='-'   && r.paragelia==='ΝΑΙ') return false;
     if (fr==='ΝΑΙ' && r.psygeio!=='ΝΑΙ') return false;
@@ -2825,9 +2849,9 @@ document.addEventListener('click', closeAllTbMenus);
 
 // how many filters (incl. "show vaccinated") are currently narrowing the view
 function updateFiltersBadge() {
-  const count = ['filt-flock', 'filt-ordered', 'filt-fridge']
+  const count = ['filt-ordered', 'filt-fridge']
     .filter(id => document.getElementById(id).value)
-    .length + (showDone ? 1 : 0);
+    .length + (filterHouses.size ? 1 : 0) + (showDone ? 1 : 0);
   const badge = document.getElementById('filters-badge');
   badge.style.display = count ? '' : 'none';
   badge.textContent = count;
