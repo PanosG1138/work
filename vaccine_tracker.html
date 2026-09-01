@@ -731,7 +731,7 @@ body.printing-card .printcard-doc{display:block}
       <label>Ημ. Εμβολιασμού</label>
       <input type="text" id="f-vacc" placeholder="ηη/μμ ή ηη/μμ/εε" onblur="onSmartDateBlur(this)" autocomplete="off">
     </div>
-    <div class="fgroup">
+    <div class="fgroup" style="display:none">
       <label>Ημ. Παραγγελίας <span class="calc-badge">ΑΥΤΟ −30 ημ.</span></label>
       <input type="text" id="f-orderdate" class="calc-field" readonly placeholder="Ορίστε πρώτα ημ. εμβολιασμού…">
     </div>
@@ -759,7 +759,7 @@ body.printing-card .printcard-doc{display:block}
       </datalist>
     </div>
     <div class="fgroup"><label>Σχόλια Πάνος</label><textarea id="f-notes" placeholder="…"></textarea></div>
-    <div class="fgroup"><label>Εμβολιασμός</label>
+    <div class="fgroup" style="display:none"><label>Εμβολιασμός</label>
       <select id="f-emvoliasmos" onchange="emvoliasmosVal=this.value">
         <option value="">ΟΧΙ</option>
         <option value="ΝΑΙ">ΝΑΙ</option>
