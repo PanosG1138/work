@@ -714,6 +714,11 @@ body.printing-card .printcard-doc{display:block}
         <option>Θ1</option><option>Θ2</option><option>Θ3</option><option>Θ4</option><option>Α1</option>
       </select>
     </div>
+    <div class="fgroup" id="f-newhatch-gate" style="display:none">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:400">
+        <input type="checkbox" id="f-newhatch">Νέα εκκόλαψη (δεν υπάρχει ακόμα στο σύστημα)
+      </label>
+    </div>
     <div class="fgroup">
       <label>Ημ. Εμβολιασμού</label>
       <input type="text" id="f-vacc" placeholder="ηη/μμ ή ηη/μμ/εε" onblur="onSmartDateBlur(this)" autocomplete="off">
@@ -935,14 +940,19 @@ body.printing-card .printcard-doc{display:block}
     <div id="wz-context">
       <div class="fgroup">
         <label>Ημ. Εκκόλαψης</label>
-        <input type="text" id="wz-hatch" placeholder="ηη/μμ ή ηη/μμ/εε" autocomplete="off" onkeydown="if(event.key==='Enter')wizardStartLoop()">
+        <input type="text" id="wz-hatch" list="hatch-list" placeholder="ηη/μμ ή ηη/μμ/εε" autocomplete="off" onblur="onSmartDateBlur(this)" onkeydown="if(event.key==='Enter')wizardStartLoop()">
       </div>
       <div class="fgroup">
         <label>Αναθρεπτήριο</label>
-        <select id="wz-flock">
+        <select id="wz-flock" onchange="refreshNewHatchGate('wz-hatch','wz-flock','wz-newhatch-gate')">
           <option value="">— επιλογή —</option>
           <option>Θ1</option><option>Θ2</option><option>Θ3</option><option>Θ4</option><option>Α1</option>
         </select>
+      </div>
+      <div class="fgroup" id="wz-newhatch-gate" style="display:none">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:400">
+          <input type="checkbox" id="wz-newhatch">Νέα εκκόλαψη (δεν υπάρχει ακόμα στο σύστημα)
+        </label>
       </div>
       <div class="modal-actions">
         <button class="btn-secondary" onclick="closeWizard()">Ακύρωση</button>
@@ -1264,29 +1274,62 @@ function onSmartDateBlur(el) {
   el.style.borderColor = ''; // clear any error state
   // trigger downstream logic (order date calc, steps)
   if (el.id === 'f-vacc' || el.id === 'f-hatch') onDateChange();
-  if (el.id === 'f-hatch') autoFillFlock(el.dataset.iso);
-  if (el.id === 'm-vacc') modalDateChange();
+  if (el.id === 'f-hatch') {
+    autoFillFlock(el.dataset.iso, 'f-flock');
+    refreshNewHatchGate('f-hatch', 'f-flock', 'f-newhatch-gate');
+  }
+  if (el.id === 'wz-hatch') {
+    autoFillFlock(el.dataset.iso, 'wz-flock');
+    refreshNewHatchGate('wz-hatch', 'wz-flock', 'wz-newhatch-gate');
+  }
+  if (el.id === 'm-vacc' || el.id === 'm-hatch') modalDateChange();
 }
 
-function autoFillFlock(hatchIso) {
+// vaccination date may never fall before the hatch date (same day is fine)
+function dateOrderInvalid(hatchIso, vaccIso) {
+  return !!(hatchIso && vaccIso && vaccIso < hatchIso);
+}
+
+function autoFillFlock(hatchIso, flockElId) {
+  flockElId = flockElId || 'f-flock';
   if (!hatchIso) return;
-  const flockSel = document.getElementById('f-flock');
+  const flockSel = document.getElementById(flockElId);
   if (flockSel.value) return;
   const match = data.find(r => r.hm_ekk === hatchIso && r.anath);
   if (match) {
     flockSel.value = match.anath;
-    onFieldChange();
+    if (flockElId === 'f-flock') onFieldChange();
   }
 }
 
+// true if any existing row already has this exact hatch date + house combo
+function isKnownFlock(hatchIso, flock) {
+  return !!(hatchIso && flock && data.some(r => r.hm_ekk === hatchIso && r.anath === flock));
+}
+
+// shows/hides the "New Hatch" confirmation checkbox: visible only when the
+// current hatch+house combo isn't already in the system
+function refreshNewHatchGate(hatchElId, flockElId, gateElId) {
+  const gate = document.getElementById(gateElId);
+  if (!gate) return;
+  const hatchIso = document.getElementById(hatchElId).dataset.iso || '';
+  const flock = document.getElementById(flockElId).value;
+  const show = hatchIso && flock && !isKnownFlock(hatchIso, flock);
+  gate.style.display = show ? '' : 'none';
+  if (!show) gate.querySelector('input[type=checkbox]').checked = false;
+}
+
 function onDateChange() {
-  const vaccIso = document.getElementById('f-vacc').dataset.iso || '';
+  const vaccEl = document.getElementById('f-vacc');
+  const vaccIso = vaccEl.dataset.iso || '';
+  const hatchIso = document.getElementById('f-hatch').dataset.iso || '';
+  vaccEl.style.borderColor = dateOrderInvalid(hatchIso, vaccIso) ? 'var(--gh-danger-fg)' : '';
   const el = document.getElementById('f-orderdate');
   if (vaccIso) { const od = subDays(vaccIso, 30); el.value = fmt(od); el.dataset.iso = od; }
   else { el.value = ''; el.dataset.iso = ''; }
   updateSteps();
 }
-function onFieldChange() { updateSteps(); }
+function onFieldChange() { updateSteps(); refreshNewHatchGate('f-hatch', 'f-flock', 'f-newhatch-gate'); }
 
 function updateSteps() {
   const s1 = !!(document.getElementById('f-hatch').dataset.iso && document.getElementById('f-flock').value);
@@ -1355,6 +1398,14 @@ async function addEntry() {
   if (!hatch)      { toast('Εισάγετε ημερομηνία εκκόλαψης', true); return; }
   if (!flock)      { toast('Επιλέξτε αναθρεπτήριο', true); return; }
   if (!vacc)       { toast('Εισάγετε ημερομηνία εμβολιασμού', true); return; }
+  if (dateOrderInvalid(hatch, vacc)) {
+    toast('Η ημ. εμβολιασμού δεν μπορεί να είναι πριν την εκκόλαψη', true);
+    return;
+  }
+  if (!isKnownFlock(hatch, flock) && !document.getElementById('f-newhatch').checked) {
+    toast('Νέα εκκόλαψη — τσεκάρετε "Νέα εκκόλαψη" για να συνεχίσετε', true);
+    return;
+  }
 
   const splitCSV = s => s ? s.split(/,\s*/).map(v => v.trim()).filter(Boolean) : [''];
   const vaccines  = splitCSV(vaccineRaw);
@@ -1388,17 +1439,41 @@ async function addEntry() {
     });
   });
 
+  // check each combo against existing rows — same house+hatch+vacc.date+vaccine
+  // is offered as a replace instead of a straight insert
+  const toInsert = [], toReplace = [];
+  for (const combo of combos) {
+    const dup = findDuplicateRow(hatch, flock, vacc, combo.emvolio);
+    if (dup && confirm(
+      `Υπάρχει ήδη καταχώρηση: ${dup.emvolio} · Πελάτης: ${dup.pelatis || '—'} · ` +
+      `Ποσότητα: ${fmtPosotita(dup.posotita)} · Προμηθευτής: ${dup.promitheutis || '—'}\n\n` +
+      `Αντικατάσταση με τη νέα καταχώρηση;`
+    )) {
+      toReplace.push({ id: dup.id, combo });
+    } else if (!dup) {
+      toInsert.push(combo);
+    } // dup declined: skip this combo entirely
+  }
+  if (!toInsert.length && !toReplace.length) return;
+
   const btn = document.getElementById('btn-add');
   btn.disabled = true;
-  btn.textContent = combos.length > 1 ? `Αποθήκευση ${combos.length}…` : 'Αποθήκευση…';
+  btn.textContent = 'Αποθήκευση…';
   setSyncStatus('loading', 'Αποθήκευση…');
   try {
-    await insertRows(combos, now);
+    if (toInsert.length) await insertRows(toInsert, now);
+    for (const { id, combo } of toReplace) {
+      const { created_by, created_at, ...fields } = combo;
+      await replaceRow(id, fields, now);
+    }
     resetForm(); render();
     // on mobile, close the drawer so the user sees the new row in the table
     if (isMobile() && sidebarOpen) toggleSidebar();
     setSyncStatus('ok', 'Αποθηκεύτηκε ✓');
-    toast(combos.length > 1 ? `${combos.length} εγγραφές προστέθηκαν!` : 'Η παραγγελία προστέθηκε!');
+    const parts = [];
+    if (toInsert.length) parts.push(`${toInsert.length} προστέθηκαν`);
+    if (toReplace.length) parts.push(`${toReplace.length} αντικαταστάθηκαν`);
+    toast(parts.join(' · ') + '!');
   } catch (e) {
     setSyncStatus('err', 'Σφάλμα');
     toast('Σφάλμα: ' + e.message, true);
@@ -1426,6 +1501,8 @@ function openWizard() {
   wizardHatchIso = ''; wizardFlock = ''; wizardQueue = []; wizardDraft = {};
   document.getElementById('wz-hatch').value = '';
   document.getElementById('wz-flock').value = '';
+  document.getElementById('wz-newhatch-gate').style.display = 'none';
+  document.getElementById('wz-newhatch').checked = false;
   document.getElementById('wz-context').style.display = '';
   document.getElementById('wz-loop').style.display = 'none';
   document.getElementById('wz-review').style.display = 'none';
@@ -1443,6 +1520,14 @@ function wizardStartLoop() {
   const flock = document.getElementById('wz-flock').value;
   if (!hatchIso) { toast('Εισάγετε έγκυρη ημερομηνία εκκόλαψης', true); return; }
   if (!flock)    { toast('Επιλέξτε αναθρεπτήριο', true); return; }
+  // Enter fires this via keydown, which can beat the field's blur — force
+  // the ISO + gate in sync here rather than relying on onSmartDateBlur alone
+  document.getElementById('wz-hatch').dataset.iso = hatchIso;
+  refreshNewHatchGate('wz-hatch', 'wz-flock', 'wz-newhatch-gate');
+  if (!isKnownFlock(hatchIso, flock) && !document.getElementById('wz-newhatch').checked) {
+    toast('Νέα εκκόλαψη — τσεκάρετε "Νέα εκκόλαψη" για να συνεχίσετε', true);
+    return;
+  }
   wizardHatchIso = hatchIso; wizardFlock = flock;
   document.getElementById('wz-context-chip').textContent = flock + ' · Εκκόλαψη ' + fmt(hatchIso);
   document.getElementById('wz-context').style.display = 'none';
@@ -1482,6 +1567,10 @@ function wizardAdvance() {
   if (wizardStage === 'date') {
     const iso = parseSmartDate(val);
     if (!iso) { toast('Μη έγκυρη ημερομηνία', true); return; }
+    if (dateOrderInvalid(wizardHatchIso, iso)) {
+      toast('Η ημ. εμβολιασμού δεν μπορεί να είναι πριν την εκκόλαψη', true);
+      return;
+    }
     wizardDraft.vaccDate = iso;
     wizardStage = 'vaccine';
   } else if (wizardStage === 'vaccine') {
@@ -1493,6 +1582,16 @@ function wizardAdvance() {
     wizardStage = 'qty';
   } else if (wizardStage === 'qty') {
     wizardDraft.qty = rawQty(val);
+    const dup = findDuplicateRow(wizardHatchIso, wizardFlock, wizardDraft.vaccDate, wizardDraft.vaccine);
+    if (dup) {
+      const replace = confirm(
+        `Υπάρχει ήδη καταχώρηση: ${dup.emvolio} · Πελάτης: ${dup.pelatis || '—'} · ` +
+        `Ποσότητα: ${fmtPosotita(dup.posotita)} · Προμηθευτής: ${dup.promitheutis || '—'}\n\n` +
+        `Αντικατάσταση με τη νέα καταχώρηση;`
+      );
+      if (!replace) { wizardDraft = {}; wizardStage = 'date'; wizardRenderStage(); return; }
+      wizardDraft._replaceId = dup.id;
+    }
     wizardQueue.push({ ...wizardDraft });
     wizardDraft = {};
     renderWizardQueue();
@@ -1504,7 +1603,8 @@ function wizardAdvance() {
 
 function wizardQueueRowHTML(q, i, onRemove) {
   return '<div class="wizard-queue-row">' +
-    '<span class="wq-main">' + fmt(q.vaccDate) + ' · ' + x(q.vaccine) + '</span>' +
+    '<span class="wq-main">' + fmt(q.vaccDate) + ' · ' + x(q.vaccine) +
+      (q._replaceId ? ' <span style="color:var(--gh-attention-fg)">(αντικατάσταση)</span>' : '') + '</span>' +
     '<span class="wq-sub">' + (q.qty ? fmtPosotita(q.qty) : '—') + (q.customer ? ' · ' + x(q.customer) : '') + '</span>' +
     '<button class="row-btn del" onclick="' + onRemove + '(' + i + ')">×</button>' +
   '</div>';
@@ -1545,22 +1645,28 @@ async function wizardSaveAll() {
   if (!guardConnected()) return;
   if (!wizardQueue.length) return;
   const now = new Date().toISOString();
-  const rows = wizardQueue.map(q => ({
+  const buildFields = q => ({
     hm_ekk: wizardHatchIso, hm_emv: q.vaccDate, hm_par: null, anath: wizardFlock,
     sxolia_panos: null, promitheutis: null, paragelia: null,
     hm_paragelia: subDays(q.vaccDate, 30), psygeio: null, emvoliasmos: null, sxolia_eleni: null,
-    created_by: currentUser, created_at: now, updated_by: currentUser, updated_at: now,
     emvolio: q.vaccine, pelatis: q.customer, posotita: q.qty,
-  }));
+  });
+  const rows = wizardQueue.filter(q => !q._replaceId)
+    .map(q => ({ ...buildFields(q), created_by: currentUser, created_at: now, updated_by: currentUser, updated_at: now }));
+  const replaces = wizardQueue.filter(q => q._replaceId);
   const btn = document.getElementById('wz-save-btn');
   btn.disabled = true; btn.textContent = 'Αποθήκευση…';
   setSyncStatus('loading', 'Αποθήκευση…');
   try {
-    await insertRows(rows, now);
+    if (rows.length) await insertRows(rows, now);
+    for (const q of replaces) await replaceRow(q._replaceId, buildFields(q), now);
     render();
     document.getElementById('wizard-bg').style.display = 'none';
     setSyncStatus('ok', 'Αποθηκεύτηκε ✓');
-    toast(`${rows.length} εγγραφές προστέθηκαν!`);
+    const parts = [];
+    if (rows.length) parts.push(`${rows.length} προστέθηκαν`);
+    if (replaces.length) parts.push(`${replaces.length} αντικαταστάθηκαν`);
+    toast(parts.join(' · ') + '!');
   } catch (e) {
     setSyncStatus('err', 'Σφάλμα');
     toast('Σφάλμα: ' + e.message, true);
@@ -1593,7 +1699,10 @@ async function editEntry(id) {
 }
 
 function modalDateChange() {
-  const vaccIso = document.getElementById('m-vacc').dataset.iso || '';
+  const vaccEl = document.getElementById('m-vacc');
+  const vaccIso = vaccEl.dataset.iso || '';
+  const hatchIso = document.getElementById('m-hatch').dataset.iso || '';
+  vaccEl.style.borderColor = dateOrderInvalid(hatchIso, vaccIso) ? 'var(--gh-danger-fg)' : '';
   const el = document.getElementById('m-orderdate');
   if (vaccIso) { el.value = fmt(subDays(vaccIso,30)); el.dataset.iso = subDays(vaccIso,30); }
   else { el.value=''; el.dataset.iso=''; }
@@ -1646,6 +1755,44 @@ async function loadHistory(rowId) {
   }
 }
 
+// shared by saveEdit() and replaceRow() to build a history diff
+const FIELD_LABELS = {
+  emvolio:'Εμβόλιο', hm_ekk:'Ημ. Εκκόλαψης', hm_emv:'Ημ. Εμβολιασμού',
+  hm_par:'Ημ. Καταχώρησης', anath:'Αναθρεπτήριο', pelatis:'Πελάτης',
+  posotita:'Ποσότητα', paragelia:'Παραγγελία', psygeio:'Ψυγείο', emvoliasmos:'Εμβολιασμός',
+  promitheutis:'Προμηθευτής', sxolia_panos:'Σχόλια Πάνος',
+  sxolia_eleni:'Σχόλια Ελένη', hm_paragelia:'Ημ. Παραγγελίας',
+};
+
+// finds an existing row that's an exact match on house + hatch date +
+// vaccination date + vaccine name — the "same slot" a new entry can replace
+function findDuplicateRow(hatchIso, flock, vaccIso, vaccine) {
+  return data.find(r => r.hm_ekk === hatchIso && r.anath === flock &&
+    r.hm_emv === vaccIso && r.emvolio === vaccine);
+}
+
+// updates an existing row in place (preserving its id/created_by/created_at)
+// and logs the change to its history, same pattern as saveEdit()
+async function replaceRow(id, fields, now) {
+  const idx = data.findIndex(x => x.id === id);
+  const before = idx >= 0 ? { ...data[idx] } : {};
+  const row = { ...fields, updated_by: currentUser, updated_at: now };
+  const changes = {};
+  Object.keys(FIELD_LABELS).forEach(k => {
+    if (!(k in row)) return;
+    const oldVal = before[k] ?? null;
+    const newVal = row[k] ?? null;
+    if (String(oldVal ?? '') !== String(newVal ?? '')) {
+      changes[k] = { label: FIELD_LABELS[k], from: oldVal, to: newVal };
+    }
+  });
+  const [updated] = await sbUpdate(id, row);
+  if (Object.keys(changes).length > 0) {
+    await sbHInsert({ row_id: id, action: 'edited', user_name: currentUser, ts: now, changes_json: JSON.stringify(changes) });
+  }
+  if (idx >= 0) data[idx] = updated;
+}
+
 async function saveEdit() {
   if (!guardConnected()) return;
   const g  = id => document.getElementById(id).value;
@@ -1667,14 +1814,12 @@ async function saveEdit() {
     updated_by: currentUser, updated_at: now,
   };
 
+  if (dateOrderInvalid(row.hm_ekk, row.hm_emv)) {
+    toast('Η ημ. εμβολιασμού δεν μπορεί να είναι πριν την εκκόλαψη', true);
+    return;
+  }
+
   // build diff: only fields that actually changed
-  const FIELD_LABELS = {
-    emvolio:'Εμβόλιο', hm_ekk:'Ημ. Εκκόλαψης', hm_emv:'Ημ. Εμβολιασμού',
-    hm_par:'Ημ. Καταχώρησης', anath:'Αναθρεπτήριο', pelatis:'Πελάτης',
-    posotita:'Ποσότητα', paragelia:'Παραγγελία', psygeio:'Ψυγείο', emvoliasmos:'Εμβολιασμός',
-    promitheutis:'Προμηθευτής', sxolia_panos:'Σχόλια Πάνος',
-    sxolia_eleni:'Σχόλια Ελένη', hm_paragelia:'Ημ. Παραγγελίας',
-  };
   const changes = {};
   Object.keys(FIELD_LABELS).forEach(k => {
     const oldVal = before[k] ?? null;
@@ -2702,6 +2847,7 @@ function resetForm() {
   // close any open vaccine dropdown
   document.getElementById('vac-dropdown').style.display = 'none';
   updateSteps();
+  refreshNewHatchGate('f-hatch', 'f-flock', 'f-newhatch-gate');
 }
 
 // ── THEME ─────────────────────────────────────────────────────────
