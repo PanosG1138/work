@@ -1200,12 +1200,12 @@ async function loadData() {
   }
 }
 
-// rows whose Ημ. Εμβολιασμού was at least 4 days ago get auto-flagged ΝΑΙ —
+// rows whose Ημ. Εμβολιασμού was at least 6 days ago get auto-flagged ΝΑΙ —
 // only when Παραγγελία and Ψυγείο are both ΝΑΙ; otherwise never auto-marked,
 // no matter how much time has passed
 async function autoMarkVaccinated() {
   const today = new Date().toISOString().slice(0,10);
-  const cutoff = subDays(today, 4);
+  const cutoff = subDays(today, 6);
   const due = data.filter(r => r.hm_emv && r.hm_emv <= cutoff && r.emvoliasmos !== 'ΝΑΙ' &&
     r.paragelia === 'ΝΑΙ' && r.psygeio === 'ΝΑΙ');
   if (!due.length) return;
