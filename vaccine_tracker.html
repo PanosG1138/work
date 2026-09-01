@@ -151,9 +151,7 @@ select{
 textarea{resize:vertical;min-height:44px;font-size:13px}
 .calc-field{background:var(--gh-attention-subtle)!important;border-color:rgba(240,180,41,0.5)!important;color:var(--gh-attention-fg)!important;font-weight:500}
 
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .divider{height:1px;background:var(--gh-border-muted);margin:12px 0}
-.toggle-group{display:flex;gap:4px}
 .toggle-btn{flex:1;padding:6px 4px;border-radius:var(--rs);border:1px solid var(--gh-border-default);background:var(--gh-canvas-default);color:var(--gh-fg-muted);font-family:'Inter',system-ui,sans-serif;font-size:13px;cursor:pointer;text-align:center;transition:all 0.15s}
 .toggle-btn.active{border-color:var(--gh-accent-emphasis);background:var(--gh-accent-subtle);color:var(--gh-accent-fg)}
 
@@ -316,12 +314,6 @@ th.sticky-l0,th.sticky-l1{z-index:3;background:var(--gh-canvas-subtle)}
 td.cb-cell,th.cb-cell{width:36px;padding:6px 8px;text-align:center}
 input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cursor:pointer}
 
-/* Meta info */
-.meta-info{display:flex;flex-direction:column;gap:2px}
-.meta-user{font-size:12px;color:var(--gh-fg-default);font-weight:500}
-.meta-date{font-size:11px;color:var(--gh-fg-muted)}
-.meta-edited{font-size:11px;color:var(--gh-attention-fg)}
-
 /* Batch field list */
 .batch-field-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
 .batch-field-row{display:grid;grid-template-columns:20px 1fr 1fr;align-items:center;gap:10px}
@@ -402,7 +394,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
 /* Edit modal: history as a right-side column instead of stacked below */
 .modal-history-layout{display:flex;gap:24px}
 .modal-main{flex:1;min-width:0}
-.modal-side{width:200px;flex-shrink:0;border-left:1px solid var(--gh-border-muted);padding-left:20px;display:flex;flex-direction:column;min-height:0}
+.modal-side{width:260px;flex-shrink:0;border-left:1px solid var(--gh-border-muted);padding-left:20px;display:flex;flex-direction:column;min-height:0}
 .modal-side .history-section{margin-top:0;padding-top:0;border-top:none;display:flex;flex-direction:column;flex:1;min-height:0}
 .modal-side .history-list{flex:1;max-height:none;min-height:0}
 .history-item{background:var(--gh-canvas-default);border:1px solid var(--gh-border-muted);border-radius:var(--rs);padding:10px 12px}
@@ -430,17 +422,6 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
 .name-gate input{text-align:center;font-size:15px;padding:8px;margin-bottom:12px;letter-spacing:0.02em}
 .name-gate .btn-primary{width:100%;height:36px;font-size:14px}
 .gate-error{font-size:12px;color:var(--gh-danger-fg);margin-top:8px;min-height:18px}
-.name-options{display:flex;gap:8px;margin-top:4px}
-.name-opt-btn{
-  flex:1;padding:12px 8px;
-  background:var(--gh-canvas-default);
-  border:1px solid var(--gh-border-default);
-  border-radius:var(--rs);
-  color:var(--gh-fg-default);
-  font-family:'Inter',system-ui,sans-serif;font-weight:600;font-size:15px;
-  cursor:pointer;transition:background 0.15s,border-color 0.15s,color 0.15s;
-}
-.name-opt-btn:hover{background:var(--gh-accent-subtle);border-color:var(--gh-accent-emphasis);color:var(--gh-accent-fg)}
 
 /* ── CUSTOM AUTOCOMPLETE DROPDOWN ── */
 .ac-dropdown{
@@ -815,6 +796,10 @@ body.printing-card .printcard-doc{display:block}
             <button type="button" class="house-chip" onclick="toggleHouseFilter('Α1')">Α1</button>
           </div>
         </div>
+        <div id="hatch-filter-wrap" style="display:none">
+          <label class="filter-house-label">Ημ. εκκόλαψης</label>
+          <div class="house-chip-row" id="hatch-filter-row"></div>
+        </div>
         <select class="filter-sel" id="filt-ordered" onchange="render()" style="width:100%">
           <option value="">Όλες οι καταστάσεις</option>
           <option value="ΝΑΙ">Παραγγελθέντα</option>
@@ -892,7 +877,7 @@ body.printing-card .printcard-doc{display:block}
 
 <!-- EDIT MODAL -->
 <div id="modal-bg" class="modal-bg" style="display:none" onclick="if(event.target===this)closeModal()">
-  <div class="modal" style="width:780px;max-width:95vw">
+  <div class="modal" style="width:840px;max-width:95vw">
     <h3>Επεξεργασία Παραγγελίας</h3>
     <div class="modal-history-layout">
       <div class="modal-main">
@@ -1163,6 +1148,7 @@ let data = [], sortCol = 'hm_emv', sortDir = 1;
 let editId = null, editLoadedAt = null, deleteId = null, orderedVal = '', fridgeVal = '', emvoliasmosVal = '';
 let showDone = false;
 let filterHouses = new Set();
+let filterHatchDates = new Set();
 
 function toggleHouseFilter(house) {
   if (filterHouses.has(house)) filterHouses.delete(house); else filterHouses.add(house);
@@ -1170,6 +1156,32 @@ function toggleHouseFilter(house) {
     btn.classList.toggle('active', filterHouses.has(btn.textContent.trim()));
   });
   render();
+}
+
+function toggleHatchDateFilter(iso) {
+  if (filterHatchDates.has(iso)) filterHatchDates.delete(iso); else filterHatchDates.add(iso);
+  render();
+}
+
+// rebuilds the dependent hatch-date chip row: only dates that occur within
+// the currently-selected houses, and only shown once a house is picked
+function refreshHatchDateFilterRow() {
+  const wrap = document.getElementById('hatch-filter-wrap');
+  const row = document.getElementById('hatch-filter-row');
+  if (!filterHouses.size) {
+    wrap.style.display = 'none';
+    filterHatchDates.clear();
+    row.innerHTML = '';
+    return;
+  }
+  const isos = [...new Set(
+    data.filter(r => filterHouses.has(r.anath) && r.hm_ekk).map(r => r.hm_ekk)
+  )].sort();
+  [...filterHatchDates].forEach(iso => { if (!isos.includes(iso)) filterHatchDates.delete(iso); });
+  wrap.style.display = isos.length ? '' : 'none';
+  row.innerHTML = isos.map(iso =>
+    `<button type="button" class="house-chip${filterHatchDates.has(iso) ? ' active' : ''}" onclick="toggleHatchDateFilter('${iso}')">${fmt(iso)}</button>`
+  ).join('');
 }
 let currentUser = '';
 
@@ -2009,6 +2021,7 @@ function populateCustomerList() {
 function render() {
   populateHatchList();
   populateCustomerList();
+  refreshHatchDateFilterRow();
   updateFiltersBadge();
   const SC = ['emvolio','hm_ekk','hm_emv','hm_paragelia','hm_par','pelatis','posotita','paragelia','emvoliasmos'];
   SC.forEach(c => { const e=document.getElementById('s-'+c); if(e) e.textContent=sortCol===c?(sortDir===1?'↑':'↓'):''; });
@@ -2812,6 +2825,7 @@ function getFiltered() {
       }
     }
     if (filterHouses.size && !filterHouses.has(r.anath)) return false;
+    if (filterHatchDates.size && !filterHatchDates.has(r.hm_ekk)) return false;
     if (fo==='ΝΑΙ' && r.paragelia!=='ΝΑΙ') return false;
     if (fo==='-'   && r.paragelia==='ΝΑΙ') return false;
     if (fr==='ΝΑΙ' && r.psygeio!=='ΝΑΙ') return false;
@@ -2851,7 +2865,7 @@ document.addEventListener('click', closeAllTbMenus);
 function updateFiltersBadge() {
   const count = ['filt-ordered', 'filt-fridge']
     .filter(id => document.getElementById(id).value)
-    .length + (filterHouses.size ? 1 : 0) + (showDone ? 1 : 0);
+    .length + (filterHouses.size ? 1 : 0) + (filterHatchDates.size ? 1 : 0) + (showDone ? 1 : 0);
   const badge = document.getElementById('filters-badge');
   badge.style.display = count ? '' : 'none';
   badge.textContent = count;
