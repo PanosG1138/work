@@ -2,8 +2,10 @@ name: Feed Change Notifications
 
 on:
   schedule:
-    - cron: '30 7 * * *'   # summer EEST (UTC+3)
-    - cron: '30 8 * * *'   # winter EET  (UTC+2)
+    # single daily run — 10:30 Athens in summer (EEST), 09:30 in winter (EET).
+    # A second DST-matched cron would fire on top of this one, not instead of
+    # it, and send a duplicate email every day.
+    - cron: '30 7 * * *'
   workflow_dispatch:
 
 jobs:
@@ -19,8 +21,8 @@ jobs:
           NOTIFY_EMAIL:   ${{ secrets.NOTIFY_EMAIL }}
         run: |
           python3 << 'PYEOF'
-          import os, json, smtplib, urllib.request
-          from datetime import date, timedelta
+          import os, json, smtplib, urllib.request, zoneinfo
+          from datetime import date, datetime, timedelta
           from email.mime.multipart import MIMEMultipart
           from email.mime.text import MIMEText
 
@@ -56,16 +58,7 @@ jobs:
           REMINDER_DAYS = [7, 3]   # send a reminder this many days before the feed change
 
           def get_athens_today():
-              import subprocess
-              try:
-                  result = subprocess.run(
-                      ['python3', '-c',
-                       'import datetime,zoneinfo; print(datetime.datetime.now(zoneinfo.ZoneInfo("Europe/Athens")).date())'],
-                      capture_output=True, text=True
-                  )
-                  return date.fromisoformat(result.stdout.strip())
-              except Exception:
-                  return date.today()
+              return datetime.now(zoneinfo.ZoneInfo('Europe/Athens')).date()
 
           def adjust_for_weekend(d):
               """If feed change falls on weekend, move notification to Friday."""
