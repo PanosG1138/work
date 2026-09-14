@@ -1021,6 +1021,18 @@ body.printing-card .printcard-doc{display:block}
   </div>
 </div>
 
+<!-- DUPLICATE ENTRY — replace the existing row, add a new row anyway, or skip -->
+<div id="dup-bg" class="modal-bg" style="display:none;z-index:300" onclick="if(event.target===this)resolveDuplicate('cancel')" onkeydown="if(event.key==='Escape')resolveDuplicate('cancel')">
+  <div class="confirm-box" style="width:460px;max-width:95vw">
+    <p>Υπάρχει ήδη καταχώρηση με την ίδια εκκόλαψη, αναθρεπτήριο, ημ. εμβολιασμού και εμβόλιο:<span id="dup-detail" style="display:block;margin:10px 0;color:var(--gh-fg-default);font-weight:600"></span></p>
+    <div class="modal-actions" style="justify-content:center;flex-wrap:wrap">
+      <button class="btn-secondary" onclick="resolveDuplicate('cancel')">Ακύρωση</button>
+      <button class="btn-secondary" onclick="resolveDuplicate('add')">Προσθήκη νέας γραμμής</button>
+      <button class="btn-primary" id="dup-replace" onclick="resolveDuplicate('replace')">Αντικατάσταση</button>
+    </div>
+  </div>
+</div>
+
 <!-- Hidden print-only document — populated by renderPrintCard(), shown only via body.printing-card during window.print() -->
 <div class="printcard-doc" id="printcard-doc"></div>
 
@@ -1508,20 +1520,14 @@ async function addEntry() {
     });
   });
 
-  // check each combo against existing rows — same house+hatch+vacc.date+vaccine
-  // is offered as a replace instead of a straight insert
+  // for the same house+hatch+vacc.date+vaccine as an existing row, ask whether to
+  // replace that row, add this as a separate row, or skip it
   const toInsert = [], toReplace = [];
   for (const combo of combos) {
     const dup = findDuplicateRow(hatch, flock, vacc, combo.emvolio);
-    if (dup && confirm(
-      `Υπάρχει ήδη καταχώρηση: ${dup.emvolio} · Πελάτης: ${dup.pelatis || '—'} · ` +
-      `Ποσότητα: ${fmtPosotita(dup.posotita)} · Προμηθευτής: ${dup.promitheutis || '—'}\n\n` +
-      `Αντικατάσταση με τη νέα καταχώρηση;`
-    )) {
-      toReplace.push({ id: dup.id, combo });
-    } else if (!dup) {
-      toInsert.push(combo);
-    } // dup declined: skip this combo entirely
+    const choice = dup ? await askDuplicate(dup) : 'add';
+    if (choice === 'replace') toReplace.push({ id: dup.id, combo });
+    else if (choice === 'add') toInsert.push(combo);
   }
   if (!toInsert.length && !toReplace.length) return;
 
@@ -1631,7 +1637,7 @@ function wizardPopulateCustomerList() {
   });
 }
 
-function wizardAdvance() {
+async function wizardAdvance() {
   const val = document.getElementById('wz-field-input').value.trim();
   if (wizardStage === 'date') {
     const iso = parseSmartDate(val);
@@ -1652,15 +1658,9 @@ function wizardAdvance() {
   } else if (wizardStage === 'qty') {
     wizardDraft.qty = rawQty(val);
     const dup = findDuplicateRow(wizardHatchIso, wizardFlock, wizardDraft.vaccDate, wizardDraft.vaccine);
-    if (dup) {
-      const replace = confirm(
-        `Υπάρχει ήδη καταχώρηση: ${dup.emvolio} · Πελάτης: ${dup.pelatis || '—'} · ` +
-        `Ποσότητα: ${fmtPosotita(dup.posotita)} · Προμηθευτής: ${dup.promitheutis || '—'}\n\n` +
-        `Αντικατάσταση με τη νέα καταχώρηση;`
-      );
-      if (!replace) { wizardDraft = {}; wizardStage = 'date'; wizardRenderStage(); return; }
-      wizardDraft._replaceId = dup.id;
-    }
+    const choice = dup ? await askDuplicate(dup) : 'add';
+    if (choice === 'cancel') { wizardDraft = {}; wizardStage = 'date'; wizardRenderStage(); return; }
+    if (choice === 'replace') wizardDraft._replaceId = dup.id;
     wizardQueue.push({ ...wizardDraft });
     wizardDraft = {};
     renderWizardQueue();
@@ -1850,6 +1850,22 @@ function buildChanges(before, row) {
 function findDuplicateRow(hatchIso, flock, vaccIso, vaccine) {
   return data.find(r => r.hm_ekk === hatchIso && r.anath === flock &&
     r.hm_emv === vaccIso && r.emvolio === vaccine);
+}
+
+// asks what to do about a duplicate; resolves 'replace', 'add' (keep both rows) or 'cancel'
+let dupResolve = null;
+function askDuplicate(dup) {
+  document.getElementById('dup-detail').textContent =
+    `${dup.emvolio} · Πελάτης: ${dup.pelatis || '—'} · Ποσότητα: ${fmtPosotita(dup.posotita)} · Προμηθευτής: ${dup.promitheutis || '—'}`;
+  document.getElementById('dup-bg').style.display = 'flex';
+  document.getElementById('dup-replace').focus();
+  return new Promise(resolve => { dupResolve = resolve; });
+}
+function resolveDuplicate(choice) {
+  document.getElementById('dup-bg').style.display = 'none';
+  const resolve = dupResolve;
+  dupResolve = null;
+  if (resolve) resolve(choice);
 }
 
 // updates an existing row in place (preserving its id/created_by/created_at)
