@@ -163,7 +163,7 @@ textarea{resize:vertical;min-height:44px;font-size:13px}
   font-family:'Inter',system-ui,sans-serif;font-weight:500;font-size:14px;
   cursor:pointer;margin-top:8px;transition:background 0.15s,opacity 0.15s;
 }
-.btn-submit:hover{background:#388bfd}
+.btn-submit:hover{filter:brightness(1.1)}
 .btn-submit:disabled{opacity:0.4;cursor:not-allowed}
 .btn-cancel{
   width:100%;padding:6px 16px;
@@ -326,7 +326,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
 .batch-modal-sub{font-size:12px;color:var(--gh-fg-muted);margin-bottom:14px}
 
 /* ── OFFLINE OVERLAY ── */
-.offline-overlay{display:none;position:absolute;inset:0;background:rgba(var(--gh-overlay-rgb,1,4,9),0.8);z-index:40;align-items:center;justify-content:center;flex-direction:column;gap:12px;backdrop-filter:blur(2px);border-radius:var(--rs)}
+.offline-overlay{display:none;position:absolute;inset:0;background:rgba(10,12,17,0.8);z-index:40;align-items:center;justify-content:center;flex-direction:column;gap:12px;backdrop-filter:blur(2px);border-radius:var(--rs)}
 .offline-overlay.active{display:flex}
 .offline-msg{font-weight:600;font-size:14px;color:var(--gh-danger-fg);text-align:center;line-height:1.6}
 .offline-msg span{display:block;font-weight:400;font-size:12px;color:var(--gh-fg-muted);margin-top:4px}
@@ -353,7 +353,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
   font-family:'Inter',system-ui,sans-serif;font-weight:500;font-size:14px;
   cursor:pointer;transition:background 0.15s,opacity 0.15s;
 }
-.btn-primary:hover{background:#388bfd}
+.btn-primary:hover{filter:brightness(1.1)}
 .btn-primary:disabled{opacity:0.4;cursor:not-allowed}
 .btn-danger{
   height:32px;padding:0 16px;
@@ -1280,10 +1280,17 @@ async function autoMarkVaccinated() {
   const due = data.filter(r => r.hm_emv && r.hm_emv <= cutoff && r.emvoliasmos !== 'ΝΑΙ' &&
     r.paragelia === 'ΝΑΙ' && r.psygeio === 'ΝΑΙ');
   if (!due.length) return;
-  await sbFetch(`${TABLE}?id=in.(${due.map(r => r.id).join(',')})`, {
-    method: 'PATCH', body: JSON.stringify({ emvoliasmos: 'ΝΑΙ' }),
-  });
-  due.forEach(r => r.emvoliasmos = 'ΝΑΙ');
+  const now = new Date().toISOString();
+  // filter on the old value too, so two tabs loading at once don't both log the change
+  const updated = await sbFetch(`${TABLE}?id=in.(${due.map(r => r.id).join(',')})&or=(emvoliasmos.is.null,emvoliasmos.neq.ΝΑΙ)`, {
+    method: 'PATCH', prefer: 'return=representation',
+    body: JSON.stringify({ emvoliasmos: 'ΝΑΙ', updated_by: 'Αυτόματα', updated_at: now }),
+  }) || [];
+  await Promise.all(updated.map(u => sbHInsert({
+    row_id: u.id, action: 'edited', user_name: 'Αυτόματα', ts: now,
+    changes_json: JSON.stringify(buildChanges(data.find(r => r.id === u.id), { emvoliasmos: 'ΝΑΙ' })),
+  })));
+  updated.forEach(u => { const i = data.findIndex(r => r.id === u.id); if (i >= 0) data[i] = u; });
 }
 
 // ── DATES ─────────────────────────────────────────────────────────
@@ -1817,7 +1824,7 @@ async function loadHistory(rowId) {
   }
 }
 
-// shared by saveEdit() and replaceRow() to build a history diff
+// labels for history diffs, used by buildChanges()
 const FIELD_LABELS = {
   emvolio:'Εμβόλιο', hm_ekk:'Ημ. Εκκόλαψης', hm_emv:'Ημ. Εμβολιασμού',
   hm_par:'Ημ. Καταχώρησης', anath:'Αναθρεπτήριο', pelatis:'Πελάτης',
@@ -1825,6 +1832,18 @@ const FIELD_LABELS = {
   promitheutis:'Προμηθευτής', sxolia_panos:'Σχόλια Πάνος',
   sxolia_eleni:'Σχόλια Ελένη', hm_paragelia:'Ημ. Παραγγελίας',
 };
+
+// fields that actually change between a stored row and the values being written
+function buildChanges(before, row) {
+  const changes = {};
+  Object.keys(FIELD_LABELS).forEach(k => {
+    if (!(k in row)) return;
+    const oldVal = (before || {})[k] ?? null;
+    const newVal = row[k] ?? null;
+    if (String(oldVal ?? '') !== String(newVal ?? '')) changes[k] = { label: FIELD_LABELS[k], from: oldVal, to: newVal };
+  });
+  return changes;
+}
 
 // finds an existing row that's an exact match on house + hatch date +
 // vaccination date + vaccine name — the "same slot" a new entry can replace
@@ -1839,15 +1858,7 @@ async function replaceRow(id, fields, now) {
   const idx = data.findIndex(x => x.id === id);
   const before = idx >= 0 ? { ...data[idx] } : {};
   const row = { ...fields, updated_by: currentUser, updated_at: now };
-  const changes = {};
-  Object.keys(FIELD_LABELS).forEach(k => {
-    if (!(k in row)) return;
-    const oldVal = before[k] ?? null;
-    const newVal = row[k] ?? null;
-    if (String(oldVal ?? '') !== String(newVal ?? '')) {
-      changes[k] = { label: FIELD_LABELS[k], from: oldVal, to: newVal };
-    }
-  });
+  const changes = buildChanges(before, row);
   const [updated] = await sbUpdate(id, row);
   if (Object.keys(changes).length > 0) {
     await sbHInsert({ row_id: id, action: 'edited', user_name: currentUser, ts: now, changes_json: JSON.stringify(changes) });
@@ -1881,15 +1892,7 @@ async function saveEdit() {
     return;
   }
 
-  // build diff: only fields that actually changed
-  const changes = {};
-  Object.keys(FIELD_LABELS).forEach(k => {
-    const oldVal = before[k] ?? null;
-    const newVal = row[k] ?? null;
-    if (String(oldVal ?? '') !== String(newVal ?? '')) {
-      changes[k] = { label: FIELD_LABELS[k], from: oldVal, to: newVal };
-    }
-  });
+  const changes = buildChanges(before, row);
 
   const btn = document.getElementById('btn-save');
   btn.disabled = true; btn.textContent = 'Αποθήκευση…';
@@ -2465,6 +2468,20 @@ async function saveBatchEdit() {
 
   if (!Object.keys(updates).length) { toast('Δεν επιλέχθηκε κανένα πεδίο.', true); return; }
 
+  // a new vaccination date implies a new order date, unless that field is being set explicitly too
+  if ('hm_emv' in updates && !('hm_paragelia' in updates)) {
+    updates.hm_paragelia = updates.hm_emv ? subDays(updates.hm_emv, 30) : null;
+  }
+  const badOrder = [...selectedIds].filter(id => {
+    const r = data.find(x => x.id === id);
+    return r && dateOrderInvalid('hm_ekk' in updates ? updates.hm_ekk : r.hm_ekk,
+                                 'hm_emv' in updates ? updates.hm_emv : r.hm_emv);
+  });
+  if (badOrder.length) {
+    toast(`Η ημ. εμβολιασμού θα ήταν πριν την εκκόλαψη σε ${badOrder.length} εγγραφ${badOrder.length === 1 ? 'ή' : 'ές'}`, true);
+    return;
+  }
+
   const now = new Date().toISOString();
   updates.updated_by = currentUser;
   updates.updated_at = now;
@@ -2477,14 +2494,19 @@ async function saveBatchEdit() {
   let successCount = 0;
 
   try {
-    // fire all updates in parallel
-    await Promise.all(ids.map(id => sbUpdate(id, updates)));
-    await Promise.all(ids.map(id => sbHInsert({ row_id: id, action: 'edited', user_name: currentUser, ts: now })));
+    // fire all updates in parallel; history records each row's own before/after values
+    const results = await Promise.all(ids.map(id => sbUpdate(id, updates)));
+    await Promise.all(results.map(([updated]) => {
+      const changes = buildChanges(data.find(r => r.id === updated.id), updates);
+      return Object.keys(changes).length
+        ? sbHInsert({ row_id: updated.id, action: 'edited', user_name: currentUser, ts: now, changes_json: JSON.stringify(changes) })
+        : null;
+    }));
 
     // apply to local data
-    ids.forEach(id => {
-      const idx = data.findIndex(r => r.id === id);
-      if (idx >= 0) { data[idx] = { ...data[idx], ...updates }; successCount++; }
+    results.forEach(([updated]) => {
+      const idx = data.findIndex(r => r.id === updated.id);
+      if (idx >= 0) { data[idx] = updated; successCount++; }
     });
 
     closeBatchModal(); clearSelection(); render();
@@ -2532,7 +2554,7 @@ async function confirmBatchDelete() {
 
 // ── VACCINE SMART DATALIST ────────────────────────────────────────
 // Updates the suggestion list based on the last comma-separated token being typed
-// VACCINE_OPTIONS — also defined in shared.js (single source of truth)
+// VACCINE_OPTIONS — duplicated by design in inventory.html; keep both lists in sync
 const VACCINE_OPTIONS = [
   'AVINEW','AVINEW NEO','BIONEW BI','BIONEW BI + COR','Clone30',
   'CORIPRAVAC','E.COLI','GALLIMUNE 407','GALLIMUNE SE+ST','IB 4/91','IB PRIMER',

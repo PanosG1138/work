@@ -11,6 +11,7 @@ on:
 jobs:
   notify:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Check feed changes and send email
         env:
@@ -61,11 +62,11 @@ jobs:
               return datetime.now(zoneinfo.ZoneInfo('Europe/Athens')).date()
 
           def adjust_for_weekend(d):
-              """If feed change falls on weekend, move notification to Friday."""
+              """Move a weekend feed change to the nearest weekday: Saturday → Friday, Sunday → Monday."""
               dow = d.weekday()
-              if dow == 5:   # Saturday → notify Friday (2 days earlier, so alert is 3 days before Friday)
+              if dow == 5:   # Saturday → Friday
                   return d - timedelta(days=1), d.strftime('%d/%m/%Y') + ' (Saturday)'
-              if dow == 6:   # Sunday → notify Monday (move feed change to Monday)
+              if dow == 6:   # Sunday → Monday
                   return d + timedelta(days=1), d.strftime('%d/%m/%Y') + ' (Sunday)'
               return d, None
 

@@ -474,7 +474,7 @@ const sbDelete = id      => sbFetch(`${TABLE}?id=eq.${id}`, {method:'DELETE'});
 async function sbUpdate(id, row){
   const result = await sbFetch(`${TABLE}?id=eq.${id}`, {method:'PATCH', prefer:'return=representation', body:JSON.stringify(row)});
   if(!result || !result.length){
-    throw new Error('Update was rejected by the database (0 rows returned) — check that the "placements" table has an UPDATE policy/grant for the anon role.');
+    throw new Error('Update was rejected by the database (0 rows returned) — check that the placements table has an UPDATE policy for logged-in (authenticated) users.');
   }
   return result;
 }
@@ -482,6 +482,14 @@ async function sbUpdate(id, row){
 const sbSelectResolved = ()   => sbFetch(`${RESOLVED_TABLE}?select=conflict_key`);
 const sbInsertResolved = key  => sbFetch(RESOLVED_TABLE, {method:'POST', prefer:'return=representation', body:JSON.stringify({conflict_key:key})});
 const sbDeleteResolved = key  => sbFetch(`${RESOLVED_TABLE}?conflict_key=eq.${encodeURIComponent(key)}`, {method:'DELETE'});
+/* A "resolved" mark belongs to the dates it was reviewed at. When a placement's hatch date changes
+   or it's deleted, drop every mark involving it so a new clash isn't silently hidden. */
+async function clearResolutionsFor(recordIds){
+  const ids = recordIds.map(String);
+  const keys = [...resolvedKeys].filter(k => k.split('|').some(part => ids.includes(part.split('::')[0])));
+  await Promise.all(keys.map(sbDeleteResolved));
+  keys.forEach(k => resolvedKeys.delete(k));
+}
 
 /* ── State ── */
 let data = [];
@@ -505,6 +513,9 @@ function setSyncStatus(state, msg){
 
 /* ── Date helpers ── */
 function addDays(date, n){ const d=new Date(date); d.setDate(d.getDate()+n); return d; }
+/* Local calendar date as YYYY-MM-DD. toISOString() converts to UTC first, which slips a day
+   for dates built from a winter-time base that land in summer time, and for local midnight. */
+function isoDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function fmtDate(d){ return new Date(d).toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric'}); }
 /* Gap in days between two date ranges (a point event has start===end).
    Returns 0 if they overlap; otherwise the number of days between the nearest edges. */
@@ -677,14 +688,19 @@ function kindLabel(k){
 }
 
 function checkCleaningOverlap(house, hatchDate){
-  const sameHouse = data.filter(r=>r.house===house).sort((a,b)=>new Date(a.doc_date)-new Date(b.doc_date));
+  /* the placement being edited can't overlap itself */
+  const sameHouse = data.filter(r=>r.house===house && r.id!==editId).sort((a,b)=>new Date(a.doc_date)-new Date(b.doc_date));
   const newHatch = new Date(hatchDate);
-  for(const prev of sameHouse){
-    const s=prev.schedule;
+  const newSchedule = getSchedule(hatchDate);
+  for(const other of sameHouse){
+    const s=other.schedule;
     if(newHatch>=s.cleanStart && newHatch<=s.cleanEnd)
-      return `This hatch date falls within the cleaning period of a previous cycle (${fmtDate(s.cleanStart)} – ${fmtDate(s.cleanEnd)}).`;
+      return `This hatch date falls within the cleaning period of another cycle (${fmtDate(s.cleanStart)} – ${fmtDate(s.cleanEnd)}).`;
     if(newHatch>=s.loadStart && newHatch<=s.cleanEnd)
-      return `This hatch date falls during the loading/cleaning window of a previous cycle.`;
+      return `This hatch date falls during the loading/cleaning window of another cycle.`;
+    const otherHatch = new Date(other.doc_date);
+    if(otherHatch>=newSchedule.loadStart && otherHatch<=newSchedule.cleanEnd)
+      return `This cycle's loading/cleaning window (${fmtDate(newSchedule.loadStart)} – ${fmtDate(newSchedule.cleanEnd)}) would overlap the cycle hatched ${fmtDate(otherHatch)}.`;
   }
   return null;
 }
@@ -732,7 +748,7 @@ function findBestShiftInDirection(recordId, dir){
     const candidateHatch = addDays(originalHatch, dir*shift);
     if(wouldOverlapOwnCleaning(recordId, candidateHatch)) continue;
 
-    const candidateIso = candidateHatch.toISOString().slice(0,10);
+    const candidateIso = isoDate(candidateHatch);
     const hypoRows = data.map(r => r.id===recordId
       ? {...r, doc_date: candidateIso, schedule: getSchedule(candidateHatch)}
       : r
@@ -864,12 +880,12 @@ function findBestPairShift(recordIdEarlier, recordIdLater){
     for(const dir of (shift===0 ? [1] : [1,-1])){
       const newEarlierDate = addDays(origHatchEarlier, dir*shift);
       if(wouldOverlapOwnCleaning(recordIdEarlier, newEarlierDate)) continue;
-      const isoEarlier = newEarlierDate.toISOString().slice(0,10);
+      const isoEarlier = isoDate(newEarlierDate);
 
       for(let gap=PAIR_MIN_GAP; gap<=PAIR_MAX_GAP; gap++){
         const newLaterDate = addDays(newEarlierDate, gap);
         if(wouldOverlapOwnCleaning(recordIdLater, newLaterDate)) continue;
-        const isoLater = newLaterDate.toISOString().slice(0,10);
+        const isoLater = isoDate(newLaterDate);
 
         const hypoPairVsRest = pairVsRestCount(isoEarlier, isoLater);
         const hypoTotal = othersOnlyCount + hypoPairVsRest;
@@ -950,7 +966,7 @@ function findNextCleanHatchDate(house, extraRecords){
   const floor = getNextPlacementFloor(house, extraRecords);
   const otherEvents = buildEvents([...data, ...extraRecords]);
   for(let i=0; i<=NEXT_PLACEMENT_MAX_SEARCH_DAYS; i++){
-    const candidateIso = addDays(floor, i).toISOString().slice(0,10);
+    const candidateIso = isoDate(addDays(floor, i));
     const hypoEvents = buildHypotheticalEvents(house, candidateIso);
     const conflictCount = countConflictsBetweenSets(hypoEvents, otherEvents) + countConflictsWithinSet(hypoEvents);
     if(conflictCount === 0) return {house, hatchDate: candidateIso, daysFromFloor: i};
@@ -969,8 +985,8 @@ function findNextCleanPairDates(extraRecords){
       for(let gap=PAIR_MIN_GAP; gap<=PAIR_MAX_GAP; gap++){
         const laterDate = addDays(earlierDate, gap);
         if(laterDate < laterFloorIndependent) continue;
-        const earlierIso = earlierDate.toISOString().slice(0,10);
-        const laterIso = laterDate.toISOString().slice(0,10);
+        const earlierIso = isoDate(earlierDate);
+        const laterIso = isoDate(laterDate);
         const combined = [
           ...buildHypotheticalEvents(earlierHouse, earlierIso, 'E'),
           ...buildHypotheticalEvents(laterHouse, laterIso, 'L'),
@@ -1511,9 +1527,11 @@ async function saveNew(){
   btn.textContent='Saving...';
   try{
     if(editId){
-      const [updated]=await sbUpdate(editId,{doc_date:date});
       const idx=data.findIndex(r=>r.id===editId);
+      const dateChanged = idx<0 || data[idx].doc_date!==date;
+      const [updated]=await sbUpdate(editId,{doc_date:date});
       if(idx>=0) data[idx]={...updated, schedule:getSchedule(updated.doc_date)};
+      if(dateChanged) await clearResolutionsFor([editId]);
       setSyncStatus('ok','Updated');
     } else {
       const [inserted]=await sbInsert({house, doc_date:date});
@@ -1536,6 +1554,7 @@ async function confirmDelete(){
   try{
     await sbDelete(deleteId);
     data=data.filter(r=>r.id!==deleteId);
+    await clearResolutionsFor([deleteId]);
     closeConfirm(); render();
     setSyncStatus('ok','Deleted');
   }catch(e){ setSyncStatus('err','Delete failed: '+e.message); closeConfirm(); }
@@ -1645,6 +1664,7 @@ async function applyResolverSuggestion(recordId, newHatchDate){
     const [updated] = await sbUpdate(recordId, {doc_date:newHatchDate});
     const idx = data.findIndex(r=>r.id===recordId);
     if(idx>=0) data[idx] = {...updated, schedule:getSchedule(updated.doc_date)};
+    await clearResolutionsFor([recordId]);
     setSyncStatus('ok','Updated');
     closeResolverPanel();
     render();
@@ -1661,6 +1681,7 @@ async function applyPairResolverSuggestion(recordIdEarlier, newHatchEarlier, rec
     const idxL = data.findIndex(r=>r.id===recordIdLater);
     if(idxE>=0) data[idxE] = {...updatedEarlier, schedule:getSchedule(updatedEarlier.doc_date)};
     if(idxL>=0) data[idxL] = {...updatedLater,   schedule:getSchedule(updatedLater.doc_date)};
+    await clearResolutionsFor([recordIdEarlier, recordIdLater]);
     setSyncStatus('ok','Updated both');
     closeResolverPanel();
     render();

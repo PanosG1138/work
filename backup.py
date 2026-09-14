@@ -1,6 +1,6 @@
 """
 ΕΜΒΟΛΙΑ — Daily Supabase → Google Sheets Backup
-Fetches all rows from emvolia and emvolia_history and writes to Google Sheets.
+Fetches every Supabase table the tools use and writes each to its own Google Sheets tab.
 Runs via GitHub Actions every night.
 """
 
@@ -74,13 +74,17 @@ def cleanup_old_history():
     return deleted_total
 
 # ── WRITE SHEET TAB ───────────────────────────────────────────────
+def cell(v):
+    # JSON columns (the truck loads) as readable JSON rather than Python repr
+    return json.dumps(v, ensure_ascii=False) if isinstance(v, (dict, list)) else str(v or "")
+
 def write_tab(sh, title, columns, headers, rows):
     try:
         ws = sh.worksheet(title)
     except gspread.WorksheetNotFound:
         ws = sh.add_worksheet(title=title, rows=10000, cols=len(columns))
 
-    data = [headers] + [[str(r.get(c, "") or "") for c in columns] for r in rows]
+    data = [headers] + [[cell(r.get(c)) for c in columns] for r in rows]
     ws.clear()
     ws.update("A1", data, value_input_option="RAW")
 
@@ -114,20 +118,31 @@ def run_backup():
     history   = fetch("emvolia_history",   "ts.desc")
     inventory = fetch("inventory",         "emvolio.asc")
     inv_hist  = fetch("inventory_history", "ts.desc")
+    extra = [
+        ("Τοποθετήσεις",           fetch("placements",          "doc_date.asc")),
+        ("Επιλυμένες Συγκρούσεις", fetch("resolved_conflicts",  "conflict_key.asc")),
+        ("Ζωοτροφές",              fetch("feed_hatches",        "row_index.asc")),
+        ("Φόρτωση Καμπόσος",       fetch("truck_load",          "id.asc")),
+        ("Φόρτωση Δουκάκης",       fetch("truck_load_doukakis", "id.asc")),
+    ]
 
     print("\nWriting to Google Sheets…")
     n_data    = write_tab(sh, "Δεδομένα",         DATA_COLUMNS,        DATA_HEADERS,        emvolia)
     n_history = write_tab(sh, "Ιστορικό",         HISTORY_COLUMNS,     HISTORY_HEADERS,     history)
     n_inv     = write_tab(sh, "Απόθεμα",          INVENTORY_COLUMNS,   INVENTORY_HEADERS,   inventory)
     n_inv_h   = write_tab(sh, "Ιστορικό Αποθέματος", INV_HISTORY_COLUMNS, INV_HISTORY_HEADERS, inv_hist)
+    for title, rows in extra:
+        # column list comes from the data itself, so nothing is dropped if a table gains a column
+        columns = list(dict.fromkeys(k for r in rows for k in r)) or ["id"]
+        write_tab(sh, title, columns, columns, rows)
 
     # ── LOG ───────────────────────────────────────────────────────
     try:
         log_ws = sh.worksheet("Log")
     except gspread.WorksheetNotFound:
-        log_ws = sh.add_worksheet(title="Log", rows=1000, cols=5)
+        log_ws = sh.add_worksheet(title="Log", rows=1000, cols=7)
         log_ws.update("A1", [["Timestamp", "Εγγραφές", "Ιστορικό", "Απόθεμα", "Ιστ. Αποθέματος", "Status", "Notes"]])
-        log_ws.format("A1:E1", {"textFormat": {"bold": True}})
+        log_ws.format("A1:G1", {"textFormat": {"bold": True}})
 
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     log_ws.append_row([ts, n_data, n_history, n_inv, n_inv_h, "✓ Success", ""])
@@ -153,7 +168,7 @@ if __name__ == "__main__":
             sh = gc.open_by_key(os.environ["SHEET_ID"])
             log_ws = sh.worksheet("Log")
             ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-            log_ws.append_row([ts, 0, 0, "✗ Failed", str(e)])
+            log_ws.append_row([ts, 0, 0, 0, 0, "✗ Failed", str(e)])
         except Exception:
             pass
         raise

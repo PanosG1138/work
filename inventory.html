@@ -95,7 +95,7 @@ header{
   font-family:'Inter',system-ui,sans-serif;font-weight:500;font-size:14px;
   cursor:pointer;transition:background 0.15s;
 }
-.btn-primary:hover{background:#388bfd}
+.btn-primary:hover{filter:brightness(1.1)}
 .btn-primary:disabled{opacity:0.4;cursor:not-allowed}
 .btn-secondary{
   height:32px;padding:0 16px;background:var(--gh-canvas-subtle);color:var(--gh-fg-default);
@@ -335,7 +335,7 @@ const SB_KEY   = 'sb_publishable_1S3L1sNMOjr-YgwGAAD2Kg_X_3S4cTl';
 const TABLE    = 'inventory';
 const HTABLE   = 'inventory_history';
 
-// VACCINE_OPTIONS — also defined in shared.js (single source of truth)
+// VACCINE_OPTIONS — duplicated by design in vaccine_tracker.html; keep both lists in sync
 const VACCINE_OPTIONS = [
   'AVINEW','AVINEW NEO','BIONEW BI','BIONEW BI + COR','Clone30',
   'CORIPRAVAC','E.COLI','GALLIMUNE 407','GALLIMUNE SE+ST','IB 4/91','IB PRIMER',
@@ -529,7 +529,7 @@ function openNew() {
   document.getElementById('modal-title').textContent = '+ Νέο εμβόλιο';
   document.getElementById('m-emvolio').value = '';
   document.getElementById('m-posotita').value = '';
-  document.getElementById('m-monada').value = 'δόσεις';
+  document.getElementById('m-monada').value = 'Δόσεις';
   document.getElementById('m-sxolia').value = '';
   document.getElementById('history-section').style.display = 'none';
   document.getElementById('btn-modal-delete').style.display = 'none';
@@ -541,10 +541,12 @@ async function openEdit(id) {
   const r = data.find(r => r.id === id);
   if (!r) return;
   editId = id;
-  document.getElementById('modal-title').textContent = x(r.emvolio);
+  document.getElementById('modal-title').textContent = r.emvolio;
   document.getElementById('m-emvolio').value = r.emvolio || '';
   document.getElementById('m-posotita').value = fmtNum(r.posotita);
-  document.getElementById('m-monada').value = r.monada || 'δόσεις';
+  // older rows may store the unit lower-case ('δόσεις') or not at all
+  const unitSel = document.getElementById('m-monada');
+  unitSel.value = [...unitSel.options].find(o => o.value.toLowerCase() === (r.monada || 'Δόσεις').toLowerCase())?.value || 'Δόσεις';
   document.getElementById('m-sxolia').value = r.sxolia || '';
   document.getElementById('btn-modal-delete').style.display = '';
   document.getElementById('edit-bg').style.display = 'flex';
