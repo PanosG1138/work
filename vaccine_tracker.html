@@ -1287,7 +1287,8 @@ async function autoMarkVaccinated() {
 }
 
 // ── DATES ─────────────────────────────────────────────────────────
-function subDays(iso, n) { const d = new Date(iso); d.setDate(d.getDate() - n); return d.toISOString().slice(0,10); }
+// UTC math: new Date('YYYY-MM-DD') is UTC midnight, so local setDate() slips a day across DST changes
+function subDays(iso, n) { const d = new Date(iso); d.setUTCDate(d.getUTCDate() - n); return d.toISOString().slice(0,10); }
 function fmt(iso) { if(!iso) return ''; const [y,m,d] = iso.split('-'); return `${d}/${m}/${y}`; }
 function fmtDt(iso) {
   if(!iso) return '—';

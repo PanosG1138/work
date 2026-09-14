@@ -56,8 +56,12 @@ This is schedule_checker's/feed_tracker's house list — vaccine_tracker.html's 
 - Shared JS files are risky here: a previous shared.js approach for
   VACCINE_OPTIONS caused a 404 → ReferenceError. Vaccine list is now
   defined inline in both HTML files (commented as duplicated-by-design).
-- All Supabase tables need explicit anon_all RLS policies + grants for the
-  anon key to work — check this first if a save/load silently fails.
+- Supabase access is locked to logged-in users: every tool signs in with
+  Supabase Auth and sends the session token, so RLS policies must allow the
+  `authenticated` role. The publishable key alone sees 0 rows on every
+  table — keep it that way. Never add anon/public policies: that key is in
+  the public page source. If a load/save silently returns nothing (200 with
+  `[]` or 0 rows), check that table's `authenticated` policies first.
 - <datalist> must be inside <body>, not floating outside it (caused a
   past bug).
 
