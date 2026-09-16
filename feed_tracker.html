@@ -432,7 +432,7 @@ function refreshHouseDropdowns() {
 
 // ── BUILD HEADER ─────────────────────────────────────────────────
 function buildHeader() {
-  let html = `<th style="min-width:130px">Hatch Date</th><th style="min-width:80px">House</th><th style="min-width:110px">Breed</th><th style="min-width:90px">Type</th>`;
+  let html = `<th style="min-width:130px">Hatch Date</th><th style="min-width:80px">House</th><th style="min-width:110px">Breed</th><th style="min-width:90px">Type</th><th style="min-width:80px">Age</th>`;
   for (let i = 0; i < MAX_PHASES; i++) {
     html += `<th class="phase-col" style="min-width:130px">Phase ${i+1}</th>`;
   }
@@ -494,6 +494,9 @@ function buildRows() {
       ${REARING_TYPES.map(t => `<option value="${t}"${r.rearing_type===t?' selected':''}>${t}</option>`).join('')}
     </select></td>`;
 
+    // Age (filled in by updatePhaseDates)
+    html += `<td id="age-${i}" style="white-space:nowrap"></td>`;
+
     // Phase cells
     for (let p = 0; p < MAX_PHASES; p++) {
       html += `<td class="phase-col" id="phase-${i}-${p}"></td>`;
@@ -538,8 +541,19 @@ function computeActivePhase(r) {
   return { breed, phaseDates, activeIdx };
 }
 
+// Age in days since hatch (hatch day = 0); '—' with no hatch date or before hatching
+function ageText(hatch) {
+  if (!hatch) return '—';
+  const h = addDays(hatch, 0); h.setHours(0,0,0,0);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const days = Math.round((today - h) / 86400000);
+  return days < 0 ? '—' : `${days} day${days === 1 ? '' : 's'}`;
+}
+
 function updatePhaseDates(rowIdx) {
   const r = rows[rowIdx];
+  const ageCell = document.getElementById(`age-${rowIdx}`);
+  if (ageCell) ageCell.textContent = ageText(r.hatch);
   const active = computeActivePhase(r);
 
   // Bail early if row is incomplete — clear all phase cells
