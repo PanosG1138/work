@@ -44,9 +44,11 @@ A house's next hatch should not be earlier than the previous cycle's "ready" dat
   white = not confirmed (Requested / Not ordered).
 - Arrow between cards = days from the previous cycle's ready date to this hatch
   (green `+N d`, red `−N d · not ready`).
-- Dashed "Earliest next" card at the bottom of each column = earliest possible next hatch
-  (latest cycle's ready date, never before today). Θ1/Θ2 are suggested together 7–12 days apart;
-  if one already has an extra cycle, only the other gets a suggestion, within 7–12 days of it.
+- Dashed "Earliest possible" card in each column = earliest possible placement counting
+  only Confirmed hatches (Requested / Not ordered ignored): the last confirmed cycle's ready date,
+  never before today. It sits right after the last confirmed card; unconfirmed hatches follow it.
+  Θ1/Θ2 stay 7–12 days apart: if one has an extra confirmed cycle, the other is placed within
+  7–12 days of that hatch, and the one ahead gets its own ready date.
   "Use this date" opens the add form prefilled.
 - Warnings (never blocking): hatch before the house is ready; Θ1/Θ2 gap outside 7–12 days.
 - Completed cycles (house already emptied) are always hidden; they're kept in the table and

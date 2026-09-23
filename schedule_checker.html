@@ -189,7 +189,7 @@ header{
       <span><span class="swatch" style="border-color:#fff"></span>not confirmed</span>
       <span><b class="a-ok">▼ +N d</b> house ready N days before hatch</span>
       <span><b class="a-bad">▼ −N d</b> hatch before house is ready</span>
-      <span>Dashed card = earliest possible next hatch</span>
+      <span>Dashed card = earliest placement after the confirmed hatches</span>
     </div>
   </div>
   <div id="view"></div>
@@ -376,13 +376,15 @@ function pairWarning(house, hatch, excludeId){
 }
 
 /* ── Next-hatch suggestions ──────────────────────────────────────────
-   Earliest date each house can take its next hatch: the day after its latest
-   cycle is ready (never before today). Θ1/Θ2 are placed together, PAIR_MIN–PAIR_MAX
-   days apart; if one of them already has an extra cycle, only the other gets a
-   suggestion, placed within range of that unmatched hatch where possible.
+   Earliest date each house can take its next hatch, counting CONFIRMED hatches only
+   (Requested / Not ordered are ignored): the day its last confirmed cycle is ready,
+   never before today. Θ1/Θ2 are placed together, PAIR_MIN–PAIR_MAX days apart; if one
+   of them has an extra confirmed cycle, the other is placed within range of that
+   unmatched hatch where possible, and the one ahead just gets its own ready date.
    Cross-house conflicts (vaccination/loading clashes) are deliberately not checked. */
+function confirmedOf(house){ return cyclesOf(house).filter(r => r.status === 'Confirmed'); }
 function earliestFor(house){
-  const cycles = cyclesOf(house);
+  const cycles = confirmedOf(house);
   const t = today();
   if(!cycles.length) return t;
   const ready = getSchedule(house, cycles[cycles.length-1].doc_date).ready;
@@ -395,7 +397,7 @@ function suggestNext(){
   ['Θ3','Θ4','Θ5'].forEach(h => { out[h] = earliestFor(h); });
 
   const [h1, h2] = PAIR;
-  const n1 = cyclesOf(h1).length, n2 = cyclesOf(h2).length;
+  const n1 = confirmedOf(h1).length, n2 = confirmedOf(h2).length;
   if(n1 === n2){
     const r1 = earliestFor(h1), r2 = earliestFor(h2);
     /* Try each house going first; keep the option whose second hatch comes sooner. */
@@ -407,7 +409,8 @@ function suggestNext(){
     out[h2] = useA ? a2 : b2;
   } else {
     const lag = n1 < n2 ? h1 : h2, lead = lag === h1 ? h2 : h1;
-    const leadCycles = cyclesOf(lead);
+    const leadCycles = confirmedOf(lead);
+    out[lead] = earliestFor(lead);
     const p = parseISO(leadCycles[leadCycles.length-1].doc_date);
     const r = earliestFor(lag);
     if(r <= addDays(p, -PAIR_MIN))      out[lag] = maxDate(r, addDays(p, -PAIR_MAX));
@@ -474,7 +477,23 @@ function render(){
   const cols = houses.map(house => {
     const slots = [];
     let prev = null;
-    cyclesOf(house).forEach((r, i) => {
+    const cycles = cyclesOf(house);
+    const lastConfirmed = cycles.map(r => r.status).lastIndexOf('Confirmed');
+    // dashed card = earliest placement after the confirmed hatches; sits right after the last
+    // confirmed card, unconfirmed hatches follow below it
+    const pushSuggestion = () => {
+      const iso = isoDate(next[house]);
+      const s = getSchedule(house, iso);
+      const pw = pairWarning(house, s.hatch);
+      slots.push({
+        arrow: prev ? arrow(prev.ready, s.hatch) : '',
+        card: hcard('next-' + house, ' suggest', house, 'After confirmed hatches', 'Earliest possible', s,
+          (pw ? `<div class="warn">⚠ ${pw}</div>` : '') +
+          `<div class="hc-foot"><button class="row-btn accept" onclick="event.stopPropagation();openAddModal('${house}','${iso}')">Use this date</button></div>`),
+      });
+    };
+    if(lastConfirmed < 0) pushSuggestion();
+    cycles.forEach((r, i) => {
       const s = getSchedule(house, r.doc_date);
       // completed cycles (house already emptied) are never shown; they still feed the next arrow
       if(s.empty >= t){
@@ -492,18 +511,8 @@ function render(){
         });
       }
       prev = s;
+      if(i === lastConfirmed) pushSuggestion();
     });
-    if(next[house]){
-      const iso = isoDate(next[house]);
-      const s = getSchedule(house, iso);
-      const pw = pairWarning(house, s.hatch);
-      slots.push({
-        arrow: prev ? arrow(prev.ready, s.hatch) : '',
-        card: hcard('next-' + house, ' suggest', house, 'Earliest next', 'Earliest next · not placed yet', s,
-          (pw ? `<div class="warn">⚠ ${pw}</div>` : '') +
-          `<div class="hc-foot"><button class="row-btn accept" onclick="event.stopPropagation();openAddModal('${house}','${iso}')">Use this date</button></div>`),
-      });
-    }
     return slots;
   });
 
