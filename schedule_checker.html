@@ -76,10 +76,11 @@ header{
 /* keyboard focus ring in accent blue, so it can't be mistaken for a status outline */
 .hc:focus-visible{outline:2px solid var(--gh-accent-fg);outline-offset:3px}
 .hc.open .hc-chev{transform:rotate(90deg)}
-/* outline = state: magenta hatched (in house), green confirmed, white not confirmed yet */
-:root{--magenta:#e879f9}
+/* outline = state: magenta hatched (in house), green confirmed, soft orange chicks requested, white not ordered */
+:root{--magenta:#e879f9;--soft-orange:#f6a664}
 .hc.hatched{border:2px solid var(--magenta)}
 .hc.confirmed{border:2px solid var(--gh-success-fg)}
+.hc.requested{border:2px solid var(--soft-orange)}
 .hc.unconfirmed{border:2px solid #fff}
 .hc.suggest{background:transparent;border:2px dashed var(--gh-border-default)}
 .hc-top{display:flex;justify-content:space-between;align-items:baseline;font-weight:800;font-size:16px}
@@ -189,7 +190,8 @@ header{
     <div class="legend">
       <span><span class="swatch" style="border-color:var(--magenta)"></span>hatched</span>
       <span><span class="swatch" style="border-color:var(--gh-success-fg)"></span>confirmed</span>
-      <span><span class="swatch" style="border-color:#fff"></span>not confirmed</span>
+      <span><span class="swatch" style="border-color:var(--soft-orange)"></span>requested, not confirmed</span>
+      <span><span class="swatch" style="border-color:#fff"></span>not ordered</span>
       <span><b class="a-ok">▼ +N d</b> house ready N days before hatch</span>
       <span><b class="a-bad">▼ −N d</b> hatch before house is ready</span>
       <span><b class="a-kept">▼ −N d · kept early</b> you chose to keep it anyway</span>
@@ -523,7 +525,7 @@ function render(){
                     (r.keep && !confirmed ? ` <span class="badge b-rq">Date kept</span>` : '');
         const keepBtn = confirmed ? '' :
           `<button class="row-btn keep" onclick="event.stopPropagation();toggleKeep('${r.id}')">${r.keep ? 'Undo keep' : 'Keep this date'}</button>`;
-        const outline = hatched ? ' hatched' : r.status === 'Confirmed' ? ' confirmed' : ' unconfirmed';
+        const outline = hatched ? ' hatched' : confirmed ? ' confirmed' : r.status === 'Requested' ? ' requested' : ' unconfirmed';
         const pw = pairWarning(house, s.hatch, r.id);
         slots.push({
           arrow: prev ? arrow(prev.ready, s.hatch, r.keep && !confirmed) : '',

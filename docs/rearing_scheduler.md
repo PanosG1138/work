@@ -41,7 +41,7 @@ A house's next hatch should not be earlier than the previous cycle's "ready" dat
   Click to expand: cycle #, rearing system, vax 1, vax 2, loading, empty, status
   (Confirmed / Requested / Not ordered, or "In house · N d old"), warnings, Edit/Del.
 - Outline colour: magenta = hatched (birds in house), green = future + confirmed,
-  white = not confirmed (Requested / Not ordered).
+  soft orange = Requested (day-old chicks asked for, not confirmed yet), white = Not ordered.
 - Arrow between cards = days from the previous cycle's ready date to this hatch
   (green `+N d`, red `−N d · not ready`).
 - Dashed "Earliest possible" card in each column = earliest possible placement counting
