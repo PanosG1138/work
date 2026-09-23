@@ -55,11 +55,14 @@ A house's next hatch should not be earlier than the previous cycle's "ready" dat
 - "Keep this date" (unconfirmed cards only; `placements.keep`): plan with that hatch as if it were
   confirmed — the dashed card moves after it — without changing its order status. A too-early
   arrow into a kept hatch turns amber ("−N d · kept early") instead of red. "Undo keep" reverts.
+  Setting a hatch to Confirmed clears its keep flag.
+- One placement per house + hatch date (unique constraint `placements_house_doc_date_key`); the
+  add/edit form blocks Save and says so when the date is already taken.
 - Warnings (never blocking): hatch before the house is ready; Θ1/Θ2 gap outside 7–12 days.
 - Completed cycles (house already emptied) are always hidden; they're kept in the table and
   still count for the next cycle's arrow and suggestion.
 
-Data: `placements` table (`id`, `house`, `doc_date` = hatch date, `breed`, `status`, `keep`).
+Data: `placements` table (`id`, `house`, `doc_date` = hatch date, `breed`, `status`, `keep`); unique (`house`, `doc_date`).
 Rearing system and all dates are derived from house + hatch date, never stored.
 
 ## Out of scope for now

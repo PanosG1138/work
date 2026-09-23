@@ -195,7 +195,7 @@ header{
       <span><b class="a-ok">▼ +N d</b> house ready N days before hatch</span>
       <span><b class="a-bad">▼ −N d</b> hatch before house is ready</span>
       <span><b class="a-kept">▼ −N d · kept early</b> you chose to keep it anyway</span>
-      <span>Dashed card = earliest placement after the confirmed hatches</span>
+      <span>Dashed card = earliest placement after the confirmed, kept and hatched hatches</span>
     </div>
   </div>
   <div id="view"></div>
@@ -298,9 +298,6 @@ const VAX_LENGTH = 7;
 const PAIR = ['Θ1', 'Θ2'];            // always hatch PAIR_MIN–PAIR_MAX days apart
 const PAIR_MIN = 7, PAIR_MAX = 12;
 const STATUS_CLASS = { 'Confirmed':'b-ok', 'Requested':'b-rq', 'Not ordered':'b-no' };
-
-/* Single dark theme only — no toggle, no stored preference. */
-document.documentElement.setAttribute('data-theme', 'dark');
 
 /* ── Supabase ── */
 async function sbFetch(path, opts={}){
@@ -522,7 +519,7 @@ function render(){
         const hatched = s.hatch <= t;
         const confirmed = r.status === 'Confirmed';
         const badge = (hatched ? `<span class="badge b-now">In house · ${daysBetween(s.hatch, t)} d old</span>`
-                    :            `<span class="badge ${STATUS_CLASS[r.status]||'b-no'}">${esc(r.status||'Not ordered')}</span>`) +
+                    :            `<span class="badge ${STATUS_CLASS[r.status]}">${esc(r.status)}</span>`) +
                     (r.keep && !confirmed ? ` <span class="badge b-rq">Date kept</span>` : '');
         const keepBtn = confirmed ? '' :
           `<button class="row-btn keep" onclick="event.stopPropagation();toggleKeep('${r.id}')">${r.keep ? 'Undo keep' : 'Keep this date'}</button>`;
@@ -545,8 +542,8 @@ function render(){
   let html = houses.map(house => `<div class="house-head"><div class="house-name">${house}</div><div class="house-sys">${HOUSES[house]} rearing</div></div>`).join('');
   const rowsCount = Math.max(...cols.map(c => c.length));
   for(let k = 0; k < rowsCount; k++){
-    html += cols.map(c => (c[k] && c[k].arrow) || '<div></div>').join('');
-    html += cols.map(c => (c[k] && c[k].card) || '<div></div>').join('');
+    html += cols.map(c => c[k]?.arrow || '<div></div>').join('');
+    html += cols.map(c => c[k]?.card || '<div></div>').join('');
   }
   el.innerHTML = '<div class="houses">' + html + '</div>';
 }
@@ -571,7 +568,7 @@ function openEditModal(id){
   const r = data.find(x=>x.id==id);
   if(!r) throw new Error(`Placement ${id} not found`);
   editId = r.id;
-  openModal('Edit placement', r.house, r.doc_date, r.breed||'', r.status||'Not ordered', 'Update');
+  openModal('Edit placement', r.house, r.doc_date, r.breed||'', r.status, 'Update');
 }
 function closeModal(){
   document.getElementById('modal-bg').classList.add('hidden');
@@ -602,6 +599,11 @@ function checkModalWarn(){
     }
     const pw = pairWarning(house, hatch, editId);
     if(pw) warnings.push(`${house}: ${pw}.`);
+    // one placement per house + hatch date (unique in the database too)
+    if(others.some(r => r.doc_date === date)){
+      warnings.unshift(`${house} already has a placement hatching ${fmt(hatch)} — edit that one instead.`);
+      document.getElementById('m-save').disabled = true;
+    }
   }
   warnBox.innerHTML = warnings.map(w=>'⚠️ '+esc(w)).join('<br>');
   warnBox.classList.toggle('visible', warnings.length > 0);
@@ -619,7 +621,8 @@ async function saveNew(){
   btn.textContent = 'Saving...';
   try{
     if(editId){
-      const [updated] = await sbUpdate(editId, {doc_date:date, breed, status});
+      // keep only means something while unconfirmed, so confirming clears it
+      const [updated] = await sbUpdate(editId, {doc_date:date, breed, status, ...(status === 'Confirmed' && {keep:false})});
       data = data.map(r => r.id===editId ? updated : r);
       setSyncStatus('ok','Updated');
     } else {
@@ -650,7 +653,6 @@ async function confirmDelete(){
   }catch(e){ setSyncStatus('err','Delete failed: '+e.message); closeConfirm(); }
 }
 
-// Data load triggered by onAuthStateChange after sign-in
 </script>
 </body>
 </html>
