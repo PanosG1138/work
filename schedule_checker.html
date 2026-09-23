@@ -99,6 +99,9 @@ header{
 .arrow::before{content:'▼';display:block;font-size:16px}
 .a-ok{color:var(--gh-success-fg)}
 .a-bad{color:var(--gh-danger-fg)}
+.a-kept{color:var(--gh-attention-fg)}
+.row-btn.keep{border-color:var(--gh-attention-fg);color:var(--gh-attention-fg)}
+.row-btn.keep:hover{background:var(--gh-attention-subtle)}
 .empty-state{padding:56px 20px;text-align:center;color:var(--gh-fg-muted);font-size:14px}
 
 /* ── Row action buttons ── */
@@ -189,6 +192,7 @@ header{
       <span><span class="swatch" style="border-color:#fff"></span>not confirmed</span>
       <span><b class="a-ok">▼ +N d</b> house ready N days before hatch</span>
       <span><b class="a-bad">▼ −N d</b> hatch before house is ready</span>
+      <span><b class="a-kept">▼ −N d · kept early</b> you chose to keep it anyway</span>
       <span>Dashed card = earliest placement after the confirmed hatches</span>
     </div>
   </div>
@@ -376,15 +380,17 @@ function pairWarning(house, hatch, excludeId){
 }
 
 /* ── Next-hatch suggestions ──────────────────────────────────────────
-   Earliest date each house can take its next hatch, counting CONFIRMED hatches only
-   (Requested / Not ordered are ignored): the day its last confirmed cycle is ready,
+   Earliest date each house can take its next hatch, counting CONFIRMED hatches plus any
+   unconfirmed one marked "Keep this date" (r.keep); the rest are ignored: the day the last
+   of those cycles is ready,
    never before today. Θ1/Θ2 are placed together, PAIR_MIN–PAIR_MAX days apart; if one
    of them has an extra confirmed cycle, the other is placed within range of that
    unmatched hatch where possible, and the one ahead just gets its own ready date.
    Cross-house conflicts (vaccination/loading clashes) are deliberately not checked. */
-function confirmedOf(house){ return cyclesOf(house).filter(r => r.status === 'Confirmed'); }
+const planned = r => r.status === 'Confirmed' || r.keep;
+function plannedOf(house){ return cyclesOf(house).filter(planned); }
 function earliestFor(house){
-  const cycles = confirmedOf(house);
+  const cycles = plannedOf(house);
   const t = today();
   if(!cycles.length) return t;
   const ready = getSchedule(house, cycles[cycles.length-1].doc_date).ready;
@@ -397,7 +403,7 @@ function suggestNext(){
   ['Θ3','Θ4','Θ5'].forEach(h => { out[h] = earliestFor(h); });
 
   const [h1, h2] = PAIR;
-  const n1 = confirmedOf(h1).length, n2 = confirmedOf(h2).length;
+  const n1 = plannedOf(h1).length, n2 = plannedOf(h2).length;
   if(n1 === n2){
     const r1 = earliestFor(h1), r2 = earliestFor(h2);
     /* Try each house going first; keep the option whose second hatch comes sooner. */
@@ -409,7 +415,7 @@ function suggestNext(){
     out[h2] = useA ? a2 : b2;
   } else {
     const lag = n1 < n2 ? h1 : h2, lead = lag === h1 ? h2 : h1;
-    const leadCycles = confirmedOf(lead);
+    const leadCycles = plannedOf(lead);
     out[lead] = earliestFor(lead);
     const p = parseISO(leadCycles[leadCycles.length-1].doc_date);
     const r = earliestFor(lag);
@@ -461,10 +467,23 @@ function hcard(key, cls, house, label, breed, s, extra){
     `<div class="hc-breed">${breed}</div>` + cardBody(house, s) + `<div class="hc-more">${extra}</div></div>`;
 }
 
-function arrow(prevReady, hatch){
+/* kept: an unconfirmed hatch the user chose to keep even though the house isn't ready (amber, not red) */
+function arrow(prevReady, hatch, kept){
   const g = daysBetween(prevReady, hatch);
-  const txt = g >= 0 ? `+${g} d` : `−${-g} d · not ready`;
-  return `<div class="arrow ${g>=0?'a-ok':'a-bad'}">${txt}</div>`;
+  const txt = g >= 0 ? `+${g} d` : `−${-g} d · ${kept ? 'kept early' : 'not ready'}`;
+  return `<div class="arrow ${g>=0 ? 'a-ok' : kept ? 'a-kept' : 'a-bad'}">${txt}</div>`;
+}
+
+/* "Keep this date": plan with an unconfirmed hatch as if it were confirmed; clicking again undoes it */
+async function toggleKeep(id){
+  const r = data.find(x => x.id === id);
+  setSyncStatus('loading','Saving...');
+  try{
+    const [updated] = await sbUpdate(id, {keep: !r.keep});
+    data = data.map(x => x.id === id ? updated : x);
+    setSyncStatus('ok','Updated');
+    render();
+  }catch(e){ setSyncStatus('err','Save failed: '+e.message); }
 }
 
 function render(){
@@ -478,9 +497,9 @@ function render(){
     const slots = [];
     let prev = null;
     const cycles = cyclesOf(house);
-    const lastConfirmed = cycles.map(r => r.status).lastIndexOf('Confirmed');
-    // dashed card = earliest placement after the confirmed hatches; sits right after the last
-    // confirmed card, unconfirmed hatches follow below it
+    const lastPlanned = cycles.map(planned).lastIndexOf(true);
+    // dashed card = earliest placement after the confirmed (and kept) hatches; sits right after
+    // the last of them, the other unconfirmed hatches follow below it
     const pushSuggestion = () => {
       const iso = isoDate(next[house]);
       const s = getSchedule(house, iso);
@@ -492,26 +511,30 @@ function render(){
           `<div class="hc-foot"><button class="row-btn accept" onclick="event.stopPropagation();openAddModal('${house}','${iso}')">Use this date</button></div>`),
       });
     };
-    if(lastConfirmed < 0) pushSuggestion();
+    if(lastPlanned < 0) pushSuggestion();
     cycles.forEach((r, i) => {
       const s = getSchedule(house, r.doc_date);
       // completed cycles (house already emptied) are never shown; they still feed the next arrow
       if(s.empty >= t){
         const hatched = s.hatch <= t;
-        const badge = hatched ? `<span class="badge b-now">In house · ${daysBetween(s.hatch, t)} d old</span>`
-                    :           `<span class="badge ${STATUS_CLASS[r.status]||'b-no'}">${esc(r.status||'Not ordered')}</span>`;
+        const confirmed = r.status === 'Confirmed';
+        const badge = (hatched ? `<span class="badge b-now">In house · ${daysBetween(s.hatch, t)} d old</span>`
+                    :            `<span class="badge ${STATUS_CLASS[r.status]||'b-no'}">${esc(r.status||'Not ordered')}</span>`) +
+                    (r.keep && !confirmed ? ` <span class="badge b-rq">Date kept</span>` : '');
+        const keepBtn = confirmed ? '' :
+          `<button class="row-btn keep" onclick="event.stopPropagation();toggleKeep('${r.id}')">${r.keep ? 'Undo keep' : 'Keep this date'}</button>`;
         const outline = hatched ? ' hatched' : r.status === 'Confirmed' ? ' confirmed' : ' unconfirmed';
         const pw = pairWarning(house, s.hatch, r.id);
         slots.push({
-          arrow: prev ? arrow(prev.ready, s.hatch) : '',
+          arrow: prev ? arrow(prev.ready, s.hatch, r.keep && !confirmed) : '',
           card: hcard(r.id, outline, house, `#${i+1}`, esc(r.breed||'Breed —'), s,
             badge + (pw ? `<div class="warn">⚠ ${pw}</div>` : '') +
             `<div class="hc-foot"><button class="row-btn" onclick="event.stopPropagation();openEditModal('${r.id}')">Edit</button>` +
-            `<button class="row-btn del" onclick="event.stopPropagation();askDelete('${r.id}')">Del</button></div>`),
+            `<button class="row-btn del" onclick="event.stopPropagation();askDelete('${r.id}')">Del</button>${keepBtn}</div>`),
         });
       }
       prev = s;
-      if(i === lastConfirmed) pushSuggestion();
+      if(i === lastPlanned) pushSuggestion();
     });
     return slots;
   });
