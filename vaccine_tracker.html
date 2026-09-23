@@ -719,7 +719,7 @@ body.printing-card .printcard-doc{display:block}
       <label>Αναθρεπτήριο</label>
       <select id="f-flock" onchange="onFieldChange()">
         <option value="">— επιλογή —</option>
-        <option>Θ1</option><option>Θ2</option><option>Θ3</option><option>Θ4</option><option>Α1</option>
+        <option>Θ1</option><option>Θ2</option><option>Θ3</option><option>Θ4</option><option>Θ5</option><option>Α1</option>
       </select>
     </div>
     <div class="fgroup" id="f-newhatch-gate" style="display:none">
@@ -793,6 +793,7 @@ body.printing-card .printcard-doc{display:block}
             <button type="button" class="house-chip" onclick="toggleHouseFilter('Θ2')">Θ2</button>
             <button type="button" class="house-chip" onclick="toggleHouseFilter('Θ3')">Θ3</button>
             <button type="button" class="house-chip" onclick="toggleHouseFilter('Θ4')">Θ4</button>
+            <button type="button" class="house-chip" onclick="toggleHouseFilter('Θ5')">Θ5</button>
             <button type="button" class="house-chip" onclick="toggleHouseFilter('Α1')">Α1</button>
           </div>
         </div>
@@ -888,7 +889,7 @@ body.printing-card .printcard-doc{display:block}
           <div class="fgroup"><label>Ημ. Παραγγελίας <span class="calc-badge">ΑΥΤΟ</span></label><input type="text" id="m-orderdate" class="calc-field" readonly></div>
           <div class="fgroup"><label>Ημ. Καταχώρησης Παραγγελίας</label><input type="text" id="m-deliv" placeholder="ηη/μμ ή ηη/μμ/εε" onblur="onSmartDateBlur(this)" autocomplete="off"></div>
           <div class="fgroup"><label>Αναθρεπτήριο</label>
-            <select id="m-flock"><option value="">—</option><option>Θ1</option><option>Θ2</option><option>Θ3</option><option>Θ4</option><option>Α1</option></select></div>
+            <select id="m-flock"><option value="">—</option><option>Θ1</option><option>Θ2</option><option>Θ3</option><option>Θ4</option><option>Θ5</option><option>Α1</option></select></div>
           <div class="fgroup"><label>Πελάτης</label><input type="text" id="m-customer"></div>
           <div class="fgroup"><label>Ποσότητα</label><input type="text" id="m-qty" onblur="fmtQty(this)" onfocus="stripQty(this)"></div>
           <div class="fgroup"><label>Παραγγελία</label>
@@ -971,7 +972,7 @@ body.printing-card .printcard-doc{display:block}
         <label>Αναθρεπτήριο</label>
         <select id="wz-flock" onchange="refreshNewHatchGate('wz-hatch','wz-flock','wz-newhatch-gate')">
           <option value="">— επιλογή —</option>
-          <option>Θ1</option><option>Θ2</option><option>Θ3</option><option>Θ4</option><option>Α1</option>
+          <option>Θ1</option><option>Θ2</option><option>Θ3</option><option>Θ4</option><option>Θ5</option><option>Α1</option>
         </select>
       </div>
       <div class="fgroup" id="wz-newhatch-gate" style="display:none">
@@ -2411,7 +2412,7 @@ const BATCH_FIELDS = [
   { key:'hm_emv',       label:'Ημ. Εμβολιασμού',  type:'date'   },
   { key:'hm_paragelia', label:'Ημ. Παραγγελίας',  type:'date'   },
   { key:'hm_par',       label:'Ημ. Καταχώρησης Παραγγελίας', type:'date'   },
-  { key:'anath',        label:'Αναθρεπτήριο',      type:'select', options:['','Θ1','Θ2','Θ3','Θ4','Α1'] },
+  { key:'anath',        label:'Αναθρεπτήριο',      type:'select', options:['','Θ1','Θ2','Θ3','Θ4','Θ5','Α1'] },
   { key:'posotita',     label:'Ποσότητα',          type:'qty'    },
   { key:'pelatis',      label:'Πελάτης',           type:'text'   },
   { key:'paragelia',    label:'Παραγγελία',        type:'select', options:['','ΝΑΙ'] },

@@ -57,37 +57,45 @@ header{
 }
 .btn-primary:hover{filter:brightness(1.1)}
 .btn-primary:disabled{opacity:.4;cursor:not-allowed}
-.toggle{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gh-fg-muted);cursor:pointer}
 .legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--gh-fg-muted);margin-left:auto}
 .legend b{font-weight:600}
+.swatch{display:inline-block;width:11px;height:11px;border-radius:3px;border:2px solid;vertical-align:-1px;margin-right:4px}
 
 /* ── House columns + hatch cards ── */
-.houses{display:grid;grid-template-columns:repeat(5,minmax(220px,1fr));gap:14px;overflow-x:auto;padding-bottom:6px}
+/* one grid for all houses: row N of every column lines up (arrow rows and card rows alternate) */
+.houses{display:grid;grid-template-columns:repeat(5,minmax(230px,1fr));column-gap:16px;align-items:start;overflow-x:auto;padding-bottom:6px}
 .house-head{text-align:center;margin-bottom:10px}
 .house-name{font-weight:800;font-size:18px}
 .house-sys{font-size:11.5px;color:var(--gh-fg-muted)}
 .hc{
   background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:var(--gh-r-lg);
-  padding:12px 14px;font-size:12.5px;font-variant-numeric:tabular-nums;
+  padding:14px 16px;font-size:13.5px;font-variant-numeric:tabular-nums;cursor:pointer;
 }
-.hc.now{border:2px solid var(--gh-accent-fg)}
-.hc.past{opacity:.45}
+.hc:not(.open) .hc-more{display:none}
+.hc-chev{display:inline-block;margin-left:8px;font-size:20px;line-height:1;font-weight:400;color:var(--gh-fg-muted);transition:transform .15s}
+/* keyboard focus ring in accent blue, so it can't be mistaken for a status outline */
+.hc:focus-visible{outline:2px solid var(--gh-accent-fg);outline-offset:3px}
+.hc.open .hc-chev{transform:rotate(90deg)}
+/* outline = state: magenta hatched (in house), green confirmed, white not confirmed yet */
+:root{--magenta:#e879f9}
+.hc.hatched{border:2px solid var(--magenta)}
+.hc.confirmed{border:2px solid var(--gh-success-fg)}
+.hc.unconfirmed{border:2px solid #fff}
 .hc.suggest{background:transparent;border:2px dashed var(--gh-border-default)}
-.hc-top{display:flex;justify-content:space-between;align-items:baseline;font-weight:800;font-size:14px}
-.hc-num{font-size:11px;font-weight:500;color:var(--gh-fg-subtle)}
-.hc-breed{color:var(--gh-fg-muted);margin:1px 0 8px}
-.hc-row{display:flex;justify-content:space-between;gap:8px;line-height:1.7}
-.hc-row span:first-child{color:var(--gh-fg-subtle)}
+.hc-top{display:flex;justify-content:space-between;align-items:baseline;font-weight:800;font-size:16px}
+.hc-num{font-size:11px;font-weight:500;color:var(--gh-fg-muted)}
+.hc-breed{color:var(--gh-fg-default);font-weight:500;margin:1px 0 10px}
+.hc-row{display:flex;justify-content:space-between;gap:8px;line-height:1.85}
+.hc-row span:first-child{color:var(--gh-fg-muted)}
 .hc-row.em{font-weight:700}
 .badge{display:inline-block;margin-top:8px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--gh-r-sm)}
 .b-ok{background:var(--gh-success-subtle);color:var(--gh-success-fg)}
 .b-rq{background:var(--gh-attention-subtle);color:var(--gh-attention-fg)}
 .b-no{background:var(--gh-danger-subtle);color:var(--gh-danger-fg)}
 .b-now{background:var(--gh-accent-subtle);color:var(--gh-accent-fg)}
-.b-past{background:var(--gh-canvas-elev2);color:var(--gh-fg-subtle)}
 .warn{margin-top:8px;font-size:11.5px;color:var(--gh-attention-fg)}
 .hc-foot{display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--gh-border-muted)}
-.arrow{text-align:center;margin:4px 0;font-size:11.5px;font-weight:600;line-height:1.2}
+.arrow{text-align:center;margin:8px 0;font-size:12px;font-weight:600;line-height:1.2}
 .arrow::before{content:'▼';display:block;font-size:16px}
 .a-ok{color:var(--gh-success-fg)}
 .a-bad{color:var(--gh-danger-fg)}
@@ -175,8 +183,10 @@ header{
 <div class="main">
   <div class="toolbar">
     <button class="btn-primary" onclick="openAddModal()">+ Add placement</button>
-    <label class="toggle"><input type="checkbox" id="show-past" onchange="render()"> Show past cycles</label>
     <div class="legend">
+      <span><span class="swatch" style="border-color:var(--magenta)"></span>hatched</span>
+      <span><span class="swatch" style="border-color:var(--gh-success-fg)"></span>confirmed</span>
+      <span><span class="swatch" style="border-color:#fff"></span>not confirmed</span>
       <span><b class="a-ok">▼ +N d</b> house ready N days before hatch</span>
       <span><b class="a-bad">▼ −N d</b> hatch before house is ready</span>
       <span>Dashed card = earliest possible next hatch</span>
@@ -274,7 +284,7 @@ _sb.auth.onAuthStateChange((event, session) => {
 const HOUSES = {
   'Θ1': 'Cage', 'Θ2': 'Cage', 'Θ3': 'Cage', 'Θ4': 'Cage', 'Θ5': 'Aviary',
 };
-const LOAD_START_DAY = { Cage: 105, Aviary: 119 };  // aviary = 17 weeks
+const LOAD_START_DAY = { Cage: 105, Aviary: 118 };
 const LOAD_DAYS  = 14;   // house is empty LOAD_DAYS after loading starts
 const CLEAN_DAYS = 25;   // house is ready CLEAN_DAYS after it is empty
 const VAX_DAYS   = [60, 90];
@@ -422,50 +432,64 @@ async function load(){
 /* ── Render ── */
 function esc(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-function row(label, value, em){ return `<div class="hc-row${em?' em':''}"><span>${label}</span><span>${value}</span></div>`; }
+/* more=true: row only shows when the card is expanded */
+function row(label, value, em, more){ return `<div class="hc-row${em?' em':''}${more?' hc-more':''}"><span>${label}</span><span>${value}</span></div>`; }
 function range(a, b){ return `${fmtShort(a)} – ${fmt(b)}`; }
 
+/* Collapsed: Hatch, loading start (day 105 cage / 118 aviary), Ready. Expanded: everything. */
 function cardBody(house, s){
-  return row('Rearing', s.system) +
+  return row('Rearing', s.system, false, true) +
     row('Hatch', fmt(s.hatch), true) +
-    row('Vax 1', range(...s.vax[0])) +
-    row('Vax 2', range(...s.vax[1])) +
-    row('Loading', range(s.loadStart, s.empty)) +
-    row('Empty', fmt(s.empty), true) +
+    row('Vax 1', range(...s.vax[0]), false, true) +
+    row('Vax 2', range(...s.vax[1]), false, true) +
+    row(`Day ${LOAD_START_DAY[s.system]}`, fmt(s.loadStart)) +
+    row('Loading', range(s.loadStart, s.empty), false, true) +
+    row('Empty', fmt(s.empty), true, true) +
     row('Ready', fmt(s.ready));
 }
 
-function arrow(prevReady, hatch, faded){
+/* Card shell: click (or Enter/Space) toggles expanded; state survives re-renders, not page reloads. */
+const openCards = new Set();
+function toggleCard(el, key){ if(el.classList.toggle('open')) openCards.add(key); else openCards.delete(key); }
+function hcard(key, cls, house, label, breed, s, extra){
+  return `<div class="hc${cls}${openCards.has(key)?' open':''}" tabindex="0" onclick="toggleCard(this,'${key}')" ` +
+    `onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();toggleCard(this,'${key}')}">` +
+    `<div class="hc-top"><span>${house}</span><span class="hc-num"><span class="hc-more">${label}</span><span class="hc-chev">›</span></span></div>` +
+    `<div class="hc-breed">${breed}</div>` + cardBody(house, s) + `<div class="hc-more">${extra}</div></div>`;
+}
+
+function arrow(prevReady, hatch){
   const g = daysBetween(prevReady, hatch);
   const txt = g >= 0 ? `+${g} d` : `−${-g} d · not ready`;
-  return `<div class="arrow ${g>=0?'a-ok':'a-bad'}"${faded?' style="opacity:.45"':''}>${txt}</div>`;
+  return `<div class="arrow ${g>=0?'a-ok':'a-bad'}">${txt}</div>`;
 }
 
 function render(){
   const el = document.getElementById('view');
-  const showPast = document.getElementById('show-past').checked;
   const t = today();
   const next = suggestNext();
 
-  el.innerHTML = '<div class="houses">' + Object.keys(HOUSES).map(house => {
-    let html = `<div><div class="house-head"><div class="house-name">${house}</div><div class="house-sys">${HOUSES[house]} rearing</div></div>`;
+  const houses = Object.keys(HOUSES);
+  // per house: a list of slots { arrow, card }; slot N of every house lands on the same grid row
+  const cols = houses.map(house => {
+    const slots = [];
     let prev = null;
     cyclesOf(house).forEach((r, i) => {
       const s = getSchedule(house, r.doc_date);
-      const past = s.empty < t, now = s.hatch <= t && t < s.empty;
-      if(!(past && !showPast)){
-        if(prev) html += arrow(prev.ready, s.hatch, past);
-        const badge = now  ? `<span class="badge b-now">In house · ${daysBetween(s.hatch, t)} d old</span>`
-                    : past ? `<span class="badge b-past">Emptied</span>`
-                    :        `<span class="badge ${STATUS_CLASS[r.status]||'b-no'}">${esc(r.status||'Not ordered')}</span>`;
+      // completed cycles (house already emptied) are never shown; they still feed the next arrow
+      if(s.empty >= t){
+        const hatched = s.hatch <= t;
+        const badge = hatched ? `<span class="badge b-now">In house · ${daysBetween(s.hatch, t)} d old</span>`
+                    :           `<span class="badge ${STATUS_CLASS[r.status]||'b-no'}">${esc(r.status||'Not ordered')}</span>`;
+        const outline = hatched ? ' hatched' : r.status === 'Confirmed' ? ' confirmed' : ' unconfirmed';
         const pw = pairWarning(house, s.hatch, r.id);
-        html += `<div class="hc${now?' now':''}${past?' past':''}">` +
-          `<div class="hc-top"><span>${house}</span><span class="hc-num">#${i+1}</span></div>` +
-          `<div class="hc-breed">${esc(r.breed||'Breed —')}</div>` +
-          cardBody(house, s) + badge +
-          (pw ? `<div class="warn">⚠ ${pw}</div>` : '') +
-          `<div class="hc-foot"><button class="row-btn" onclick="openEditModal('${r.id}')">Edit</button>` +
-          `<button class="row-btn del" onclick="askDelete('${r.id}')">Del</button></div></div>`;
+        slots.push({
+          arrow: prev ? arrow(prev.ready, s.hatch) : '',
+          card: hcard(r.id, outline, house, `#${i+1}`, esc(r.breed||'Breed —'), s,
+            badge + (pw ? `<div class="warn">⚠ ${pw}</div>` : '') +
+            `<div class="hc-foot"><button class="row-btn" onclick="event.stopPropagation();openEditModal('${r.id}')">Edit</button>` +
+            `<button class="row-btn del" onclick="event.stopPropagation();askDelete('${r.id}')">Del</button></div>`),
+        });
       }
       prev = s;
     });
@@ -473,15 +497,23 @@ function render(){
       const iso = isoDate(next[house]);
       const s = getSchedule(house, iso);
       const pw = pairWarning(house, s.hatch);
-      if(prev) html += arrow(prev.ready, s.hatch, false);
-      html += `<div class="hc suggest">` +
-        `<div class="hc-top"><span>${house}</span><span class="hc-num">Earliest next</span></div>` +
-        `<div class="hc-breed">Not placed yet</div>` + cardBody(house, s) +
-        (pw ? `<div class="warn">⚠ ${pw}</div>` : '') +
-        `<div class="hc-foot"><button class="row-btn accept" onclick="openAddModal('${house}','${iso}')">Use this date</button></div></div>`;
+      slots.push({
+        arrow: prev ? arrow(prev.ready, s.hatch) : '',
+        card: hcard('next-' + house, ' suggest', house, 'Earliest next', 'Earliest next · not placed yet', s,
+          (pw ? `<div class="warn">⚠ ${pw}</div>` : '') +
+          `<div class="hc-foot"><button class="row-btn accept" onclick="event.stopPropagation();openAddModal('${house}','${iso}')">Use this date</button></div>`),
+      });
     }
-    return html + '</div>';
-  }).join('') + '</div>';
+    return slots;
+  });
+
+  let html = houses.map(house => `<div class="house-head"><div class="house-name">${house}</div><div class="house-sys">${HOUSES[house]} rearing</div></div>`).join('');
+  const rowsCount = Math.max(...cols.map(c => c.length));
+  for(let k = 0; k < rowsCount; k++){
+    html += cols.map(c => (c[k] && c[k].arrow) || '<div></div>').join('');
+    html += cols.map(c => (c[k] && c[k].card) || '<div></div>').join('');
+  }
+  el.innerHTML = '<div class="houses">' + html + '</div>';
 }
 
 /* ── Add/Edit modal ── */

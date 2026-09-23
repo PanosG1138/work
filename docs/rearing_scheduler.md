@@ -27,18 +27,21 @@ scheduler always plans with these values.
 |---|---|---|
 | Vaccination 1 | day 60–66 (7 days) | same |
 | Vaccination 2 | day 90–96 (7 days) | same |
-| Loading | day 105 → 119 (14 days) | day 119 (17 wk) → 133 |
-| House empty | day 119 | day 133 |
+| Loading | day 105 → 119 (14 days) | day 118 → 132 (14 days) |
+| House empty | day 119 | day 132 |
 | Cleaning | 25 days after empty | same |
-| Ready for next hatch | day 144 | day 158 |
+| Ready for next hatch | day 144 | day 157 |
 
 A house's next hatch should not be earlier than the previous cycle's "ready" date.
 
 ## What the tool does
 
-- One column per house, one card per hatch: house, cycle #, breed, rearing system, hatch,
-  vax 1, vax 2, loading, empty, ready, status (Confirmed / Requested / Not ordered, or
-  "In house · N d old" / "Emptied").
+- One column per house, one card per hatch; card rows line up across houses.
+  Collapsed (default): house, breed, hatch, loading start (day 105 cage / day 118 aviary), ready.
+  Click to expand: cycle #, rearing system, vax 1, vax 2, loading, empty, status
+  (Confirmed / Requested / Not ordered, or "In house · N d old"), warnings, Edit/Del.
+- Outline colour: magenta = hatched (birds in house), green = future + confirmed,
+  white = not confirmed (Requested / Not ordered).
 - Arrow between cards = days from the previous cycle's ready date to this hatch
   (green `+N d`, red `−N d · not ready`).
 - Dashed "Earliest next" card at the bottom of each column = earliest possible next hatch
@@ -46,7 +49,8 @@ A house's next hatch should not be earlier than the previous cycle's "ready" dat
   if one already has an extra cycle, only the other gets a suggestion, within 7–12 days of it.
   "Use this date" opens the add form prefilled.
 - Warnings (never blocking): hatch before the house is ready; Θ1/Θ2 gap outside 7–12 days.
-- Past cycles hidden by default ("Show past cycles" toggle).
+- Completed cycles (house already emptied) are always hidden; they're kept in the table and
+  still count for the next cycle's arrow and suggestion.
 
 Data: `placements` table (`id`, `house`, `doc_date` = hatch date, `breed`, `status`).
 Rearing system and all dates are derived from house + hatch date, never stored.
@@ -60,5 +64,4 @@ Rearing system and all dates are derived from house + hatch date, never stored.
 
 ## Open follow-ups
 
-- `feed_tracker.html` HOUSES still lists Θ6; vaccine_tracker's dropdown still has A1 and no Θ5.
 - Order book ΠΑΡΑΓΓΕΛΙΕΣ.xlsx: aviary house being renamed Θ6 → Θ5 by the user.

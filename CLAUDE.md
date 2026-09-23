@@ -39,7 +39,7 @@ Each HTML file is fully self-contained: inline `<style>` and `<script>`, no JS i
 ## Facility structure
 Five rearing houses: Θ1–Θ4 (cage), Θ5 (aviary). A1 is no longer used.
 Full house rules, cycle timings and the Θ1/Θ2 pairing live in `docs/rearing_scheduler.md`.
-Tools' own house lists have not all caught up (feed_tracker has Θ6, vaccine_tracker has A1 and no Θ5) — check the specific file.
+Exception: vaccine_tracker.html keeps A1 in its house lists (Θ1–Θ5 + A1) by the user's choice — check the specific file.
 
 ## Design principles (non-negotiable)
 1. No frameworks, no build tools — plain HTML/CSS/JS only
