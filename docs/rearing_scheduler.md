@@ -1,0 +1,64 @@
+# Rearing scheduler
+
+Source of truth for the rearing-house scheduler (`schedule_checker.html`).
+Purpose: find the ideal hatch dates for future placements in each rearing house.
+
+## Houses
+
+| House | Rearing system | Can rear pullets for | Notes |
+|---|---|---|---|
+| Θ1 | Cage | Cage customers only | Linked pair with Θ2 |
+| Θ2 | Cage | Cage customers only | Linked pair with Θ1 |
+| Θ3 | Cage | Cage customers only | |
+| Θ4 | Cage | Cage customers only | |
+| Θ5 | Aviary | Aviary, barn, cage | Avoid cage pullets here whenever possible |
+
+- "Cage / aviary / barn pullets" = the system of the customer's **production** house the pullets
+  are sold into, not how they are reared.
+- A1 is no longer used. It has no place in the scheduler's logic.
+- Θ1 and Θ2 always hatch **7–12 days** apart from each other (either order).
+
+## Cycle timings (day 0 = hatch date)
+
+Loading and cleaning are **planning maximums** — in practice they can finish sooner, but the
+scheduler always plans with these values.
+
+| Event | Cage houses (Θ1–Θ4) | Aviary (Θ5) |
+|---|---|---|
+| Vaccination 1 | day 60–66 (7 days) | same |
+| Vaccination 2 | day 90–96 (7 days) | same |
+| Loading | day 105 → 119 (14 days) | day 119 (17 wk) → 133 |
+| House empty | day 119 | day 133 |
+| Cleaning | 25 days after empty | same |
+| Ready for next hatch | day 144 | day 158 |
+
+A house's next hatch should not be earlier than the previous cycle's "ready" date.
+
+## What the tool does
+
+- One column per house, one card per hatch: house, cycle #, breed, rearing system, hatch,
+  vax 1, vax 2, loading, empty, ready, status (Confirmed / Requested / Not ordered, or
+  "In house · N d old" / "Emptied").
+- Arrow between cards = days from the previous cycle's ready date to this hatch
+  (green `+N d`, red `−N d · not ready`).
+- Dashed "Earliest next" card at the bottom of each column = earliest possible next hatch
+  (latest cycle's ready date, never before today). Θ1/Θ2 are suggested together 7–12 days apart;
+  if one already has an extra cycle, only the other gets a suggestion, within 7–12 days of it.
+  "Use this date" opens the add form prefilled.
+- Warnings (never blocking): hatch before the house is ready; Θ1/Θ2 gap outside 7–12 days.
+- Past cycles hidden by default ("Show past cycles" toggle).
+
+Data: `placements` table (`id`, `house`, `doc_date` = hatch date, `breed`, `status`).
+Rearing system and all dates are derived from house + hatch date, never stored.
+
+## Out of scope for now
+
+- Cross-house conflict detection (vaccination/loading clashes between houses) and the old
+  resolver. Parked by the user, 2026-09-23. The `resolved_conflicts` table is no longer read or
+  written by the app; `backup.py` still backs it up until the table is dropped.
+- Assigning customers (cage/aviary/barn) to hatches.
+
+## Open follow-ups
+
+- `feed_tracker.html` HOUSES still lists Θ6; vaccine_tracker's dropdown still has A1 and no Θ5.
+- Order book ΠΑΡΑΓΓΕΛΙΕΣ.xlsx: aviary house being renamed Θ6 → Θ5 by the user.

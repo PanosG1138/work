@@ -13,7 +13,7 @@ Two users: Panos and Ελένη.
 - vaccine_tracker.html — vaccine order tracking (ΕΜΒΟΛΙΑ), with an alternate house/cycle card view
 - inventory.html — vaccine stock/inventory, bidirectionally linked to vaccine_tracker
 - feed_tracker.html — feed/nutrition schedule tracking per breed
-- schedule_checker.html — rearing house scheduling + conflict detection (placement/vaccination/loading)
+- schedule_checker.html — rearing house scheduling; being replaced — rules and plan in `docs/rearing_scheduler.md`
 - truck_calculator_kamposos.html / truck_calculator_doukakis.html — truck+trailer loading calculators for two separate facilities
 - backup.py — nightly Supabase → Google Sheets backup, run by `.github/workflows/backup.yml`
 
@@ -28,7 +28,7 @@ No build step, no package manager, no test suite, no linter — that's deliberat
 - Deploy: push to `main` — GitHub Pages serves the repo directly, no build/publish step.
 
 ## Architecture
-Each HTML file is fully self-contained: inline `<style>` and `<script>`, no JS imports, no shared JS files between tools (see gotcha below). `theme.css` (CSS custom properties for the single dark GitHub-style theme — no light theme, removed repo-wide) is the *only* thing actually shared across files — everything else that looks shared (Supabase client setup, auth, date-parsing helpers, `VACCINE_OPTIONS`) is copy-pasted independently into each tool by design, so a fix in one file does not propagate and must be applied per-file if it applies elsewhere. Note: `schedule_checker.html` doesn't use the shared `theme.css` — it defines its own local `:root{...}` dark-theme block instead.
+Each HTML file is fully self-contained: inline `<style>` and `<script>`, no JS imports, no shared JS files between tools (see gotcha below). `theme.css` (CSS custom properties for the single dark GitHub-style theme — no light theme, removed repo-wide) is the *only* thing actually shared across files — everything else that looks shared (Supabase client setup, auth, date-parsing helpers, `VACCINE_OPTIONS`) is copy-pasted independently into each tool by design, so a fix in one file does not propagate and must be applied per-file if it applies elsewhere.
 
 - **Auth**: Supabase Auth (email/password), two accounts mapped to display names via a per-file `emailToDisplayName()` (`panos@internal.local` → Πάνος, `eleni@internal.local` → Ελένη). `onAuthStateChange` gates the UI and triggers the initial data load.
 - **Persistence pattern — list tools** (vaccine_tracker, inventory, schedule_checker): rows are read/written via direct PostgREST calls (`sbFetch` wrapping `fetch` to `${SB_URL}/rest/v1/...`), and edits are logged to a paired `*_history` table (`emvolia_history`, `inventory_history`) with `user_name`/`ts`/`changes_json`, used to render the changelog/history UI in edit modals. Follow this convention for any new editable data.
@@ -37,11 +37,9 @@ Each HTML file is fully self-contained: inline `<style>` and `<script>`, no JS i
 - **Automation** (`.github/workflows/`): `backup.yml` runs `backup.py` nightly, pulling every Supabase table to a Google Sheet via `gspread`. `feed_notify.yml` emails 7-day/3-day feed-change reminders — it re-implements the feed schedule tables (`SCHEDULES`, `BREED_SCHEDULE`) as a **separate copy** inline in the workflow YAML. If `feed_tracker.html`'s schedules change, that copy has to be updated by hand or the reminders drift out of sync.
 
 ## Facility structure
-Five rearing houses: Θ1, Θ2, Θ3, Θ4, Θ5. Θ4 has a linked sub-house A1.
-Θ1/Θ2 are a linked pair — never conflict with each other on any event type,
-must always move together (5–14 day gap maintained). A1/Θ4 conflicts with
-each other are exempt.
-This is schedule_checker's/feed_tracker's house list — vaccine_tracker.html's own dropdown is narrower (Θ1–Θ4 + A1, no Θ5). Check the specific file's own house list rather than assuming every tool covers the same set.
+Five rearing houses: Θ1–Θ4 (cage), Θ5 (aviary). A1 is no longer used.
+Full house rules, cycle timings and the Θ1/Θ2 pairing live in `docs/rearing_scheduler.md`.
+Tools' own house lists have not all caught up (feed_tracker has Θ6, vaccine_tracker has A1 and no Θ5) — check the specific file.
 
 ## Design principles (non-negotiable)
 1. No frameworks, no build tools — plain HTML/CSS/JS only

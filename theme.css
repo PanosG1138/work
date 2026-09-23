@@ -26,9 +26,6 @@
   /* Danger red */
   --gh-danger-fg:         #ff6b6b;
   --gh-danger-subtle:     rgba(255,107,107,0.1);
-  /* Transfer violet (used by schedule_checker.html) */
-  --gh-violet-fg:         #b18aff;
-  --gh-violet-subtle:     rgba(177,138,255,0.14);
   /* Hover */
   --gh-hover-bg:          #232832;
   /* Shadow */

@@ -46,18 +46,10 @@ header{
 .sync-badge.loading .sync-dot{animation:pulse 1.2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
 
-.main{max-width:1320px;margin:0 auto;padding:24px 20px 60px}
+.main{max-width:1400px;margin:0 auto;padding:24px 20px 60px}
 
 /* ── Toolbar ── */
-.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}
-.btn-tool{
-  height:36px;padding:0 14px;background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);
-  color:var(--gh-fg-default);border-radius:var(--gh-r-md);font-family:'Inter',sans-serif;
-  font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;
-  display:inline-flex;align-items:center;gap:6px;transition:background .15s,border-color .15s;
-}
-.btn-tool:hover{background:var(--gh-hover-bg);border-color:var(--gh-fg-subtle)}
-.btn-tool.active{border-color:var(--gh-accent-fg);background:var(--gh-accent-subtle);color:var(--gh-accent-fg)}
+.toolbar{display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap}
 .btn-primary{
   height:36px;padding:0 16px;background:var(--gh-accent-fg);color:#fff;border:none;
   border-radius:var(--gh-r-md);font-family:'Inter',sans-serif;font-weight:600;font-size:13px;
@@ -65,80 +57,40 @@ header{
 }
 .btn-primary:hover{filter:brightness(1.1)}
 .btn-primary:disabled{opacity:.4;cursor:not-allowed}
-.sep{width:1px;height:22px;background:var(--gh-border-default);flex-shrink:0}
+.toggle{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gh-fg-muted);cursor:pointer}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--gh-fg-muted);margin-left:auto}
+.legend b{font-weight:600}
 
-/* ── Conflict popover & resolve icons ── */
-.conflict-popover{
-  position:fixed;z-index:500;background:var(--gh-canvas-elev2);border:1px solid var(--gh-border-default);
-  border-radius:var(--gh-r-md);padding:6px;box-shadow:var(--gh-shadow);min-width:220px;
-}
-.conflict-popover.hidden{display:none}
-.cp-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 6px;font-size:12px;color:var(--gh-fg-default)}
-.cp-item+.cp-item{border-top:1px solid var(--gh-border-muted)}
-.cp-btn{flex-shrink:0;height:22px;padding:0 8px;border-radius:var(--gh-r-sm);border:1px solid var(--gh-attention-strong);background:var(--gh-canvas-elev2);color:var(--gh-attention-fg);font-family:'Inter',sans-serif;font-size:11px;font-weight:600;cursor:pointer}
-.cp-btn.resolved{border-color:var(--gh-border-default);color:var(--gh-fg-muted)}
-.cc-resolve-icon{font-size:10px;cursor:pointer;flex-shrink:0;color:var(--gh-attention-fg);line-height:1;padding:1px 3px;border-radius:2px;transition:opacity .12s;margin-left:auto}
-.cc-resolve-icon:hover{opacity:.65}
-.cc-resolve-icon.resolved{color:var(--gh-fg-subtle);font-size:9px}
-.tl-resolve-icon{
-  position:absolute;top:5px;width:13px;height:16px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:9px;font-weight:700;cursor:pointer;z-index:10;
-  color:var(--gh-attention-fg);background:rgba(240,180,41,0.25);border-radius:2px;
-}
-.tl-resolve-icon:hover{background:var(--gh-attention-subtle)}
-.tl-resolve-icon.resolved{color:var(--gh-fg-subtle);background:rgba(255,255,255,0.06)}
-
-/* ── Card view ── */
-.cards-wrap{display:flex;flex-direction:column;gap:24px}
-.cards-row{display:flex;gap:14px;overflow-x:auto;padding-bottom:4px}
-.cc-card{
+/* ── House columns + hatch cards ── */
+.houses{display:grid;grid-template-columns:repeat(5,minmax(220px,1fr));gap:14px;overflow-x:auto;padding-bottom:6px}
+.house-head{text-align:center;margin-bottom:10px}
+.house-name{font-weight:800;font-size:18px}
+.house-sys{font-size:11.5px;color:var(--gh-fg-muted)}
+.hc{
   background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:var(--gh-r-lg);
-  padding:16px;min-width:220px;flex:1 1 220px;
-  display:flex;flex-direction:column;box-shadow:0 2px 8px rgba(0,0,0,0.18);
+  padding:12px 14px;font-size:12.5px;font-variant-numeric:tabular-nums;
 }
-.cc-card-suggest{
-  background:repeating-linear-gradient(135deg,var(--gh-canvas-elev2) 0 8px,var(--gh-canvas-subtle) 8px 16px);
-  border:2px dashed var(--gh-border-default);
-}
-.cc-card-header{
-  display:flex;justify-content:space-between;align-items:baseline;
-  padding-bottom:10px;border-bottom:1px solid var(--gh-border-default);margin-bottom:10px;
-}
-.cc-card-label{font-weight:800;font-size:15px;letter-spacing:-.01em;color:var(--gh-fg-default)}
-.cc-card-date{font-size:12px;color:var(--gh-fg-muted)}
-.cc-gap-line{
-  font-size:11.5px;color:var(--gh-fg-muted);margin-bottom:8px;
-  padding:3px 8px;background:var(--gh-canvas-inset);border-radius:var(--gh-r-sm);
-}
-.cc-events{display:flex;flex-direction:column;gap:3px;margin-bottom:10px;flex:1}
-.cc-event-row{
-  display:flex;align-items:center;gap:8px;padding:4px 6px;
-  border-radius:var(--gh-r-sm);min-height:32px;
-}
-.cc-event-row.has-conflict{
-  outline:2px solid var(--gh-attention-fg);outline-offset:1px;
-  box-shadow:0 0 0 1px var(--gh-attention-fg),0 0 6px rgba(240,180,41,0.5);
-}
-.cc-event-name{font-size:10.5px;font-weight:700;color:var(--gh-fg-muted);width:52px;flex-shrink:0;text-transform:uppercase;letter-spacing:.04em}
-.cc-event-bar{width:8px;height:8px;border-radius:2px;flex-shrink:0}
-.cc-event-bar.placement{background:#fff;border:1px solid var(--gh-fg-default)}
-.cc-event-bar.vax{background:rgba(110,143,255,0.6);border:1px solid var(--gh-accent-fg)}
-.cc-event-bar.load{background:rgba(79,209,139,0.5);border:1px solid var(--gh-success-fg)}
-.cc-event-bar.clean{background:var(--gh-canvas-inset);border:1px solid var(--gh-border-default)}
-.cc-event-bar.transfer{background:rgba(177,138,255,0.5);border:1px solid var(--gh-violet-fg)}
-.cc-event-dates{font-size:11.5px;color:var(--gh-fg-default);flex:1;line-height:1.3}
-.cc-sub-card{
-  border:1px solid var(--gh-violet-fg);border-radius:var(--gh-r-md);
-  padding:10px 10px 6px;margin-bottom:10px;background:var(--gh-violet-subtle);
-}
-.cc-sub-header{font-size:10.5px;font-weight:700;color:var(--gh-violet-fg);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em}
-.cc-card-footer{display:flex;gap:6px;padding-top:10px;border-top:1px solid var(--gh-border-muted);margin-top:auto}
-.cc-gap-empty{visibility:hidden}
-.cc-sub-placeholder{visibility:hidden}
-.cc-card-blank{border:1px dashed var(--gh-border-muted);background:transparent;box-shadow:none;opacity:.4}
-.cc-gen-label{font-size:11px;font-weight:700;color:var(--gh-fg-subtle);text-transform:uppercase;letter-spacing:.06em;padding:4px 2px}
-.cc-suggest-label{font-size:11px;font-weight:700;color:var(--gh-fg-muted);text-transform:uppercase;letter-spacing:.06em;padding:4px 2px}
+.hc.now{border:2px solid var(--gh-accent-fg)}
+.hc.past{opacity:.45}
+.hc.suggest{background:transparent;border:2px dashed var(--gh-border-default)}
+.hc-top{display:flex;justify-content:space-between;align-items:baseline;font-weight:800;font-size:14px}
+.hc-num{font-size:11px;font-weight:500;color:var(--gh-fg-subtle)}
+.hc-breed{color:var(--gh-fg-muted);margin:1px 0 8px}
+.hc-row{display:flex;justify-content:space-between;gap:8px;line-height:1.7}
+.hc-row span:first-child{color:var(--gh-fg-subtle)}
+.hc-row.em{font-weight:700}
+.badge{display:inline-block;margin-top:8px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--gh-r-sm)}
+.b-ok{background:var(--gh-success-subtle);color:var(--gh-success-fg)}
+.b-rq{background:var(--gh-attention-subtle);color:var(--gh-attention-fg)}
+.b-no{background:var(--gh-danger-subtle);color:var(--gh-danger-fg)}
+.b-now{background:var(--gh-accent-subtle);color:var(--gh-accent-fg)}
+.b-past{background:var(--gh-canvas-elev2);color:var(--gh-fg-subtle)}
+.warn{margin-top:8px;font-size:11.5px;color:var(--gh-attention-fg)}
+.hc-foot{display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--gh-border-muted)}
+.arrow{text-align:center;margin:4px 0;font-size:11.5px;font-weight:600;line-height:1.2}
+.arrow::before{content:'▼';display:block;font-size:16px}
+.a-ok{color:var(--gh-success-fg)}
+.a-bad{color:var(--gh-danger-fg)}
 .empty-state{padding:56px 20px;text-align:center;color:var(--gh-fg-muted);font-size:14px}
 
 /* ── Row action buttons ── */
@@ -149,134 +101,8 @@ header{
 }
 .row-btn:hover{background:var(--gh-hover-bg);border-color:var(--gh-fg-subtle)}
 .row-btn.del:hover{border-color:var(--gh-danger-fg);background:rgba(255,107,107,0.1);color:var(--gh-danger-fg)}
-.row-btn.fix{border-color:var(--gh-attention-strong);color:var(--gh-attention-fg)}
-.row-btn.fix:hover{background:var(--gh-attention-subtle)}
 .row-btn.accept{border-color:var(--gh-success-fg);color:var(--gh-success-fg);font-weight:600}
 .row-btn.accept:hover{background:var(--gh-success-subtle)}
-.table-legend{
-  display:flex;align-items:center;gap:8px;font-size:12px;color:var(--gh-fg-muted);
-  margin-bottom:10px;
-}
-.table-legend-swatch{
-  width:20px;height:14px;border-radius:3px;flex-shrink:0;
-  background:repeating-linear-gradient(135deg, var(--gh-canvas-elev2) 0 5px, var(--gh-canvas-subtle) 5px 10px);
-  border-left:3px dashed var(--gh-border-default);
-}
-
-/* ── Resolver panel ── */
-.resolver-modal{width:480px}
-.resolver-summary{font-size:12.5px;color:var(--gh-fg-muted);margin-bottom:16px;line-height:1.6}
-.resolver-direction{margin-bottom:14px}
-.resolver-direction-label{font-size:11px;font-weight:700;color:var(--gh-fg-subtle);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
-.resolver-card{
-  background:var(--gh-canvas-elev2);border:1px solid var(--gh-border-default);border-radius:var(--gh-r-md);
-  padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;
-}
-.resolver-card-info{flex:1;min-width:0}
-.resolver-card-date{font-size:14px;font-weight:700;color:var(--gh-fg-default)}
-.resolver-card-shift{font-size:11.5px;color:var(--gh-fg-muted);margin-top:2px}
-.resolver-card-result{font-size:11.5px;margin-top:4px}
-.resolver-card-result.good{color:var(--gh-success-fg)}
-.resolver-card-result.partial{color:var(--gh-attention-fg)}
-.resolver-card-apply{
-  flex-shrink:0;height:32px;padding:0 14px;background:var(--gh-accent-fg);color:#fff;border:none;
-  border-radius:var(--gh-r-md);font-family:'Inter',sans-serif;font-weight:600;font-size:12.5px;cursor:pointer;
-}
-.resolver-card-apply:hover{filter:brightness(1.1)}
-.resolver-card-apply:disabled{opacity:.5;cursor:not-allowed}
-.resolver-none{
-  background:var(--gh-canvas-elev2);border:1px solid var(--gh-border-default);border-radius:var(--gh-r-md);
-  padding:14px;font-size:12.5px;color:var(--gh-fg-muted);text-align:center;
-}
-
-/* ── Timeline ── */
-.timeline-wrap{border:1px solid var(--gh-border-default);border-radius:var(--gh-r-lg);background:var(--gh-canvas-subtle);overflow:hidden}
-.timeline-inner{padding:18px 0 22px}
-.tl-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;padding:0 22px}
-.tl-header-title{font-size:13px;font-weight:700;color:var(--gh-fg-default)}
-.tl-nav{display:flex;align-items:center;gap:6px;margin-left:auto}
-.tl-nav button{
-  height:30px;padding:0 12px;border-radius:var(--gh-r-sm);border:1px solid var(--gh-border-default);
-  background:var(--gh-canvas-elev2);color:var(--gh-fg-default);font-family:'Inter',sans-serif;
-  font-size:12.5px;cursor:pointer;transition:background .15s;
-}
-.tl-nav button:hover{background:var(--gh-hover-bg)}
-.tl-range-label{font-size:12.5px;color:var(--gh-fg-muted);min-width:190px;text-align:center;font-weight:500}
-.tl-zoom{display:flex;align-items:center;gap:10px;padding:0 22px;margin-bottom:16px}
-.tl-zoom-label{font-size:11.5px;color:var(--gh-fg-muted);white-space:nowrap;min-width:36px}
-.tl-zoom input[type=range]{flex:0 0 180px;accent-color:var(--gh-accent-fg);cursor:pointer}
-.tl-zoom-pct{font-size:11.5px;color:var(--gh-fg-muted);min-width:42px;text-align:right}
-.tl-zoom-btn{
-  height:26px;width:26px;border-radius:var(--gh-r-sm);border:1px solid var(--gh-border-default);
-  background:var(--gh-canvas-elev2);color:var(--gh-fg-default);cursor:pointer;font-size:14px;line-height:1;
-  display:flex;align-items:center;justify-content:center;transition:background .15s;
-}
-.tl-zoom-btn:hover{background:var(--gh-hover-bg)}
-.tl-zoom-hint{font-size:11px;color:var(--gh-fg-subtle);margin-left:6px}
-.tl-scroll-outer{overflow-x:auto;overflow-y:hidden;padding-bottom:6px}
-.tl-grid-wrap{display:flex;gap:0;position:relative}
-.tl-labels{
-  flex-shrink:0;width:130px;padding-top:42px;display:flex;flex-direction:column;gap:0;
-  position:sticky;left:0;z-index:8;background:var(--gh-canvas-subtle);border-right:2px solid var(--gh-border-default);
-  box-shadow:2px 0 8px rgba(0,0,0,0.15);
-}
-.tl-label-cell{
-  height:38px;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;padding-right:12px;
-  font-size:12px;font-weight:700;color:var(--gh-fg-default);white-space:nowrap;line-height:1.25;
-}
-.tl-label-cell .tl-label-hatch{font-size:10px;font-weight:500;color:var(--gh-fg-muted)}
-.tl-label-cell.sub{color:var(--gh-violet-fg);font-weight:600;font-size:11px}
-.tl-label-cell.sub .tl-label-hatch{color:rgba(177,138,255,0.7)}
-.tl-label-cell.group-sep{margin-top:8px}
-.tl-chart{position:relative;flex-shrink:0}
-.tl-axis{height:42px;position:relative;border-bottom:1px solid var(--gh-border-default);margin-bottom:0;background:var(--gh-canvas-subtle);position:sticky;top:0;z-index:6}
-.tl-month-label{
-  position:absolute;font-size:12px;font-weight:700;color:var(--gh-fg-default);white-space:nowrap;
-  top:6px;border-left:1px solid var(--gh-border-default);padding-left:6px;height:16px;
-}
-.tl-month-label:first-child{border-left:none}
-.tl-day-label{position:absolute;font-size:10px;color:var(--gh-fg-subtle);white-space:nowrap;top:24px;transform:translateX(-50%)}
-.tl-gridlines{position:absolute;top:42px;left:0;right:0;bottom:0;pointer-events:none;z-index:0}
-.tl-gridline{position:absolute;top:0;bottom:0;width:1px;background:var(--gh-border-muted);opacity:.6}
-.tl-gridline.month{opacity:1;background:var(--gh-border-default);width:1px}
-.tl-gridline.weekend{background:var(--gh-canvas-inset);opacity:.5;width:auto}
-.tl-rows{position:relative;z-index:1}
-.tl-row{position:relative;height:38px;display:flex;align-items:center}
-.tl-row.group-sep{margin-top:8px}
-.tl-row-track{position:absolute;left:0;right:0;top:0;bottom:0}
-.tl-row-stripe{position:absolute;left:0;right:0;top:3px;bottom:3px;border-radius:5px;background:var(--gh-canvas-elev2);opacity:.5}
-.tl-block{
-  position:absolute;height:26px;top:6px;border-radius:5px;font-size:11px;font-weight:600;
-  display:flex;align-items:center;padding:0 6px;overflow:hidden;white-space:nowrap;
-  cursor:default;transition:filter .12s,box-shadow .12s;z-index:2;
-}
-.tl-block:hover{filter:brightness(1.2);box-shadow:0 0 0 1.5px rgba(255,255,255,0.2);z-index:9}
-.tl-block.placement{background:#fff;color:#0a0c10;border:1px solid var(--gh-fg-default);font-weight:800;z-index:3}
-.tl-block.vax{background:rgba(110,143,255,0.4);color:#fff;border:1px solid var(--gh-accent-fg);z-index:3}
-.tl-block.transfer{background:rgba(177,138,255,0.4);color:#fff;border:1px solid var(--gh-violet-fg);z-index:3}
-.tl-block.load{background:rgba(79,209,139,0.4);color:#0a1f15;border:1px solid var(--gh-success-fg);z-index:3}
-.tl-block.clean{background:var(--gh-canvas-inset);color:var(--gh-fg-subtle);border:1px solid var(--gh-border-default)}
-.tl-block.has-conflict{
-  outline:2px solid var(--gh-attention-fg);outline-offset:1px;
-  box-shadow:0 0 0 1px var(--gh-attention-fg), 0 0 6px rgba(240,180,41,0.5);
-  z-index:5;
-}
-.tl-today{position:absolute;top:0;bottom:0;width:2px;background:var(--gh-danger-fg);opacity:.8;z-index:10;pointer-events:none}
-.tl-today-label{
-  position:absolute;top:-20px;font-size:10px;font-weight:700;color:var(--gh-danger-fg);
-  transform:translateX(-50%);white-space:nowrap;background:var(--gh-canvas-subtle);padding:1px 4px;border-radius:3px;
-}
-.tl-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:16px;padding:14px 22px 0;border-top:1px solid var(--gh-border-muted)}
-.tl-legend-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--gh-fg-muted)}
-.tl-legend-swatch{width:18px;height:12px;border-radius:3px;flex-shrink:0}
-.tl-tooltip{
-  position:fixed;z-index:1000;pointer-events:none;background:var(--gh-canvas-elev2);
-  border:1px solid var(--gh-border-default);border-radius:var(--gh-r-md);padding:8px 12px;font-size:12.5px;
-  color:var(--gh-fg-default);box-shadow:var(--gh-shadow);max-width:260px;line-height:1.6;display:none;
-}
-.tl-tooltip.visible{display:block}
-.tl-tooltip-title{font-weight:700;color:var(--gh-fg-default);margin-bottom:2px}
-.tl-tooltip-dates{color:var(--gh-fg-muted);font-size:11.5px}
 
 /* ── Add/Edit modal ── */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.65);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(4px)}
@@ -338,7 +164,7 @@ header{
 <header>
   <div class="header-left">
     <span class="logo-title">🐔 Rearing House Scheduler</span>
-    <span class="logo-sub">Multi-cycle conflict checker</span>
+    <span class="logo-sub">Hatch planning per house</span>
   </div>
   <div class="header-right">
     <div class="sync-badge loading" id="sync-badge"><div class="sync-dot"></div><span id="sync-text">Loading…</span></div>
@@ -349,16 +175,14 @@ header{
 <div class="main">
   <div class="toolbar">
     <button class="btn-primary" onclick="openAddModal()">+ Add placement</button>
-    <div class="sep"></div>
-    <button class="btn-tool active" id="tab-table" onclick="switchTab('table')">📋 Table</button>
-    <button class="btn-tool" id="tab-timeline" onclick="switchTab('timeline')">📅 Timeline</button>
+    <label class="toggle"><input type="checkbox" id="show-past" onchange="render()"> Show past cycles</label>
+    <div class="legend">
+      <span><b class="a-ok">▼ +N d</b> house ready N days before hatch</span>
+      <span><b class="a-bad">▼ −N d</b> hatch before house is ready</span>
+      <span>Dashed card = earliest possible next hatch</span>
+    </div>
   </div>
-  <div class="table-legend" id="table-legend">
-    <span class="table-legend-swatch"></span>
-    Dashed columns = suggested next placement (not yet saved)
-  </div>
-  <div id="view-table"></div>
-  <div id="view-timeline" style="display:none"></div>
+  <div id="view"></div>
 </div>
 
 <!-- Add/Edit modal -->
@@ -377,6 +201,19 @@ header{
       <label>Hatch date</label>
       <input type="date" id="m-date" />
     </div>
+    <div class="fgroup">
+      <label>Breed</label>
+      <select id="m-breed">
+        <option value="">— not decided —</option>
+        <option>ISA</option><option>Hy-Line</option><option>Novogen</option><option>H&amp;N</option>
+      </select>
+    </div>
+    <div class="fgroup">
+      <label>Status</label>
+      <select id="m-status">
+        <option>Not ordered</option><option>Requested</option><option>Confirmed</option>
+      </select>
+    </div>
     <div class="warn-box" id="m-warn"></div>
     <div class="modal-actions">
       <button class="btn-secondary" onclick="closeModal()">Cancel</button>
@@ -392,20 +229,6 @@ header{
     <div class="confirm-actions">
       <button class="btn-secondary" onclick="closeConfirm()">Cancel</button>
       <button class="btn-danger" onclick="confirmDelete()">Delete</button>
-    </div>
-  </div>
-</div>
-
-<!-- Conflict popover -->
-<div id="conflict-popover" class="conflict-popover hidden"></div>
-
-<!-- Resolver panel -->
-<div class="modal-bg hidden" id="resolver-bg">
-  <div class="modal resolver-modal">
-    <h3 id="resolver-title">Suggested fixes</h3>
-    <div id="resolver-body"></div>
-    <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeResolverPanel()">Close</button>
     </div>
   </div>
 </div>
@@ -445,13 +268,22 @@ _sb.auth.onAuthStateChange((event, session) => {
     setTimeout(() => { const e = document.getElementById('auth-email'); if(e) e.focus(); }, 100);
   }
 });
-const RESOLVED_TABLE = 'resolved_conflicts';
-const CONFLICT_WINDOW = 6; /* days — events within this many days of each other conflict */
-const HOUSES  = ['Θ1','Θ2','Θ3','Θ4','Θ5'];
-const HATCH_TO_PLACEMENT_DAYS = 2;
 
-/* ── Theme ── */
-// Single dark theme only — no toggle, no stored preference.
+/* ── Houses & cycle timings — source of truth: docs/rearing_scheduler.md ──
+   Day 0 = hatch date. Loading/cleaning are the planning maximums, not typical values. */
+const HOUSES = {
+  'Θ1': 'Cage', 'Θ2': 'Cage', 'Θ3': 'Cage', 'Θ4': 'Cage', 'Θ5': 'Aviary',
+};
+const LOAD_START_DAY = { Cage: 105, Aviary: 119 };  // aviary = 17 weeks
+const LOAD_DAYS  = 14;   // house is empty LOAD_DAYS after loading starts
+const CLEAN_DAYS = 25;   // house is ready CLEAN_DAYS after it is empty
+const VAX_DAYS   = [60, 90];
+const VAX_LENGTH = 7;
+const PAIR = ['Θ1', 'Θ2'];            // always hatch PAIR_MIN–PAIR_MAX days apart
+const PAIR_MIN = 7, PAIR_MAX = 12;
+const STATUS_CLASS = { 'Confirmed':'b-ok', 'Requested':'b-rq', 'Not ordered':'b-no' };
+
+/* Single dark theme only — no toggle, no stored preference. */
 document.documentElement.setAttribute('data-theme', 'dark');
 
 /* ── Supabase ── */
@@ -468,9 +300,9 @@ async function sbFetch(path, opts={}){
   const text = await res.text();
   return text ? JSON.parse(text) : null;
 }
-const sbSelect = ()      => sbFetch(`${TABLE}?order=doc_date.asc`);
-const sbInsert = row     => sbFetch(TABLE, {method:'POST', prefer:'return=representation', body:JSON.stringify(row)});
-const sbDelete = id      => sbFetch(`${TABLE}?id=eq.${id}`, {method:'DELETE'});
+const sbSelect = ()  => sbFetch(`${TABLE}?order=doc_date.asc`);
+const sbInsert = row => sbFetch(TABLE, {method:'POST', prefer:'return=representation', body:JSON.stringify(row)});
+const sbDelete = id  => sbFetch(`${TABLE}?id=eq.${id}`, {method:'DELETE'});
 async function sbUpdate(id, row){
   const result = await sbFetch(`${TABLE}?id=eq.${id}`, {method:'PATCH', prefer:'return=representation', body:JSON.stringify(row)});
   if(!result || !result.length){
@@ -479,31 +311,10 @@ async function sbUpdate(id, row){
   return result;
 }
 
-const sbSelectResolved = ()   => sbFetch(`${RESOLVED_TABLE}?select=conflict_key`);
-const sbInsertResolved = key  => sbFetch(RESOLVED_TABLE, {method:'POST', prefer:'return=representation', body:JSON.stringify({conflict_key:key})});
-const sbDeleteResolved = key  => sbFetch(`${RESOLVED_TABLE}?conflict_key=eq.${encodeURIComponent(key)}`, {method:'DELETE'});
-/* A "resolved" mark belongs to the dates it was reviewed at. When a placement's hatch date changes
-   or it's deleted, drop every mark involving it so a new clash isn't silently hidden. */
-async function clearResolutionsFor(recordIds){
-  const ids = recordIds.map(String);
-  const keys = [...resolvedKeys].filter(k => k.split('|').some(part => ids.includes(part.split('::')[0])));
-  await Promise.all(keys.map(sbDeleteResolved));
-  keys.forEach(k => resolvedKeys.delete(k));
-}
-
 /* ── State ── */
 let data = [];
-let resolvedKeys = new Set();
-let activeTab = 'table';
-let deleteId  = null;
-let editId    = null;
-let tlOffset  = 0;
-const TL_BASE_PX_PER_DAY = 8;
-const TL_MIN_PX = 2;
-const TL_MAX_PX = 48;
-let tlPxPerDay  = TL_BASE_PX_PER_DAY;
-let tlScrollLeft = null;
-let _allConflicts = [];
+let deleteId = null;
+let editId   = null;
 
 function setSyncStatus(state, msg){
   const b = document.getElementById('sync-badge');
@@ -511,533 +322,88 @@ function setSyncStatus(state, msg){
   document.getElementById('sync-text').textContent = msg;
 }
 
-/* ── Date helpers ── */
+/* ── Date helpers (local calendar dates; 'YYYY-MM-DD' parsed as local, not UTC) ── */
+function parseISO(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y, m-1, d); }
 function addDays(date, n){ const d=new Date(date); d.setDate(d.getDate()+n); return d; }
-/* Local calendar date as YYYY-MM-DD. toISOString() converts to UTC first, which slips a day
-   for dates built from a winter-time base that land in summer time, and for local midnight. */
 function isoDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-function fmtDate(d){ return new Date(d).toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric'}); }
-/* Gap in days between two date ranges (a point event has start===end).
-   Returns 0 if they overlap; otherwise the number of days between the nearest edges. */
-function rangeGapDays(s1,e1,s2,e2){
-  const a1=new Date(s1).getTime(), b1=new Date(e1).getTime();
-  const a2=new Date(s2).getTime(), b2=new Date(e2).getTime();
-  if(a1<=b2 && b1>=a2) return 0;
-  const gapMs = a1>b2 ? (a1-b2) : (a2-b1);
-  return Math.round(gapMs/86400000);
-}
+function daysBetween(a, b){ return Math.round((b-a)/86400000); }  // rounded: DST-safe
+function fmt(d){ return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getFullYear()).slice(2); }
+function fmtShort(d){ return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0'); }
+function today(){ const t=new Date(); t.setHours(0,0,0,0); return t; }
 
-/* hatchDate is what the user types. Placement = hatch+2. Vax/load/clean still count from hatchDate. */
-/* Builds a chain of events where each subsequent event's start is clamped to
-   never begin before the previous event's end + 1 day, even if its nominal
-   (day-count-from-hatch) start would otherwise have been earlier. This is a
-   defensive invariant: under the current fixed durations there is already
-   enough natural gap that no push ever triggers, but it guarantees events
-   can never silently overlap if a duration constant changes later. */
-function buildSequentialChain(defs){
-  const result = {};
-  let prevEnd = null;
-  defs.forEach(def=>{
-    let start = def.nominalStart;
-    if(prevEnd !== null){
-      const earliestAllowed = addDays(prevEnd, 1);
-      if(start < earliestAllowed) start = earliestAllowed;
-    }
-    const end = addDays(start, def.duration - 1);
-    result[def.key + 'Start'] = start;
-    result[def.key + 'End'] = end;
-    prevEnd = end;
-  });
-  return result;
-}
-
-function getSchedule(hatchDate){
-  const base = new Date(hatchDate);
-  const chain = buildSequentialChain([
-    {key:'vax1', nominalStart: addDays(base, 59), duration: 10},
-    {key:'vax2', nominalStart: addDays(base, 89), duration: 10},
-    {key:'load', nominalStart: addDays(base, 104), duration: 18},
-    {key:'clean', nominalStart: addDays(base, 122), duration: 30},
-  ]);
+/* Every date of one cycle, derived from house + hatch date. */
+function getSchedule(house, hatchIso){
+  const system = HOUSES[house];
+  if(!system) throw new Error(`Unknown house "${house}" in placements — expected one of ${Object.keys(HOUSES).join(', ')}`);
+  const hatch = parseISO(hatchIso);
+  const loadStart = addDays(hatch, LOAD_START_DAY[system]);
+  const empty = addDays(loadStart, LOAD_DAYS);
   return {
-    hatchDate:  base,
-    placement:  addDays(base, HATCH_TO_PLACEMENT_DAYS),
-    vax1Start:  chain.vax1Start,  vax1End:  chain.vax1End,
-    vax2Start:  chain.vax2Start,  vax2End:  chain.vax2End,
-    loadStart:  chain.loadStart,  loadEnd:  chain.loadEnd,
-    cleanStart: chain.cleanStart, cleanEnd: chain.cleanEnd,
-  };
-}
-function getA1Schedule(hatchDate){
-  const base = new Date(hatchDate);
-  const chain = buildSequentialChain([
-    {key:'transfer', nominalStart: addDays(base, 34), duration: 7},
-    {key:'vax1',     nominalStart: addDays(base, 59), duration: 10},
-    {key:'vax2',     nominalStart: addDays(base, 89), duration: 10},
-    {key:'load',     nominalStart: addDays(base, 104), duration: 18},
-  ]);
-  return {
-    transferStart: chain.transferStart, transferEnd: chain.transferEnd,
-    vax1Start:     chain.vax1Start,     vax1End:     chain.vax1End,
-    vax2Start:     chain.vax2Start,     vax2End:     chain.vax2End,
-    loadStart:     chain.loadStart,     loadEnd:     chain.loadEnd,
+    system, hatch,
+    vax: VAX_DAYS.map(d => [addDays(hatch, d), addDays(hatch, d+VAX_LENGTH-1)]),
+    loadStart, empty,
+    ready: addDays(empty, CLEAN_DAYS),
   };
 }
 
-/* ── Conflict engine ──────────────────────────────────────────────
-   Build a flat list of "events" across all houses + A1 sub-houses.
-   Each event has: group (for exemption — Θ4+A1 share group 'Θ4' since A1 is
-   a sub-house of Θ4 using the same hatch date; Θ1+Θ2 share group 'Θ1Θ2'
-   since they're operated as a linked pair), house (display label),
-   recordId (for highlighting), kind, start, end.
-   Conflict rules:
-     - placement vs placement only (within CONFLICT_WINDOW days) — placements
-       never conflict with vax/load/transfer, only with each other.
-     - vax  vs vax   (within CONFLICT_WINDOW days, point events)
-     - vax  vs load  (vax day falls inside load window, or within window of load edges)
-     - load vs load  (range overlap)
-     - transfer vs vax/load (range overlap, or within window)
-   Same-group pairs (Θ4 <-> its own A1, Θ1 <-> Θ2) never conflict on any event type.
--------------------------------------------------------------------- */
-/* Θ1 and Θ2 operate as a linked pair (same as A1 is linked to Θ4) — they never
-   conflict with each other on any event type, but still conflict normally with
-   every other house. This function maps a house label to its "conflict group". */
-function houseGroup(house){
-  if(house === 'Θ1' || house === 'Θ2') return 'Θ1Θ2';
-  if(house === 'Θ4' || house === 'A1') return 'Θ4';
-  return house;
+function cyclesOf(house, excludeId){
+  return data.filter(r=>r.house===house && r.id!==excludeId).sort((a,b)=>a.doc_date.localeCompare(b.doc_date));
 }
 
-function buildEvents(rows){
-  const events = [];
-  rows.forEach(r=>{
-    const s = r.schedule;
-    const grp = houseGroup(r.house);
-    events.push({recordId:r.id, group:grp, house:r.house, kind:'placement', subkind:'placement', start:s.placement, end:s.placement, label:`${r.house} — DOC placement`});
-    events.push({recordId:r.id, group:grp, house:r.house, kind:'vax', subkind:'vax1', start:s.vax1Start, end:s.vax1End, label:`${r.house} — Vaccination 1 (day 60)`});
-    events.push({recordId:r.id, group:grp, house:r.house, kind:'vax', subkind:'vax2', start:s.vax2Start, end:s.vax2End, label:`${r.house} — Vaccination 2 (day 90)`});
-    events.push({recordId:r.id, group:grp, house:r.house, kind:'load', subkind:'load', start:s.loadStart, end:s.loadEnd, label:`${r.house} — Loading`});
-
-    if(r.house === 'Θ4'){
-      const a1 = getA1Schedule(r.doc_date);
-      const a1Label = 'A1';
-      const a1Grp = houseGroup(a1Label);
-      events.push({recordId:r.id, group:a1Grp, house:a1Label, kind:'transfer', subkind:'a1transfer', start:a1.transferStart, end:a1.transferEnd, label:'A1 — Transfer'});
-      events.push({recordId:r.id, group:a1Grp, house:a1Label, kind:'vax', subkind:'a1vax1', start:a1.vax1Start, end:a1.vax1End, label:'A1 — Vaccination 1 (day 60)'});
-      events.push({recordId:r.id, group:a1Grp, house:a1Label, kind:'vax', subkind:'a1vax2', start:a1.vax2Start, end:a1.vax2End, label:'A1 — Vaccination 2 (day 90)'});
-      events.push({recordId:r.id, group:a1Grp, house:a1Label, kind:'load', subkind:'a1load', start:a1.loadStart, end:a1.loadEnd, label:'A1 — Loading'});
-    }
-  });
-  return events;
+/* Hatch date of the other pair house closest to `hatch`, or null. */
+function pairPartnerGap(house, hatch, excludeId){
+  if(!PAIR.includes(house)) return null;
+  const other = PAIR.find(h=>h!==house);
+  const gaps = cyclesOf(other, excludeId).map(r=>daysBetween(hatch, parseISO(r.doc_date)));
+  if(!gaps.length) return null;
+  return gaps.reduce((best,g)=>Math.abs(g)<Math.abs(best)?g:best);
+}
+function pairWarning(house, hatch, excludeId){
+  const g = pairPartnerGap(house, hatch, excludeId);
+  if(g===null || (Math.abs(g)>=PAIR_MIN && Math.abs(g)<=PAIR_MAX)) return null;
+  const other = PAIR.find(h=>h!==house);
+  return `${Math.abs(g)} d from nearest ${other} hatch (should be ${PAIR_MIN}–${PAIR_MAX})`;
 }
 
-function eventsConflict(e1, e2){
-  /* Unified rule: conflict if the gap between the nearest edges of the two
-     events (0 if they overlap) is within CONFLICT_WINDOW days. Works the same
-     whether either event is a single day (vax/placement) or a range (load/transfer). */
-  return rangeGapDays(e1.start, e1.end, e2.start, e2.end) <= CONFLICT_WINDOW;
+/* ── Next-hatch suggestions ──────────────────────────────────────────
+   Earliest date each house can take its next hatch: the day after its latest
+   cycle is ready (never before today). Θ1/Θ2 are placed together, PAIR_MIN–PAIR_MAX
+   days apart; if one of them already has an extra cycle, only the other gets a
+   suggestion, placed within range of that unmatched hatch where possible.
+   Cross-house conflicts (vaccination/loading clashes) are deliberately not checked. */
+function earliestFor(house){
+  const cycles = cyclesOf(house);
+  const t = today();
+  if(!cycles.length) return t;
+  const ready = getSchedule(house, cycles[cycles.length-1].doc_date).ready;
+  return ready > t ? ready : t;
 }
+function maxDate(a, b){ return a > b ? a : b; }
 
-function pairIsRelevant(e1, e2){
-  /* Skip same conflict-group: Θ4 <-> its own A1 (sub-house, same hatch date),
-     and Θ1 <-> Θ2 (operated as a linked pair, never conflict with each other) */
-  if(e1.group === e2.group) return false;
-  /* DOC placement only conflicts with another DOC placement — nothing else. */
-  if(e1.kind==='placement' || e2.kind==='placement'){
-    return e1.kind==='placement' && e2.kind==='placement';
-  }
-  /* Remaining kind-pairs that count as conflicts: vax-vax, vax-load, transfer-vax, transfer-load, load-load */
-  const kinds = [e1.kind, e2.kind].sort().join('-');
-  const allowed = new Set([
-    'vax-vax',
-    'load-vax',
-    'transfer-vax',
-    'load-transfer',
-    'load-load',
-  ]);
-  return allowed.has(kinds);
-}
-
-function detectConflicts(rows){
-  const events = buildEvents(rows);
-  const out = [];
-  for(let i=0;i<events.length;i++){
-    for(let j=i+1;j<events.length;j++){
-      const e1=events[i], e2=events[j];
-      if(!pairIsRelevant(e1,e2)) continue;
-      if(!eventsConflict(e1,e2)) continue;
-
-      const fmtRange = (e)=> e.start.getTime()===e.end.getTime() ? fmtDate(e.start) : `${fmtDate(e.start)} – ${fmtDate(e.end)}`;
-      const cellKeys = [`${e1.recordId}::${e1.subkind}`, `${e2.recordId}::${e2.subkind}`];
-      const conflictKey = cellKeys.slice().sort().join('|');
-      out.push({
-        conflictKey,
-        type: `${kindLabel(e1.kind)} ↔ ${kindLabel(e2.kind)}`,
-        houses: [e1.house, e2.house],
-        dateA: fmtRange(e1), dateB: fmtRange(e2),
-        ids: [e1.recordId, e2.recordId],
-        cellKeys,
-        jumpTo: e1.start <= e2.start ? e1.start : e2.start,
-      });
-    }
-  }
-  return out;
-}
-function kindLabel(k){
-  return {placement:'Placement', vax:'Vaccination', load:'Loading', transfer:'Transfer'}[k] || k;
-}
-
-function checkCleaningOverlap(house, hatchDate){
-  /* the placement being edited can't overlap itself */
-  const sameHouse = data.filter(r=>r.house===house && r.id!==editId).sort((a,b)=>new Date(a.doc_date)-new Date(b.doc_date));
-  const newHatch = new Date(hatchDate);
-  const newSchedule = getSchedule(hatchDate);
-  for(const other of sameHouse){
-    const s=other.schedule;
-    if(newHatch>=s.cleanStart && newHatch<=s.cleanEnd)
-      return `This hatch date falls within the cleaning period of another cycle (${fmtDate(s.cleanStart)} – ${fmtDate(s.cleanEnd)}).`;
-    if(newHatch>=s.loadStart && newHatch<=s.cleanEnd)
-      return `This hatch date falls during the loading/cleaning window of another cycle.`;
-    const otherHatch = new Date(other.doc_date);
-    if(otherHatch>=newSchedule.loadStart && otherHatch<=newSchedule.cleanEnd)
-      return `This cycle's loading/cleaning window (${fmtDate(newSchedule.loadStart)} – ${fmtDate(newSchedule.cleanEnd)}) would overlap the cycle hatched ${fmtDate(otherHatch)}.`;
-  }
-  return null;
-}
-
-/* ── Conflict resolver ──────────────────────────────────────────────
-   Given a record, searches day-by-day in one direction (earlier/later)
-   for the smallest shift that:
-     - never lets the candidate hatch date fall inside ANY other cycle of
-       the same house's loading/cleaning window (bidirectional — checks
-       both "candidate lands inside another cycle" and "candidate's own
-       window would swallow another cycle's hatch date")
-     - never increases the TOTAL active-conflict count for the whole dataset
-     - reduces the number of conflicts involving this specific record
-   Returns the option with the greatest improvement (ties broken by
-   smallest shift), or null if no improving, safe shift exists.
--------------------------------------------------------------------- */
-const RESOLVER_MAX_SHIFT_DAYS = 120;
-
-function wouldOverlapOwnCleaning(recordId, candidateHatchDate){
-  const rec = data.find(r=>r.id===recordId);
-  const sameHouse = data.filter(r=>r.house===rec.house && r.id!==recordId);
-  const cand = new Date(candidateHatchDate);
-  const candSchedule = getSchedule(cand);
-  for(const other of sameHouse){
-    const s = other.schedule;
-    if(cand >= s.loadStart && cand <= s.cleanEnd) return true;
-    const otherHatch = new Date(other.doc_date);
-    if(otherHatch >= candSchedule.loadStart && otherHatch <= candSchedule.cleanEnd) return true;
-  }
-  return false;
-}
-
-function findBestShiftInDirection(recordId, dir){
-  const recIdx = data.findIndex(r=>r.id===recordId);
-  if(recIdx===-1) return null;
-  const originalHatch = new Date(data[recIdx].doc_date);
-
-  const baselineConflicts = detectConflicts(data).filter(c=>!resolvedKeys.has(c.conflictKey));
-  const baselineTotal = baselineConflicts.length;
-  const baselineRecordCount = baselineConflicts.filter(c=>c.ids.includes(recordId)).length;
-  if(baselineRecordCount === 0) return null;
-
-  let best = null;
-  for(let shift=1; shift<=RESOLVER_MAX_SHIFT_DAYS; shift++){
-    const candidateHatch = addDays(originalHatch, dir*shift);
-    if(wouldOverlapOwnCleaning(recordId, candidateHatch)) continue;
-
-    const candidateIso = isoDate(candidateHatch);
-    const hypoRows = data.map(r => r.id===recordId
-      ? {...r, doc_date: candidateIso, schedule: getSchedule(candidateHatch)}
-      : r
-    );
-    const hypoConflicts = detectConflicts(hypoRows).filter(c=>!resolvedKeys.has(c.conflictKey));
-    const hypoTotal = hypoConflicts.length;
-    if(hypoTotal > baselineTotal) continue;
-
-    const hypoRecordCount = hypoConflicts.filter(c=>c.ids.includes(recordId)).length;
-    const improvement = baselineRecordCount - hypoRecordCount;
-    if(improvement <= 0) continue;
-
-    if(!best || improvement > best.improvement ||
-       (improvement === best.improvement && Math.abs(shift) < Math.abs(best.shiftDays))){
-      best = {
-        shiftDays: dir*shift,
-        newHatch: candidateIso,
-        totalBefore: baselineTotal,
-        totalAfter: hypoTotal,
-        recordConflictsBefore: baselineRecordCount,
-        recordConflictsAfter: hypoRecordCount,
-        improvement,
-      };
-      if(hypoRecordCount === 0) break;
-    }
-  }
-  return best;
-}
-
-function suggestResolutionsForRecord(recordId){
-  return {
-    earlier: findBestShiftInDirection(recordId, -1),
-    later:   findBestShiftInDirection(recordId, 1),
-  };
-}
-
-/* ── Θ1/Θ2 paired resolver ──────────────────────────────────────────
-   Θ1 and Θ2 are operated as a linked pair: they never conflict with each
-   other, and when resolving conflicts against OTHER houses they must move
-   together, maintaining a gap of PAIR_MIN_GAP–PAIR_MAX_GAP days between
-   their hatch dates (in whichever order they currently have).
-
-   For performance, conflicts entirely among "other" houses are computed
-   once and reused; only the pair-vs-everyone-else delta is recomputed for
-   each candidate (shift, gap) — this is mathematically identical to
-   re-running full conflict detection each time, just far cheaper, and is
-   cross-validated against the naive approach in testing.
--------------------------------------------------------------------- */
-const PAIR_MIN_GAP = 5;
-const PAIR_MAX_GAP = 14;
-const PAIR_MAX_SHIFT_DAYS = 150;
-
-/* If recordId belongs to Θ1 or Θ2, find its paired counterpart — the
-   Θ1/Θ2 record (of the other house) with the closest hatch date. Returns
-   {earlier, later} record objects (by hatch date) or null if no counterpart exists. */
-function findPairedRecord(recordId){
-  const rec = data.find(r=>r.id===recordId);
-  if(!rec || (rec.house!=='Θ1' && rec.house!=='Θ2')) return null;
-  const otherHouse = rec.house==='Θ1' ? 'Θ2' : 'Θ1';
-  const candidates = data.filter(r=>r.house===otherHouse);
-  if(!candidates.length) return null;
-  const recHatch = new Date(rec.doc_date);
-  let closest = candidates[0];
-  let closestDiff = Math.abs(new Date(closest.doc_date)-recHatch);
-  for(const c of candidates){
-    const diff = Math.abs(new Date(c.doc_date)-recHatch);
-    if(diff < closestDiff){ closest = c; closestDiff = diff; }
-  }
-  const recIsEarlier = recHatch <= new Date(closest.doc_date);
-  return recIsEarlier
-    ? {earlier: rec, later: closest}
-    : {earlier: closest, later: rec};
-}
-
-function countConflictsBetweenSets(eventsA, eventsB){
-  let count = 0;
-  for(const ea of eventsA){
-    for(const eb of eventsB){
-      if(pairIsRelevant(ea,eb) && eventsConflict(ea,eb)){
-        const key = [`${ea.recordId}::${ea.subkind}`, `${eb.recordId}::${eb.subkind}`].sort().join('|');
-        if(!resolvedKeys.has(key)) count++;
-      }
-    }
-  }
-  return count;
-}
-
-function countConflictsWithinSet(events){
-  let count = 0;
-  for(let i=0;i<events.length;i++){
-    for(let j=i+1;j<events.length;j++){
-      const e1=events[i], e2=events[j];
-      if(pairIsRelevant(e1,e2) && eventsConflict(e1,e2)){
-        const key = [`${e1.recordId}::${e1.subkind}`, `${e2.recordId}::${e2.subkind}`].sort().join('|');
-        if(!resolvedKeys.has(key)) count++;
-      }
-    }
-  }
-  return count;
-}
-
-function findBestPairShift(recordIdEarlier, recordIdLater){
-  const recEarlier = data.find(r=>r.id===recordIdEarlier);
-  const recLater   = data.find(r=>r.id===recordIdLater);
-  if(!recEarlier || !recLater) return null;
-  const origHatchEarlier = new Date(recEarlier.doc_date);
-
-  const otherRows = data.filter(r=>r.id!==recordIdEarlier && r.id!==recordIdLater);
-  const otherEvents = buildEvents(otherRows);
-  const othersOnlyCount = countConflictsWithinSet(otherEvents);
-
-  function pairVsRestCount(hatchEarlierIso, hatchLaterIso){
-    const pairRows = [
-      {...recEarlier, doc_date:hatchEarlierIso, schedule:getSchedule(hatchEarlierIso)},
-      {...recLater,   doc_date:hatchLaterIso,   schedule:getSchedule(hatchLaterIso)},
-    ];
-    const pairEvents = buildEvents(pairRows);
-    return countConflictsBetweenSets(pairEvents, otherEvents) + countConflictsWithinSet(pairEvents);
-  }
-
-  const baselinePairVsRest = pairVsRestCount(recEarlier.doc_date, recLater.doc_date);
-  const baselineTotal = othersOnlyCount + baselinePairVsRest;
-  if(baselinePairVsRest === 0) return null;
-
-  let best = null;
-
-  outer:
-  for(let shift=0; shift<=PAIR_MAX_SHIFT_DAYS; shift++){
-    for(const dir of (shift===0 ? [1] : [1,-1])){
-      const newEarlierDate = addDays(origHatchEarlier, dir*shift);
-      if(wouldOverlapOwnCleaning(recordIdEarlier, newEarlierDate)) continue;
-      const isoEarlier = isoDate(newEarlierDate);
-
-      for(let gap=PAIR_MIN_GAP; gap<=PAIR_MAX_GAP; gap++){
-        const newLaterDate = addDays(newEarlierDate, gap);
-        if(wouldOverlapOwnCleaning(recordIdLater, newLaterDate)) continue;
-        const isoLater = isoDate(newLaterDate);
-
-        const hypoPairVsRest = pairVsRestCount(isoEarlier, isoLater);
-        const hypoTotal = othersOnlyCount + hypoPairVsRest;
-        if(hypoTotal > baselineTotal) continue;
-
-        const improvement = baselinePairVsRest - hypoPairVsRest;
-        if(improvement <= 0) continue;
-
-        const totalMovement = Math.abs(shift);
-        if(!best || improvement > best.improvement ||
-           (improvement === best.improvement && totalMovement < best.totalMovement)){
-          best = {
-            shiftDays: dir*shift, gap,
-            newHatchEarlier: isoEarlier, newHatchLater: isoLater,
-            totalBefore: baselineTotal, totalAfter: hypoTotal,
-            pairConflictsBefore: baselinePairVsRest, pairConflictsAfter: hypoPairVsRest,
-            improvement,
-          };
-          if(hypoPairVsRest === 0 && shift > 3) break outer;
-        }
-      }
-    }
-  }
-  return best;
-}
-
-function suggestPairResolutions(recordId){
-  const pair = findPairedRecord(recordId);
-  if(!pair) return null;
-  return {
-    pair,
-    suggestion: findBestPairShift(pair.earlier.id, pair.later.id),
-  };
-}
-
-/* ── Next-placement suggester ──────────────────────────────────────
-   Separate from the resolver above: instead of moving an EXISTING record,
-   this finds the earliest fully conflict-free hatch date for a house's
-   NEXT (not-yet-entered) cycle. Existing placements are never modified —
-   this is purely additive and advisory.
-
-   The search floor for a house is always anchored to its MOST RECENT
-   cycle's cleaning end (the latest hatch date for that house), never an
-   earlier cycle — a placed date is treated as final regardless of any
-   conflicts it may have. For Θ4, the floor also respects A1's own loading
-   window, since A1 physically occupies that house too.
-
-   All four "slots" (Θ1+Θ2 pair, Θ3, Θ4, Θ5) are suggested in one pass,
-   ordered by whichever floor date comes soonest, and each later suggestion
-   in the pass treats earlier ones in the SAME pass as if they were real —
-   so the suggestions never conflict with each other, only ever with actual
-   committed data plus whatever's already been suggested this pass.
--------------------------------------------------------------------- */
-const NEXT_PLACEMENT_MAX_SEARCH_DAYS = 720;
-
-function buildHypotheticalEvents(house, hatchIso, idSuffix){
-  const fakeRow = {id:'__hypo__'+house+(idSuffix||''), house, doc_date:hatchIso, schedule:getSchedule(hatchIso)};
-  return buildEvents([fakeRow]);
-}
-
-function getNextPlacementFloor(house, extraRecords){
-  const allForHouse = [...data, ...extraRecords].filter(r=>r.house===house);
-  if(!allForHouse.length){
-    const today = new Date(); today.setHours(0,0,0,0);
-    return today;
-  }
-  const latest = allForHouse.slice().sort((a,b)=>new Date(b.doc_date)-new Date(a.doc_date))[0];
-  let floor = addDays(latest.schedule.cleanEnd, 1);
-  if(house === 'Θ4'){
-    const a1 = getA1Schedule(latest.doc_date);
-    const a1Floor = addDays(a1.loadEnd, 1);
-    if(a1Floor > floor) floor = a1Floor;
-  }
-  return floor;
-}
-
-function findNextCleanHatchDate(house, extraRecords){
-  const floor = getNextPlacementFloor(house, extraRecords);
-  const otherEvents = buildEvents([...data, ...extraRecords]);
-  for(let i=0; i<=NEXT_PLACEMENT_MAX_SEARCH_DAYS; i++){
-    const candidateIso = isoDate(addDays(floor, i));
-    const hypoEvents = buildHypotheticalEvents(house, candidateIso);
-    const conflictCount = countConflictsBetweenSets(hypoEvents, otherEvents) + countConflictsWithinSet(hypoEvents);
-    if(conflictCount === 0) return {house, hatchDate: candidateIso, daysFromFloor: i};
-  }
-  return null;
-}
-
-function findNextCleanPairDates(extraRecords){
-  const floor1 = getNextPlacementFloor('Θ1', extraRecords);
-  const floor2 = getNextPlacementFloor('Θ2', extraRecords);
-  const otherEvents = buildEvents([...data, ...extraRecords]);
-
-  function searchWithEarlierHouse(earlierHouse, laterHouse, earlierFloor, laterFloorIndependent){
-    for(let i=0; i<=NEXT_PLACEMENT_MAX_SEARCH_DAYS; i++){
-      const earlierDate = addDays(earlierFloor, i);
-      for(let gap=PAIR_MIN_GAP; gap<=PAIR_MAX_GAP; gap++){
-        const laterDate = addDays(earlierDate, gap);
-        if(laterDate < laterFloorIndependent) continue;
-        const earlierIso = isoDate(earlierDate);
-        const laterIso = isoDate(laterDate);
-        const combined = [
-          ...buildHypotheticalEvents(earlierHouse, earlierIso, 'E'),
-          ...buildHypotheticalEvents(laterHouse, laterIso, 'L'),
-        ];
-        const conflictCount = countConflictsBetweenSets(combined, otherEvents) + countConflictsWithinSet(combined);
-        if(conflictCount === 0) return {earlierHouse, laterHouse, earlierDate:earlierIso, laterDate:laterIso, gap, totalShift:i};
-      }
-    }
-    return null;
-  }
-
-  const optA = searchWithEarlierHouse('Θ1','Θ2', floor1, floor2);
-  const optB = searchWithEarlierHouse('Θ2','Θ1', floor2, floor1);
-  if(!optA) return optB;
-  if(!optB) return optA;
-  return optA.totalShift <= optB.totalShift ? optA : optB;
-}
-
-/* Returns a map: { 'Θ1': isoDate, 'Θ2': isoDate, 'Θ3': isoDate, 'Θ4': isoDate, 'Θ5': isoDate }
-   — the next suggested hatch date per house, all mutually conflict-free. */
-function suggestAllNextPlacements(){
-  const accepted = [];
+function suggestNext(){
   const out = {};
+  ['Θ3','Θ4','Θ5'].forEach(h => { out[h] = earliestFor(h); });
 
-  const slots = [
-    {key:'Θ1Θ2', floor: new Date(Math.min(getNextPlacementFloor('Θ1',[]).getTime(), getNextPlacementFloor('Θ2',[]).getTime()))},
-    {key:'Θ3', floor: getNextPlacementFloor('Θ3', [])},
-    {key:'Θ4', floor: getNextPlacementFloor('Θ4', [])},
-    {key:'Θ5', floor: getNextPlacementFloor('Θ5', [])},
-  ];
-  slots.sort((a,b)=>a.floor-b.floor);
-
-  slots.forEach(slot=>{
-    if(slot.key === 'Θ1Θ2'){
-      const pair = findNextCleanPairDates(accepted);
-      if(pair){
-        const h1Date = pair.earlierHouse==='Θ1' ? pair.earlierDate : pair.laterDate;
-        const h2Date = pair.earlierHouse==='Θ2' ? pair.earlierDate : pair.laterDate;
-        accepted.push({id:'__hypo__Θ1', house:'Θ1', doc_date:h1Date, schedule:getSchedule(h1Date)});
-        accepted.push({id:'__hypo__Θ2', house:'Θ2', doc_date:h2Date, schedule:getSchedule(h2Date)});
-        out['Θ1'] = h1Date;
-        out['Θ2'] = h2Date;
-      }
-    } else {
-      const result = findNextCleanHatchDate(slot.key, accepted);
-      if(result){
-        accepted.push({id:'__hypo__'+slot.key, house:slot.key, doc_date:result.hatchDate, schedule:getSchedule(result.hatchDate)});
-        out[slot.key] = result.hatchDate;
-      }
-    }
-  });
+  const [h1, h2] = PAIR;
+  const n1 = cyclesOf(h1).length, n2 = cyclesOf(h2).length;
+  if(n1 === n2){
+    const r1 = earliestFor(h1), r2 = earliestFor(h2);
+    /* Try each house going first; keep the option whose second hatch comes sooner. */
+    const firstThen = (rA, rB) => { const a = maxDate(rA, addDays(rB, -PAIR_MAX)); return [a, maxDate(rB, addDays(a, PAIR_MIN))]; };
+    const [a1, a2] = firstThen(r1, r2);   // h1 first
+    const [b2, b1] = firstThen(r2, r1);   // h2 first
+    const useA = maxDate(a1,a2) < maxDate(b1,b2) || (+maxDate(a1,a2) === +maxDate(b1,b2) && a1 <= b2);
+    out[h1] = useA ? a1 : b1;
+    out[h2] = useA ? a2 : b2;
+  } else {
+    const lag = n1 < n2 ? h1 : h2, lead = lag === h1 ? h2 : h1;
+    const leadCycles = cyclesOf(lead);
+    const p = parseISO(leadCycles[leadCycles.length-1].doc_date);
+    const r = earliestFor(lag);
+    if(r <= addDays(p, -PAIR_MIN))      out[lag] = maxDate(r, addDays(p, -PAIR_MAX));
+    else if(r <= addDays(p, PAIR_MAX))  out[lag] = maxDate(r, addDays(p, PAIR_MIN));
+    else                                out[lag] = r;  // pair gap can't be kept — card shows the warning
+  }
   return out;
 }
 
@@ -1045,507 +411,165 @@ function suggestAllNextPlacements(){
 async function load(){
   setSyncStatus('loading','Loading...');
   try{
-    const [rows, resolvedRows] = await Promise.all([sbSelect(), sbSelectResolved()]);
-    data = (rows||[]).map(r=>({...r, schedule:getSchedule(r.doc_date)}));
-    resolvedKeys = new Set((resolvedRows||[]).map(r=>r.conflict_key));
+    const rows = await sbSelect();
+    rows.forEach(r => getSchedule(r.house, r.doc_date));  // fail fast on unknown houses
+    data = rows;
     setSyncStatus('ok','Synced');
     render();
   }catch(e){ setSyncStatus('err','Error: '+e.message); }
 }
 
-async function toggleResolved(conflictKey){
-  try{
-    if(resolvedKeys.has(conflictKey)){
-      await sbDeleteResolved(conflictKey);
-      resolvedKeys.delete(conflictKey);
-    } else {
-      await sbInsertResolved(conflictKey);
-      resolvedKeys.add(conflictKey);
-    }
-    setSyncStatus('ok','Updated');
-    render();
-  }catch(e){ setSyncStatus('err','Failed: '+e.message); }
-}
-
-function handleResolveClick(event, cellKey){
-  event.stopPropagation();
-  const relevant = _allConflicts.filter(c=>c.cellKeys.includes(cellKey));
-  if(!relevant.length) return;
-  if(relevant.length===1){ toggleResolved(relevant[0].conflictKey); return; }
-  showConflictPopover(event, relevant);
-}
-
-function showConflictPopover(event, conflicts){
-  const pop = document.getElementById('conflict-popover');
-  pop.innerHTML = conflicts.map(c=>{
-    const isRes = resolvedKeys.has(c.conflictKey);
-    return `<div class="cp-item">` +
-      `<span>${c.type}: <strong>${c.houses[0]}</strong> &amp; <strong>${c.houses[1]}</strong></span>` +
-      `<button class="cp-btn${isRes?' resolved':''}" onclick="event.stopPropagation();closeConflictPopover();toggleResolved('${c.conflictKey}')">${isRes?'Reopen':'Resolve'}</button>` +
-      `</div>`;
-  }).join('');
-  const x = event.clientX+8, y = event.clientY+8;
-  pop.style.left = Math.min(x, window.innerWidth-240)+'px';
-  pop.style.top  = Math.min(y, window.innerHeight-160)+'px';
-  pop.classList.remove('hidden');
-}
-
-function closeConflictPopover(){
-  document.getElementById('conflict-popover').classList.add('hidden');
-}
-
-document.addEventListener('click', e=>{
-  const pop = document.getElementById('conflict-popover');
-  if(pop && !pop.classList.contains('hidden') && !pop.contains(e.target))
-    pop.classList.add('hidden');
-});
-
 /* ── Render ── */
+function esc(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function row(label, value, em){ return `<div class="hc-row${em?' em':''}"><span>${label}</span><span>${value}</span></div>`; }
+function range(a, b){ return `${fmtShort(a)} – ${fmt(b)}`; }
+
+function cardBody(house, s){
+  return row('Rearing', s.system) +
+    row('Hatch', fmt(s.hatch), true) +
+    row('Vax 1', range(...s.vax[0])) +
+    row('Vax 2', range(...s.vax[1])) +
+    row('Loading', range(s.loadStart, s.empty)) +
+    row('Empty', fmt(s.empty), true) +
+    row('Ready', fmt(s.ready));
+}
+
+function arrow(prevReady, hatch, faded){
+  const g = daysBetween(prevReady, hatch);
+  const txt = g >= 0 ? `+${g} d` : `−${-g} d · not ready`;
+  return `<div class="arrow ${g>=0?'a-ok':'a-bad'}"${faded?' style="opacity:.45"':''}>${txt}</div>`;
+}
+
 function render(){
-  _allConflicts = detectConflicts(data);
-  const conflictCellKeys = new Set(_allConflicts.filter(c=>!resolvedKeys.has(c.conflictKey)).flatMap(c=>c.cellKeys));
-  if(activeTab==='table') renderTable(conflictCellKeys);
-  else renderTimeline(conflictCellKeys);
-}
+  const el = document.getElementById('view');
+  const showPast = document.getElementById('show-past').checked;
+  const t = today();
+  const next = suggestNext();
 
-function renderTable(conflictCellKeys){
-  const el = document.getElementById('view-table');
-  if(!data.length){
-    el.innerHTML='<div class="empty-state">No placements yet. Add the first one.</div>';
-    return;
-  }
-
-  /* Build per-house sorted cycle lists for cycle numbering and gap calculation */
-  const houseData = {};
-  HOUSES.forEach(h=>{
-    houseData[h] = data.filter(r=>r.house===h).sort((a,b)=>new Date(a.doc_date)-new Date(b.doc_date));
-  });
-
-  const maxGen = Math.max(0, ...HOUSES.map(h=>houseData[h].length));
-  const genRows = [];
-  for(let gen=0; gen<maxGen; gen++){
-    const realCols = HOUSES
-      .filter(h=>houseData[h][gen])
-      .map(h=>{
-        const r=houseData[h][gen];
-        return {record:r, house:h, cycleLabel:houseData[h].length>1?`${h} #${gen+1}`:h, prev:gen>0?houseData[h][gen-1]:null, isSuggestion:false};
-      })
-      .sort((a,b)=>new Date(a.record.doc_date)-new Date(b.record.doc_date));
-    const blankCount = HOUSES.filter(h=>!houseData[h][gen]).length;
-    genRows.push({realCols, blankCount});
-  }
-
-  const nextSuggestions = suggestAllNextPlacements();
-  const suggestionCols = [];
-  HOUSES.forEach(h=>{
-    if(!nextSuggestions[h]) return;
-    const fakeRecord = {id:'__suggestion__'+h, house:h, doc_date:nextSuggestions[h], schedule:getSchedule(nextSuggestions[h])};
-    const lastReal = houseData[h].length ? houseData[h][houseData[h].length-1] : null;
-    suggestionCols.push({record:fakeRecord, house:h, cycleLabel:`${h} · Επόμενη`, prev:lastReal, isSuggestion:true});
-  });
-
-  function eRow(name, barCls, dateStr, subkind, r){
-    const cellKey = subkind ? `${r.id}::${subkind}` : null;
-    const isC = cellKey && conflictCellKeys.has(cellKey);
-    const hasAny = cellKey && _allConflicts.some(c=>c.cellKeys.includes(cellKey));
-    const icon = isC
-      ? `<span class="cc-resolve-icon" onclick="handleResolveClick(event,'${cellKey}')">⚠</span>`
-      : (hasAny ? `<span class="cc-resolve-icon resolved" onclick="handleResolveClick(event,'${cellKey}')">✓</span>` : '');
-    return `<div class="cc-event-row${isC?' has-conflict':''}">` +
-      `<span class="cc-event-name">${name}</span>` +
-      `<span class="cc-event-bar ${barCls}"></span>` +
-      `<span class="cc-event-dates">${dateStr}</span>${icon}</div>`;
-  }
-
-  function makeCard(col){
-    const r = col.record, s = r.schedule;
-    const hasConflict = !col.isSuggestion && ['placement','vax1','vax2','load','a1transfer','a1vax1','a1vax2','a1load'].some(k=>conflictCellKeys.has(`${r.id}::${k}`));
-
-    let gapHtml;
-    if(col.prev){
-      const gap = Math.round((new Date(r.doc_date) - col.prev.schedule.cleanEnd) / 86400000);
-      gapHtml = `<div class="cc-gap-line">${gap>0 ? gap+'d gap from prev' : '⚠️ '+Math.abs(gap)+'d overlap'}</div>`;
-    } else {
-      gapHtml = `<div class="cc-gap-line cc-gap-empty">&nbsp;</div>`;
-    }
-
-    const eventsHtml =
-      eRow('Hatch',  'placement', fmtDate(r.doc_date)+' · DOC: '+fmtDate(s.placement), 'placement', r) +
-      eRow('Vax 1',  'vax',  fmtDate(s.vax1Start)+' – '+fmtDate(s.vax1End),  'vax1', r) +
-      eRow('Vax 2',  'vax',  fmtDate(s.vax2Start)+' – '+fmtDate(s.vax2End),  'vax2', r) +
-      eRow('Load',   'load', fmtDate(s.loadStart)+' – '+fmtDate(s.loadEnd),   'load', r) +
-      eRow('Clean',  'clean',fmtDate(s.cleanStart)+' – '+fmtDate(s.cleanEnd), null,   r);
-
-    let a1Html;
-    if(col.house === 'Θ4'){
-      const a1 = getA1Schedule(r.doc_date);
-      a1Html = `<div class="cc-sub-card"><div class="cc-sub-header">A1 sub-house</div><div class="cc-events">` +
-        eRow('Transfer','transfer',fmtDate(a1.transferStart)+' – '+fmtDate(a1.transferEnd),'a1transfer',r) +
-        eRow('Vax 1','vax',fmtDate(a1.vax1Start)+' – '+fmtDate(a1.vax1End),'a1vax1',r) +
-        eRow('Vax 2','vax',fmtDate(a1.vax2Start)+' – '+fmtDate(a1.vax2End),'a1vax2',r) +
-        eRow('Load','load',fmtDate(a1.loadStart)+' – '+fmtDate(a1.loadEnd),'a1load',r) +
-        `</div></div>`;
-    } else {
-      a1Html = `<div class="cc-sub-card cc-sub-placeholder"><div class="cc-sub-header">A1 sub-house</div>` +
-        `<div class="cc-events">${'<div class="cc-event-row"></div>'.repeat(4)}</div></div>`;
-    }
-
-    const footerHtml = col.isSuggestion
-      ? `<button class="row-btn accept" onclick="acceptSuggestion('${col.house}','${r.doc_date}')">Accept</button>`
-      : `<button class="row-btn" onclick="openEditModal('${r.id}')">Edit</button>` +
-        `<button class="row-btn del" onclick="askDelete('${r.id}','${r.house}','${r.doc_date}')">Del</button>` +
-        (hasConflict ? `<button class="row-btn fix" onclick="openResolverPanel('${r.id}')">Fix</button>` : '');
-
-    return `<div class="cc-card${col.isSuggestion?' cc-card-suggest':''}">` +
-      `<div class="cc-card-header"><span class="cc-card-label">${col.cycleLabel}</span><span class="cc-card-date">${fmtDate(r.doc_date)}</span></div>` +
-      gapHtml +
-      `<div class="cc-events">${eventsHtml}</div>` +
-      a1Html +
-      `<div class="cc-card-footer">${footerHtml}</div></div>`;
-  }
-
-  const blankCard = `<div class="cc-card cc-card-blank"></div>`;
-  let html = `<div class="cards-wrap">`;
-  genRows.forEach((row, gi)=>{
-    html += `<div class="cc-gen-label">Cycle ${gi+1}</div>`;
-    html += `<div class="cards-row">${row.realCols.map(makeCard).join('')}${blankCard.repeat(row.blankCount)}</div>`;
-  });
-  if(suggestionCols.length)
-    html += `<div class="cc-suggest-label">Suggested next placements</div><div class="cards-row">${suggestionCols.map(makeCard).join('')}</div>`;
-  el.innerHTML = html + '</div>';
-}
-
-/* ── Timeline ── */
-function renderTimeline(conflictCellKeys){
-  const el = document.getElementById('view-timeline');
-  if(!data.length){
-    el.innerHTML='<div class="empty-state">No placements yet. Add the first one.</div>';
-    return;
-  }
-
-  const today = new Date(); today.setHours(0,0,0,0);
-  const viewStart = new Date(today.getFullYear(), today.getMonth()+tlOffset, 1);
-  const viewEnd   = new Date(viewStart.getFullYear(), viewStart.getMonth()+12, 0);
-  const totalDays = Math.round((viewEnd-viewStart)/86400000)+1;
-  const chartWidth = totalDays * tlPxPerDay;
-
-  const MIN_BLOCK_PX = 4;
-
-  function dayOffset(d){ return Math.round((new Date(d)-viewStart)/86400000); }
-  function xPos(d){ return dayOffset(d)*tlPxPerDay; }
-  function blockPos(s,e){
-    const cs = new Date(Math.max(new Date(s), viewStart));
-    const ce = new Date(Math.min(new Date(e), viewEnd));
-    if(cs > ce) return null;
-    const left  = xPos(cs);
-    const width = Math.max(MIN_BLOCK_PX, (dayOffset(ce)-dayOffset(cs)+1)*tlPxPerDay);
-    return {left, width};
-  }
-  function singleDayPos(d){
-    const off = dayOffset(d);
-    if(off < -1 || off > totalDays+1) return null;
-    return {left: Math.max(0, xPos(d)), width: Math.max(MIN_BLOCK_PX, tlPxPerDay)};
-  }
-
-  let axisHtml = '';
-  let cur = new Date(viewStart);
-  while(cur <= viewEnd){
-    const x = xPos(cur);
-    if(x >= -2 && x <= chartWidth){
-      const label = cur.toLocaleDateString('en-GB',{month:'short',year:'2-digit'});
-      axisHtml += `<div class="tl-month-label" style="left:${x.toFixed(1)}px">${label}</div>`;
-    }
-    cur = new Date(cur.getFullYear(), cur.getMonth()+1, 1);
-  }
-  if(tlPxPerDay >= 18){
-    let dcur = new Date(viewStart);
-    while(dcur <= viewEnd){
-      const x = xPos(dcur);
-      if(x >= 0 && x <= chartWidth) axisHtml += `<div class="tl-day-label" style="left:${(x+tlPxPerDay/2).toFixed(1)}px">${dcur.getDate()}</div>`;
-      dcur = addDays(dcur,1);
-    }
-  }
-
-  let gridHtml = '';
-  cur = new Date(viewStart.getFullYear(), viewStart.getMonth()+1, 1);
-  while(cur <= viewEnd){
-    const x = xPos(cur);
-    if(x > 0 && x < chartWidth) gridHtml += `<div class="tl-gridline month" style="left:${x.toFixed(1)}px"></div>`;
-    cur = new Date(cur.getFullYear(), cur.getMonth()+1, 1);
-  }
-  if(tlPxPerDay >= 10){
-    let dcur = new Date(viewStart);
-    while(dcur <= viewEnd){
-      const dow = dcur.getDay();
-      const x = xPos(dcur);
-      if(dow===0 || dow===6) gridHtml += `<div class="tl-gridline weekend" style="left:${x.toFixed(1)}px;width:${tlPxPerDay.toFixed(1)}px"></div>`;
-      else if(tlPxPerDay >= 18) gridHtml += `<div class="tl-gridline" style="left:${x.toFixed(1)}px"></div>`;
-      dcur = addDays(dcur,1);
-    }
-  }
-
-  const todayOff = dayOffset(today);
-  const showToday = todayOff >= 0 && todayOff <= totalDays;
-  const todayX = xPos(today);
-
-  const sorted = data.slice().sort((a,b)=>new Date(a.doc_date)-new Date(b.doc_date));
-  let labelsHtml = '';
-  let rowsHtml   = '';
-  let rowCount   = 0;
-
-  function makeBlock(cls, pos, tooltip, cellKey){
-    if(!pos) return '';
-    const isC = cellKey && conflictCellKeys.has(cellKey);
-    const hasAny = cellKey && _allConflicts.some(c=>c.cellKeys.includes(cellKey));
-    const label = pos.width > 36 ? cls.charAt(0).toUpperCase()+cls.slice(1) : '';
-    let html = `<div class="tl-block ${cls}${isC?' has-conflict':''}" style="left:${pos.left.toFixed(1)}px;width:${pos.width.toFixed(1)}px" data-tip="${tooltip}">${label}</div>`;
-    if((isC || hasAny) && pos.width >= 14){
-      const iconLeft = (pos.left + pos.width - 13).toFixed(1);
-      html += `<div class="tl-resolve-icon${!isC?' resolved':''}" style="left:${iconLeft}px" onclick="handleResolveClick(event,'${cellKey}')">${isC?'⚠':'✓'}</div>`;
-    }
-    return html;
-  }
-
-  /* Pre-compute each house's own cycle index (Θ3 #1, Θ3 #2, ...) before the
-     global chronological sort, so cycle numbers reflect house history order. */
-  const cycleIndexByHouse = {};
-  HOUSES.forEach(h=>{
-    const hRows = sorted.filter(r=>r.house===h);
-    hRows.forEach((r,i)=>{ cycleIndexByHouse[r.id] = {idx:i, total:hRows.length}; });
-  });
-
-  sorted.forEach(r => {
-    const h = r.house;
-    const s = r.schedule;
-    const {idx, total} = cycleIndexByHouse[r.id];
-    const cycleLabel = total > 1 ? `${h} #${idx+1}` : h;
-    labelsHtml += `<div class="tl-label-cell">${cycleLabel}<span class="tl-label-hatch">${fmtDate(r.doc_date)}</span></div>`;
-
-    let blocks = '';
-    blocks += makeBlock('placement', singleDayPos(s.placement), `${cycleLabel} — DOC placement\\n${fmtDate(s.placement)}`, `${r.id}::placement`);
-    blocks += makeBlock('vax', blockPos(s.vax1Start, s.vax1End), `${cycleLabel} — Vaccination 1\\n${fmtDate(s.vax1Start)} → ${fmtDate(s.vax1End)}`, `${r.id}::vax1`);
-    blocks += makeBlock('vax', blockPos(s.vax2Start, s.vax2End), `${cycleLabel} — Vaccination 2\\n${fmtDate(s.vax2Start)} → ${fmtDate(s.vax2End)}`, `${r.id}::vax2`);
-    blocks += makeBlock('load', blockPos(s.loadStart, s.loadEnd), `${cycleLabel} — Loading\\n${fmtDate(s.loadStart)} → ${fmtDate(s.loadEnd)}`, `${r.id}::load`);
-    blocks += makeBlock('clean', blockPos(s.cleanStart, s.cleanEnd), `${cycleLabel} — Cleaning\\n${fmtDate(s.cleanStart)} → ${fmtDate(s.cleanEnd)}`);
-
-    rowsHtml += `<div class="tl-row" style="width:${chartWidth}px"><div class="tl-row-track"><div class="tl-row-stripe"></div>${blocks}</div></div>`;
-    rowCount++;
-
-    /* Θ4's A1 sub-row always immediately follows its parent Θ4 cycle, as one unit */
-    if(h === 'Θ4'){
-      const a1 = getA1Schedule(r.doc_date);
-      const a1Label = total > 1 ? `A1 #${idx+1}` : 'A1';
-      labelsHtml += `<div class="tl-label-cell sub">${a1Label}<span class="tl-label-hatch">${fmtDate(r.doc_date)}</span></div>`;
-
-      let a1blocks = '';
-      a1blocks += makeBlock('transfer', blockPos(a1.transferStart, a1.transferEnd), `A1 — Transfer\\n${fmtDate(a1.transferStart)} → ${fmtDate(a1.transferEnd)}`, `${r.id}::a1transfer`);
-      a1blocks += makeBlock('vax', blockPos(a1.vax1Start, a1.vax1End), `A1 — Vaccination 1\\n${fmtDate(a1.vax1Start)} → ${fmtDate(a1.vax1End)}`, `${r.id}::a1vax1`);
-      a1blocks += makeBlock('vax', blockPos(a1.vax2Start, a1.vax2End), `A1 — Vaccination 2\\n${fmtDate(a1.vax2Start)} → ${fmtDate(a1.vax2End)}`, `${r.id}::a1vax2`);
-      a1blocks += makeBlock('load', blockPos(a1.loadStart, a1.loadEnd), `A1 — Loading\\n${fmtDate(a1.loadStart)} → ${fmtDate(a1.loadEnd)}`, `${r.id}::a1load`);
-
-      rowsHtml += `<div class="tl-row" style="width:${chartWidth}px"><div class="tl-row-track"><div class="tl-row-stripe"></div>${a1blocks}</div></div>`;
-      rowCount++;
-    }
-  });
-
-  const todayLine = showToday
-    ? `<div class="tl-today" style="left:${todayX.toFixed(1)}px;height:${rowCount*38}px"><div class="tl-today-label">Today</div></div>`
-    : '';
-
-  const vmS = viewStart.toLocaleDateString('en-GB',{month:'short',year:'numeric'});
-  const vmE = viewEnd.toLocaleDateString('en-GB',{month:'short',year:'numeric'});
-  const zoomPct = Math.round(tlPxPerDay/TL_BASE_PX_PER_DAY*100);
-
-  el.innerHTML = `
-    <div class="tl-tooltip" id="tl-tooltip">
-      <div class="tl-tooltip-title" id="tl-tt-title"></div>
-      <div class="tl-tooltip-dates" id="tl-tt-dates"></div>
-    </div>
-    <div class="timeline-wrap"><div class="timeline-inner">
-      <div class="tl-header">
-        <span class="tl-header-title">12-month view</span>
-        <div class="tl-nav">
-          <button onclick="tlNav(-3)">&#8592;&#8592; 3m</button>
-          <button onclick="tlNav(-1)">&#8592; 1m</button>
-          <span class="tl-range-label">${vmS} &mdash; ${vmE}</span>
-          <button onclick="tlNav(1)">1m &#8594;</button>
-          <button onclick="tlNav(3)">3m &#8594;&#8594;</button>
-          <button onclick="tlReset()">Today</button>
-        </div>
-      </div>
-      <div class="tl-zoom">
-        <span class="tl-zoom-label">Zoom</span>
-        <button class="tl-zoom-btn" onclick="tlZoomStep(-1)">&#8722;</button>
-        <input type="range" min="${TL_MIN_PX}" max="${TL_MAX_PX}" step="1" value="${tlPxPerDay}" oninput="tlSetZoom(this.value)">
-        <button class="tl-zoom-btn" onclick="tlZoomStep(1)">+</button>
-        <span class="tl-zoom-pct">${zoomPct}%</span>
-        <button class="tl-zoom-btn" style="width:auto;padding:0 10px;font-size:11.5px" onclick="tlZoomFit()">Fit</button>
-        <span class="tl-zoom-hint">Ctrl/⌘ + scroll to zoom</span>
-      </div>
-      <div class="tl-scroll-outer" id="tl-scroll">
-        <div class="tl-grid-wrap">
-          <div class="tl-labels">${labelsHtml}</div>
-          <div class="tl-chart" style="width:${chartWidth}px">
-            <div class="tl-axis" style="width:${chartWidth}px">${axisHtml}</div>
-            <div class="tl-gridlines" style="width:${chartWidth}px">${gridHtml}${todayLine}</div>
-            <div class="tl-rows">${rowsHtml}</div>
-          </div>
-        </div>
-      </div>
-      <div class="tl-legend">
-        <span class="tl-legend-item"><span class="tl-legend-swatch" style="background:#fff;border:1px solid var(--gh-fg-default)"></span>DOC placement</span>
-        <span class="tl-legend-item"><span class="tl-legend-swatch" style="background:rgba(110,143,255,0.4);border:1px solid var(--gh-accent-fg)"></span>Vaccination</span>
-        <span class="tl-legend-item"><span class="tl-legend-swatch" style="background:rgba(177,138,255,0.4);border:1px solid var(--gh-violet-fg)"></span>Transfer (A1)</span>
-        <span class="tl-legend-item"><span class="tl-legend-swatch" style="background:rgba(79,209,139,0.4);border:1px solid var(--gh-success-fg)"></span>Loading</span>
-        <span class="tl-legend-item"><span class="tl-legend-swatch" style="background:var(--gh-canvas-inset);border:1px solid var(--gh-border-default)"></span>Cleaning</span>
-        <span class="tl-legend-item"><span class="tl-legend-swatch" style="background:rgba(110,143,255,0.2);outline:2px solid var(--gh-attention-fg);outline-offset:1px;border:none"></span>Conflict (outline)</span>
-      </div>
-    </div></div>`;
-
-  const scrollEl = document.getElementById('tl-scroll');
-  if(scrollEl && tlScrollLeft !== null) scrollEl.scrollLeft = tlScrollLeft;
-  if(scrollEl){
-    scrollEl.addEventListener('scroll', ()=>{ tlScrollLeft = scrollEl.scrollLeft; });
-    scrollEl.addEventListener('wheel', e=>{
-      if(!e.ctrlKey && !e.metaKey) return;
-      e.preventDefault();
-      const rect = scrollEl.getBoundingClientRect();
-      const labelsW = document.querySelector('.tl-labels')?.offsetWidth || 84;
-      const cursorX = e.clientX - rect.left - labelsW + scrollEl.scrollLeft;
-      const dayUnderCursor = cursorX / tlPxPerDay;
-      const dir = e.deltaY < 0 ? 1 : -1;
-      const newPx = Math.max(TL_MIN_PX, Math.min(TL_MAX_PX, tlPxPerDay + dir*Math.max(1,Math.round(tlPxPerDay*0.15))));
-      if(newPx === tlPxPerDay) return;
-      const newScrollLeft = dayUnderCursor*newPx - (cursorX - scrollEl.scrollLeft);
-      tlPxPerDay = newPx;
-      tlScrollLeft = Math.max(0, newScrollLeft);
-      render();
-    }, {passive:false});
-  }
-
-  const tip = document.getElementById('tl-tooltip');
-  el.querySelectorAll('.tl-block[data-tip]').forEach(block => {
-    block.addEventListener('mouseenter', e => {
-      const parts = block.dataset.tip.split('\\n');
-      document.getElementById('tl-tt-title').textContent = parts[0] || '';
-      document.getElementById('tl-tt-dates').textContent = parts[1] || '';
-      tip.classList.add('visible');
-      positionTooltip(e);
+  el.innerHTML = '<div class="houses">' + Object.keys(HOUSES).map(house => {
+    let html = `<div><div class="house-head"><div class="house-name">${house}</div><div class="house-sys">${HOUSES[house]} rearing</div></div>`;
+    let prev = null;
+    cyclesOf(house).forEach((r, i) => {
+      const s = getSchedule(house, r.doc_date);
+      const past = s.empty < t, now = s.hatch <= t && t < s.empty;
+      if(!(past && !showPast)){
+        if(prev) html += arrow(prev.ready, s.hatch, past);
+        const badge = now  ? `<span class="badge b-now">In house · ${daysBetween(s.hatch, t)} d old</span>`
+                    : past ? `<span class="badge b-past">Emptied</span>`
+                    :        `<span class="badge ${STATUS_CLASS[r.status]||'b-no'}">${esc(r.status||'Not ordered')}</span>`;
+        const pw = pairWarning(house, s.hatch, r.id);
+        html += `<div class="hc${now?' now':''}${past?' past':''}">` +
+          `<div class="hc-top"><span>${house}</span><span class="hc-num">#${i+1}</span></div>` +
+          `<div class="hc-breed">${esc(r.breed||'Breed —')}</div>` +
+          cardBody(house, s) + badge +
+          (pw ? `<div class="warn">⚠ ${pw}</div>` : '') +
+          `<div class="hc-foot"><button class="row-btn" onclick="openEditModal('${r.id}')">Edit</button>` +
+          `<button class="row-btn del" onclick="askDelete('${r.id}')">Del</button></div></div>`;
+      }
+      prev = s;
     });
-    block.addEventListener('mousemove', positionTooltip);
-    block.addEventListener('mouseleave', () => tip.classList.remove('visible'));
-  });
-  function positionTooltip(e){
-    const x = e.clientX+12, y = e.clientY+12;
-    tip.style.left = (x+240>window.innerWidth ? e.clientX-250 : x)+'px';
-    tip.style.top  = (y+70>window.innerHeight  ? e.clientY-80  : y)+'px';
-  }
-}
-
-function tlNav(dir){ tlOffset+=dir; render(); }
-function tlReset(){ tlOffset=0; tlScrollLeft=0; render(); }
-function tlSetZoom(val){ tlPxPerDay=Number(val); render(); }
-function tlZoomStep(dir){ tlPxPerDay = Math.max(TL_MIN_PX, Math.min(TL_MAX_PX, tlPxPerDay + dir*2)); render(); }
-function tlZoomFit(){ tlPxPerDay = TL_BASE_PX_PER_DAY; tlScrollLeft = 0; render(); }
-
-/* ── Tabs ── */
-function switchTab(tab){
-  activeTab=tab;
-  document.getElementById('view-table').style.display    = tab==='table'    ? '' : 'none';
-  document.getElementById('view-timeline').style.display = tab==='timeline' ? '' : 'none';
-  document.getElementById('table-legend').style.display   = tab==='table'    ? '' : 'none';
-  document.getElementById('tab-table').classList.toggle('active',    tab==='table');
-  document.getElementById('tab-timeline').classList.toggle('active', tab==='timeline');
-  render();
+    if(next[house]){
+      const iso = isoDate(next[house]);
+      const s = getSchedule(house, iso);
+      const pw = pairWarning(house, s.hatch);
+      if(prev) html += arrow(prev.ready, s.hatch, false);
+      html += `<div class="hc suggest">` +
+        `<div class="hc-top"><span>${house}</span><span class="hc-num">Earliest next</span></div>` +
+        `<div class="hc-breed">Not placed yet</div>` + cardBody(house, s) +
+        (pw ? `<div class="warn">⚠ ${pw}</div>` : '') +
+        `<div class="hc-foot"><button class="row-btn accept" onclick="openAddModal('${house}','${iso}')">Use this date</button></div></div>`;
+    }
+    return html + '</div>';
+  }).join('') + '</div>';
 }
 
 /* ── Add/Edit modal ── */
-function openAddModal(){
-  editId=null;
-  document.getElementById('modal-title').textContent='Add placement';
-  document.getElementById('m-house').value='';
-  document.getElementById('m-house').disabled=false;
-  document.getElementById('m-date').value='';
-  document.getElementById('m-warn').classList.remove('visible');
-  document.getElementById('m-save').textContent='Save';
-  document.getElementById('m-save').disabled=true;
+function openModal(title, house, date, breed, status, saveText){
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('m-house').value  = house;
+  document.getElementById('m-house').disabled = !!editId;
+  document.getElementById('m-date').value   = date;
+  document.getElementById('m-breed').value  = breed;
+  document.getElementById('m-status').value = status;
+  document.getElementById('m-save').textContent = saveText;
   document.getElementById('modal-bg').classList.remove('hidden');
+  checkModalWarn();
 }
-function acceptSuggestion(house, hatchDate){
-  editId=null;
-  document.getElementById('modal-title').textContent='Confirm suggested placement';
-  document.getElementById('m-house').value=house;
-  document.getElementById('m-house').disabled=true;
-  document.getElementById('m-date').value=hatchDate;
-  document.getElementById('m-warn').classList.remove('visible');
-  document.getElementById('m-save').textContent='Save';
-  document.getElementById('m-save').disabled=false;
-  document.getElementById('modal-bg').classList.remove('hidden');
+function openAddModal(house='', date=''){
+  editId = null;
+  openModal('Add placement', house, date, '', 'Not ordered', 'Save');
 }
-
 function openEditModal(id){
-  const r = data.find(x=>x.id===id);
-  if(!r) return;
-  editId=id;
-  document.getElementById('modal-title').textContent='Edit placement';
-  document.getElementById('m-house').value=r.house;
-  document.getElementById('m-house').disabled=true;
-  document.getElementById('m-date').value=r.doc_date;
-  document.getElementById('m-warn').classList.remove('visible');
-  document.getElementById('m-save').textContent='Update';
-  document.getElementById('m-save').disabled=false;
-  document.getElementById('modal-bg').classList.remove('hidden');
+  const r = data.find(x=>x.id==id);
+  if(!r) throw new Error(`Placement ${id} not found`);
+  editId = r.id;
+  openModal('Edit placement', r.house, r.doc_date, r.breed||'', r.status||'Not ordered', 'Update');
 }
 function closeModal(){
   document.getElementById('modal-bg').classList.add('hidden');
-  document.getElementById('m-house').disabled=false;
-  editId=null;
+  editId = null;
 }
 
-document.getElementById('m-house').addEventListener('change', checkModalWarn);
-document.getElementById('m-date').addEventListener('change',  checkModalWarn);
+['m-house','m-date'].forEach(id => document.getElementById(id).addEventListener('change', checkModalWarn));
 
+/* Warn (don't block) when the date breaks the house's ready date or the Θ1/Θ2 gap. */
 function checkModalWarn(){
-  const house=document.getElementById('m-house').value;
-  const date =document.getElementById('m-date').value;
-  document.getElementById('m-save').disabled=!(house&&date);
-  const warnBox=document.getElementById('m-warn');
-  if(house&&date){
-    const w=checkCleaningOverlap(house,date);
-    if(w){ warnBox.textContent='⚠️ '+w; warnBox.classList.add('visible'); }
-    else warnBox.classList.remove('visible');
-  } else warnBox.classList.remove('visible');
+  const house = document.getElementById('m-house').value;
+  const date  = document.getElementById('m-date').value;
+  document.getElementById('m-save').disabled = !(house && date);
+  const warnBox = document.getElementById('m-warn');
+  const warnings = [];
+  if(house && date){
+    const hatch = parseISO(date);
+    const others = cyclesOf(house, editId);
+    const before = others.filter(r=>r.doc_date < date).pop();
+    const after  = others.find(r=>r.doc_date > date);
+    if(before){
+      const ready = getSchedule(house, before.doc_date).ready;
+      if(hatch < ready) warnings.push(`${house} is not ready until ${fmt(ready)} (previous cycle hatched ${fmt(parseISO(before.doc_date))}).`);
+    }
+    if(after){
+      const ready = getSchedule(house, date).ready;
+      if(parseISO(after.doc_date) < ready) warnings.push(`This cycle keeps ${house} busy until ${fmt(ready)}, after the next hatch on ${fmt(parseISO(after.doc_date))}.`);
+    }
+    const pw = pairWarning(house, hatch, editId);
+    if(pw) warnings.push(`${house}: ${pw}.`);
+  }
+  warnBox.innerHTML = warnings.map(w=>'⚠️ '+esc(w)).join('<br>');
+  warnBox.classList.toggle('visible', warnings.length > 0);
 }
 
 async function saveNew(){
-  const house=document.getElementById('m-house').value;
-  const date =document.getElementById('m-date').value;
-  if(!house||!date) return;
-  const btn=document.getElementById('m-save');
-  btn.disabled=true;
-  const origText=btn.textContent;
-  btn.textContent='Saving...';
+  const house  = document.getElementById('m-house').value;
+  const date   = document.getElementById('m-date').value;
+  const breed  = document.getElementById('m-breed').value || null;
+  const status = document.getElementById('m-status').value;
+  if(!house || !date) return;
+  const btn = document.getElementById('m-save');
+  btn.disabled = true;
+  const origText = btn.textContent;
+  btn.textContent = 'Saving...';
   try{
     if(editId){
-      const idx=data.findIndex(r=>r.id===editId);
-      const dateChanged = idx<0 || data[idx].doc_date!==date;
-      const [updated]=await sbUpdate(editId,{doc_date:date});
-      if(idx>=0) data[idx]={...updated, schedule:getSchedule(updated.doc_date)};
-      if(dateChanged) await clearResolutionsFor([editId]);
+      const [updated] = await sbUpdate(editId, {doc_date:date, breed, status});
+      data = data.map(r => r.id===editId ? updated : r);
       setSyncStatus('ok','Updated');
     } else {
-      const [inserted]=await sbInsert({house, doc_date:date});
-      data.push({...inserted, schedule:getSchedule(inserted.doc_date)});
+      const [inserted] = await sbInsert({house, doc_date:date, breed, status});
+      data.push(inserted);
       setSyncStatus('ok','Saved');
     }
     closeModal(); render();
   }catch(e){ setSyncStatus('err','Save failed: '+e.message); }
-  finally{ btn.disabled=false; btn.textContent=origText; }
+  finally{ btn.disabled = false; btn.textContent = origText; }
 }
 
-function askDelete(id, house, docDate){
-  deleteId=id;
-  document.getElementById('confirm-detail').textContent=`${house} — ${fmtDate(docDate)}`;
+function askDelete(id){
+  const r = data.find(x=>x.id==id);
+  if(!r) throw new Error(`Placement ${id} not found`);
+  deleteId = r.id;
+  document.getElementById('confirm-detail').textContent = `${r.house} — ${fmt(parseISO(r.doc_date))}`;
   document.getElementById('confirm-bg').classList.remove('hidden');
 }
 function closeConfirm(){ document.getElementById('confirm-bg').classList.add('hidden'); deleteId=null; }
@@ -1553,141 +577,10 @@ async function confirmDelete(){
   if(!deleteId) return;
   try{
     await sbDelete(deleteId);
-    data=data.filter(r=>r.id!==deleteId);
-    await clearResolutionsFor([deleteId]);
+    data = data.filter(r=>r.id!==deleteId);
     closeConfirm(); render();
     setSyncStatus('ok','Deleted');
   }catch(e){ setSyncStatus('err','Delete failed: '+e.message); closeConfirm(); }
-}
-
-/* ── Resolver panel UI ── */
-function openResolverPanel(recordId){
-  const rec = data.find(r=>r.id===recordId);
-  if(!rec) return;
-  renderResolverPanel(recordId);
-  document.getElementById('resolver-bg').classList.remove('hidden');
-}
-function closeResolverPanel(){
-  document.getElementById('resolver-bg').classList.add('hidden');
-}
-
-function renderResolverPanel(recordId){
-  const rec = data.find(r=>r.id===recordId);
-  if(!rec) return;
-
-  if(rec.house === 'Θ1' || rec.house === 'Θ2'){
-    renderPairResolverPanel(recordId);
-    return;
-  }
-
-  document.getElementById('resolver-title').textContent = `Suggested fixes — ${rec.house}`;
-
-  const suggestions = suggestResolutionsForRecord(recordId);
-  const body = document.getElementById('resolver-body');
-
-  const renderCard = (opt, label) => {
-    if(!opt){
-      return `<div class="resolver-direction">
-        <div class="resolver-direction-label">${label}</div>
-        <div class="resolver-none">No safe ${label.toLowerCase()} shift found within ${RESOLVER_MAX_SHIFT_DAYS} days.</div>
-      </div>`;
-    }
-    const fullyResolved = opt.recordConflictsAfter === 0;
-    const resultClass = fullyResolved ? 'good' : 'partial';
-    const resultText = fullyResolved
-      ? `Clears all ${opt.recordConflictsBefore} conflict${opt.recordConflictsBefore!==1?'s':''} for this cycle`
-      : `Reduces this cycle's conflicts from ${opt.recordConflictsBefore} to ${opt.recordConflictsAfter}`;
-    return `<div class="resolver-direction">
-      <div class="resolver-direction-label">${label}</div>
-      <div class="resolver-card">
-        <div class="resolver-card-info">
-          <div class="resolver-card-date">${fmtDate(opt.newHatch)}</div>
-          <div class="resolver-card-shift">${Math.abs(opt.shiftDays)} day${Math.abs(opt.shiftDays)!==1?'s':''} ${opt.shiftDays>0?'later':'earlier'} &middot; total conflicts ${opt.totalBefore} → ${opt.totalAfter}</div>
-          <div class="resolver-card-result ${resultClass}">${fullyResolved?'✓ ':'~ '}${resultText}</div>
-        </div>
-        <button class="resolver-card-apply" onclick="applyResolverSuggestion('${recordId}','${opt.newHatch}')">Apply</button>
-      </div>
-    </div>`;
-  };
-
-  let html = `<div class="resolver-summary">Hatch date is currently <strong>${fmtDate(rec.doc_date)}</strong>. Shifting it changes vaccination, loading, and cleaning dates for ${rec.house}${rec.house==='Θ4'?' and A1':''} accordingly. Suggestions below never overlap this house's own previous cleaning period, and never increase the total number of conflicts elsewhere.</div>`;
-  html += renderCard(suggestions.earlier, 'Move earlier');
-  html += renderCard(suggestions.later, 'Move later');
-  body.innerHTML = html;
-}
-
-function renderPairResolverPanel(recordId){
-  const result = suggestPairResolutions(recordId);
-  const body = document.getElementById('resolver-body');
-  document.getElementById('resolver-title').textContent = 'Suggested fixes — Θ1 + Θ2 (linked pair)';
-
-  if(!result){
-    body.innerHTML = `<div class="resolver-none">No paired Θ1/Θ2 cycle found to move together with.</div>`;
-    return;
-  }
-
-  const {pair, suggestion} = result;
-  const currentGap = Math.round((new Date(pair.later.doc_date) - new Date(pair.earlier.doc_date))/86400000);
-
-  let html = `<div class="resolver-summary">
-    Θ1 and Θ2 are operated as a linked pair and always move together, keeping a gap of
-    ${PAIR_MIN_GAP}–${PAIR_MAX_GAP} days between their hatch dates. Currently:
-    <strong>${pair.earlier.house}</strong> ${fmtDate(pair.earlier.doc_date)} →
-    <strong>${pair.later.house}</strong> ${fmtDate(pair.later.doc_date)} (${currentGap}-day gap).
-  </div>`;
-
-  if(!suggestion){
-    html += `<div class="resolver-none">No safe joint move found within ${PAIR_MAX_SHIFT_DAYS} days that improves this pair's conflicts without creating new ones elsewhere.</div>`;
-  } else {
-    const fullyResolved = suggestion.pairConflictsAfter === 0;
-    const resultClass = fullyResolved ? 'good' : 'partial';
-    const resultText = fullyResolved
-      ? `Clears all ${suggestion.pairConflictsBefore} conflict${suggestion.pairConflictsBefore!==1?'s':''} involving this pair`
-      : `Reduces this pair's conflicts from ${suggestion.pairConflictsBefore} to ${suggestion.pairConflictsAfter}`;
-    html += `<div class="resolver-direction">
-      <div class="resolver-direction-label">${suggestion.shiftDays===0 ? 'Adjust gap only' : (suggestion.shiftDays>0 ? 'Move later' : 'Move earlier')}</div>
-      <div class="resolver-card">
-        <div class="resolver-card-info">
-          <div class="resolver-card-date">${pair.earlier.house}: ${fmtDate(suggestion.newHatchEarlier)} &nbsp;→&nbsp; ${pair.later.house}: ${fmtDate(suggestion.newHatchLater)}</div>
-          <div class="resolver-card-shift">${Math.abs(suggestion.shiftDays)} day${Math.abs(suggestion.shiftDays)!==1?'s':''} ${suggestion.shiftDays>=0?'later':'earlier'} &middot; new gap ${suggestion.gap}d &middot; total conflicts ${suggestion.totalBefore} → ${suggestion.totalAfter}</div>
-          <div class="resolver-card-result ${resultClass}">${fullyResolved?'✓ ':'~ '}${resultText}</div>
-        </div>
-        <button class="resolver-card-apply" onclick="applyPairResolverSuggestion('${pair.earlier.id}','${suggestion.newHatchEarlier}','${pair.later.id}','${suggestion.newHatchLater}')">Apply to both</button>
-      </div>
-    </div>`;
-  }
-  body.innerHTML = html;
-}
-
-async function applyResolverSuggestion(recordId, newHatchDate){
-  try{
-    const [updated] = await sbUpdate(recordId, {doc_date:newHatchDate});
-    const idx = data.findIndex(r=>r.id===recordId);
-    if(idx>=0) data[idx] = {...updated, schedule:getSchedule(updated.doc_date)};
-    await clearResolutionsFor([recordId]);
-    setSyncStatus('ok','Updated');
-    closeResolverPanel();
-    render();
-  }catch(e){
-    setSyncStatus('err','Update failed: '+e.message);
-  }
-}
-
-async function applyPairResolverSuggestion(recordIdEarlier, newHatchEarlier, recordIdLater, newHatchLater){
-  try{
-    const [updatedEarlier] = await sbUpdate(recordIdEarlier, {doc_date:newHatchEarlier});
-    const [updatedLater]   = await sbUpdate(recordIdLater,   {doc_date:newHatchLater});
-    const idxE = data.findIndex(r=>r.id===recordIdEarlier);
-    const idxL = data.findIndex(r=>r.id===recordIdLater);
-    if(idxE>=0) data[idxE] = {...updatedEarlier, schedule:getSchedule(updatedEarlier.doc_date)};
-    if(idxL>=0) data[idxL] = {...updatedLater,   schedule:getSchedule(updatedLater.doc_date)};
-    await clearResolutionsFor([recordIdEarlier, recordIdLater]);
-    setSyncStatus('ok','Updated both');
-    closeResolverPanel();
-    render();
-  }catch(e){
-    setSyncStatus('err','Update failed: '+e.message);
-  }
 }
 
 // Data load triggered by onAuthStateChange after sign-in
