@@ -378,7 +378,7 @@ const sbHInsert = entry     => sbFetch(HTABLE, { method:'POST', body: JSON.strin
 
 // ── STATE ─────────────────────────────────────────────────────────
 let data = [], sortCol = 'emvolio', sortDir = 1;
-let editId = null, currentUser = '';
+let editId = null, editLoadedAt = null, currentUser = '';
 
 // ── AUTH ──────────────────────────────────────────────────────────
 const _sb = supabase.createClient(SB_URL, SB_KEY);
@@ -544,6 +544,7 @@ async function openEdit(id) {
   const r = data.find(r => r.id === id);
   if (!r) return;
   editId = id;
+  editLoadedAt = r.updated_at || null;   // saveEntry compares this to spot a save by the other user meanwhile
   document.getElementById('modal-title').textContent = r.emvolio;
   document.getElementById('m-emvolio').value = r.emvolio || '';
   document.getElementById('m-posotita').value = r.posotita == null ? '' : fmtNum(r.posotita);
@@ -596,6 +597,12 @@ async function saveEntry() {
 
   if (!emvolio) { toast('Εισάγετε όνομα εμβολίου.', true); return; }
   if (Number.isNaN(posotita)) { toast('Η ποσότητα πρέπει να είναι ακέραιος αριθμός, χωρίς δεκαδικά (π.χ. 60.000)', true); return; }
+  // new items only: a second item with the same name (ignoring case and extra spaces) would split that vaccine's stock
+  const sameName = s => (s || '').trim().replace(/\s+/g, ' ').toUpperCase();
+  if (!editId && data.some(r => sameName(r.emvolio) === sameName(emvolio))) {
+    toast('Υπάρχει ήδη εμβόλιο με αυτό το όνομα — επεξεργαστείτε το υπάρχον', true);
+    return;
+  }
 
   const now = new Date().toISOString();
   const btn = document.getElementById('btn-save');
@@ -604,14 +611,26 @@ async function saveEntry() {
 
   try {
     if (editId) {
-      // edit — capture before for history
-      const before = data.find(r => r.id === editId);
+      // re-read the item: if the other user saved it since this window opened, ask before overwriting,
+      // and log history against the stored quantity rather than the stale one on screen
+      const [fresh] = await sbFetch(`${TABLE}?id=eq.${editId}&select=posotita,updated_at,updated_by`);
+      if (fresh && fresh.updated_at !== editLoadedAt && !confirm(
+        `Το εμβόλιο τροποποιήθηκε ${fresh.updated_by ? 'από ' + fresh.updated_by : 'από άλλον χρήστη'} ενώ το επεξεργαζόσουν.\n\n` +
+        `Πάτα OK για να αποθηκεύσεις τις αλλαγές σου (αντικαθιστά τις αλλαγές τους)\n` +
+        `ή Ακύρωση για να ανανεώσεις και να δεις τις νεότερες τιμές.`
+      )) {
+        const id = editId;
+        closeModal();
+        await loadData();
+        openEdit(id);
+        return;
+      }
       const row = { emvolio, posotita, monada, sxolia, updated_by: currentUser, updated_at: now };
-      const [updated] = await sbUpdate(editId, row);
+      const [updated] = await sbUpdate(editId, row);   // throws ROW_GONE if the item was deleted
       // only log if qty changed
-      if (before && before.posotita !== posotita) {
+      if (String(fresh.posotita ?? '') !== String(posotita ?? '')) {
         await sbHInsert({ inventory_id: editId, user_name: currentUser, ts: now,
-          posotita_before: before.posotita, posotita_after: posotita });
+          posotita_before: fresh.posotita, posotita_after: posotita });
       }
       const idx = data.findIndex(r => r.id === editId);
       if (idx >= 0) data[idx] = updated;
