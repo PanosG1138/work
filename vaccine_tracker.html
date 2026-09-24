@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <title>ΕΜΒΟΛΙΑ</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
 <link rel="stylesheet" href="theme.css">
 <style>
 /* theme toggle button */
@@ -126,7 +126,7 @@ header{
 .calc-badge{font-size:10px;background:var(--gh-attention-subtle);color:var(--gh-attention-fg);border:1px solid rgba(240,180,41,0.4);border-radius:4px;padding:1px 5px;font-weight:500}
 
 /* Inputs */
-input[type=date],input[type=text],input[type=password],select,textarea{
+input[type=date],input[type=text],input[type=email],input[type=password],select,textarea{
   width:100%;
   background:var(--gh-canvas-default);
   border:1px solid var(--gh-border-default);
@@ -161,8 +161,6 @@ textarea{resize:vertical;min-height:44px;font-size:13px}
 .btn-add-line:hover{color:var(--gh-fg-default);border-color:var(--gh-fg-subtle)}
 .cust-summary{font-size:11px;color:var(--gh-fg-muted);margin-top:6px}
 .cust-summary.err{color:var(--gh-danger-fg)}
-.toggle-btn{flex:1;padding:6px 4px;border-radius:var(--rs);border:1px solid var(--gh-border-default);background:var(--gh-canvas-default);color:var(--gh-fg-muted);font-family:'Inter',system-ui,sans-serif;font-size:13px;cursor:pointer;text-align:center;transition:all 0.15s}
-.toggle-btn.active{border-color:var(--gh-accent-emphasis);background:var(--gh-accent-subtle);color:var(--gh-accent-fg)}
 
 /* Sidebar buttons */
 .btn-submit{
@@ -1013,8 +1011,9 @@ body.printing-card .printcard-doc{display:block}
       <div class="fgroup">
         <label id="wz-field-label">Ημ. Εμβολιασμού;</label>
         <!-- preventDefault: otherwise the same Enter keypress also clicks the duplicate dialog's focused button -->
-        <input type="text" id="wz-field-input" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();wizardAdvance()}">
+        <input type="text" id="wz-field-input" autocomplete="off" oninput="wizardVaccineInput(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();wizardAdvance()}">
         <datalist id="wz-customer-dl"></datalist>
+        <datalist id="wz-vaccine-dl"></datalist>
       </div>
       <div class="wizard-hint" id="wz-hint">Enter ↵ για συνέχεια</div>
 
@@ -1046,6 +1045,14 @@ body.printing-card .printcard-doc{display:block}
       <button class="btn-secondary" onclick="resolveDuplicate('cancel')">Ακύρωση</button>
       <button class="btn-primary" id="dup-add" onclick="resolveDuplicate('add')">Προσθήκη νέας γραμμής</button>
     </div>
+  </div>
+</div>
+
+<!-- WHAT ARRIVED — Ψυγείο set to ΝΑΙ on an order with alternative vaccines ("A / B") -->
+<div id="arrived-bg" class="modal-bg" style="display:none;z-index:300" onclick="if(event.target===this)resolveArrived(null)" onkeydown="if(event.key==='Escape')resolveArrived(null)">
+  <div class="confirm-box" style="width:420px;max-width:95vw">
+    <p>Ποιο εμβόλιο παραλήφθηκε;<span id="arrived-detail" style="display:block;margin:8px 0 0;color:var(--gh-fg-default);font-weight:600"></span></p>
+    <div class="modal-actions" id="arrived-actions" style="justify-content:center;flex-wrap:wrap"></div>
   </div>
 </div>
 
@@ -1163,7 +1170,13 @@ async function sbFetch(path, opts = {}) {
 
 const sbSelect  = ()        => sbFetch(`${TABLE}?order=hm_emv.asc`);
 const sbInsert  = row       => sbFetch(TABLE, { method:'POST', prefer:'return=representation', body: JSON.stringify(row) });
-const sbUpdate  = (id, row) => sbFetch(`${TABLE}?id=eq.${id}`, { method:'PATCH', prefer:'return=representation', body: JSON.stringify(row) });
+// PATCH returns [] when the row is gone (deleted meanwhile, e.g. in another tab) — fail with a clear message
+const ROW_GONE = 'Η εγγραφή δεν υπάρχει πια (ίσως διαγράφηκε) — πατήστε Ανανέωση.';
+const sbUpdate  = async (id, row) => {
+  const result = await sbFetch(`${TABLE}?id=eq.${id}`, { method:'PATCH', prefer:'return=representation', body: JSON.stringify(row) });
+  if (!result || !result.length) throw new Error(ROW_GONE);
+  return result;
+};
 const sbDelete  = id        => sbFetch(`${TABLE}?id=eq.${id}`, { method:'DELETE' });
 const sbHistory = rowId     => sbFetch(`${HTABLE}?row_id=eq.${rowId}&order=ts.asc`);
 const sbHInsert = entry     => sbFetch(HTABLE, { method:'POST', body: JSON.stringify(entry) });
@@ -1173,7 +1186,7 @@ const sbChangelog = (since, user) =>
 
 // ── STATE ─────────────────────────────────────────────────────────
 let data = [], sortCol = 'hm_emv', sortDir = 1;
-let editId = null, editLoadedAt = null, deleteId = null, orderedVal = '', fridgeVal = '', emvoliasmosVal = '';
+let editId = null, editLoadedAt = null, deleteId = null, emvoliasmosVal = '';
 let showDone = false;
 let filterHouses = new Set();
 let filterHatchDates = new Set();
@@ -1264,7 +1277,7 @@ function setSyncStatus(state, text) {
   const overlay = document.getElementById('sidebar-offline');
   if (overlay) overlay.classList.toggle('active', !connected);
 
-  // block/unblock write buttons in toolbar and batch bar
+  // block/unblock the sidebar's add button
   const writeIds = ['btn-add'];
   writeIds.forEach(id => {
     const el = document.getElementById(id);
@@ -1275,11 +1288,6 @@ function setSyncStatus(state, text) {
     } else {
       if (el.dataset.wasDisabled !== '1') el.disabled = false;
     }
-  });
-
-  // batch bar write buttons
-  ['btn-batch-edit-inner','btn-batch-del-inner'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.disabled = !connected;
   });
 }
 
@@ -1303,8 +1311,7 @@ async function loadData() {
 // only when Παραγγελία and Ψυγείο are both ΝΑΙ; otherwise never auto-marked,
 // no matter how much time has passed
 async function autoMarkVaccinated() {
-  const today = new Date().toISOString().slice(0,10);
-  const cutoff = subDays(today, 6);
+  const cutoff = subDays(todayIso(), 6);
   const due = data.filter(r => r.hm_emv && r.hm_emv <= cutoff && r.emvoliasmos !== 'ΝΑΙ' &&
     r.paragelia === 'ΝΑΙ' && r.psygeio === 'ΝΑΙ');
   if (!due.length) return;
@@ -1324,6 +1331,8 @@ async function autoMarkVaccinated() {
 // ── DATES ─────────────────────────────────────────────────────────
 // UTC math: new Date('YYYY-MM-DD') is UTC midnight, so local setDate() slips a day across DST changes
 function subDays(iso, n) { const d = new Date(iso); d.setUTCDate(d.getUTCDate() - n); return d.toISOString().slice(0,10); }
+// today's local calendar date — toISOString() is UTC, which is still yesterday for the first 2-3 hours of the day in Greece
+function todayIso() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 function fmt(iso) { if(!iso) return ''; const [y,m,d] = iso.split('-'); return `${d}/${m}/${y}`; }
 function fmtDt(iso) {
   if(!iso) return '—';
@@ -1351,6 +1360,8 @@ function parseSmartDate(raw) {
   }
   if (isNaN(d) || isNaN(m) || isNaN(y)) return '';
   if (m < 1 || m > 12 || d < 1 || d > 31) return '';
+  // reject days the month doesn't have (31/02, 31/04…) — Date.UTC would roll them into the next month
+  if (new Date(Date.UTC(y, m - 1, d)).getUTCDate() !== d) return '';
   // pad and return ISO
   return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 }
@@ -1517,9 +1528,9 @@ async function addEntry() {
     hm_ekk: hatch||null, hm_emv: vacc||null, hm_par: null, anath: flock,
     sxolia_panos: document.getElementById('f-notes').value.trim()||null,
     promitheutis: document.getElementById('f-supplier').value.trim()||null,
-    paragelia: orderedVal||null,
+    paragelia: null,
     hm_paragelia: document.getElementById('f-orderdate').dataset.iso||null,
-    psygeio: fridgeVal||null, emvoliasmos: emvoliasmosVal||null, sxolia_eleni: null,
+    psygeio: null, emvoliasmos: emvoliasmosVal||null, sxolia_eleni: null,
     created_by: currentUser, created_at: now, updated_by: currentUser, updated_at: now,
   };
 
@@ -1622,7 +1633,7 @@ function wizardRenderStage() {
   const input = document.getElementById('wz-field-input');
   input.value = '';
   input.removeAttribute('list');
-  if (wizardStage === 'vaccine') input.setAttribute('list', 'vaccine-list');
+  if (wizardStage === 'vaccine') { input.setAttribute('list', 'wz-vaccine-dl'); wizardVaccineInput(input); }
   if (wizardStage === 'customer') { wizardPopulateCustomerList(); input.setAttribute('list', 'wz-customer-dl'); }
   document.getElementById('wz-hint').textContent =
     (wizardStage === 'customer' || wizardStage === 'qty') ? 'Enter ↵ για συνέχεια (προαιρετικό)' : 'Enter ↵ για συνέχεια';
@@ -1650,7 +1661,7 @@ async function wizardAdvance() {
     wizardStage = 'vaccine';
   } else if (wizardStage === 'vaccine') {
     if (!val) { toast('Εισάγετε όνομα εμβολίου', true); return; }
-    wizardDraft.vaccine = val;
+    wizardDraft.vaccine = normVaccine(val);
     wizardStage = 'customer';
   } else if (wizardStage === 'customer') {
     wizardDraft.customer = val || null;
@@ -1670,7 +1681,7 @@ async function wizardAdvance() {
 
 function wizardQueueRowHTML(q, i, onRemove) {
   return '<div class="wizard-queue-row">' +
-    '<span class="wq-main">' + fmt(q.vaccDate) + ' · ' + x(q.vaccine) + '</span>' +
+    '<span class="wq-main">' + fmt(q.vaccDate) + ' · ' + x(vaccineLabel(q.vaccine)) + '</span>' +
     '<span class="wq-sub">' + (q.qty ? fmtPosotita(q.qty) : '—') + (q.customer ? ' · ' + x(q.customer) : '') + '</span>' +
     '<button class="row-btn del" onclick="' + onRemove + '(' + i + ')">×</button>' +
   '</div>';
@@ -1836,11 +1847,41 @@ function buildChanges(before, row) {
   return changes;
 }
 
-// finds an existing row that's an exact match on house + hatch date +
-// vaccination date + vaccine name — a likely duplicate of a new entry
+// alternative vaccines are written "A / B" (either one can be ordered) and shown as "A ή B"
+// the separator is any "/" except one directly between two digits, which is part of a name (IB 4/91, MG 6/85)
+const ALT_SEP = /\s+\/\s*|\s*\/\s+|(?<!\d)\/|\/(?!\d)/;
+function vaccineAlts(s) { return String(s || '').split(ALT_SEP).map(v => v.trim()).filter(Boolean); }
+function normVaccine(s) { return vaccineAlts(s).join(' / '); }
+function vaccineLabel(s) { return vaccineAlts(s).join(' ή '); }
+// same vaccine if any alternative matches, ignoring case: "CLONE30 / AVINEW" vs "CLONE30"
+function sameVaccine(a, b) {
+  const bs = vaccineAlts(b).map(v => v.toUpperCase());
+  return vaccineAlts(a).some(v => bs.includes(v.toUpperCase()));
+}
+
+// finds an existing row on the same house + hatch date + vaccination date + vaccine
+// (any alternative counts) — a likely duplicate of a new entry
 function findDuplicateRow(hatchIso, flock, vaccIso, vaccine) {
   return data.find(r => r.hm_ekk === hatchIso && r.anath === flock &&
-    r.hm_emv === vaccIso && r.emvolio === vaccine);
+    r.hm_emv === vaccIso && sameVaccine(r.emvolio, vaccine));
+}
+
+// asks which of an order's alternative vaccines actually arrived; resolves that name, or null to cancel
+let arrivedResolve = null;
+function askArrived(emvolio, context) {
+  document.getElementById('arrived-detail').textContent = `${context} · ${vaccineLabel(emvolio)}`;
+  document.getElementById('arrived-actions').innerHTML =
+    '<button class="btn-secondary" onclick="resolveArrived(null)">Ακύρωση</button>' +
+    vaccineAlts(emvolio).map(v => `<button class="btn-primary" data-v="${x(v)}" onclick="resolveArrived(this.dataset.v)">${x(v)}</button>`).join('');
+  document.getElementById('arrived-bg').style.display = 'flex';
+  document.querySelector('#arrived-actions .btn-secondary').focus();
+  return new Promise(resolve => { arrivedResolve = resolve; });
+}
+function resolveArrived(vaccine) {
+  document.getElementById('arrived-bg').style.display = 'none';
+  const resolve = arrivedResolve;
+  arrivedResolve = null;
+  if (resolve) resolve(vaccine);
 }
 
 // asks what to do about a duplicate; resolves 'add' (keep both rows) or 'cancel'.
@@ -1848,7 +1889,7 @@ function findDuplicateRow(hatchIso, flock, vaccIso, vaccine) {
 let dupResolve = null;
 function askDuplicate(dup, entry) {
   document.getElementById('dup-detail').textContent =
-    `${dup.emvolio} · Πελάτης: ${dup.pelatis || '—'} · Ποσότητα: ${fmtPosotita(dup.posotita)} · Προμηθευτής: ${dup.promitheutis || '—'}`;
+    `${vaccineLabel(dup.emvolio)} · Πελάτης: ${dup.pelatis || '—'} · Ποσότητα: ${fmtPosotita(dup.posotita)} · Προμηθευτής: ${dup.promitheutis || '—'}`;
   document.getElementById('dup-new').textContent =
     `Πελάτης: ${entry.pelatis || '—'} · Ποσότητα: ${fmtPosotita(entry.posotita)}`;
   document.getElementById('dup-bg').style.display = 'flex';
@@ -1873,7 +1914,7 @@ async function saveEdit() {
   const before = idx >= 0 ? { ...data[idx] } : {};
 
   const row = {
-    emvolio: g('m-vaccine').trim(), hm_ekk: gd('m-hatch'), hm_emv: gd('m-vacc'),
+    emvolio: normVaccine(g('m-vaccine')), hm_ekk: gd('m-hatch'), hm_emv: gd('m-vacc'),
     hm_par: gd('m-deliv'), anath: g('m-flock'),
     pelatis: g('m-customer').trim()||null, posotita: rawQty(g('m-qty')),
     paragelia: g('m-ordered')||null, psygeio: g('m-fridge')||null, emvoliasmos: g('m-emvoliasmos')||null,
@@ -1890,6 +1931,12 @@ async function saveEdit() {
   if (dateOrderInvalid(row.hm_ekk, row.hm_emv)) {
     toast('Η ημ. εμβολιασμού δεν μπορεί να είναι πριν την εκκόλαψη', true);
     return;
+  }
+  // fridge just set to ΝΑΙ on an order with alternatives → record which vaccine actually arrived
+  if (row.psygeio === 'ΝΑΙ' && before.psygeio !== 'ΝΑΙ' && vaccineAlts(row.emvolio).length > 1) {
+    const arrived = await askArrived(row.emvolio, `${row.anath} · ${fmt(row.hm_emv)}`);
+    if (!arrived) return;
+    row.emvolio = arrived;
   }
 
   const changes = buildChanges(before, row);
@@ -1948,7 +1995,7 @@ function promptDelete(id) {
   if (!guardConnected()) return;
   deleteId = id;
   const r = data.find(x => x.id === id);
-  document.getElementById('confirm-name').textContent = r ? r.emvolio : '';
+  document.getElementById('confirm-name').textContent = r ? vaccineLabel(r.emvolio) : '';
   document.getElementById('confirm-bg').style.display = 'flex';
 }
 
@@ -2030,9 +2077,12 @@ function render() {
   const SC = ['emvolio','hm_ekk','hm_emv','hm_paragelia','hm_par','pelatis','posotita','paragelia','emvoliasmos'];
   SC.forEach(c => { const e=document.getElementById('s-'+c); if(e) e.textContent=sortCol===c?(sortDir===1?'↑':'↓'):''; });
 
+  // Ποσότητα sorts by its leading number ('7 ΚΙΛΑ' sorts as 7, empty as 0); every other column as text
+  const sortVal = r => sortCol === 'posotita'
+    ? (parseInt(String(r.posotita || '').replace(/\./g, ''), 10) || 0)
+    : (r[sortCol] || '').toString().toLowerCase();
   const rows = getFiltered().sort((a,b) => {
-    const av=(a[sortCol]||'').toString().toLowerCase();
-    const bv=(b[sortCol]||'').toString().toLowerCase();
+    const av = sortVal(a), bv = sortVal(b);
     return av<bv?-sortDir:av>bv?sortDir:0;
   });
 
@@ -2065,7 +2115,7 @@ function render() {
       `<td class="sticky-l1"><span class="badge b-flock" title="${x(fl)}">${x(fl)}</span></td>`+
       `<td>${fmt(r.hm_emv)}</td>`+
       `<td style="color:${r.hm_paragelia?'var(--gh-attention-fg)':'var(--gh-fg-subtle)'}">${fmt(r.hm_paragelia)||'—'}</td>`+
-      `<td class="vacc" title="${x(r.emvolio)}">${x(r.emvolio)}</td>`+
+      `<td class="vacc" title="${x(vaccineLabel(r.emvolio))}">${x(vaccineLabel(r.emvolio))}</td>`+
       `<td>${fmtPosotita(r.posotita)}</td>`+
       `<td style="color:var(--gh-fg-muted)">${x(r.pelatis||'—')}</td>`+
       `<td class="td-notes" style="color:var(--gh-fg-muted);font-size:11px" title="${x(r.sxolia_panos||'')}">${x(r.sxolia_panos||'—')}</td>`+
@@ -2162,7 +2212,7 @@ function houseGroups() {
 // past/today/soon/future reading, scoped to this view only
 function hvChipClass(r) {
   if (r.emvoliasmos === 'ΝΑΙ' || !r.hm_emv) return 'past';
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIso();
   if (r.hm_emv < today) return 'past';
   if (r.hm_emv === today) return 'today';
   return (new Date(r.hm_emv) - new Date(today)) / 86400000 <= 7 ? 'soon' : 'future';
@@ -2172,7 +2222,7 @@ function hvRowHTML(r) {
   const fri = r.psygeio === 'ΝΑΙ';
   return `<div class="hv-row${r.emvoliasmos === 'ΝΑΙ' ? ' done' : ''}" onclick="editEntry(${r.id})" title="Διπλό κλικ για επεξεργασία">` +
     `<span class="hv-chip ${hvChipClass(r)}">${fmt(r.hm_emv) || '—'}</span>` +
-    `<span class="hv-vacc">${x(r.emvolio)}</span>` +
+    `<span class="hv-vacc">${x(vaccineLabel(r.emvolio))}</span>` +
     (r.posotita ? `<span class="hv-qty">×${fmtPosotita(r.posotita)}</span>` : '') +
     orderDot(r) +
     `<span class="hv-dot ${fri ? 'yes' : 'no'}" title="Ψυγείο: ${fri ? 'ΝΑΙ' : 'ΟΧΙ'}"></span>` +
@@ -2318,7 +2368,7 @@ function renderPrintCard(key) {
             const qtyDisplay = parts.length ? x(parts.join(' + ')) : '—';
             return `<tr>
               <td>${x(fmt(r.hm_emv)) || '—'}</td>
-              <td>${x(r.emvolio)}</td>
+              <td>${x(vaccineLabel(r.emvolio))}</td>
               <td>${qtyDisplay}</td>
             </tr>`;
           }).join('')}
@@ -2364,8 +2414,6 @@ document.addEventListener('keydown', e => {
     closePrintCard();
   }
 });
-
-// ── PASSWORD GATE ─────────────────────────────────────────────────
 
 // ── BATCH SELECTION ───────────────────────────────────────────────
 let selectedIds = new Set();
@@ -2501,6 +2549,21 @@ async function saveBatchEdit() {
     return;
   }
 
+  if (updates.emvolio) updates.emvolio = normVaccine(updates.emvolio);
+  // Ψυγείο → ΝΑΙ: for each order with alternatives, ask which vaccine arrived (Ακύρωση stops the whole bulk edit)
+  const arrivedFor = new Map();
+  if (updates.psygeio === 'ΝΑΙ') {
+    for (const id of selectedIds) {
+      const r = data.find(x => x.id === id);
+      const emvolio = updates.emvolio || r.emvolio;
+      if (r.psygeio === 'ΝΑΙ' || vaccineAlts(emvolio).length < 2) continue;
+      const arrived = await askArrived(emvolio, `${r.anath} · ${fmt(r.hm_emv)}`);
+      if (!arrived) return;
+      arrivedFor.set(id, { emvolio: arrived });
+    }
+  }
+  const rowUpdates = id => ({ ...updates, ...arrivedFor.get(id) });
+
   const now = new Date().toISOString();
   updates.updated_by = currentUser;
   updates.updated_at = now;
@@ -2510,27 +2573,31 @@ async function saveBatchEdit() {
   setSyncStatus('loading', 'Μαζική αποθήκευση…');
 
   const ids = [...selectedIds];
-  let successCount = 0;
 
   try {
-    // fire all updates in parallel; history records each row's own before/after values
-    const results = await Promise.all(ids.map(id => sbUpdate(id, updates)));
-    await Promise.all(results.map(([updated]) => {
-      const changes = buildChanges(data.find(r => r.id === updated.id), updates);
+    // fire all updates in parallel; a row deleted meanwhile comes back null instead of failing the batch
+    const results = await Promise.all(ids.map(id =>
+      sbUpdate(id, rowUpdates(id)).then(([updated]) => updated, e => { if (e.message === ROW_GONE) return null; throw e; })));
+    const updatedRows = results.filter(Boolean);
+    const goneIds = ids.filter((id, i) => !results[i]);
+    // history records each row's own before/after values
+    await Promise.all(updatedRows.map(updated => {
+      const changes = buildChanges(data.find(r => r.id === updated.id), rowUpdates(updated.id));
       return Object.keys(changes).length
         ? sbHInsert({ row_id: updated.id, action: 'edited', user_name: currentUser, ts: now, changes_json: JSON.stringify(changes) })
         : null;
     }));
 
-    // apply to local data
-    results.forEach(([updated]) => {
+    // apply to local data; drop rows that no longer exist
+    data = data.filter(r => !goneIds.includes(r.id));
+    updatedRows.forEach(updated => {
       const idx = data.findIndex(r => r.id === updated.id);
-      if (idx >= 0) { data[idx] = updated; successCount++; }
+      if (idx >= 0) data[idx] = updated;
     });
 
     closeBatchModal(); clearSelection(); render();
     setSyncStatus('ok', 'Αποθηκεύτηκε ✓');
-    toast(`Ενημερώθηκαν ${successCount} εγγραφές`);
+    toast(`Ενημερώθηκαν ${updatedRows.length} εγγραφές` + (goneIds.length ? ` · ${goneIds.length} δεν υπάρχουν πια` : ''));
   } catch(e) {
     setSyncStatus('err', 'Σφάλμα');
     toast('Σφάλμα: ' + e.message, true);
@@ -2575,18 +2642,30 @@ async function confirmBatchDelete() {
 // Updates the suggestion list based on the last comma-separated token being typed
 // VACCINE_OPTIONS — duplicated by design in inventory.html; keep both lists in sync
 const VACCINE_OPTIONS = [
-  'AVINEW','AVINEW NEO','BIONEW BI','BIONEW BI + COR','Clone30',
-  'CORIPRAVAC','E.COLI','GALLIMUNE 407','GALLIMUNE SE+ST','IB 4/91','IB PRIMER',
+  'AVINEW','AVINEW NEO','BIONEW BI','BIONEW BI + COR','CLONE30',
+  'CORIPRAVAC','E.COLI','GALLIMUNE 407','GALLIMUNE SE+ST','IB 4/91','IB PRIMER','IZOVAC',
   'LASOTA ND','Ma5','MG 6/85','NEMOVAC TRT','OLVAC B+HG','POULVAC E.COLI',
   'RESPIVAC','SALENVAC ETC','SALMOVAC','SG-9R','TARTYLL','TS-11','VAXSAFE','VECTROMUNE'
 ];
 
 let vacDropIdx = -1; // keyboard nav index
 
+// text before the name being typed: earlier vaccines (", ") and earlier alternatives (" / ")
+function vaccinePrefix(value) {
+  const parts = value.split(',');
+  const alts = parts[parts.length - 1].split(ALT_SEP);
+  const done = parts.slice(0, -1).map(p => p.trim()).filter(Boolean).join(', ');
+  const altDone = alts.slice(0, -1).map(a => a.trim()).filter(Boolean).join(' / ');
+  return (done ? done + ', ' : '') + (altDone ? altDone + ' / ' : '');
+}
+
 function onVaccineInput(el) {
+  // "/" typed right after a picked vaccine ("CLONE30, /") starts an alternative to it
+  el.value = el.value.replace(/,\s*\/\s*$/, ' / ');
   const parts = el.value.split(',');
-  const lastToken = parts[parts.length - 1].trim();
-  const prefix = parts.slice(0, -1).map(p => p.trim()).join(', ');
+  const alts = parts[parts.length - 1].split(ALT_SEP);
+  const lastToken = alts[alts.length - 1].trim();
+  const prefix = vaccinePrefix(el.value);
   vacDropIdx = -1;
 
   const drop = document.getElementById('vac-dropdown');
@@ -2615,7 +2694,7 @@ function onVaccineInput(el) {
 }
 
 function selectVaccine(el, prefix, vaccine) {
-  el.value = prefix ? prefix + ', ' + vaccine + ', ' : vaccine + ', ';
+  el.value = prefix + vaccine + ', ';
   // move cursor to end
   el.setSelectionRange(el.value.length, el.value.length);
   document.getElementById('vac-dropdown').style.display = 'none';
@@ -2639,9 +2718,7 @@ function onVaccineKey(e) {
     if (vacDropIdx >= 0) {
       e.preventDefault();
       const el = document.getElementById('f-vaccine');
-      const parts = el.value.split(',');
-      const prefix = parts.slice(0, -1).map(p => p.trim()).join(', ');
-      selectVaccine(el, prefix, opts[vacDropIdx].textContent);
+      selectVaccine(el, vaccinePrefix(el.value), opts[vacDropIdx].textContent);
       return;
     }
     drop.style.display = 'none';
@@ -2668,7 +2745,16 @@ function scheduleCloseVacDrop() {
 // ── CUSTOMER LINES (sidebar form) ────────────────────────────────
 // one customer + one quantity per line; every vaccine typed gets the same lines
 function typedVaccines() {
-  return document.getElementById('f-vaccine').value.split(',').map(v => v.trim()).filter(Boolean);
+  return document.getElementById('f-vaccine').value.split(',').map(normVaccine).filter(Boolean);
+}
+
+// wizard vaccine step: suggestions continue after "/" ("CLONE30 / AV…" → "CLONE30 / AVINEW")
+function wizardVaccineInput(el) {
+  if (wizardStage !== 'vaccine') return;
+  const alts = el.value.split(ALT_SEP);
+  const prefix = alts.slice(0, -1).map(a => a.trim()).filter(Boolean).join(' / ');
+  document.getElementById('wz-vaccine-dl').innerHTML =
+    VACCINE_OPTIONS.map(v => `<option value="${x(prefix ? prefix + ' / ' + v : v)}">`).join('');
 }
 
 function addCustLine() {
@@ -2762,7 +2848,7 @@ async function showChangelog(user) {
     list.innerHTML = '';
     hist.forEach(h => {
       const row = data.find(r => r.id === h.row_id);
-      const vaccineName = row ? row.emvolio : '(διαγραμμένο)';
+      const vaccineName = row ? vaccineLabel(row.emvolio) : '(διαγραμμένο)';
       // build contextual subtitle: vaccine | anath – hm_ekk
       let vaccineCtx = x(vaccineName);
       if (row) {
@@ -2966,14 +3052,7 @@ function resetForm() {
   refreshNewHatchGate('f-hatch', 'f-flock', 'f-newhatch-gate');
 }
 
-// ── THEME ─────────────────────────────────────────────────────────
-// Single dark theme only — no toggle, no stored preference (a full
-// theme overhaul is planned separately; this just removes the switch).
-document.documentElement.setAttribute('data-theme', 'dark');
-
 // ── INIT ──────────────────────────────────────────────────────────
-
-orderedVal = ''; fridgeVal = ''; emvoliasmosVal = '';
 // sidebarOpen already defaults to false — collapse the desktop shell to match
 // (mobile ignores .shell.collapsed; it hides the drawer via .sidebar.mobile-open instead)
 document.getElementById('shell').classList.add('collapsed');

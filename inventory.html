@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <title>ΕΜΒΟΛΙΑ — Απόθεμα</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
 <link rel="stylesheet" href="theme.css">
 <style>
 .theme-toggle{
@@ -138,7 +138,7 @@ td.qty-cell{font-weight:700;font-size:14px;color:var(--gh-success-fg)}
 .modal h3{font-weight:600;font-size:16px;margin-bottom:18px;color:var(--gh-fg-default)}
 .fgroup{margin-bottom:12px}
 .fgroup label{display:block;font-size:12px;font-weight:500;color:var(--gh-fg-muted);margin-bottom:5px}
-input[type=text],input[type=number],input[type=password],select,textarea{
+input[type=text],input[type=number],input[type=email],input[type=password],select,textarea{
   width:100%;background:var(--gh-canvas-default);border:1px solid var(--gh-border-default);
   border-radius:var(--rs);color:var(--gh-fg-default);
   font-family:'Inter',system-ui,sans-serif;font-size:14px;padding:6px 10px;
@@ -337,8 +337,8 @@ const HTABLE   = 'inventory_history';
 
 // VACCINE_OPTIONS — duplicated by design in vaccine_tracker.html; keep both lists in sync
 const VACCINE_OPTIONS = [
-  'AVINEW','AVINEW NEO','BIONEW BI','BIONEW BI + COR','Clone30',
-  'CORIPRAVAC','E.COLI','GALLIMUNE 407','GALLIMUNE SE+ST','IB 4/91','IB PRIMER',
+  'AVINEW','AVINEW NEO','BIONEW BI','BIONEW BI + COR','CLONE30',
+  'CORIPRAVAC','E.COLI','GALLIMUNE 407','GALLIMUNE SE+ST','IB 4/91','IB PRIMER','IZOVAC',
   'LASOTA ND','Ma5','MG 6/85','NEMOVAC TRT','OLVAC B+HG','POULVAC E.COLI',
   'RESPIVAC','SALENVAC ETC','SALMOVAC','SG-9R','TARTYLL','TS-11','VAXSAFE','VECTROMUNE'
 ];
@@ -365,7 +365,13 @@ async function sbFetch(path, opts = {}) {
 
 const sbSelect  = ()        => sbFetch(`${TABLE}?order=emvolio.asc`);
 const sbInsert  = row       => sbFetch(TABLE, { method:'POST', prefer:'return=representation', body: JSON.stringify(row) });
-const sbUpdate  = (id, row) => sbFetch(`${TABLE}?id=eq.${id}`, { method:'PATCH', prefer:'return=representation', body: JSON.stringify(row) });
+// PATCH returns [] when the row is gone (deleted meanwhile, e.g. in another tab) — fail with a clear message
+const ROW_GONE = 'Η εγγραφή δεν υπάρχει πια (ίσως διαγράφηκε) — πατήστε Ανανέωση.';
+const sbUpdate  = async (id, row) => {
+  const result = await sbFetch(`${TABLE}?id=eq.${id}`, { method:'PATCH', prefer:'return=representation', body: JSON.stringify(row) });
+  if (!result || !result.length) throw new Error(ROW_GONE);
+  return result;
+};
 const sbDelete  = id        => sbFetch(`${TABLE}?id=eq.${id}`, { method:'DELETE' });
 const sbHistory = id        => sbFetch(`${HTABLE}?inventory_id=eq.${id}&order=ts.desc`);
 const sbHInsert = entry     => sbFetch(HTABLE, { method:'POST', body: JSON.stringify(entry) });
@@ -415,10 +421,6 @@ function initApp(name) {
   document.getElementById('user-name').textContent = name;
   loadData();
 }
-
-// ── THEME ─────────────────────────────────────────────────────────
-// Single dark theme only — no toggle, no stored preference.
-document.documentElement.setAttribute('data-theme', 'dark');
 
 // ── SYNC STATUS ───────────────────────────────────────────────────
 function setSyncStatus(state, text) {
