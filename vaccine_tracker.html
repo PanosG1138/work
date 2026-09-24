@@ -309,6 +309,7 @@ th.sticky-l0,th.sticky-l1{z-index:3;background:var(--gh-canvas-subtle)}
 .hv-dot{display:inline-block;width:5px;height:5px;border-radius:50%;flex-shrink:0}
 .hv-dot.yes{background:var(--gh-success-fg)}
 .hv-dot.no{background:var(--gh-fg-subtle)}
+.hv-dot.yes.faentina{background:#e879f9} /* Παρ. = ΝΑΙ with Προμηθευτής FAENTINA: magenta instead of green */
 
 /* Checkbox */
 td.cb-cell,th.cb-cell{width:36px;padding:6px 8px;text-align:center}
@@ -997,7 +998,8 @@ body.printing-card .printcard-doc{display:block}
       </div>
       <div class="fgroup">
         <label id="wz-field-label">Ημ. Εμβολιασμού;</label>
-        <input type="text" id="wz-field-input" autocomplete="off" onkeydown="if(event.key==='Enter')wizardAdvance()">
+        <!-- preventDefault: otherwise the same Enter keypress also clicks the duplicate dialog's focused button -->
+        <input type="text" id="wz-field-input" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();wizardAdvance()}">
         <datalist id="wz-customer-dl"></datalist>
       </div>
       <div class="wizard-hint" id="wz-hint">Enter ↵ για συνέχεια</div>
@@ -1022,14 +1024,13 @@ body.printing-card .printcard-doc{display:block}
   </div>
 </div>
 
-<!-- DUPLICATE ENTRY — replace the existing row, add a new row anyway, or skip -->
+<!-- DUPLICATE ENTRY — add as a new row anyway, or skip -->
 <div id="dup-bg" class="modal-bg" style="display:none;z-index:300" onclick="if(event.target===this)resolveDuplicate('cancel')" onkeydown="if(event.key==='Escape')resolveDuplicate('cancel')">
   <div class="confirm-box" style="width:460px;max-width:95vw">
     <p>Υπάρχει ήδη καταχώρηση με την ίδια εκκόλαψη, αναθρεπτήριο, ημ. εμβολιασμού και εμβόλιο:<span id="dup-detail" style="display:block;margin:10px 0;color:var(--gh-fg-default);font-weight:600"></span></p>
     <div class="modal-actions" style="justify-content:center;flex-wrap:wrap">
       <button class="btn-secondary" onclick="resolveDuplicate('cancel')">Ακύρωση</button>
-      <button class="btn-secondary" onclick="resolveDuplicate('add')">Προσθήκη νέας γραμμής</button>
-      <button class="btn-primary" id="dup-replace" onclick="resolveDuplicate('replace')">Αντικατάσταση</button>
+      <button class="btn-primary" id="dup-add" onclick="resolveDuplicate('add')">Προσθήκη νέας γραμμής</button>
     </div>
   </div>
 </div>
@@ -1522,34 +1523,25 @@ async function addEntry() {
   });
 
   // for the same house+hatch+vacc.date+vaccine as an existing row, ask whether to
-  // replace that row, add this as a separate row, or skip it
-  const toInsert = [], toReplace = [];
+  // add this as a separate row or skip it
+  const toInsert = [];
   for (const combo of combos) {
     const dup = findDuplicateRow(hatch, flock, vacc, combo.emvolio);
-    const choice = dup ? await askDuplicate(dup) : 'add';
-    if (choice === 'replace') toReplace.push({ id: dup.id, combo });
-    else if (choice === 'add') toInsert.push(combo);
+    if (!dup || await askDuplicate(dup) === 'add') toInsert.push(combo);
   }
-  if (!toInsert.length && !toReplace.length) return;
+  if (!toInsert.length) return;
 
   const btn = document.getElementById('btn-add');
   btn.disabled = true;
   btn.textContent = 'Αποθήκευση…';
   setSyncStatus('loading', 'Αποθήκευση…');
   try {
-    if (toInsert.length) await insertRows(toInsert, now);
-    for (const { id, combo } of toReplace) {
-      const { created_by, created_at, ...fields } = combo;
-      await replaceRow(id, fields, now);
-    }
+    await insertRows(toInsert, now);
     resetForm(); render();
     // on mobile, close the drawer so the user sees the new row in the table
     if (isMobile() && sidebarOpen) toggleSidebar();
     setSyncStatus('ok', 'Αποθηκεύτηκε ✓');
-    const parts = [];
-    if (toInsert.length) parts.push(`${toInsert.length} προστέθηκαν`);
-    if (toReplace.length) parts.push(`${toReplace.length} αντικαταστάθηκαν`);
-    toast(parts.join(' · ') + '!');
+    toast(`${toInsert.length} προστέθηκαν!`);
   } catch (e) {
     setSyncStatus('err', 'Σφάλμα');
     toast('Σφάλμα: ' + e.message, true);
@@ -1659,9 +1651,7 @@ async function wizardAdvance() {
   } else if (wizardStage === 'qty') {
     wizardDraft.qty = rawQty(val);
     const dup = findDuplicateRow(wizardHatchIso, wizardFlock, wizardDraft.vaccDate, wizardDraft.vaccine);
-    const choice = dup ? await askDuplicate(dup) : 'add';
-    if (choice === 'cancel') { wizardDraft = {}; wizardStage = 'date'; wizardRenderStage(); return; }
-    if (choice === 'replace') wizardDraft._replaceId = dup.id;
+    if (dup && await askDuplicate(dup) === 'cancel') { wizardDraft = {}; wizardStage = 'date'; wizardRenderStage(); return; }
     wizardQueue.push({ ...wizardDraft });
     wizardDraft = {};
     renderWizardQueue();
@@ -1673,8 +1663,7 @@ async function wizardAdvance() {
 
 function wizardQueueRowHTML(q, i, onRemove) {
   return '<div class="wizard-queue-row">' +
-    '<span class="wq-main">' + fmt(q.vaccDate) + ' · ' + x(q.vaccine) +
-      (q._replaceId ? ' <span style="color:var(--gh-attention-fg)">(αντικατάσταση)</span>' : '') + '</span>' +
+    '<span class="wq-main">' + fmt(q.vaccDate) + ' · ' + x(q.vaccine) + '</span>' +
     '<span class="wq-sub">' + (q.qty ? fmtPosotita(q.qty) : '—') + (q.customer ? ' · ' + x(q.customer) : '') + '</span>' +
     '<button class="row-btn del" onclick="' + onRemove + '(' + i + ')">×</button>' +
   '</div>';
@@ -1715,28 +1704,22 @@ async function wizardSaveAll() {
   if (!guardConnected()) return;
   if (!wizardQueue.length) return;
   const now = new Date().toISOString();
-  const buildFields = q => ({
+  const rows = wizardQueue.map(q => ({
     hm_ekk: wizardHatchIso, hm_emv: q.vaccDate, hm_par: null, anath: wizardFlock,
     sxolia_panos: null, promitheutis: null, paragelia: null,
     hm_paragelia: subDays(q.vaccDate, 30), psygeio: null, emvoliasmos: null, sxolia_eleni: null,
     emvolio: q.vaccine, pelatis: q.customer, posotita: q.qty,
-  });
-  const rows = wizardQueue.filter(q => !q._replaceId)
-    .map(q => ({ ...buildFields(q), created_by: currentUser, created_at: now, updated_by: currentUser, updated_at: now }));
-  const replaces = wizardQueue.filter(q => q._replaceId);
+    created_by: currentUser, created_at: now, updated_by: currentUser, updated_at: now,
+  }));
   const btn = document.getElementById('wz-save-btn');
   btn.disabled = true; btn.textContent = 'Αποθήκευση…';
   setSyncStatus('loading', 'Αποθήκευση…');
   try {
-    if (rows.length) await insertRows(rows, now);
-    for (const q of replaces) await replaceRow(q._replaceId, buildFields(q), now);
+    await insertRows(rows, now);
     render();
     document.getElementById('wizard-bg').style.display = 'none';
     setSyncStatus('ok', 'Αποθηκεύτηκε ✓');
-    const parts = [];
-    if (rows.length) parts.push(`${rows.length} προστέθηκαν`);
-    if (replaces.length) parts.push(`${replaces.length} αντικαταστάθηκαν`);
-    toast(parts.join(' · ') + '!');
+    toast(`${rows.length} προστέθηκαν!`);
   } catch (e) {
     setSyncStatus('err', 'Σφάλμα');
     toast('Σφάλμα: ' + e.message, true);
@@ -1847,19 +1830,19 @@ function buildChanges(before, row) {
 }
 
 // finds an existing row that's an exact match on house + hatch date +
-// vaccination date + vaccine name — the "same slot" a new entry can replace
+// vaccination date + vaccine name — a likely duplicate of a new entry
 function findDuplicateRow(hatchIso, flock, vaccIso, vaccine) {
   return data.find(r => r.hm_ekk === hatchIso && r.anath === flock &&
     r.hm_emv === vaccIso && r.emvolio === vaccine);
 }
 
-// asks what to do about a duplicate; resolves 'replace', 'add' (keep both rows) or 'cancel'
+// asks what to do about a duplicate; resolves 'add' (keep both rows) or 'cancel'
 let dupResolve = null;
 function askDuplicate(dup) {
   document.getElementById('dup-detail').textContent =
     `${dup.emvolio} · Πελάτης: ${dup.pelatis || '—'} · Ποσότητα: ${fmtPosotita(dup.posotita)} · Προμηθευτής: ${dup.promitheutis || '—'}`;
   document.getElementById('dup-bg').style.display = 'flex';
-  document.getElementById('dup-replace').focus();
+  document.getElementById('dup-add').focus();
   return new Promise(resolve => { dupResolve = resolve; });
 }
 function resolveDuplicate(choice) {
@@ -1867,20 +1850,6 @@ function resolveDuplicate(choice) {
   const resolve = dupResolve;
   dupResolve = null;
   if (resolve) resolve(choice);
-}
-
-// updates an existing row in place (preserving its id/created_by/created_at)
-// and logs the change to its history, same pattern as saveEdit()
-async function replaceRow(id, fields, now) {
-  const idx = data.findIndex(x => x.id === id);
-  const before = idx >= 0 ? { ...data[idx] } : {};
-  const row = { ...fields, updated_by: currentUser, updated_at: now };
-  const changes = buildChanges(before, row);
-  const [updated] = await sbUpdate(id, row);
-  if (Object.keys(changes).length > 0) {
-    await sbHInsert({ row_id: id, action: 'edited', user_name: currentUser, ts: now, changes_json: JSON.stringify(changes) });
-  }
-  if (idx >= 0) data[idx] = updated;
 }
 
 async function saveEdit() {
@@ -2059,7 +2028,7 @@ function render() {
   rows.forEach(r => {
     const tr = document.createElement('tr');
     if (r._new) { tr.classList.add('new-row'); delete r._new; }
-    const ord = r.paragelia==='ΝΑΙ', fri = r.psygeio==='ΝΑΙ', emv = r.emvoliasmos==='ΝΑΙ';
+    const fri = r.psygeio==='ΝΑΙ', emv = r.emvoliasmos==='ΝΑΙ';
     if (fri) tr.classList.add('row-arrived');
     const fl = flockLabel(r);
 
@@ -2079,7 +2048,7 @@ function render() {
       `<td>${fmtPosotita(r.posotita)}</td>`+
       `<td style="color:var(--gh-fg-muted)">${x(r.pelatis||'—')}</td>`+
       `<td class="td-notes" style="color:var(--gh-fg-muted);font-size:11px" title="${x(r.sxolia_panos||'')}">${x(r.sxolia_panos||'—')}</td>`+
-      `<td style="text-align:center"><span class="hv-dot ${ord?'yes':'no'}" title="Παραγγελία: ${ord?'ΝΑΙ':'ΟΧΙ'}"></span></td>`+
+      `<td style="text-align:center">${orderDot(r)}</td>`+
       `<td>${fmt(r.hm_par)||'—'}</td>`+
       `<td style="color:var(--gh-fg-muted);font-size:11px">${x(r.promitheutis||'—')}</td>`+
       `<td style="text-align:center"><span class="hv-dot ${fri?'yes':'no'}" title="Ψυγείο: ${fri?'ΝΑΙ':'ΟΧΙ'}"></span></td>`+
@@ -2133,6 +2102,14 @@ function render() {
 
 function x(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+// Παρ. dot, shared by the table and the house cards: green when ordered, magenta when ordered
+// from FAENTINA (any upper/lower case), grey when not ordered
+function orderDot(r) {
+  const ord = r.paragelia === 'ΝΑΙ';
+  const faentina = ord && (r.promitheutis || '').trim().toUpperCase() === 'FAENTINA';
+  return `<span class="hv-dot ${ord ? 'yes' : 'no'}${faentina ? ' faentina' : ''}" title="Παραγγελία: ${ord ? 'ΝΑΙ' : 'ΟΧΙ'}${faentina ? ' · FAENTINA' : ''}"></span>`;
+}
+
 // ── HOUSE VIEW ────────────────────────────────────────────────────
 // Alternate view: one card per house+hatch cycle (same house, different
 // hatch date = a different card), condensing that cycle's rows.
@@ -2171,12 +2148,12 @@ function hvChipClass(r) {
 }
 
 function hvRowHTML(r) {
-  const ord = r.paragelia === 'ΝΑΙ', fri = r.psygeio === 'ΝΑΙ';
+  const fri = r.psygeio === 'ΝΑΙ';
   return `<div class="hv-row${r.emvoliasmos === 'ΝΑΙ' ? ' done' : ''}" onclick="editEntry(${r.id})" title="Διπλό κλικ για επεξεργασία">` +
     `<span class="hv-chip ${hvChipClass(r)}">${fmt(r.hm_emv) || '—'}</span>` +
     `<span class="hv-vacc">${x(r.emvolio)}</span>` +
     (r.posotita ? `<span class="hv-qty">×${fmtPosotita(r.posotita)}</span>` : '') +
-    `<span class="hv-dot ${ord ? 'yes' : 'no'}" title="Παραγγελία: ${ord ? 'ΝΑΙ' : 'ΟΧΙ'}"></span>` +
+    orderDot(r) +
     `<span class="hv-dot ${fri ? 'yes' : 'no'}" title="Ψυγείο: ${fri ? 'ΝΑΙ' : 'ΟΧΙ'}"></span>` +
   `</div>`;
 }
