@@ -152,6 +152,15 @@ textarea{resize:vertical;min-height:44px;font-size:13px}
 .calc-field{background:var(--gh-attention-subtle)!important;border-color:rgba(240,180,41,0.5)!important;color:var(--gh-attention-fg)!important;font-weight:500}
 
 .divider{height:1px;background:var(--gh-border-muted);margin:12px 0}
+/* customer lines (sidebar form): customer + quantity per line */
+.cust-line{display:grid;grid-template-columns:1fr 82px 24px;gap:5px;align-items:center;margin-bottom:6px}
+.cust-line input{padding:6px 8px}
+.cust-line.bad input{border-color:var(--gh-danger-fg)}
+.cust-line .row-btn{height:30px;padding:0}
+.btn-add-line{width:100%;padding:5px;background:none;border:1px dashed var(--gh-border-default);border-radius:var(--rs);color:var(--gh-fg-muted);font-family:'Inter',system-ui,sans-serif;font-size:12px;cursor:pointer}
+.btn-add-line:hover{color:var(--gh-fg-default);border-color:var(--gh-fg-subtle)}
+.cust-summary{font-size:11px;color:var(--gh-fg-muted);margin-top:6px}
+.cust-summary.err{color:var(--gh-danger-fg)}
 .toggle-btn{flex:1;padding:6px 4px;border-radius:var(--rs);border:1px solid var(--gh-border-default);background:var(--gh-canvas-default);color:var(--gh-fg-muted);font-family:'Inter',system-ui,sans-serif;font-size:13px;cursor:pointer;text-align:center;transition:all 0.15s}
 .toggle-btn.active{border-color:var(--gh-accent-emphasis);background:var(--gh-accent-subtle);color:var(--gh-accent-fg)}
 
@@ -749,8 +758,13 @@ body.printing-card .printcard-doc{display:block}
 
     <div class="divider"></div>
     <div class="sec-label">Βήμα 3 — Λεπτομέρειες</div>
-    <div class="fgroup"><label>Ποσότητα <span style="font-size:10px;color:var(--gh-fg-subtle);font-weight:400">(χωρίστε με κόμμα για πολλούς πελάτες)</span></label><input type="text" id="f-qty" placeholder="π.χ. 75.000 ή 10.000, 15.000" onblur="fmtQty(this)" onfocus="stripQty(this)"></div>
-    <div class="fgroup"><label>Πελάτης <span style="font-size:10px;color:var(--gh-fg-subtle);font-weight:400">(χωρίστε με κόμμα)</span></label><input type="text" id="f-customer" list="customer-list" placeholder="Προαιρετικό…" oninput="onCustomerInput()"><datalist id="customer-list"></datalist></div>
+    <div class="fgroup">
+      <label>Πελάτες &amp; ποσότητες</label>
+      <div id="cust-lines"></div>
+      <button type="button" class="btn-add-line" onclick="addCustLine()">+ Προσθήκη πελάτη</button>
+      <div class="cust-summary" id="cust-summary"></div>
+      <datalist id="customer-list"></datalist>
+    </div>
     <div class="fgroup">
       <label>Προμηθευτής</label>
       <input type="text" id="f-supplier" list="supplier-list" placeholder="Προαιρετικό…">
@@ -1027,7 +1041,7 @@ body.printing-card .printcard-doc{display:block}
 <!-- DUPLICATE ENTRY — add as a new row anyway, or skip -->
 <div id="dup-bg" class="modal-bg" style="display:none;z-index:300" onclick="if(event.target===this)resolveDuplicate('cancel')" onkeydown="if(event.key==='Escape')resolveDuplicate('cancel')">
   <div class="confirm-box" style="width:460px;max-width:95vw">
-    <p>Υπάρχει ήδη καταχώρηση με την ίδια εκκόλαψη, αναθρεπτήριο, ημ. εμβολιασμού και εμβόλιο:<span id="dup-detail" style="display:block;margin:10px 0;color:var(--gh-fg-default);font-weight:600"></span></p>
+    <p>Υπάρχει ήδη καταχώρηση με την ίδια εκκόλαψη, αναθρεπτήριο, ημ. εμβολιασμού και εμβόλιο:<span id="dup-detail" style="display:block;margin:10px 0;color:var(--gh-fg-default);font-weight:600"></span>Νέα γραμμή:<span id="dup-new" style="display:block;margin:6px 0 0;color:var(--gh-fg-default);font-weight:600"></span></p>
     <div class="modal-actions" style="justify-content:center;flex-wrap:wrap">
       <button class="btn-secondary" onclick="resolveDuplicate('cancel')">Ακύρωση</button>
       <button class="btn-primary" id="dup-add" onclick="resolveDuplicate('add')">Προσθήκη νέας γραμμής</button>
@@ -1369,6 +1383,11 @@ function onSmartDateBlur(el) {
 }
 
 // vaccination date may never fall before the hatch date (same day is fine)
+// true if any of these date boxes has text that didn't parse — saving would silently blank that date
+function hasBadDate(ids) {
+  return ids.some(id => { const el = document.getElementById(id); return el.value.trim() && !el.dataset.iso; });
+}
+
 function dateOrderInvalid(hatchIso, vaccIso) {
   return !!(hatchIso && vaccIso && vaccIso < hatchIso);
 }
@@ -1412,7 +1431,7 @@ function onDateChange() {
   else { el.value = ''; el.dataset.iso = ''; }
   updateSteps();
 }
-function onFieldChange() { updateSteps(); refreshNewHatchGate('f-hatch', 'f-flock', 'f-newhatch-gate'); }
+function onFieldChange() { updateSteps(); refreshNewHatchGate('f-hatch', 'f-flock', 'f-newhatch-gate'); updateCustSummary(); }
 
 function updateSteps() {
   const s1 = !!(document.getElementById('f-hatch').dataset.iso && document.getElementById('f-flock').value);
@@ -1472,8 +1491,6 @@ function guardConnected() {
 async function addEntry() {
   if (!guardConnected()) return;
   const vaccineRaw  = document.getElementById('f-vaccine').value.trim();
-  const customerRaw = document.getElementById('f-customer').value.trim();
-  const qtyRaw      = document.getElementById('f-qty').value.trim();
   const hatch = document.getElementById('f-hatch').dataset.iso || '';
   const vacc  = document.getElementById('f-vacc').dataset.iso  || '';
   const flock = document.getElementById('f-flock').value;
@@ -1490,18 +1507,10 @@ async function addEntry() {
     return;
   }
 
-  const splitCSV = s => s ? s.split(/,\s*/).map(v => v.trim()).filter(Boolean) : [''];
-  const vaccines  = splitCSV(vaccineRaw);
-  const customers = splitCSV(customerRaw) || [''];
-  const qtys      = splitCSV(qtyRaw);
-
-  // qty assignment: if one qty → same for all; if qty count matches customer count → pair them
-  const getQty = (custIdx) => {
-    if (qtys.length === 0) return null;
-    if (qtys.length === 1) return rawQty(qtys[0]);
-    if (qtys.length === customers.length) return rawQty(qtys[custIdx]);
-    return rawQty(qtys[0]); // fallback: use first
-  };
+  const lines = readCustLines();
+  if (!lines) { toast('Ένας πελάτης και μία ποσότητα ανά γραμμή — χωρίς κόμματα', true); return; }
+  // no customer lines filled → one row without customer/quantity, as before
+  const entries = lines.length ? lines : [{ pelatis: null, posotita: null }];
 
   const now = new Date().toISOString();
   const baseRow = {
@@ -1514,12 +1523,10 @@ async function addEntry() {
     created_by: currentUser, created_at: now, updated_by: currentUser, updated_at: now,
   };
 
-  // build all combinations: vaccine × customer
+  // every vaccine gets every customer line, with that line's quantity
   const combos = [];
-  vaccines.forEach(vaccine => {
-    customers.forEach((pelatis, ci) => {
-      combos.push({ ...baseRow, emvolio: vaccine, pelatis: pelatis||null, posotita: getQty(ci) });
-    });
+  typedVaccines().forEach(vaccine => {
+    entries.forEach(e => combos.push({ ...baseRow, emvolio: vaccine, pelatis: e.pelatis, posotita: e.posotita }));
   });
 
   // for the same house+hatch+vacc.date+vaccine as an existing row, ask whether to
@@ -1527,7 +1534,7 @@ async function addEntry() {
   const toInsert = [];
   for (const combo of combos) {
     const dup = findDuplicateRow(hatch, flock, vacc, combo.emvolio);
-    if (!dup || await askDuplicate(dup) === 'add') toInsert.push(combo);
+    if (!dup || await askDuplicate(dup, combo) === 'add') toInsert.push(combo);
   }
   if (!toInsert.length) return;
 
@@ -1651,7 +1658,7 @@ async function wizardAdvance() {
   } else if (wizardStage === 'qty') {
     wizardDraft.qty = rawQty(val);
     const dup = findDuplicateRow(wizardHatchIso, wizardFlock, wizardDraft.vaccDate, wizardDraft.vaccine);
-    if (dup && await askDuplicate(dup) === 'cancel') { wizardDraft = {}; wizardStage = 'date'; wizardRenderStage(); return; }
+    if (dup && await askDuplicate(dup, { pelatis: wizardDraft.customer, posotita: wizardDraft.qty }) === 'cancel') { wizardDraft = {}; wizardStage = 'date'; wizardRenderStage(); return; }
     wizardQueue.push({ ...wizardDraft });
     wizardDraft = {};
     renderWizardQueue();
@@ -1836,11 +1843,14 @@ function findDuplicateRow(hatchIso, flock, vaccIso, vaccine) {
     r.hm_emv === vaccIso && r.emvolio === vaccine);
 }
 
-// asks what to do about a duplicate; resolves 'add' (keep both rows) or 'cancel'
+// asks what to do about a duplicate; resolves 'add' (keep both rows) or 'cancel'.
+// entry = the new line being asked about ({pelatis, posotita})
 let dupResolve = null;
-function askDuplicate(dup) {
+function askDuplicate(dup, entry) {
   document.getElementById('dup-detail').textContent =
     `${dup.emvolio} · Πελάτης: ${dup.pelatis || '—'} · Ποσότητα: ${fmtPosotita(dup.posotita)} · Προμηθευτής: ${dup.promitheutis || '—'}`;
+  document.getElementById('dup-new').textContent =
+    `Πελάτης: ${entry.pelatis || '—'} · Ποσότητα: ${fmtPosotita(entry.posotita)}`;
   document.getElementById('dup-bg').style.display = 'flex';
   document.getElementById('dup-add').focus();
   return new Promise(resolve => { dupResolve = resolve; });
@@ -1873,6 +1883,10 @@ async function saveEdit() {
     updated_by: currentUser, updated_at: now,
   };
 
+  if (hasBadDate(['m-hatch', 'm-vacc', 'm-deliv'])) {
+    toast('Μη έγκυρη ημερομηνία — διορθώστε το κόκκινο πεδίο', true);
+    return;
+  }
   if (dateOrderInvalid(row.hm_ekk, row.hm_emv)) {
     toast('Η ημ. εμβολιασμού δεν μπορεί να είναι πριν την εκκόλαψη', true);
     return;
@@ -2022,6 +2036,12 @@ function render() {
     return av<bv?-sortDir:av>bv?sortDir:0;
   });
 
+  // selection only ever holds visible rows, so batch edit/delete can't touch rows hidden by search or filters
+  const visibleIds = new Set(rows.map(r => r.id));
+  selectedIds.forEach(id => { if (!visibleIds.has(id)) selectedIds.delete(id); });
+  updateBatchBar();
+  document.getElementById('cb-all').checked = rows.length > 0 && rows.every(r => selectedIds.has(r.id));
+
   document.getElementById('empty-state').style.display = rows.length ? 'none' : 'block';
   const frag = document.createDocumentFragment();
 
@@ -2030,6 +2050,7 @@ function render() {
     if (r._new) { tr.classList.add('new-row'); delete r._new; }
     const fri = r.psygeio==='ΝΑΙ', emv = r.emvoliasmos==='ΝΑΙ';
     if (fri) tr.classList.add('row-arrived');
+    if (selectedIds.has(r.id)) tr.classList.add('selected');
     const fl = flockLabel(r);
 
     tr.setAttribute('data-id', r.id);
@@ -2040,7 +2061,7 @@ function render() {
       editEntry(r.id);
     });
     tr.innerHTML =
-      `<td class="cb-cell sticky-l0"><input type="checkbox" class="row-cb" data-id="${r.id}" onchange="onRowCheck(${r.id},this.checked)"></td>`+
+      `<td class="cb-cell sticky-l0"><input type="checkbox" class="row-cb" data-id="${r.id}"${selectedIds.has(r.id) ? ' checked' : ''} onchange="onRowCheck(${r.id},this.checked)"></td>`+
       `<td class="sticky-l1"><span class="badge b-flock" title="${x(fl)}">${x(fl)}</span></td>`+
       `<td>${fmt(r.hm_emv)}</td>`+
       `<td style="color:${r.hm_paragelia?'var(--gh-attention-fg)':'var(--gh-fg-subtle)'}">${fmt(r.hm_paragelia)||'—'}</td>`+
@@ -2461,6 +2482,10 @@ async function saveBatchEdit() {
   });
 
   if (!Object.keys(updates).length) { toast('Δεν επιλέχθηκε κανένα πεδίο.', true); return; }
+  if (hasBadDate(BATCH_FIELDS.filter(f => f.type === 'date' && f.key in updates).map(f => 'bf-' + f.key))) {
+    toast('Μη έγκυρη ημερομηνία — διορθώστε το κόκκινο πεδίο', true);
+    return;
+  }
 
   // a new vaccination date implies a new order date, unless that field is being set explicitly too
   if ('hm_emv' in updates && !('hm_paragelia' in updates)) {
@@ -2640,26 +2665,61 @@ function scheduleCloseVacDrop() {
   }, 150);
 }
 
-// ── CUSTOMER SMART DATALIST ───────────────────────────────────────
-function onCustomerInput() {
-  const el = document.getElementById('f-customer');
-  const parts = el.value.split(',');
-  const lastToken = parts[parts.length - 1].trim().toLowerCase();
-  const prefix = parts.slice(0, -1).map(p => p.trim()).join(', ');
+// ── CUSTOMER LINES (sidebar form) ────────────────────────────────
+// one customer + one quantity per line; every vaccine typed gets the same lines
+function typedVaccines() {
+  return document.getElementById('f-vaccine').value.split(',').map(v => v.trim()).filter(Boolean);
+}
 
-  const dl = document.getElementById('customer-list');
-  dl.innerHTML = '';
-  if (!lastToken) return;
+function addCustLine() {
+  const line = document.createElement('div');
+  line.className = 'cust-line';
+  line.innerHTML =
+    '<input type="text" class="cl-name" list="customer-list" placeholder="Πελάτης (προαιρετικό)…" oninput="updateCustSummary()">' +
+    '<input type="text" class="cl-qty" placeholder="Ποσότητα" oninput="updateCustSummary()" onfocus="stripQty(this)" onblur="fmtQty(this);updateCustSummary()">' +
+    '<button type="button" class="row-btn del" title="Αφαίρεση γραμμής" onclick="removeCustLine(this)">×</button>';
+  document.getElementById('cust-lines').appendChild(line);
+  updateCustSummary();
+}
 
-  const customers = [...new Set(data.map(r => r.pelatis).filter(Boolean))];
-  customers
-    .filter(c => c.toLowerCase().includes(lastToken))
-    .forEach(c => {
-      const opt = document.createElement('option');
-      opt.value = prefix ? prefix + ', ' + c : c;
-      opt.label = c;
-      dl.appendChild(opt);
-    });
+function removeCustLine(btn) {
+  btn.closest('.cust-line').remove();
+  if (!document.querySelector('#cust-lines .cust-line')) addCustLine();  // always keep one line
+  updateCustSummary();
+}
+
+function resetCustLines() {
+  document.getElementById('cust-lines').innerHTML = '';
+  addCustLine();
+}
+
+// filled lines as [{pelatis, posotita}] (empty lines skipped); null if any box holds a comma —
+// that line is outlined red, since each line takes exactly one customer and one quantity
+function readCustLines() {
+  const lines = [];
+  let ok = true;
+  document.querySelectorAll('#cust-lines .cust-line').forEach(line => {
+    const name = line.querySelector('.cl-name').value.trim();
+    const qty = line.querySelector('.cl-qty').value.trim();
+    const bad = name.includes(',') || qty.includes(',');
+    line.classList.toggle('bad', bad);
+    if (bad) ok = false;
+    else if (name || qty) lines.push({ pelatis: name || null, posotita: rawQty(qty) });
+  });
+  return ok ? lines : null;
+}
+
+// "Θα δημιουργηθούν N γραμμές · σύνολο X" under the lines, so the result is visible before adding
+function updateCustSummary() {
+  const el = document.getElementById('cust-summary');
+  const lines = readCustLines();
+  el.classList.toggle('err', !lines);
+  if (!lines) { el.textContent = 'Ένας πελάτης και μία ποσότητα ανά γραμμή — χωρίς κόμματα'; return; }
+  const nVacc = Math.max(typedVaccines().length, 1);
+  const rows = Math.max(lines.length, 1) * nVacc;
+  const total = lines.reduce((sum, l) => sum + (/^\d+$/.test(l.posotita || '') ? Number(l.posotita) : 0), 0);
+  el.textContent = (rows === 1 ? 'Θα δημιουργηθεί 1 γραμμή' : `Θα δημιουργηθούν ${rows} γραμμές`) +
+    (total ? ` · σύνολο ${total.toLocaleString('el-GR')}${nVacc > 1 ? ' ανά εμβόλιο' : ''}` : '');
 }
 
 // ── CHANGELOG ────────────────────────────────────────────────────
@@ -2891,7 +2951,7 @@ function updateFiltersBadge() {
 
 function resetForm() {
   // clears step 2 and 3 only — keeps hatch date, flock, vacc date, order date
-  ['f-vaccine','f-customer','f-qty','f-supplier','f-notes']
+  ['f-vaccine','f-supplier','f-notes']
     .forEach(id => {
       const e = document.getElementById(id); if(!e) return;
       e.value = ''; e.style.borderColor = '';
@@ -2901,6 +2961,7 @@ function resetForm() {
   const fe = document.getElementById('f-emvoliasmos'); if (fe) fe.value = '';
   // close any open vaccine dropdown
   document.getElementById('vac-dropdown').style.display = 'none';
+  resetCustLines();
   updateSteps();
   refreshNewHatchGate('f-hatch', 'f-flock', 'f-newhatch-gate');
 }
@@ -2916,6 +2977,8 @@ orderedVal = ''; fridgeVal = ''; emvoliasmosVal = '';
 // sidebarOpen already defaults to false — collapse the desktop shell to match
 // (mobile ignores .shell.collapsed; it hides the drawer via .sidebar.mobile-open instead)
 document.getElementById('shell').classList.add('collapsed');
+
+resetCustLines();
 
 // Populate vaccine datalist from VACCINE_OPTIONS (datalist is in HTML above this script)
 (function(){

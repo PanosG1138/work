@@ -446,15 +446,16 @@ function fmtNum(val) {
   const n = parseInt(String(val).replace(/\./g, ''), 10);
   return isNaN(n) ? String(val) : n.toLocaleString('el-GR');
 }
+// stock is always a whole number: '60000' or '60.000' (dots = thousands). Anything else — a decimal
+// like '2,5' or '2.5', or text — returns NaN so saveEntry warns instead of guessing (2,5 used to save as 2, 2.5 as 25)
 function rawNum(val) {
-  if (!val) return null;
-  const s = String(val).replace(/\./g, '').trim();
-  const n = parseInt(s, 10);
-  return isNaN(n) ? null : n;
+  const s = String(val ?? '').trim();
+  if (!s) return null;
+  return /^(\d{1,3}(\.\d{3})+|\d+)$/.test(s) ? Number(s.replace(/\./g, '')) : NaN;
 }
 function fmtInput(el) {
-  const n = parseInt(el.value.replace(/\./g, ''), 10);
-  if (!isNaN(n)) el.value = n.toLocaleString('el-GR');
+  const n = rawNum(el.value);
+  if (n !== null && !Number.isNaN(n)) el.value = n.toLocaleString('el-GR');
 }
 function stripFmt(el) { el.value = el.value.replace(/\./g, ''); }
 
@@ -543,7 +544,7 @@ async function openEdit(id) {
   editId = id;
   document.getElementById('modal-title').textContent = r.emvolio;
   document.getElementById('m-emvolio').value = r.emvolio || '';
-  document.getElementById('m-posotita').value = fmtNum(r.posotita);
+  document.getElementById('m-posotita').value = r.posotita == null ? '' : fmtNum(r.posotita);
   // older rows may store the unit lower-case ('δόσεις') or not at all
   const unitSel = document.getElementById('m-monada');
   unitSel.value = [...unitSel.options].find(o => o.value.toLowerCase() === (r.monada || 'Δόσεις').toLowerCase())?.value || 'Δόσεις';
@@ -592,6 +593,7 @@ async function saveEntry() {
   const sxolia   = document.getElementById('m-sxolia').value.trim() || null;
 
   if (!emvolio) { toast('Εισάγετε όνομα εμβολίου.', true); return; }
+  if (Number.isNaN(posotita)) { toast('Η ποσότητα πρέπει να είναι ακέραιος αριθμός, χωρίς δεκαδικά (π.χ. 60.000)', true); return; }
 
   const now = new Date().toISOString();
   const btn = document.getElementById('btn-save');
