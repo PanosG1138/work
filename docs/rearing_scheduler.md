@@ -28,12 +28,37 @@ scheduler always plans with these values.
 |---|---|---|
 | Vaccination 1 | day 60–66 (7 days) | same |
 | Vaccination 2 | day 90–96 (7 days) | same |
-| Loading | day 105 → 119 (14 days) | day 118 → 132 (14 days) |
+| Loading | day 105–118 (14 days) | day 118–131 (14 days) |
 | House empty | day 119 | day 132 |
 | Cleaning | 25 days after empty | same |
 | Ready for next hatch | day 144 | day 157 |
 
 A house's next hatch should not be earlier than the previous cycle's "ready" date.
+
+## Clashes between houses
+
+Per hatch the scheduler looks at four events: chick placement, Vaccination 1, Vaccination 2 and
+Loading (the 14 loading days in the table above; Θ5 and Θ7 follow the same rules as the cage
+houses, with their own loading days).
+
+- **Chick placement** = hatch **+2 days** for ISA, Hy-Line (Pluriton) and H&N, **+1 day** for
+  Novogen. No breed chosen yet = either day. Two placements clash **only on the same day**.
+- **Vaccination / loading**: vax–vax, vax–loading and loading–loading of two houses clash only
+  when they **share at least one day** — no buffer before or after. Placements never clash with
+  vaccinations or loading.
+- **Θ1 and Θ2 never clash with each other** (they run as a pair); they clash with every other house.
+- Events already over are ignored.
+
+In the tool: a "⚠ N clashes" line on each affected card (details when expanded), a collapsible
+list of every clash above the houses, and clash warnings in the add/edit form.
+- **Suggest move**: the smallest shift (up to ±120 days) of one of the two hatches that clears the
+  clash and leaves fewer open clashes overall, without putting a hatch in the past, before its house
+  exists, on a taken date, before its house is ready (or making the house's next hatch not ready),
+  or breaking the Θ1/Θ2 7–12 day gap. Only "Not ordered" hatches that haven't hatched can move
+  (kept ones included); a movable Θ1/Θ2 partner moves the same number of days. **Apply** saves it.
+- **Mark resolved** hides a clash you accept (table `resolved_conflicts`, `conflict_key`).
+  The key includes both events' dates, so the mark stops applying if either hatch moves.
+  Resolved clashes stay listed under "Resolved", with **Unresolve**.
 
 ## What the tool does
 
@@ -68,9 +93,6 @@ Rearing system and all dates are derived from house + hatch date, never stored.
 
 ## Out of scope for now
 
-- Cross-house conflict detection (vaccination/loading clashes between houses) and the old
-  resolver. Parked by the user, 2026-09-23. The `resolved_conflicts` table is no longer read or
-  written by the app; `backup.py` still backs it up until the table is dropped.
 - Assigning customers (cage/aviary/barn) to hatches.
 
 ## Open follow-ups

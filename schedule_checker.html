@@ -103,6 +103,16 @@ header{
 .a-kept{color:var(--gh-attention-fg)}
 .row-btn.keep{border-color:var(--gh-attention-fg);color:var(--gh-attention-fg)}
 .row-btn.keep:hover{background:var(--gh-attention-subtle)}
+.clash-line{margin-top:8px;font-size:11.5px;font-weight:600;color:var(--gh-danger-fg)}
+.clash-panel{margin-bottom:18px;border:1px solid var(--gh-border-default);border-radius:var(--gh-r-lg);background:var(--gh-canvas-subtle);padding:10px 16px}
+.clash-panel summary{cursor:pointer;font-weight:700;font-size:14px}
+.clash-panel summary.bad{color:var(--gh-danger-fg)}
+.clash-panel details{margin-top:8px}
+.clash-panel details summary{font-size:13px;color:var(--gh-fg-muted)}
+.clash-item{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:8px 0;border-top:1px solid var(--gh-border-muted);font-size:13px;font-variant-numeric:tabular-nums}
+.clash-what{flex:1 1 480px}
+.muted{color:var(--gh-fg-muted)}
+.clash-fix{flex-basis:100%;font-size:12.5px}
 .empty-state{padding:56px 20px;text-align:center;color:var(--gh-fg-muted);font-size:14px}
 
 /* ── Row action buttons ── */
@@ -196,8 +206,10 @@ header{
       <span><b class="a-bad">▼ −N d</b> hatch before house is ready</span>
       <span><b class="a-kept">▼ −N d · kept early</b> you chose to keep it anyway</span>
       <span>Dashed card = earliest placement after the confirmed, kept and hatched hatches</span>
+      <span><b style="color:var(--gh-danger-fg)">⚠ clash</b> vaccination/loading dates overlapping another house's, or same chick-placement day</span>
     </div>
   </div>
+  <div id="clashes"></div>
   <div id="view"></div>
 </div>
 
@@ -253,6 +265,7 @@ header{
 const SB_URL  = 'https://oorhbrphdbigwgizejcc.supabase.co';
 const SB_KEY  = 'sb_publishable_1S3L1sNMOjr-YgwGAAD2Kg_X_3S4cTl';
 const TABLE   = 'placements';
+const RESOLVED_TABLE = 'resolved_conflicts';   // clashes marked "resolved" (conflict_key)
 
 // ── AUTH ──────────────────────────────────────────────────────────
 const _sb = supabase.createClient(SB_URL, SB_KEY);
@@ -298,6 +311,9 @@ const VAX_LENGTH = 7;
 const HOUSE_FROM = { 'Θ7': '2027-08-25' };   // new house: no hatch possible before it's built
 const PAIR = ['Θ1', 'Θ2'];            // always hatch PAIR_MIN–PAIR_MAX days apart
 const PAIR_MIN = 7, PAIR_MAX = 12;
+const MAX_SHIFT = 120;    // suggested moves look this many days either way
+/* days from hatch to chick placement: Novogen next day, ISA/Hy-Line/H&N two days; no breed yet = either */
+function placeDays(breed){ return breed === 'Novogen' ? [1] : breed ? [2] : [1, 2]; }
 const STATUS_CLASS = { 'Confirmed':'b-ok', 'Requested':'b-rq', 'Not ordered':'b-no' };
 
 /* ── Supabase ── */
@@ -317,6 +333,7 @@ async function sbFetch(path, opts={}){
 const sbSelect = ()  => sbFetch(`${TABLE}?order=doc_date.asc`);
 const sbInsert = row => sbFetch(TABLE, {method:'POST', prefer:'return=representation', body:JSON.stringify(row)});
 const sbDelete = id  => sbFetch(`${TABLE}?id=eq.${id}`, {method:'DELETE'});
+const sbSelectResolved = () => sbFetch(`${RESOLVED_TABLE}?select=conflict_key`);
 async function sbUpdate(id, row){
   const result = await sbFetch(`${TABLE}?id=eq.${id}`, {method:'PATCH', prefer:'return=representation', body:JSON.stringify(row)});
   if(!result || !result.length){
@@ -327,6 +344,9 @@ async function sbUpdate(id, row){
 
 /* ── State ── */
 let data = [];
+let resolved = new Set();   // conflict_keys the user accepted
+let fixes = {};             // clash key -> {sig, moves, html}: last "Suggest move" result
+let clashPanelOpen = false, resolvedOpen = false;
 let deleteId = null;
 let editId   = null;
 
@@ -355,7 +375,7 @@ function getSchedule(house, hatchIso){
   return {
     system, hatch,
     vax: VAX_DAYS.map(d => [addDays(hatch, d), addDays(hatch, d+VAX_LENGTH-1)]),
-    loadStart, empty,
+    loadStart, loadEnd: addDays(empty, -1), empty,   // loading = LOAD_DAYS days, house empty the day after
     ready: addDays(empty, CLEAN_DAYS),
   };
 }
@@ -387,7 +407,7 @@ function pairWarning(house, hatch, excludeId){
    placed together PAIR_MIN–PAIR_MAX days apart. Otherwise the house with the later latest
    hatch is ahead: the other is placed within range of that unmatched hatch where possible,
    and the one ahead just gets its own ready date.
-   Cross-house conflicts (vaccination/loading clashes) are deliberately not checked. */
+   Cross-house clashes are not avoided here — they're flagged and resolved separately (see Clashes). */
 const planned = r => r.status === 'Confirmed' || r.keep || r.doc_date <= isoDate(today());
 function plannedOf(house){ return cyclesOf(house).filter(planned); }
 function earliestFor(house){
@@ -427,13 +447,162 @@ function suggestNext(){
   return out;
 }
 
+/* ── Clashes between houses ──────────────────────────────────────────
+   Events per hatch: chick placement (hatch +1 Novogen / +2 others / either if no breed), Vax 1, Vax 2,
+   Loading (14 days from day 105 or 118). Vax/loading events of two houses clash only when they share at
+   least one day (no buffer); placements clash only with another placement on the same day.
+   Θ1/Θ2 never clash with each other. Events already over (before today) are ignored.
+   A clash's key includes both event dates, so a "resolved" mark stops applying once either hatch moves. */
+const KIND = { place:'Placement', vax1:'Vax 1', vax2:'Vax 2', load:'Loading' };
+function eventsOf(r){
+  const s = getSchedule(r.house, r.doc_date);
+  const days = placeDays(r.breed).map(d => addDays(s.hatch, d));
+  return [
+    { r, kind:'place', days, start:days[0], end:days[days.length-1] },
+    { r, kind:'vax1', start:s.vax[0][0], end:s.vax[0][1] },
+    { r, kind:'vax2', start:s.vax[1][0], end:s.vax[1][1] },
+    { r, kind:'load', start:s.loadStart, end:s.loadEnd },
+  ];
+}
+const sameGroup = (a, b) => a === b || (PAIR.includes(a) && PAIR.includes(b));
+function findClashes(rows){
+  const t = today();
+  const evs = rows.flatMap(eventsOf).filter(e => e.end >= t);
+  const out = [];
+  for(let i = 0; i < evs.length; i++) for(let j = i+1; j < evs.length; j++){
+    let [a, b] = [evs[i], evs[j]];
+    if(sameGroup(a.r.house, b.r.house)) continue;
+    let overlap;   // days both events share
+    if(a.kind === 'place' || b.kind === 'place'){
+      if(a.kind !== b.kind || !a.days.some(d => b.days.some(x => +x === +d))) continue;
+      overlap = 1;
+    } else {
+      overlap = daysBetween(maxDate(a.start, b.start), a.end < b.end ? a.end : b.end) + 1;
+      if(overlap < 1) continue;
+    }
+    if(b.start < a.start) [a, b] = [b, a];
+    const tag = e => `${e.r.id}:${e.kind}`;
+    out.push({ a, b, overlap, id:[tag(a), tag(b)].sort().join('|'),
+               key:[a, b].map(e => `${tag(e)}:${isoDate(e.start)}`).sort().join('|') });
+  }
+  return out;
+}
+const openClashes = rows => findClashes(rows).filter(c => !resolved.has(c.key));
+function when(e){ return e.kind === 'place' ? e.days.map(fmt).join(' or ') : range(e.start, e.end); }
+function gapText(c){ return c.a.kind === 'place' ? 'same day' : `${c.overlap} d overlap`; }
+function evText(e){ return `<b>${e.r.house}</b> ${KIND[e.kind]} ${when(e)} <span class="muted">(hatch ${fmt(parseISO(e.r.doc_date))})</span>`; }
+
+/* Run fn with `data` swapped for a hypothetical copy — the house/pair helpers all read the global. */
+function withData(rows, fn){ const saved = data; data = rows; try{ return fn(); } finally{ data = saved; } }
+const dataSig = () => JSON.stringify(data.map(r => [r.id, r.doc_date, r.breed, r.status, r.keep]));
+function notReadyCount(house){
+  const c = cyclesOf(house);
+  return c.filter((r, i) => i && parseISO(r.doc_date) < getSchedule(house, c[i-1].doc_date).ready).length;
+}
+function pairPartner(r){
+  if(!PAIR.includes(r.house)) return null;
+  const hatch = parseISO(r.doc_date);
+  const near = cyclesOf(PAIR.find(h => h !== r.house)).filter(x => Math.abs(daysBetween(hatch, parseISO(x.doc_date))) <= PAIR_MAX);
+  return near.sort((x, y) => Math.abs(daysBetween(hatch, parseISO(x.doc_date))) - Math.abs(daysBetween(hatch, parseISO(y.doc_date))))[0] || null;
+}
+
+/* "Suggest move": the smallest shift (±1..MAX_SHIFT days) of one side's hatch that clears this clash and
+   leaves fewer open clashes overall, without a hatch in the past, before the house exists, on a taken date,
+   before its house is ready (or making the next hatch not ready), or breaking the Θ1/Θ2 7–12 day gap.
+   Only "Not ordered" hatches that haven't hatched can move (kept ones too); a movable Θ1/Θ2 partner moves along. */
+const movable = r => r.status === 'Not ordered' && r.doc_date > isoDate(today());
+function suggestFix(key){
+  const c = findClashes(data).find(x => x.key === key);
+  if(!c) return;
+  const base = openClashes(data).length;
+  let best = null;
+  for(const e of [c.a, c.b]){
+    if(!movable(e.r)) continue;
+    const partner = pairPartner(e.r);
+    const movers = [e.r, ...(partner && movable(partner) ? [partner] : [])];
+    const before = Object.fromEntries(movers.map(m => [m.id, !!pairWarning(m.house, parseISO(m.doc_date), m.id)]));
+    const houses = [...new Set(movers.map(m => m.house))];
+    const ready0 = Object.fromEntries(houses.map(h => [h, notReadyCount(h)]));
+    search: for(let d = 1; d <= MAX_SHIFT && !(best && d >= Math.abs(best.d)); d++){
+      for(const dir of [1, -1]){
+        const moved = new Map(movers.map(m => [m.id, isoDate(addDays(parseISO(m.doc_date), dir*d))]));
+        const hypo = data.map(x => moved.has(x.id) ? {...x, doc_date: moved.get(x.id)} : x);
+        const ok = withData(hypo, () =>
+          movers.every(m => { const date = moved.get(m.id);
+            return parseISO(date) > today() && !(HOUSE_FROM[m.house] && date < HOUSE_FROM[m.house]) &&
+              !cyclesOf(m.house, m.id).some(x => x.doc_date === date) &&
+              (before[m.id] || !pairWarning(m.house, parseISO(date), m.id)); }) &&
+          houses.every(h => notReadyCount(h) <= ready0[h]));
+        if(!ok) continue;
+        const after = openClashes(hypo);
+        if(after.some(x => x.id === c.id) || after.length >= base) continue;
+        best = { d: dir*d, moves: [...moved], left: after.length };
+        break search;
+      }
+    }
+  }
+  const sig = dataSig();
+  if(!best){
+    const fixed = ![c.a, c.b].some(e => movable(e.r));
+    fixes[key] = { sig, moves: [], html: `<span class="muted">${fixed ? 'Both hatches are fixed (hatched, confirmed or requested) — nothing to move.'
+      : `No move within ${MAX_SHIFT} days clears it without breaking house readiness, the Θ1/Θ2 gap or adding clashes.`}</span>` };
+  } else {
+    const txt = best.moves.map(([id, date]) => { const r = data.find(x => x.id === id);
+      return `<b>${r.house}</b> ${fmt(parseISO(r.doc_date))} → <b>${fmt(parseISO(date))}</b>`; }).join(' and ');
+    fixes[key] = { sig, moves: best.moves, html: `Move ${txt} (${best.d > 0 ? '+' : '−'}${Math.abs(best.d)} d) → ${best.left} open clash${best.left === 1 ? '' : 'es'} left ` +
+      `<button class="row-btn accept" onclick="applyFix('${key}')">Apply</button>` };
+  }
+  render();
+}
+async function applyFix(key){
+  const f = fixes[key];
+  if(!f || f.sig !== dataSig()) return render();
+  setSyncStatus('loading','Saving...');
+  try{
+    for(const [id, date] of f.moves){
+      const [updated] = await sbUpdate(id, {doc_date: date});
+      data = data.map(x => x.id === id ? updated : x);
+    }
+    setSyncStatus('ok','Updated');
+  }catch(e){ setSyncStatus('err','Save failed: '+e.message); }
+  render();
+}
+async function setResolved(key, on){
+  setSyncStatus('loading','Saving...');
+  try{
+    if(on) await sbFetch(RESOLVED_TABLE, {method:'POST', body:JSON.stringify({conflict_key:key})});
+    else   await sbFetch(`${RESOLVED_TABLE}?conflict_key=eq.${encodeURIComponent(key)}`, {method:'DELETE'});
+    on ? resolved.add(key) : resolved.delete(key);
+    setSyncStatus('ok','Updated');
+    render();
+  }catch(e){ setSyncStatus('err','Save failed: '+e.message); }
+}
+
+function renderClashes(all){
+  const open = all.filter(c => !resolved.has(c.key)), done = all.filter(c => resolved.has(c.key));
+  const sig = dataSig();
+  const item = (c, btns) => `<div class="clash-item"><span class="clash-what">${evText(c.a)} ↔ ${evText(c.b)} <span class="muted">· ${gapText(c)}</span></span>${btns}` +
+    (fixes[c.key]?.sig === sig ? `<div class="clash-fix">${fixes[c.key].html}</div>` : '') + '</div>';
+  const list = open.map(c => item(c,
+    `<button class="row-btn" onclick="suggestFix('${c.key}')">Suggest move</button>` +
+    `<button class="row-btn" onclick="setResolved('${c.key}', true)">Mark resolved</button>`)).join('');
+  const doneList = done.map(c => item(c, `<button class="row-btn" onclick="setResolved('${c.key}', false)">Unresolve</button>`)).join('');
+  document.getElementById('clashes').innerHTML = !all.length ? '' :
+    `<details class="clash-panel"${clashPanelOpen ? ' open' : ''} ontoggle="clashPanelOpen=this.open">` +
+    `<summary class="${open.length ? 'bad' : ''}">${open.length ? `⚠ ${open.length} open clash${open.length === 1 ? '' : 'es'}` : 'No open clashes'}` +
+    `${done.length ? ` <span class="muted">· ${done.length} resolved</span>` : ''}</summary>${list}` +
+    (done.length ? `<details${resolvedOpen ? ' open' : ''} ontoggle="event.stopPropagation();resolvedOpen=this.open"><summary>Resolved (${done.length})</summary>${doneList}</details>` : '') +
+    `</details>`;
+}
+
 /* ── Load ── */
 async function load(){
   setSyncStatus('loading','Loading...');
   try{
-    const rows = await sbSelect();
+    const [rows, res] = await Promise.all([sbSelect(), sbSelectResolved()]);
     rows.forEach(r => getSchedule(r.house, r.doc_date));  // fail fast on unknown houses
     data = rows;
+    resolved = new Set(res.map(x => x.conflict_key));
     setSyncStatus('ok','Synced');
     render();
   }catch(e){ setSyncStatus('err','Error: '+e.message); }
@@ -453,7 +622,7 @@ function cardBody(house, s){
     row('Vax 1', range(...s.vax[0]), false, true) +
     row('Vax 2', range(...s.vax[1]), false, true) +
     row(`Day ${LOAD_START_DAY[s.system]}`, fmt(s.loadStart)) +
-    row('Loading', range(s.loadStart, s.empty), false, true) +
+    row('Loading', range(s.loadStart, s.loadEnd), false, true) +
     row('Empty', fmt(s.empty), true, true) +
     row('Ready', fmt(s.ready));
 }
@@ -461,11 +630,11 @@ function cardBody(house, s){
 /* Card shell: click (or Enter/Space) toggles expanded; state survives re-renders, not page reloads. */
 const openCards = new Set();
 function toggleCard(el, key){ if(el.classList.toggle('open')) openCards.add(key); else openCards.delete(key); }
-function hcard(key, cls, house, label, breed, s, extra){
+function hcard(key, cls, house, label, breed, s, extra, alert=''){
   return `<div class="hc${cls}${openCards.has(key)?' open':''}" tabindex="0" onclick="toggleCard(this,'${key}')" ` +
     `onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();toggleCard(this,'${key}')}">` +
     `<div class="hc-top"><span>${house}</span><span class="hc-num"><span class="hc-more">${label}</span><span class="hc-chev">›</span></span></div>` +
-    `<div class="hc-breed">${breed}</div>` + cardBody(house, s) + `<div class="hc-more">${extra}</div></div>`;
+    `<div class="hc-breed">${breed}</div>` + cardBody(house, s) + alert + `<div class="hc-more">${extra}</div></div>`;
 }
 
 /* kept: an unconfirmed hatch the user chose to keep even though the house isn't ready (amber, not red) */
@@ -491,6 +660,9 @@ function render(){
   const el = document.getElementById('view');
   const t = today();
   const next = suggestNext();
+  const clashes = findClashes(data);
+  renderClashes(clashes);
+  const openOf = id => clashes.filter(c => !resolved.has(c.key) && (c.a.r.id === id || c.b.r.id === id));
 
   const houses = Object.keys(HOUSES);
   // per house: a list of slots { arrow, card }; slot N of every house lands on the same grid row
@@ -526,12 +698,16 @@ function render(){
           `<button class="row-btn keep" onclick="event.stopPropagation();toggleKeep('${r.id}')">${r.keep ? 'Undo keep' : 'Keep this date'}</button>`;
         const outline = hatched ? ' hatched' : confirmed ? ' confirmed' : r.status === 'Requested' ? ' requested' : ' unconfirmed';
         const pw = pairWarning(house, s.hatch, r.id);
+        const mine = openOf(r.id);
+        const clashLine = mine.length ? `<div class="clash-line">⚠ ${mine.length} clash${mine.length === 1 ? '' : 'es'}</div>` : '';
+        const clashList = mine.map(c => { const [me, other] = c.a.r.id === r.id ? [c.a, c.b] : [c.b, c.a];
+          return `<div class="warn" style="color:var(--gh-danger-fg)">${KIND[me.kind]} ↔ ${other.r.house} ${KIND[other.kind]} ${when(other)} · ${gapText(c)}</div>`; }).join('');
         slots.push({
           arrow: prev ? arrow(prev.ready, s.hatch, r.keep && !confirmed) : '',
           card: hcard(r.id, outline, house, `#${i+1}`, esc(r.breed||'Breed —'), s,
-            badge + (pw ? `<div class="warn">⚠ ${pw}</div>` : '') +
+            badge + (pw ? `<div class="warn">⚠ ${pw}</div>` : '') + clashList +
             `<div class="hc-foot"><button class="row-btn" onclick="event.stopPropagation();openEditModal('${r.id}')">Edit</button>` +
-            `<button class="row-btn del" onclick="event.stopPropagation();askDelete('${r.id}')">Del</button>${keepBtn}</div>`),
+            `<button class="row-btn del" onclick="event.stopPropagation();askDelete('${r.id}')">Del</button>${keepBtn}</div>`, clashLine),
         });
       }
       prev = s;
@@ -576,9 +752,9 @@ function closeModal(){
   editId = null;
 }
 
-['m-house','m-date'].forEach(id => document.getElementById(id).addEventListener('change', checkModalWarn));
+['m-house','m-date','m-breed'].forEach(id => document.getElementById(id).addEventListener('change', checkModalWarn));
 
-/* Warn (don't block) when the date breaks the house's ready date or the Θ1/Θ2 gap. */
+/* Warn (don't block) when the date breaks the house's ready date or the Θ1/Θ2 gap, or clashes with another house. */
 function checkModalWarn(){
   const house = document.getElementById('m-house').value;
   const date  = document.getElementById('m-date').value;
@@ -600,6 +776,11 @@ function checkModalWarn(){
     }
     const pw = pairWarning(house, hatch, editId);
     if(pw) warnings.push(`${house}: ${pw}.`);
+    const me = { id: editId || 'new', house, doc_date: date, breed: document.getElementById('m-breed').value || null };
+    openClashes([...data.filter(r => r.id !== editId), me]).filter(c => c.a.r === me || c.b.r === me).forEach(c => {
+      const [mine, other] = c.a.r === me ? [c.a, c.b] : [c.b, c.a];
+      warnings.push(`Clash: ${KIND[mine.kind]} ↔ ${other.r.house} ${KIND[other.kind]} ${when(other)} (${gapText(c)}).`);
+    });
     if(HOUSE_FROM[house] && date < HOUSE_FROM[house]) warnings.push(`${house} can't take a hatch before ${fmt(parseISO(HOUSE_FROM[house]))}.`);
     // one placement per house + hatch date (unique in the database too)
     if(others.some(r => r.doc_date === date)){
