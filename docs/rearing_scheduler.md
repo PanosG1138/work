@@ -12,6 +12,7 @@ Purpose: find the ideal hatch dates for future placements in each rearing house.
 | Θ3 | Cage | Cage customers only | |
 | Θ4 | Cage | Cage customers only | |
 | Θ5 | Aviary | Aviary, barn, cage | Avoid cage pullets here whenever possible |
+| Θ7 | Aviary | Aviary, barn | New house (planned): capacity 70.000, first hatch possible 25/08/2027 |
 
 - "Cage / aviary / barn pullets" = the system of the customer's **production** house the pullets
   are sold into, not how they are reared.
@@ -23,7 +24,7 @@ Purpose: find the ideal hatch dates for future placements in each rearing house.
 Loading and cleaning are **planning maximums** — in practice they can finish sooner, but the
 scheduler always plans with these values.
 
-| Event | Cage houses (Θ1–Θ4) | Aviary (Θ5) |
+| Event | Cage houses (Θ1–Θ4) | Aviary (Θ5, Θ7) |
 |---|---|---|
 | Vaccination 1 | day 60–66 (7 days) | same |
 | Vaccination 2 | day 90–96 (7 days) | same |

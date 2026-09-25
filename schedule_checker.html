@@ -63,7 +63,7 @@ header{
 
 /* ── House columns + hatch cards ── */
 /* one grid for all houses: row N of every column lines up (arrow rows and card rows alternate) */
-.houses{display:grid;grid-template-columns:repeat(5,minmax(230px,1fr));column-gap:16px;align-items:start;overflow-x:auto;padding-bottom:6px}
+.houses{display:grid;grid-template-columns:repeat(6,minmax(200px,1fr));column-gap:16px;align-items:start;overflow-x:auto;padding-bottom:6px}
 .house-head{text-align:center;margin-bottom:10px}
 .house-name{font-weight:800;font-size:18px}
 .house-sys{font-size:11.5px;color:var(--gh-fg-muted)}
@@ -210,7 +210,7 @@ header{
       <select id="m-house">
         <option value="">— select —</option>
         <option>Θ1</option><option>Θ2</option><option>Θ3</option>
-        <option>Θ4</option><option>Θ5</option>
+        <option>Θ4</option><option>Θ5</option><option>Θ7</option>
       </select>
     </div>
     <div class="fgroup">
@@ -288,13 +288,14 @@ _sb.auth.onAuthStateChange((event, session) => {
 /* ── Houses & cycle timings — source of truth: docs/rearing_scheduler.md ──
    Day 0 = hatch date. Loading/cleaning are the planning maximums, not typical values. */
 const HOUSES = {
-  'Θ1': 'Cage', 'Θ2': 'Cage', 'Θ3': 'Cage', 'Θ4': 'Cage', 'Θ5': 'Aviary',
+  'Θ1': 'Cage', 'Θ2': 'Cage', 'Θ3': 'Cage', 'Θ4': 'Cage', 'Θ5': 'Aviary', 'Θ7': 'Aviary',
 };
 const LOAD_START_DAY = { Cage: 105, Aviary: 118 };
 const LOAD_DAYS  = 14;   // house is empty LOAD_DAYS after loading starts
 const CLEAN_DAYS = 25;   // house is ready CLEAN_DAYS after it is empty
 const VAX_DAYS   = [60, 90];
 const VAX_LENGTH = 7;
+const HOUSE_FROM = { 'Θ7': '2027-08-25' };   // new house: no hatch possible before it's built
 const PAIR = ['Θ1', 'Θ2'];            // always hatch PAIR_MIN–PAIR_MAX days apart
 const PAIR_MIN = 7, PAIR_MAX = 12;
 const STATUS_CLASS = { 'Confirmed':'b-ok', 'Requested':'b-rq', 'Not ordered':'b-no' };
@@ -391,7 +392,7 @@ const planned = r => r.status === 'Confirmed' || r.keep || r.doc_date <= isoDate
 function plannedOf(house){ return cyclesOf(house).filter(planned); }
 function earliestFor(house){
   const cycles = plannedOf(house);
-  const t = today();
+  const t = HOUSE_FROM[house] ? maxDate(today(), parseISO(HOUSE_FROM[house])) : today();
   if(!cycles.length) return t;
   const ready = getSchedule(house, cycles[cycles.length-1].doc_date).ready;
   return maxDate(ready, t);
@@ -400,7 +401,7 @@ function maxDate(a, b){ return a > b ? a : b; }
 
 function suggestNext(){
   const out = {};
-  ['Θ3','Θ4','Θ5'].forEach(h => { out[h] = earliestFor(h); });
+  Object.keys(HOUSES).filter(h => !PAIR.includes(h)).forEach(h => { out[h] = earliestFor(h); });
 
   const [h1, h2] = PAIR;
   const lastPlanned = h => { const c = plannedOf(h); return c.length ? parseISO(c[c.length-1].doc_date) : null; };
@@ -599,6 +600,7 @@ function checkModalWarn(){
     }
     const pw = pairWarning(house, hatch, editId);
     if(pw) warnings.push(`${house}: ${pw}.`);
+    if(HOUSE_FROM[house] && date < HOUSE_FROM[house]) warnings.push(`${house} can't take a hatch before ${fmt(parseISO(HOUSE_FROM[house]))}.`);
     // one placement per house + hatch date (unique in the database too)
     if(others.some(r => r.doc_date === date)){
       warnings.unshift(`${house} already has a placement hatching ${fmt(hatch)} — edit that one instead.`);
