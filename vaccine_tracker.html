@@ -1014,6 +1014,7 @@ body.printing-card .printcard-doc{display:block}
       <div class="wizard-queue" id="wizard-queue"></div>
 
       <div class="modal-actions">
+        <button class="btn-secondary" id="wz-back-btn" onclick="wizardBack()" style="margin-right:auto">← Πίσω</button>
         <button class="btn-secondary" onclick="closeWizard()">Ακύρωση</button>
         <button class="btn-primary" id="wz-finish-btn" onclick="wizardShowReview()" disabled>Ολοκλήρωση κι έλεγχος</button>
       </div>
@@ -1625,13 +1626,28 @@ function wizardRenderStage() {
   });
   document.getElementById('wz-field-label').textContent = WIZARD_LABELS[wizardStage];
   const input = document.getElementById('wz-field-input');
-  input.value = '';
+  // a field reached with ← Πίσω (or revisited after it) shows what was typed there; a new line starts empty
+  const d = wizardDraft;
+  input.value = { date: d.vaccDate ? fmt(d.vaccDate) : '', vaccine: d.vaccine || '', customer: d.customer || '', qty: d.qty || '' }[wizardStage];
+  // from the first field, Πίσω returns to hatch date/house — only while nothing is queued for that flock
+  const back = document.getElementById('wz-back-btn');
+  back.disabled = idx === 0 && wizardQueue.length > 0;
+  back.title = back.disabled ? 'Η εκκόλαψη/αναθρεπτήριο δεν αλλάζει όσο υπάρχουν εγγραφές στη λίστα' : '';
   input.removeAttribute('list');
   if (wizardStage === 'vaccine') { input.setAttribute('list', 'wz-vaccine-dl'); wizardVaccineInput(input); }
   if (wizardStage === 'customer') { wizardPopulateCustomerList(); input.setAttribute('list', 'wz-customer-dl'); }
   document.getElementById('wz-hint').textContent =
     (wizardStage === 'customer' || wizardStage === 'qty') ? 'Enter ↵ για συνέχεια (προαιρετικό)' : 'Enter ↵ για συνέχεια';
   input.focus();
+}
+
+function wizardBack() {
+  const idx = WIZARD_STAGES.indexOf(wizardStage);
+  if (idx > 0) { wizardStage = WIZARD_STAGES[idx - 1]; wizardRenderStage(); return; }
+  if (wizardQueue.length) return;  // hatch/house are shared by every queued line
+  document.getElementById('wz-loop').style.display = 'none';
+  document.getElementById('wz-context').style.display = '';
+  document.getElementById('wz-hatch').focus();
 }
 
 function wizardPopulateCustomerList() {
