@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rearing House Scheduler</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
 <link rel="stylesheet" href="theme.css">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -496,7 +496,7 @@ function findClashes(rows){
   return out;
 }
 const openClashes = rows => findClashes(rows).filter(c => !resolved.has(c.key));
-function when(e){ return e.kind === 'place' ? e.days.map(fmt).join(' or ') : range(e.start, e.end); }
+function when(e){ return e.kind === 'place' ? placeText(parseISO(e.r.doc_date), e.r.breed) : range(e.start, e.end); }
 function gapText(c){ return c.a.kind === 'place' ? 'same day' : `${c.overlap} d overlap`; }
 function evText(e){ return `<b>${e.r.house}</b> ${KIND[e.kind]} ${when(e)} <span class="muted">(hatch ${fmt(parseISO(e.r.doc_date))})</span>`; }
 
@@ -578,7 +578,7 @@ async function applyFix(key){
 async function setResolved(key, on){
   setSyncStatus('loading','Saving...');
   try{
-    if(on) await sbFetch(RESOLVED_TABLE, {method:'POST', body:JSON.stringify({conflict_key:key})});
+    if(on) await sbFetch(`${RESOLVED_TABLE}?on_conflict=conflict_key`, {method:'POST', prefer:'resolution=ignore-duplicates', body:JSON.stringify({conflict_key:key})});
     else   await sbFetch(`${RESOLVED_TABLE}?conflict_key=eq.${encodeURIComponent(key)}`, {method:'DELETE'});
     on ? resolved.add(key) : resolved.delete(key);
     setSyncStatus('ok','Updated');
@@ -610,9 +610,13 @@ async function load(){
     const [rows, res] = await Promise.all([sbSelect(), sbSelectResolved()]);
     rows.forEach(r => getSchedule(r.house, r.doc_date));  // fail fast on unknown houses
     data = rows;
-    resolved = new Set(res.map(x => x.conflict_key));
+    const live = new Set(findClashes(rows).map(c => c.key));
+    const stale = res.map(x => x.conflict_key).filter(k => !live.has(k));
+    resolved = new Set(res.map(x => x.conflict_key).filter(k => live.has(k)));
     setSyncStatus('ok','Synced');
     render();
+    // marks whose clash is gone (a hatch moved, or it's over) can never match again: drop them
+    if(stale.length) await sbFetch(`${RESOLVED_TABLE}?conflict_key=in.(${encodeURIComponent(stale.map(k => `"${k}"`).join(','))})`, {method:'DELETE'});
   }catch(e){ setSyncStatus('err','Error: '+e.message); }
 }
 
@@ -631,15 +635,15 @@ function placeText(hatch, breed){
 }
 
 /* Collapsed: Hatch, loading start (day 105 cage / 118 aviary), Ready. Expanded: everything.
-   breed sets the chick-placement day; hl = labels of rows to highlight (a clash clicked on a card). */
+   breed sets the chick-placement day; hl = event kinds whose rows to highlight (a clash clicked on a card). */
 function cardBody(house, s, breed, hl = new Set()){
   return row('Rearing', s.system, false, true) +
     row('Hatch', fmt(s.hatch), true) +
-    row('Placement', placeText(s.hatch, breed), false, true, hl.has(KIND.place)) +
-    row('Vax 1', range(...s.vax[0]), false, true, hl.has(KIND.vax1)) +
-    row('Vax 2', range(...s.vax[1]), false, true, hl.has(KIND.vax2)) +
+    row('Placement', placeText(s.hatch, breed), false, true, hl.has('place')) +
+    row('Vax 1', range(...s.vax[0]), false, true, hl.has('vax1')) +
+    row('Vax 2', range(...s.vax[1]), false, true, hl.has('vax2')) +
     row(`Day ${LOAD_START_DAY[s.system]}`, fmt(s.loadStart)) +
-    row('Loading', range(s.loadStart, s.loadEnd), false, true, hl.has(KIND.load)) +
+    row('Loading', range(s.loadStart, s.loadEnd), false, true, hl.has('load')) +
     row('Empty', fmt(s.empty), true, true) +
     row('Ready', fmt(s.ready));
 }
@@ -693,7 +697,7 @@ function render(){
   renderClashes(clashes);
   const openOf = id => clashes.filter(c => !resolved.has(c.key) && (c.a.r.id === id || c.b.r.id === id));
   const focused = clashes.find(c => c.key === focusKey && !resolved.has(c.key));
-  const hlOf = id => new Set(focused ? [focused.a, focused.b].filter(e => e.r.id === id).map(e => KIND[e.kind]) : []);
+  const hlOf = id => new Set(focused ? [focused.a, focused.b].filter(e => e.r.id === id).map(e => e.kind) : []);
 
   const houses = Object.keys(HOUSES);
   // per house: a list of slots { arrow, card }; slot N of every house lands on the same grid row

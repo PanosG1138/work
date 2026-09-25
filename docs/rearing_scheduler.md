@@ -59,7 +59,8 @@ other card and scrolling to it); clicking it again clears the highlight.
   or breaking the Θ1/Θ2 7–12 day gap. Only "Not ordered" hatches that haven't hatched can move
   (kept ones included); a movable Θ1/Θ2 partner moves the same number of days. **Apply** saves it.
 - **Mark resolved** hides a clash you accept (table `resolved_conflicts`, `conflict_key`).
-  The key includes both events' dates, so the mark stops applying if either hatch moves.
+  The key includes both events' dates, so the mark stops applying if either hatch moves; marks that
+  no longer match a current clash are deleted when the page loads.
   Resolved clashes stay listed under "Resolved", with **Unresolve**.
 
 ## What the tool does
