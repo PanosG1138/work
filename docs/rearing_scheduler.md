@@ -49,8 +49,10 @@ houses, with their own loading days).
 - **Θ1 and Θ2 never clash with each other** (they run as a pair); they clash with every other house.
 - Events already over are ignored.
 
-In the tool: a "⚠ N clashes" line on each affected card (details when expanded), a collapsible
-list of every clash above the houses, and clash warnings in the add/edit form.
+In the tool: a "⚠ N clashes" line on each affected card, a collapsible list of every clash above
+the houses, and clash warnings in the add/edit form. An expanded card lists its clashes, each with
+a ✓ (mark resolved). Clicking a clash there highlights the clashing rows on both cards (opening the
+other card and scrolling to it); clicking it again clears the highlight.
 - **Suggest move**: the smallest shift (up to ±120 days) of one of the two hatches that clears the
   clash and leaves fewer open clashes overall, without putting a hatch in the past, before its house
   exists, on a taken date, before its house is ready (or making the house's next hatch not ready),
@@ -64,7 +66,7 @@ list of every clash above the houses, and clash warnings in the add/edit form.
 
 - One column per house, one card per hatch; card rows line up across houses.
   Collapsed (default): house, breed, hatch, loading start (day 105 cage / day 118 aviary), ready.
-  Click to expand: cycle #, rearing system, vax 1, vax 2, loading, empty, status
+  Click to expand: cycle #, rearing system, chick placement, vax 1, vax 2, loading, empty, status
   (Confirmed / Requested / Not ordered, or "In house · N d old"), warnings, Edit/Del.
 - Outline colour: magenta = hatched (birds in house), green = future + confirmed,
   soft orange = Requested (day-old chicks asked for, not confirmed yet), white = Not ordered.
