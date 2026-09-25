@@ -685,14 +685,8 @@ body.printing-card .printcard-doc{display:block}
       <div class="hstat"><div class="hstat-val" id="stat-pending" style="color:var(--gh-attention-fg)">—</div><div class="hstat-label">Εκκρεμείς</div></div>
     </div>
     <button class="theme-toggle" id="btn-logout" onclick="confirmSignOut()" style="display:none" title="Αποσύνδεση">← Έξοδος</button>
-    <div class="tb-menu-wrap">
-      <button class="btn-tool" onclick="toggleTbMenu('header-menu',event)" title="Περισσότερα">
-        ⋯ <span class="tb-badge" id="changelog-badge" style="display:none">!</span>
-      </button>
-      <div class="tb-menu" id="header-menu" style="display:none;right:0;left:auto" onclick="event.stopPropagation()">
-        <button class="btn-tool" id="btn-changelog" onclick="reopenChangelog()" title="Εμφάνιση αλλαγών από άλλους χρήστες" style="display:none;width:100%">📋 Αλλαγές</button>
-      </div>
-    </div>
+    <!-- shown only when the other user made changes since your last visit; reopens that list -->
+    <button class="btn-tool" id="btn-changelog" onclick="reopenChangelog()" title="Εμφάνιση αλλαγών από άλλους χρήστες" style="display:none">📋 Αλλαγές</button>
   </div>
 </header>
 
@@ -2892,9 +2886,8 @@ async function showChangelog(user) {
 
     document.getElementById('changelog-title').textContent =
       hist.length + ' αλλαγ' + (hist.length === 1 ? 'ή' : 'ές') + ' από άλλους χρήστες';
-    // show the replay button (in the ⋯ menu) for this session, and flag the menu itself
+    // show the replay button in the header for this session
     document.getElementById('btn-changelog').style.display = '';
-    document.getElementById('changelog-badge').style.display = '';
 
   } catch(e) {
     list.innerHTML = `<div class="cl-empty">Σφάλμα φόρτωσης: ${x(e.message)}</div>`;
@@ -2908,7 +2901,6 @@ function closeChangelog() {
 // Re-opens the changelog from the cached content of the current session
 function reopenChangelog() {
   document.getElementById('changelog-bg').style.display = 'flex';
-  document.getElementById('changelog-badge').style.display = 'none';
 }
 
 // ── MONTH SEARCH MAP ─────────────────────────────────────────────
@@ -3011,7 +3003,7 @@ function updateShowDoneBtn() {
 }
 
 // ── TOOLBAR MENUS (Φίλτρα / ⋯) ──────────────────────────────────────
-const TB_MENU_IDS = ['filters-menu', 'actions-menu', 'header-menu'];
+const TB_MENU_IDS = ['filters-menu', 'actions-menu'];
 function closeAllTbMenus() {
   TB_MENU_IDS.forEach(id => { document.getElementById(id).style.display = 'none'; });
 }
