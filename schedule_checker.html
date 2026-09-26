@@ -100,10 +100,10 @@ header{
 .arrow::before{content:'▼';display:block;font-size:16px}
 .a-ok{color:var(--gh-success-fg)}
 .a-bad{color:var(--gh-danger-fg)}
-.a-kept{color:var(--gh-attention-fg)}
 .row-btn.keep{border-color:var(--gh-attention-fg);color:var(--gh-attention-fg)}
 .row-btn.keep:hover{background:var(--gh-attention-subtle)}
-.clash-line{margin-top:8px;font-size:11.5px;font-weight:600;color:var(--gh-danger-fg)}
+/* min-height: an empty clash line keeps the space, so collapsed cards in a row are the same height */
+.clash-line{margin-top:8px;min-height:1.5em;font-size:11.5px;font-weight:600;color:var(--gh-danger-fg)}
 .clash-panel{margin-bottom:18px;border:1px solid var(--gh-border-default);border-radius:var(--gh-r-lg);background:var(--gh-canvas-subtle);padding:10px 16px}
 .clash-panel summary{cursor:pointer;font-weight:700;font-size:14px}
 .clash-panel summary.bad{color:var(--gh-danger-fg)}
@@ -211,8 +211,7 @@ header{
       <span><span class="swatch" style="border-color:var(--soft-orange)"></span>requested, not confirmed</span>
       <span><span class="swatch" style="border-color:#fff"></span>not ordered</span>
       <span><b class="a-ok">▼ N d</b> days the house stands empty before the next hatch</span>
-      <span><b class="a-bad">▼ N d · not ready</b> less than the 25 cleaning days</span>
-      <span><b class="a-kept">▼ N d · kept early</b> you chose to keep it anyway</span>
+      <span><b class="a-bad">▼ N d</b> (red) less than the 25 cleaning days</span>
       <span>Dashed card = earliest placement after the confirmed, kept and hatched hatches</span>
       <span><b style="color:var(--gh-danger-fg)">⚠ clash</b> vaccination/loading dates overlapping another house's (loading vs Vax 1 doesn't count), or same chick-placement day</span>
     </div>
@@ -659,7 +658,7 @@ function hcard(key, cls, house, label, breed, s, extra, alert='', rawBreed=null,
   return `<div class="hc${cls}${openCards.has(key)?' open':''}" id="card-${key}" tabindex="0" onclick="toggleCard(this,'${key}')" ` +
     `onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();toggleCard(this,'${key}')}">` +
     `<div class="hc-top"><span>${house}</span><span class="hc-num"><span class="hc-more">${label}</span><span class="hc-chev">›</span></span></div>` +
-    `<div class="hc-breed">${breed}</div>` + cardBody(house, s, rawBreed, hl) + alert + `<div class="hc-more">${extra}</div></div>`;
+    `<div class="hc-breed">${breed}</div>` + cardBody(house, s, rawBreed, hl) + (alert || '<div class="clash-line"></div>') + `<div class="hc-more">${extra}</div></div>`;
 }
 
 /* Clicking a clash on a card lights up the clashing rows on both cards (opening the other card) and
@@ -674,12 +673,9 @@ function focusClash(key, fromId){
           ?.scrollIntoView({behavior:'smooth', block:'nearest', inline:'nearest'});
 }
 
-/* Days the house stands empty: from the previous flock's empty day to this hatch. Under CLEAN_DAYS the house
-   isn't ready (red); kept = an unconfirmed hatch the user chose to keep anyway (amber, not red). */
-function arrow(prev, hatch, kept){
-  const days = daysBetween(prev.empty, hatch), ready = hatch >= prev.ready;
-  const txt = ready ? `${days} d` : `${days} d · ${kept ? 'kept early' : 'not ready'}`;
-  return `<div class="arrow ${ready ? 'a-ok' : kept ? 'a-kept' : 'a-bad'}">${txt}</div>`;
+/* Days the house stands empty: from the previous flock's empty day to this hatch; red when under CLEAN_DAYS (not ready). */
+function arrow(prev, hatch){
+  return `<div class="arrow ${hatch >= prev.ready ? 'a-ok' : 'a-bad'}">${daysBetween(prev.empty, hatch)} d</div>`;
 }
 
 /* "Keep this date": plan with an unconfirmed hatch as if it were confirmed; clicking again undoes it */
@@ -745,7 +741,7 @@ function render(){
             `<span class="clash-link" title="Show on both cards" onclick="event.stopPropagation();focusClash('${c.key}','${r.id}')">${KIND[me.kind]} ↔ ${other.r.house} ${KIND[other.kind]} ${when(other)} · ${gapText(c)}</span>` +
             `<button class="tick" title="Mark resolved" aria-label="Mark resolved" onclick="event.stopPropagation();setResolved('${c.key}', true)">✓</button></div>`; }).join('');
         slots.push({
-          arrow: prev ? arrow(prev, s.hatch, r.keep && !confirmed) : '',
+          arrow: prev ? arrow(prev, s.hatch) : '',
           card: hcard(r.id, outline, house, `#${i+1}`, esc(r.breed||'Breed —'), s,
             badge + (pw ? `<div class="warn">⚠ ${pw}</div>` : '') + clashList +
             `<div class="hc-foot"><button class="row-btn" onclick="event.stopPropagation();openEditModal('${r.id}')">Edit</button>` +

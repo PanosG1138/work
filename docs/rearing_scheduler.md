@@ -76,7 +76,7 @@ other card and scrolling to it); clicking it again clears the highlight.
   soft orange = Requested (day-old chicks asked for, not confirmed yet), white = Not ordered.
 - Arrow between cards = days the house stands empty: from the previous flock's empty day (day after
   loading ends) to this hatch, e.g. `45 d`. Green when it's at least the 25 cleaning days, red
-  `N d · not ready` when shorter.
+  when shorter. Just the number, no label.
 - Dashed "Earliest possible" card in each column = earliest possible placement: the last planned
   cycle's ready date, never before today. Planned = Confirmed, kept ("Keep this date"), or already
   hatched (birds in the house, whatever the status). Other Requested / Not ordered hatches are ignored.
@@ -87,8 +87,7 @@ other card and scrolling to it); clicking it again clears the highlight.
   possible, the one ahead gets its own ready date.
   "Use this date" opens the add form prefilled.
 - "Keep this date" (unconfirmed cards only; `placements.keep`): plan with that hatch as if it were
-  confirmed — the dashed card moves after it — without changing its order status. A too-early
-  arrow into a kept hatch turns amber ("N d · kept early") instead of red. "Undo keep" reverts.
+  confirmed — the dashed card moves after it — without changing its order status. "Undo keep" reverts.
   Setting a hatch to Confirmed clears its keep flag.
 - One placement per house + hatch date (unique constraint `placements_house_doc_date_key`); the
   add/edit form blocks Save and says so when the date is already taken.
