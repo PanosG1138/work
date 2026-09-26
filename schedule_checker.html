@@ -210,9 +210,9 @@ header{
       <span><span class="swatch" style="border-color:var(--gh-success-fg)"></span>confirmed</span>
       <span><span class="swatch" style="border-color:var(--soft-orange)"></span>requested, not confirmed</span>
       <span><span class="swatch" style="border-color:#fff"></span>not ordered</span>
-      <span><b class="a-ok">▼ +N d</b> house ready N days before hatch</span>
-      <span><b class="a-bad">▼ −N d</b> hatch before house is ready</span>
-      <span><b class="a-kept">▼ −N d · kept early</b> you chose to keep it anyway</span>
+      <span><b class="a-ok">▼ N d</b> days the house stands empty before the next hatch</span>
+      <span><b class="a-bad">▼ N d · not ready</b> less than the 25 cleaning days</span>
+      <span><b class="a-kept">▼ N d · kept early</b> you chose to keep it anyway</span>
       <span>Dashed card = earliest placement after the confirmed, kept and hatched hatches</span>
       <span><b style="color:var(--gh-danger-fg)">⚠ clash</b> vaccination/loading dates overlapping another house's (loading vs Vax 1 doesn't count), or same chick-placement day</span>
     </div>
@@ -674,11 +674,12 @@ function focusClash(key, fromId){
           ?.scrollIntoView({behavior:'smooth', block:'nearest', inline:'nearest'});
 }
 
-/* kept: an unconfirmed hatch the user chose to keep even though the house isn't ready (amber, not red) */
-function arrow(prevReady, hatch, kept){
-  const g = daysBetween(prevReady, hatch);
-  const txt = g >= 0 ? `+${g} d` : `−${-g} d · ${kept ? 'kept early' : 'not ready'}`;
-  return `<div class="arrow ${g>=0 ? 'a-ok' : kept ? 'a-kept' : 'a-bad'}">${txt}</div>`;
+/* Days the house stands empty: from the previous flock's empty day to this hatch. Under CLEAN_DAYS the house
+   isn't ready (red); kept = an unconfirmed hatch the user chose to keep anyway (amber, not red). */
+function arrow(prev, hatch, kept){
+  const days = daysBetween(prev.empty, hatch), ready = hatch >= prev.ready;
+  const txt = ready ? `${days} d` : `${days} d · ${kept ? 'kept early' : 'not ready'}`;
+  return `<div class="arrow ${ready ? 'a-ok' : kept ? 'a-kept' : 'a-bad'}">${txt}</div>`;
 }
 
 /* "Keep this date": plan with an unconfirmed hatch as if it were confirmed; clicking again undoes it */
@@ -717,7 +718,7 @@ function render(){
       const s = getSchedule(house, iso);
       const pw = pairWarning(house, s.hatch);
       slots.push({
-        arrow: prev ? arrow(prev.ready, s.hatch) : '',
+        arrow: prev ? arrow(prev, s.hatch) : '',
         card: hcard('next-' + house, ' suggest', house, 'After confirmed hatches', 'Earliest possible', s,
           (pw ? `<div class="warn">⚠ ${pw}</div>` : '') +
           `<div class="hc-foot"><button class="row-btn accept" onclick="event.stopPropagation();openAddModal('${house}','${iso}')">Use this date</button></div>`),
@@ -744,7 +745,7 @@ function render(){
             `<span class="clash-link" title="Show on both cards" onclick="event.stopPropagation();focusClash('${c.key}','${r.id}')">${KIND[me.kind]} ↔ ${other.r.house} ${KIND[other.kind]} ${when(other)} · ${gapText(c)}</span>` +
             `<button class="tick" title="Mark resolved" aria-label="Mark resolved" onclick="event.stopPropagation();setResolved('${c.key}', true)">✓</button></div>`; }).join('');
         slots.push({
-          arrow: prev ? arrow(prev.ready, s.hatch, r.keep && !confirmed) : '',
+          arrow: prev ? arrow(prev, s.hatch, r.keep && !confirmed) : '',
           card: hcard(r.id, outline, house, `#${i+1}`, esc(r.breed||'Breed —'), s,
             badge + (pw ? `<div class="warn">⚠ ${pw}</div>` : '') + clashList +
             `<div class="hc-foot"><button class="row-btn" onclick="event.stopPropagation();openEditModal('${r.id}')">Edit</button>` +
