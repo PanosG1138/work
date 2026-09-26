@@ -25,22 +25,27 @@ Purpose: find the ideal hatch dates for future placements in each rearing house.
 Loading and cleaning are **planning maximums** — in practice they can finish sooner, but the
 scheduler always plans with these values.
 
-| Event | Cage houses (Θ1–Θ4) | Aviary (Θ5, Θ7) |
-|---|---|---|
-| Vaccination 1 | day 60–66 (7 days) | same |
-| Vaccination 2 | day 90–96 (7 days) | same |
-| Loading | day 105–118 (14 days) | day 118–131 (14 days) |
-| House empty | day 119 | day 132 |
-| Cleaning | 25 days after empty | same |
-| Ready for next hatch | day 144 | day 157 |
+Loading does **not** depend on the house or the rearing system — it depends on the customers in the hatch.
+Every customer's pullets load from **day 105 for 14 days**; the one exception is **Φραγκούλης/Πτηνοτροφική**,
+whose pullets (cage, aviary or barn) **always load from day 115 for 14 days**. Each hatch records which case it
+is (`placements.ptino`, "Πτηνοτροφική (Φραγκούλης) in this hatch" in the add/edit form).
+
+| Event | No Πτηνοτροφική | Πτηνοτροφική only | Πτηνοτροφική + other customers |
+|---|---|---|---|
+| Vaccination 1 | day 60–66 (7 days) | same | same |
+| Vaccination 2 | day 90–96 (7 days) | same | same |
+| Loading | day 105–118 | day 115–128 | day 105–128 (others from 105, Πτηνοτροφική from 115) |
+| House empty | day 119 | day 129 | day 129 |
+| Cleaning | 25 days after empty | same | same |
+| Ready for next hatch | day 144 | day 154 | day 154 |
 
 A house's next hatch should not be earlier than the previous cycle's "ready" date.
 
 ## Clashes between houses
 
 Per hatch the scheduler looks at four events: chick placement, Vaccination 1, Vaccination 2 and
-Loading (the 14 loading days in the table above; Θ5 and Θ7 follow the same rules as the cage
-houses, with their own loading days).
+Loading (the loading days in the table above, per the hatch's Πτηνοτροφική setting; all houses follow
+the same rules).
 
 - **Chick placement** = hatch **+2 days** for ISA, Hy-Line (Pluriton) and H&N, **+1 day** for
   Novogen. No breed chosen yet = either day. Two placements clash **only on the same day**.
@@ -69,7 +74,7 @@ other card and scrolling to it); clicking it again clears the highlight.
 ## What the tool does
 
 - One column per house, one card per hatch; card rows line up across houses.
-  Collapsed (default): house, breed, hatch, loading start (day 105 cage / day 118 aviary), ready.
+  Collapsed (default): house, breed, hatch, loading start (day 105, or 115 for a Πτηνοτροφική-only hatch), ready.
   Click to expand: cycle #, rearing system, chick placement, vax 1, vax 2, loading, empty, status
   (Confirmed / Requested / Not ordered, or "In house · N d old"), warnings, Edit/Del.
 - Outline colour: magenta = hatched (birds in house), green = future + confirmed,
@@ -96,7 +101,7 @@ other card and scrolling to it); clicking it again clears the highlight.
 - Completed cycles (house already emptied) are always hidden; they're kept in the table and
   still count for the next cycle's arrow and suggestion.
 
-Data: `placements` table (`id`, `house`, `doc_date` = hatch date, `breed`, `status`, `keep`); unique (`house`, `doc_date`).
+Data: `placements` table (`id`, `house`, `doc_date` = hatch date, `breed`, `status`, `keep`, `ptino` = null / 'only' / 'mixed'); unique (`house`, `doc_date`).
 Rearing system and all dates are derived from house + hatch date, never stored.
 
 ## Out of scope for now

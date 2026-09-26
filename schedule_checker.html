@@ -244,6 +244,14 @@ header{
       </select>
     </div>
     <div class="fgroup">
+      <label>Πτηνοτροφική (Φραγκούλης) in this hatch</label>
+      <select id="m-ptino">
+        <option value="">No</option>
+        <option value="only">Only Πτηνοτροφική (loads day 115–128)</option>
+        <option value="mixed">Πτηνοτροφική + other customers (loads day 105–128)</option>
+      </select>
+    </div>
+    <div class="fgroup">
       <label>Status</label>
       <select id="m-status">
         <option>Not ordered</option><option>Requested</option><option>Confirmed</option>
@@ -310,8 +318,11 @@ _sb.auth.onAuthStateChange((event, session) => {
 const HOUSES = {
   'Θ1': 'Cage', 'Θ2': 'Cage', 'Θ3': 'Cage', 'Θ4': 'Cage', 'Θ5': 'Aviary', 'Θ7': 'Aviary',
 };
-const LOAD_START_DAY = { Cage: 105, Aviary: 118 };
-const LOAD_DAYS  = 14;   // house is empty LOAD_DAYS after loading starts
+/* Loading doesn't depend on the house: every customer's pullets load from day LOAD_START for LOAD_DAYS days,
+   except Φραγκούλης/Πτηνοτροφική, always from day PTINO_LOAD_START. placements.ptino says whether they're in the hatch:
+   null = no, 'only' = only their pullets (loads 115–128), 'mixed' = theirs + other customers' (loads 105–128). */
+const LOAD_START = 105, PTINO_LOAD_START = 115;
+const LOAD_DAYS  = 14;
 const CLEAN_DAYS = 25;   // house is ready CLEAN_DAYS after it is empty
 const VAX_DAYS   = [60, 90];
 const VAX_LENGTH = 7;
@@ -373,20 +384,22 @@ function fmt(d){ return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMont
 function fmtShort(d){ return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0'); }
 function today(){ const t=new Date(); t.setHours(0,0,0,0); return t; }
 
-/* Every date of one cycle, derived from house + hatch date. */
-function getSchedule(house, hatchIso){
+/* Every date of one cycle, derived from house + hatch date + whether Πτηνοτροφική is in the hatch (ptino). */
+function getSchedule(house, hatchIso, ptino = null){
   const system = HOUSES[house];
   if(!system) throw new Error(`Unknown house "${house}" in placements — expected one of ${Object.keys(HOUSES).join(', ')}`);
   const hatch = parseISO(hatchIso);
-  const loadStart = addDays(hatch, LOAD_START_DAY[system]);
-  const empty = addDays(loadStart, LOAD_DAYS);
+  const loadStart = addDays(hatch, ptino === 'only' ? PTINO_LOAD_START : LOAD_START);
+  const loadEnd = addDays(hatch, (ptino ? PTINO_LOAD_START : LOAD_START) + LOAD_DAYS - 1);
+  const empty = addDays(loadEnd, 1);   // house empty the day after loading ends
   return {
     system, hatch,
     vax: VAX_DAYS.map(d => [addDays(hatch, d), addDays(hatch, d+VAX_LENGTH-1)]),
-    loadStart, loadEnd: addDays(empty, -1), empty,   // loading = LOAD_DAYS days, house empty the day after
+    loadStart, loadEnd, empty,
     ready: addDays(empty, CLEAN_DAYS),
   };
 }
+const scheduleOf = r => getSchedule(r.house, r.doc_date, r.ptino);
 
 function cyclesOf(house, excludeId){
   return data.filter(r=>r.house===house && r.id!==excludeId).sort((a,b)=>a.doc_date.localeCompare(b.doc_date));
@@ -423,7 +436,7 @@ function earliestFor(house){
   const cycles = plannedOf(house);
   const t = HOUSE_FROM[house] ? maxDate(today(), parseISO(HOUSE_FROM[house])) : today();
   if(!cycles.length) return t;
-  const ready = getSchedule(house, cycles[cycles.length-1].doc_date).ready;
+  const ready = scheduleOf(cycles[cycles.length-1]).ready;
   return maxDate(ready, t);
 }
 function maxDate(a, b){ return a > b ? a : b; }
@@ -464,7 +477,7 @@ function suggestNext(){
    A clash's key includes both event dates, so a "resolved" mark stops applying once either hatch moves. */
 const KIND = { place:'Placement', vax1:'Vax 1', vax2:'Vax 2', load:'Loading' };
 function eventsOf(r){
-  const s = getSchedule(r.house, r.doc_date);
+  const s = scheduleOf(r);
   const days = placeDays(r.breed).map(d => addDays(s.hatch, d));
   return [
     { r, kind:'place', days, start:days[0], end:days[days.length-1] },
@@ -504,10 +517,10 @@ function evText(e){ return `<b>${e.r.house}</b> ${KIND[e.kind]} ${when(e)} <span
 
 /* Run fn with `data` swapped for a hypothetical copy — the house/pair helpers all read the global. */
 function withData(rows, fn){ const saved = data; data = rows; try{ return fn(); } finally{ data = saved; } }
-const dataSig = () => JSON.stringify(data.map(r => [r.id, r.doc_date, r.breed, r.status, r.keep]));
+const dataSig = () => JSON.stringify(data.map(r => [r.id, r.doc_date, r.breed, r.status, r.keep, r.ptino]));
 function notReadyCount(house){
   const c = cyclesOf(house);
-  return c.filter((r, i) => i && parseISO(r.doc_date) < getSchedule(house, c[i-1].doc_date).ready).length;
+  return c.filter((r, i) => i && parseISO(r.doc_date) < scheduleOf(c[i-1]).ready).length;
 }
 function pairPartner(r){
   const p = pairOf(r.house);
@@ -637,15 +650,17 @@ function placeText(hatch, breed){
   return (d1.getMonth() === d2.getMonth() ? String(d1.getDate()).padStart(2,'0') : fmtShort(d1)) + ' or ' + fmt(d2);
 }
 
-/* Collapsed: Hatch, loading start (day 105 cage / 118 aviary), Ready. Expanded: everything.
+/* Collapsed: Hatch, loading start (day 105, or 115 for a Πτηνοτροφική-only hatch), Ready. Expanded: everything.
    breed sets the chick-placement day; hl = event kinds whose rows to highlight (a clash clicked on a card). */
-function cardBody(house, s, breed, hl = new Set()){
+const PTINO_TEXT = { only: 'Only', mixed: 'With other customers' };
+function cardBody(house, s, breed, hl = new Set(), ptino = null){
   return row('Rearing', s.system, false, true) +
+    (ptino ? row('Πτηνοτροφική', PTINO_TEXT[ptino], false, true) : '') +
     row('Hatch', fmt(s.hatch), true) +
     row('Placement', placeText(s.hatch, breed), false, true, hl.has('place')) +
     row('Vax 1', range(...s.vax[0]), false, true, hl.has('vax1')) +
     row('Vax 2', range(...s.vax[1]), false, true, hl.has('vax2')) +
-    row(`Day ${LOAD_START_DAY[s.system]}`, fmt(s.loadStart)) +
+    row(`Day ${daysBetween(s.hatch, s.loadStart)}`, fmt(s.loadStart)) +
     row('Loading', range(s.loadStart, s.loadEnd), false, true, hl.has('load')) +
     row('Empty', fmt(s.empty), true, true) +
     row('Ready', fmt(s.ready));
@@ -654,11 +669,11 @@ function cardBody(house, s, breed, hl = new Set()){
 /* Card shell: click (or Enter/Space) toggles expanded; state survives re-renders, not page reloads. */
 const openCards = new Set();
 function toggleCard(el, key){ if(el.classList.toggle('open')) openCards.add(key); else openCards.delete(key); }
-function hcard(key, cls, house, label, breed, s, extra, alert='', rawBreed=null, hl){
+function hcard(key, cls, house, label, breed, s, extra, alert='', rawBreed=null, hl, ptino=null){
   return `<div class="hc${cls}${openCards.has(key)?' open':''}" id="card-${key}" tabindex="0" onclick="toggleCard(this,'${key}')" ` +
     `onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();toggleCard(this,'${key}')}">` +
     `<div class="hc-top"><span>${house}</span><span class="hc-num"><span class="hc-more">${label}</span><span class="hc-chev">›</span></span></div>` +
-    `<div class="hc-breed">${breed}</div>` + cardBody(house, s, rawBreed, hl) + (alert || '<div class="clash-line"></div>') + `<div class="hc-more">${extra}</div></div>`;
+    `<div class="hc-breed">${breed}</div>` + cardBody(house, s, rawBreed, hl, ptino) + (alert || '<div class="clash-line"></div>') + `<div class="hc-more">${extra}</div></div>`;
 }
 
 /* Clicking a clash on a card lights up the clashing rows on both cards (opening the other card) and
@@ -722,7 +737,7 @@ function render(){
     };
     if(lastPlanned < 0) pushSuggestion();
     cycles.forEach((r, i) => {
-      const s = getSchedule(house, r.doc_date);
+      const s = scheduleOf(r);
       // completed cycles (house already emptied) are never shown; they still feed the next arrow
       if(s.empty >= t){
         const hatched = s.hatch <= t;
@@ -745,7 +760,7 @@ function render(){
           card: hcard(r.id, outline, house, `#${i+1}`, esc(r.breed||'Breed —'), s,
             badge + (pw ? `<div class="warn">⚠ ${pw}</div>` : '') + clashList +
             `<div class="hc-foot"><button class="row-btn" onclick="event.stopPropagation();openEditModal('${r.id}')">Edit</button>` +
-            `<button class="row-btn del" onclick="event.stopPropagation();askDelete('${r.id}')">Del</button>${keepBtn}</div>`, clashLine, r.breed, hlOf(r.id)),
+            `<button class="row-btn del" onclick="event.stopPropagation();askDelete('${r.id}')">Del</button>${keepBtn}</div>`, clashLine, r.breed, hlOf(r.id), r.ptino),
         });
       }
       prev = s;
@@ -764,13 +779,14 @@ function render(){
 }
 
 /* ── Add/Edit modal ── */
-function openModal(title, house, date, breed, status, saveText){
+function openModal(title, house, date, breed, status, saveText, ptino = ''){
   document.getElementById('modal-title').textContent = title;
   document.getElementById('m-house').value  = house;
   document.getElementById('m-house').disabled = !!editId;
   document.getElementById('m-date').value   = date;
   document.getElementById('m-breed').value  = breed;
   document.getElementById('m-status').value = status;
+  document.getElementById('m-ptino').value  = ptino;
   document.getElementById('m-save').textContent = saveText;
   document.getElementById('modal-bg').classList.remove('hidden');
   checkModalWarn();
@@ -783,14 +799,14 @@ function openEditModal(id){
   const r = data.find(x=>x.id==id);
   if(!r) throw new Error(`Placement ${id} not found`);
   editId = r.id;
-  openModal('Edit placement', r.house, r.doc_date, r.breed||'', r.status, 'Update');
+  openModal('Edit placement', r.house, r.doc_date, r.breed||'', r.status, 'Update', r.ptino||'');
 }
 function closeModal(){
   document.getElementById('modal-bg').classList.add('hidden');
   editId = null;
 }
 
-['m-house','m-date','m-breed'].forEach(id => document.getElementById(id).addEventListener('change', checkModalWarn));
+['m-house','m-date','m-breed','m-ptino'].forEach(id => document.getElementById(id).addEventListener('change', checkModalWarn));
 
 /* Warn (don't block) when the date breaks the house's ready date or a pair's gap, or clashes with another house. */
 function checkModalWarn(){
@@ -801,20 +817,21 @@ function checkModalWarn(){
   const warnings = [];
   if(house && date){
     const hatch = parseISO(date);
+    const ptino = document.getElementById('m-ptino').value || null;
     const others = cyclesOf(house, editId);
     const before = others.filter(r=>r.doc_date < date).pop();
     const after  = others.find(r=>r.doc_date > date);
     if(before){
-      const ready = getSchedule(house, before.doc_date).ready;
+      const ready = scheduleOf(before).ready;
       if(hatch < ready) warnings.push(`${house} is not ready until ${fmt(ready)} (previous cycle hatched ${fmt(parseISO(before.doc_date))}).`);
     }
     if(after){
-      const ready = getSchedule(house, date).ready;
+      const ready = getSchedule(house, date, ptino).ready;
       if(parseISO(after.doc_date) < ready) warnings.push(`This cycle keeps ${house} busy until ${fmt(ready)}, after the next hatch on ${fmt(parseISO(after.doc_date))}.`);
     }
     const pw = pairWarning(house, hatch, editId);
     if(pw) warnings.push(`${house}: ${pw}.`);
-    const me = { id: editId || 'new', house, doc_date: date, breed: document.getElementById('m-breed').value || null };
+    const me = { id: editId || 'new', house, doc_date: date, breed: document.getElementById('m-breed').value || null, ptino };
     openClashes([...data.filter(r => r.id !== editId), me]).filter(c => c.a.r === me || c.b.r === me).forEach(c => {
       const [mine, other] = c.a.r === me ? [c.a, c.b] : [c.b, c.a];
       warnings.push(`Clash: ${KIND[mine.kind]} ↔ ${other.r.house} ${KIND[other.kind]} ${when(other)} (${gapText(c)}).`);
@@ -835,6 +852,7 @@ async function saveNew(){
   const date   = document.getElementById('m-date').value;
   const breed  = document.getElementById('m-breed').value || null;
   const status = document.getElementById('m-status').value;
+  const ptino  = document.getElementById('m-ptino').value || null;
   if(!house || !date) return;
   const btn = document.getElementById('m-save');
   btn.disabled = true;
@@ -843,11 +861,11 @@ async function saveNew(){
   try{
     if(editId){
       // keep only means something while unconfirmed, so confirming clears it
-      const [updated] = await sbUpdate(editId, {doc_date:date, breed, status, ...(status === 'Confirmed' && {keep:false})});
+      const [updated] = await sbUpdate(editId, {doc_date:date, breed, status, ptino, ...(status === 'Confirmed' && {keep:false})});
       data = data.map(r => r.id===editId ? updated : r);
       setSyncStatus('ok','Updated');
     } else {
-      const [inserted] = await sbInsert({house, doc_date:date, breed, status});
+      const [inserted] = await sbInsert({house, doc_date:date, breed, status, ptino});
       data.push(inserted);
       setSyncStatus('ok','Saved');
     }
