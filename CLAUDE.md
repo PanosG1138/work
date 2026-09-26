@@ -37,8 +37,8 @@ Each HTML file is fully self-contained: inline `<style>` and `<script>`, no JS i
 - **Automation** (`.github/workflows/`): `backup.yml` runs `backup.py` nightly, pulling every Supabase table to a Google Sheet via `gspread`. `feed_notify.yml` emails 7-day/3-day feed-change reminders — it re-implements the feed schedule tables (`SCHEDULES`, `BREED_SCHEDULE`) as a **separate copy** inline in the workflow YAML. If `feed_tracker.html`'s schedules change, that copy has to be updated by hand or the reminders drift out of sync.
 
 ## Facility structure
-Rearing houses: Θ1–Θ4 (cage), Θ5 (aviary), Θ7 (new aviary, planned — first hatch possible 25/08/2027). A1 is no longer used.
-Full house rules, cycle timings and the Θ1/Θ2 pairing live in `docs/rearing_scheduler.md`.
+Rearing houses: Θ1–Θ4 (cage), Θ5 (aviary), Θ7 (new aviary, planned — first hatch possible 25/10/2027). A1 is no longer used.
+Full house rules, cycle timings and the Θ1/Θ2 and Θ4/Θ5 pairing live in `docs/rearing_scheduler.md`.
 Exception: vaccine_tracker.html keeps A1 in its house lists (Θ1–Θ5 + A1) by the user's choice — check the specific file.
 
 ## Design principles (non-negotiable)

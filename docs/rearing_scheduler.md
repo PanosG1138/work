@@ -12,12 +12,13 @@ Purpose: find the ideal hatch dates for future placements in each rearing house.
 | Θ3 | Cage | Cage customers only | |
 | Θ4 | Cage | Cage customers only | |
 | Θ5 | Aviary | Aviary, barn, cage | Avoid cage pullets here whenever possible |
-| Θ7 | Aviary | Aviary, barn | New house (planned): capacity 70.000, first hatch possible 25/08/2027 |
+| Θ7 | Aviary | Aviary, barn | New house (planned): capacity 70.000, first hatch possible 25/10/2027 |
 
 - "Cage / aviary / barn pullets" = the system of the customer's **production** house the pullets
   are sold into, not how they are reared.
 - A1 is no longer used. It has no place in the scheduler's logic.
 - Θ1 and Θ2 always hatch **7–12 days** apart from each other (either order).
+- Θ4 and Θ5 always hatch **7–15 days** apart from each other (either order).
 
 ## Cycle timings (day 0 = hatch date)
 
@@ -43,10 +44,11 @@ houses, with their own loading days).
 
 - **Chick placement** = hatch **+2 days** for ISA, Hy-Line (Pluriton) and H&N, **+1 day** for
   Novogen. No breed chosen yet = either day. Two placements clash **only on the same day**.
-- **Vaccination / loading**: vax–vax, vax–loading and loading–loading of two houses clash only
-  when they **share at least one day** — no buffer before or after. Placements never clash with
-  vaccinations or loading.
-- **Θ1 and Θ2 never clash with each other** (they run as a pair); they clash with every other house.
+- **Vaccination / loading**: vax–vax, loading–Vax 2 and loading–loading of two houses clash only
+  when they **share at least one day** — no buffer before or after. **Loading never clashes with
+  Vax 1.** Placements never clash with vaccinations or loading.
+- **The houses of a pair never clash with each other**: Θ1/Θ2 and Θ4/Θ5. They clash with every
+  other house.
 - Events already over are ignored.
 
 In the tool: a "⚠ N clashes" line on each affected card, a collapsible list of every clash above
@@ -56,8 +58,9 @@ other card and scrolling to it); clicking it again clears the highlight.
 - **Suggest move**: the smallest shift (up to ±120 days) of one of the two hatches that clears the
   clash and leaves fewer open clashes overall, without putting a hatch in the past, before its house
   exists, on a taken date, before its house is ready (or making the house's next hatch not ready),
-  or breaking the Θ1/Θ2 7–12 day gap. Only "Not ordered" hatches that haven't hatched can move
-  (kept ones included); a movable Θ1/Θ2 partner moves the same number of days. **Apply** saves it.
+  or breaking a pair's gap (Θ1/Θ2 7–12, Θ4/Θ5 7–15 days). Only "Not ordered" hatches that haven't
+  hatched can move (kept ones included); a movable pair partner moves the same number of days.
+  **Apply** saves it.
 - **Mark resolved** hides a clash you accept (table `resolved_conflicts`, `conflict_key`).
   The key includes both events' dates, so the mark stops applying if either hatch moves; marks that
   no longer match a current clash are deleted when the page loads.
@@ -77,9 +80,10 @@ other card and scrolling to it); clicking it again clears the highlight.
   cycle's ready date, never before today. Planned = Confirmed, kept ("Keep this date"), or already
   hatched (birds in the house, whatever the status). Other Requested / Not ordered hatches are ignored.
   The card sits right after the last planned card; the other hatches follow it.
-  Θ1/Θ2: if their latest planned hatches are ≤ 12 days apart they're a pair and the next two are
-  suggested together 7–12 days apart. Otherwise the house with the later latest hatch is ahead: the
-  other is placed within 7–12 days of that hatch where possible, the one ahead gets its own ready date.
+  Pairs (Θ1/Θ2 7–12 days, Θ4/Θ5 7–15 days): if their latest planned hatches are within the pair's
+  maximum they're partners and the next two are suggested together within the pair's range. Otherwise
+  the house with the later latest hatch is ahead: the other is placed within range of that hatch where
+  possible, the one ahead gets its own ready date.
   "Use this date" opens the add form prefilled.
 - "Keep this date" (unconfirmed cards only; `placements.keep`): plan with that hatch as if it were
   confirmed — the dashed card moves after it — without changing its order status. A too-early
@@ -87,7 +91,8 @@ other card and scrolling to it); clicking it again clears the highlight.
   Setting a hatch to Confirmed clears its keep flag.
 - One placement per house + hatch date (unique constraint `placements_house_doc_date_key`); the
   add/edit form blocks Save and says so when the date is already taken.
-- Warnings (never blocking): hatch before the house is ready; Θ1/Θ2 gap outside 7–12 days.
+- Warnings (never blocking): hatch before the house is ready; Θ1/Θ2 gap outside 7–12 days;
+  Θ4/Θ5 gap outside 7–15 days.
 - Completed cycles (house already emptied) are always hidden; they're kept in the table and
   still count for the next cycle's arrow and suggestion.
 

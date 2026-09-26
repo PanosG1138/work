@@ -214,7 +214,7 @@ header{
       <span><b class="a-bad">▼ −N d</b> hatch before house is ready</span>
       <span><b class="a-kept">▼ −N d · kept early</b> you chose to keep it anyway</span>
       <span>Dashed card = earliest placement after the confirmed, kept and hatched hatches</span>
-      <span><b style="color:var(--gh-danger-fg)">⚠ clash</b> vaccination/loading dates overlapping another house's, or same chick-placement day</span>
+      <span><b style="color:var(--gh-danger-fg)">⚠ clash</b> vaccination/loading dates overlapping another house's (loading vs Vax 1 doesn't count), or same chick-placement day</span>
     </div>
   </div>
   <div id="clashes"></div>
@@ -316,9 +316,10 @@ const LOAD_DAYS  = 14;   // house is empty LOAD_DAYS after loading starts
 const CLEAN_DAYS = 25;   // house is ready CLEAN_DAYS after it is empty
 const VAX_DAYS   = [60, 90];
 const VAX_LENGTH = 7;
-const HOUSE_FROM = { 'Θ7': '2027-08-25' };   // new house: no hatch possible before it's built
-const PAIR = ['Θ1', 'Θ2'];            // always hatch PAIR_MIN–PAIR_MAX days apart
-const PAIR_MIN = 7, PAIR_MAX = 12;
+const HOUSE_FROM = { 'Θ7': '2027-10-25' };   // new house: no hatch possible before it's built
+/* pairs: always hatch min–max days apart (either order) and never clash with each other */
+const PAIRS = [ { houses: ['Θ1', 'Θ2'], min: 7, max: 12 }, { houses: ['Θ4', 'Θ5'], min: 7, max: 15 } ];
+const pairOf = house => PAIRS.find(p => p.houses.includes(house));
 const MAX_SHIFT = 120;    // suggested moves look this many days either way
 /* days from hatch to chick placement: Novogen next day, ISA/Hy-Line/H&N two days; no breed yet = either */
 function placeDays(breed){ return breed === 'Novogen' ? [1] : breed ? [2] : [1, 2]; }
@@ -394,25 +395,26 @@ function cyclesOf(house, excludeId){
 
 /* Hatch date of the other pair house closest to `hatch`, or null. */
 function pairPartnerGap(house, hatch, excludeId){
-  if(!PAIR.includes(house)) return null;
-  const other = PAIR.find(h=>h!==house);
+  const p = pairOf(house);
+  if(!p) return null;
+  const other = p.houses.find(h=>h!==house);
   const gaps = cyclesOf(other, excludeId).map(r=>daysBetween(hatch, parseISO(r.doc_date)));
   if(!gaps.length) return null;
   return gaps.reduce((best,g)=>Math.abs(g)<Math.abs(best)?g:best);
 }
 function pairWarning(house, hatch, excludeId){
-  const g = pairPartnerGap(house, hatch, excludeId);
-  if(g===null || (Math.abs(g)>=PAIR_MIN && Math.abs(g)<=PAIR_MAX)) return null;
-  const other = PAIR.find(h=>h!==house);
-  return `${Math.abs(g)} d from nearest ${other} hatch (should be ${PAIR_MIN}–${PAIR_MAX})`;
+  const p = pairOf(house), g = pairPartnerGap(house, hatch, excludeId);
+  if(g===null || (Math.abs(g)>=p.min && Math.abs(g)<=p.max)) return null;
+  const other = p.houses.find(h=>h!==house);
+  return `${Math.abs(g)} d from nearest ${other} hatch (should be ${p.min}–${p.max})`;
 }
 
 /* ── Next-hatch suggestions ──────────────────────────────────────────
    Earliest date each house can take its next hatch: the day its last PLANNED cycle is ready,
    never before today. Planned = Confirmed, marked "Keep this date" (r.keep), or already
    hatched (birds are in the house whatever the status says); other hatches are ignored.
-   Θ1/Θ2: if their latest planned hatches are partners (≤ PAIR_MAX apart), the next two are
-   placed together PAIR_MIN–PAIR_MAX days apart. Otherwise the house with the later latest
+   Pairs (Θ1/Θ2, Θ4/Θ5): if their latest planned hatches are partners (≤ max apart), the next two are
+   placed together min–max days apart. Otherwise the house with the later latest
    hatch is ahead: the other is placed within range of that unmatched hatch where possible,
    and the one ahead just gets its own ready date.
    Cross-house clashes are not avoided here — they're flagged and resolved separately (see Clashes). */
@@ -429,37 +431,37 @@ function maxDate(a, b){ return a > b ? a : b; }
 
 function suggestNext(){
   const out = {};
-  Object.keys(HOUSES).filter(h => !PAIR.includes(h)).forEach(h => { out[h] = earliestFor(h); });
-
-  const [h1, h2] = PAIR;
-  const lastPlanned = h => { const c = plannedOf(h); return c.length ? parseISO(c[c.length-1].doc_date) : null; };
-  const p1 = lastPlanned(h1), p2 = lastPlanned(h2);
-  if((!p1 && !p2) || (p1 && p2 && Math.abs(daysBetween(p1, p2)) <= PAIR_MAX)){
-    const r1 = earliestFor(h1), r2 = earliestFor(h2);
-    /* Try each house going first; keep the option whose second hatch comes sooner. */
-    const firstThen = (rA, rB) => { const a = maxDate(rA, addDays(rB, -PAIR_MAX)); return [a, maxDate(rB, addDays(a, PAIR_MIN))]; };
-    const [a1, a2] = firstThen(r1, r2);   // h1 first
-    const [b2, b1] = firstThen(r2, r1);   // h2 first
-    const useA = maxDate(a1,a2) < maxDate(b1,b2) || (+maxDate(a1,a2) === +maxDate(b1,b2) && a1 <= b2);
-    out[h1] = useA ? a1 : b1;
-    out[h2] = useA ? a2 : b2;
-  } else {
-    const lead = !p2 || (p1 && p1 > p2) ? h1 : h2, lag = lead === h1 ? h2 : h1;
-    const p = lead === h1 ? p1 : p2;   // the ahead house's unmatched hatch
-    out[lead] = earliestFor(lead);
-    const r = earliestFor(lag);
-    if(r <= addDays(p, -PAIR_MIN))      out[lag] = maxDate(r, addDays(p, -PAIR_MAX));
-    else if(r <= addDays(p, PAIR_MAX))  out[lag] = maxDate(r, addDays(p, PAIR_MIN));
-    else                                out[lag] = r;  // pair gap can't be kept — card shows the warning
-  }
+  Object.keys(HOUSES).filter(h => !pairOf(h)).forEach(h => { out[h] = earliestFor(h); });
+  PAIRS.forEach(({ houses: [h1, h2], min, max }) => {
+    const lastPlanned = h => { const c = plannedOf(h); return c.length ? parseISO(c[c.length-1].doc_date) : null; };
+    const p1 = lastPlanned(h1), p2 = lastPlanned(h2);
+    if((!p1 && !p2) || (p1 && p2 && Math.abs(daysBetween(p1, p2)) <= max)){
+      const r1 = earliestFor(h1), r2 = earliestFor(h2);
+      /* Try each house going first; keep the option whose second hatch comes sooner. */
+      const firstThen = (rA, rB) => { const a = maxDate(rA, addDays(rB, -max)); return [a, maxDate(rB, addDays(a, min))]; };
+      const [a1, a2] = firstThen(r1, r2);   // h1 first
+      const [b2, b1] = firstThen(r2, r1);   // h2 first
+      const useA = maxDate(a1,a2) < maxDate(b1,b2) || (+maxDate(a1,a2) === +maxDate(b1,b2) && a1 <= b2);
+      out[h1] = useA ? a1 : b1;
+      out[h2] = useA ? a2 : b2;
+    } else {
+      const lead = !p2 || (p1 && p1 > p2) ? h1 : h2, lag = lead === h1 ? h2 : h1;
+      const p = lead === h1 ? p1 : p2;   // the ahead house's unmatched hatch
+      out[lead] = earliestFor(lead);
+      const r = earliestFor(lag);
+      if(r <= addDays(p, -min))      out[lag] = maxDate(r, addDays(p, -max));
+      else if(r <= addDays(p, max))  out[lag] = maxDate(r, addDays(p, min));
+      else                           out[lag] = r;  // pair gap can't be kept — card shows the warning
+    }
+  });
   return out;
 }
 
 /* ── Clashes between houses ──────────────────────────────────────────
    Events per hatch: chick placement (hatch +1 Novogen / +2 others / either if no breed), Vax 1, Vax 2,
    Loading (14 days from day 105 or 118). Vax/loading events of two houses clash only when they share at
-   least one day (no buffer); placements clash only with another placement on the same day.
-   Θ1/Θ2 never clash with each other. Events already over (before today) are ignored.
+   least one day (no buffer) — except loading vs Vax 1, which never clashes; placements clash only with
+   another placement on the same day. The two houses of a pair (Θ1/Θ2, Θ4/Θ5) never clash with each other. Events already over (before today) are ignored.
    A clash's key includes both event dates, so a "resolved" mark stops applying once either hatch moves. */
 const KIND = { place:'Placement', vax1:'Vax 1', vax2:'Vax 2', load:'Loading' };
 function eventsOf(r){
@@ -472,7 +474,7 @@ function eventsOf(r){
     { r, kind:'load', start:s.loadStart, end:s.loadEnd },
   ];
 }
-const sameGroup = (a, b) => a === b || (PAIR.includes(a) && PAIR.includes(b));
+const sameGroup = (a, b) => a === b || (!!pairOf(a) && pairOf(a) === pairOf(b));
 function findClashes(rows){
   const t = today();
   const evs = rows.flatMap(eventsOf).filter(e => e.end >= t);
@@ -480,6 +482,7 @@ function findClashes(rows){
   for(let i = 0; i < evs.length; i++) for(let j = i+1; j < evs.length; j++){
     let [a, b] = [evs[i], evs[j]];
     if(sameGroup(a.r.house, b.r.house)) continue;
+    if((a.kind === 'load' && b.kind === 'vax1') || (a.kind === 'vax1' && b.kind === 'load')) continue;   // loading only clashes with Vax 2 and loading
     let overlap;   // days both events share
     if(a.kind === 'place' || b.kind === 'place'){
       if(a.kind !== b.kind || !a.days.some(d => b.days.some(x => +x === +d))) continue;
@@ -508,16 +511,17 @@ function notReadyCount(house){
   return c.filter((r, i) => i && parseISO(r.doc_date) < getSchedule(house, c[i-1].doc_date).ready).length;
 }
 function pairPartner(r){
-  if(!PAIR.includes(r.house)) return null;
+  const p = pairOf(r.house);
+  if(!p) return null;
   const hatch = parseISO(r.doc_date);
-  const near = cyclesOf(PAIR.find(h => h !== r.house)).filter(x => Math.abs(daysBetween(hatch, parseISO(x.doc_date))) <= PAIR_MAX);
+  const near = cyclesOf(p.houses.find(h => h !== r.house)).filter(x => Math.abs(daysBetween(hatch, parseISO(x.doc_date))) <= p.max);
   return near.sort((x, y) => Math.abs(daysBetween(hatch, parseISO(x.doc_date))) - Math.abs(daysBetween(hatch, parseISO(y.doc_date))))[0] || null;
 }
 
 /* "Suggest move": the smallest shift (±1..MAX_SHIFT days) of one side's hatch that clears this clash and
    leaves fewer open clashes overall, without a hatch in the past, before the house exists, on a taken date,
-   before its house is ready (or making the next hatch not ready), or breaking the Θ1/Θ2 7–12 day gap.
-   Only "Not ordered" hatches that haven't hatched can move (kept ones too); a movable Θ1/Θ2 partner moves along. */
+   before its house is ready (or making the next hatch not ready), or breaking a pair's gap (Θ1/Θ2 7–12, Θ4/Θ5 7–15).
+   Only "Not ordered" hatches that haven't hatched can move (kept ones too); a movable pair partner moves along. */
 const movable = r => r.status === 'Not ordered' && r.doc_date > isoDate(today());
 function suggestFix(key){
   const c = findClashes(data).find(x => x.key === key);
@@ -553,7 +557,7 @@ function suggestFix(key){
   if(!best){
     const fixed = ![c.a, c.b].some(e => movable(e.r));
     fixes[key] = { sig, moves: [], html: `<span class="muted">${fixed ? 'Both hatches are fixed (hatched, confirmed or requested) — nothing to move.'
-      : `No move within ${MAX_SHIFT} days clears it without breaking house readiness, the Θ1/Θ2 gap or adding clashes.`}</span>` };
+      : `No move within ${MAX_SHIFT} days clears it without breaking house readiness, a pair's gap or adding clashes.`}</span>` };
   } else {
     const txt = best.moves.map(([id, date]) => { const r = data.find(x => x.id === id);
       return `<b>${r.house}</b> ${fmt(parseISO(r.doc_date))} → <b>${fmt(parseISO(date))}</b>`; }).join(' and ');
@@ -791,7 +795,7 @@ function closeModal(){
 
 ['m-house','m-date','m-breed'].forEach(id => document.getElementById(id).addEventListener('change', checkModalWarn));
 
-/* Warn (don't block) when the date breaks the house's ready date or the Θ1/Θ2 gap, or clashes with another house. */
+/* Warn (don't block) when the date breaks the house's ready date or a pair's gap, or clashes with another house. */
 function checkModalWarn(){
   const house = document.getElementById('m-house').value;
   const date  = document.getElementById('m-date').value;
