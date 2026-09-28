@@ -100,10 +100,11 @@ other card and scrolling to it); clicking it again clears the highlight.
   Θ4/Θ5 gap outside 7–15 days.
 - Completed cycles (house already emptied) are always hidden; they're kept in the table and
   still count for the next cycle's arrow and suggestion.
-- Pullets on every card: `booked / capacity` and `N free` (green bar) or `N over` (red bar);
-  capacities Θ1 52.000, Θ2 51.000, Θ3 52.000, Θ4 52.000, Θ5 64.000, Θ7 70.000. Expanded: one line
-  per customer (name = column F text up to the first " - ", quantities as `Κ` / `Λ` / `C`, full
-  Excel line on hover, Πτηνοτροφική/Φραγκούλης lines in blue), or "No customers yet".
+- "Customers" button on every card with the total booked (red when over the house capacity:
+  Θ1 52.000, Θ2 51.000, Θ3 52.000, Θ4 52.000, Θ5 64.000, Θ7 70.000). It opens a pop-up: house, hatch,
+  breed, rearing system; one row per customer (name = column F text up to the first " - ", the rest of
+  the line in grey under it; Πτηνοτροφική/Φραγκούλης names in blue) with Κ / Λ / C / Total, a total
+  row, and "Capacity N" with `N free` or `N over`. ✕, Esc or a click outside closes it.
   Read-only: customers are edited in the Excel and copied in when the placements are checked.
 
 Data: `placements` table (`id`, `house`, `doc_date` = hatch date, `breed`, `status`, `keep`, `ptino` = null / 'only' / 'mixed',
