@@ -100,13 +100,20 @@ other card and scrolling to it); clicking it again clears the highlight.
   Θ4/Θ5 gap outside 7–15 days.
 - Completed cycles (house already emptied) are always hidden; they're kept in the table and
   still count for the next cycle's arrow and suggestion.
+- Pullets on every card: `booked / capacity` and `N free` (green bar) or `N over` (red bar);
+  capacities Θ1 52.000, Θ2 51.000, Θ3 52.000, Θ4 52.000, Θ5 64.000, Θ7 70.000. Expanded: one line
+  per customer (name = column F text up to the first " - ", quantities as `Κ` / `Λ` / `C`, full
+  Excel line on hover, Πτηνοτροφική/Φραγκούλης lines in blue), or "No customers yet".
+  Read-only: customers are edited in the Excel and copied in when the placements are checked.
 
-Data: `placements` table (`id`, `house`, `doc_date` = hatch date, `breed`, `status`, `keep`, `ptino` = null / 'only' / 'mixed'); unique (`house`, `doc_date`).
+Data: `placements` table (`id`, `house`, `doc_date` = hatch date, `breed`, `status`, `keep`, `ptino` = null / 'only' / 'mixed',
+`customers` = jsonb `[{name, k, l, c}]`: the customer lines inside the block's ΣΥΝΟΛΟ in ΠΑΡΑΓΓΕΛΙΕΣ - ΝΕΟ ΠΛΑΝΟ.xlsx,
+column F and BROWN / WHITE / CORAL); unique (`house`, `doc_date`).
 Rearing system and all dates are derived from house + hatch date, never stored.
 
 ## Out of scope for now
 
-- Assigning customers (cage/aviary/barn) to hatches.
+- Editing customers in the scheduler (the Excel stays the source).
 
 ## Open follow-ups
 

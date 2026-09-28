@@ -121,6 +121,18 @@ header{
 .hc-row.hl{background:var(--gh-danger-subtle);border-radius:4px;margin:0 -6px;padding:0 6px}
 .hc-row.hl span{color:var(--gh-danger-fg)}
 .clash-fix{flex-basis:100%;font-size:12.5px}
+/* pullets booked vs house capacity (always shown), customer lines (expanded) */
+.cap{display:flex;justify-content:space-between;gap:8px;margin-top:8px;font-size:12px;white-space:nowrap}
+.cap .free{color:var(--gh-success-fg)}
+.cap .over{color:var(--gh-danger-fg);font-weight:700}
+.cap-bar{height:5px;border-radius:3px;background:var(--gh-border-muted);margin-top:3px;overflow:hidden}
+.cap-bar i{display:block;height:100%;background:var(--gh-success-fg)}
+.cap-bar.over i{background:var(--gh-danger-fg)}
+.cust{margin-top:8px;padding-top:6px;border-top:1px solid var(--gh-border-muted);font-size:12.5px}
+.cust .hc-row{line-height:1.6}
+.cust .hc-row span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.cust .hc-row span:last-child{white-space:nowrap}
+.cust .hc-row.pt span:first-child{color:var(--gh-accent-fg)}
 .empty-state{padding:56px 20px;text-align:center;color:var(--gh-fg-muted);font-size:14px}
 
 /* ── Row action buttons ── */
@@ -666,14 +678,31 @@ function cardBody(house, s, breed, hl = new Set(), ptino = null){
     row('Ready', fmt(s.ready));
 }
 
+/* Pullets booked vs capacity, and (expanded) one line per customer. customers = placements.customers,
+   copied from ΠΑΡΑΓΓΕΛΙΕΣ - ΝΕΟ ΠΛΑΝΟ.xlsx: [{name: column F text, k, l, c}] (BROWN / WHITE / CORAL). */
+const CAPACITY = { 'Θ1': 52000, 'Θ2': 51000, 'Θ3': 52000, 'Θ4': 52000, 'Θ5': 64000, 'Θ7': 70000 };
+const PTINO_RE = /^(Πτηνοτροφική|Φραγκούλης)/;   // not "Φραγκου", a different customer
+const nf = n => n.toLocaleString('el-GR');
+function pullets(house, customers){
+  const list = customers || [], cap = CAPACITY[house];
+  const total = list.reduce((sum, c) => sum + c.k + c.l + c.c, 0), left = cap - total;
+  const qty = c => [[c.k, 'Κ'], [c.l, 'Λ'], [c.c, 'C']].filter(([n]) => n).map(([n, t]) => `${nf(n)} ${t}`).join(' + ') || '—';
+  const lines = list.map(c => `<div class="hc-row${PTINO_RE.test(c.name) ? ' pt' : ''}" title="${esc(c.name)}">` +
+    `<span>${esc(c.name.split(' - ')[0])}</span><span>${qty(c)}</span></div>`).join('');
+  return `<div class="cap"><span>${nf(total)} / ${nf(cap)}</span>` +
+    `<span class="${left < 0 ? 'over' : 'free'}">${left < 0 ? nf(-left) + ' over' : nf(left) + ' free'}</span></div>` +
+    `<div class="cap-bar${left < 0 ? ' over' : ''}"><i style="width:${Math.min(100, total / cap * 100)}%"></i></div>` +
+    `<div class="cust hc-more">${lines || '<span class="muted">No customers yet</span>'}</div>`;
+}
+
 /* Card shell: click (or Enter/Space) toggles expanded; state survives re-renders, not page reloads. */
 const openCards = new Set();
 function toggleCard(el, key){ if(el.classList.toggle('open')) openCards.add(key); else openCards.delete(key); }
-function hcard(key, cls, house, label, breed, s, extra, alert='', rawBreed=null, hl, ptino=null){
+function hcard(key, cls, house, label, breed, s, extra, alert='', rawBreed=null, hl, ptino=null, customers=null){
   return `<div class="hc${cls}${openCards.has(key)?' open':''}" id="card-${key}" tabindex="0" onclick="toggleCard(this,'${key}')" ` +
     `onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();toggleCard(this,'${key}')}">` +
     `<div class="hc-top"><span>${house}</span><span class="hc-num"><span class="hc-more">${label}</span><span class="hc-chev">›</span></span></div>` +
-    `<div class="hc-breed">${breed}</div>` + cardBody(house, s, rawBreed, hl, ptino) + (alert || '<div class="clash-line"></div>') + `<div class="hc-more">${extra}</div></div>`;
+    `<div class="hc-breed">${breed}</div>` + cardBody(house, s, rawBreed, hl, ptino) + pullets(house, customers) + (alert || '<div class="clash-line"></div>') + `<div class="hc-more">${extra}</div></div>`;
 }
 
 /* Clicking a clash on a card lights up the clashing rows on both cards (opening the other card) and
@@ -760,7 +789,7 @@ function render(){
           card: hcard(r.id, outline, house, `#${i+1}`, esc(r.breed||'Breed —'), s,
             badge + (pw ? `<div class="warn">⚠ ${pw}</div>` : '') + clashList +
             `<div class="hc-foot"><button class="row-btn" onclick="event.stopPropagation();openEditModal('${r.id}')">Edit</button>` +
-            `<button class="row-btn del" onclick="event.stopPropagation();askDelete('${r.id}')">Del</button>${keepBtn}</div>`, clashLine, r.breed, hlOf(r.id), r.ptino),
+            `<button class="row-btn del" onclick="event.stopPropagation();askDelete('${r.id}')">Del</button>${keepBtn}</div>`, clashLine, r.breed, hlOf(r.id), r.ptino, r.customers),
         });
       }
       prev = s;
