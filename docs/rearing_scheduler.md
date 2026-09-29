@@ -33,7 +33,7 @@ is (`placements.ptino`, "Πτηνοτροφική (Φραγκούλης) in this
 | Event | No Πτηνοτροφική | Πτηνοτροφική only | Πτηνοτροφική + other customers |
 |---|---|---|---|
 | Vaccination 1 | day 60–66 (7 days) | same | same |
-| Vaccination 2 | day 90–96 (7 days) | same | same |
+| Vaccination 2 | day 82–88 (7 days; the "alternative vaccination parameters" since 2026-09-29, was 90–96) | same | same |
 | Loading | day 105–118 | day 115–128 | day 105–128 (others from 105, Πτηνοτροφική from 115) |
 | House empty | day 119 | day 129 | day 129 |
 | Cleaning | 25 days after empty | same | same |
