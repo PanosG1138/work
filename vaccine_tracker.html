@@ -765,6 +765,10 @@ body.printing-card .printcard-doc{display:block}
         <option value="ΚΟΜΠΟΥΛΗΣ"><option value="ΤΡΑΙΚΟΥΔΗΣ">
       </datalist>
     </div>
+    <div class="fgroup">
+      <label style="display:flex;align-items:center;justify-content:flex-start;gap:6px;cursor:pointer;font-weight:400"><input type="checkbox" id="f-first-inj" onchange="onInjectableCheck(this)">ΠΡΩΤΑ ΕΝΕΣΙΜΑ</label>
+      <label style="display:flex;align-items:center;justify-content:flex-start;gap:6px;cursor:pointer;font-weight:400"><input type="checkbox" id="f-second-inj" onchange="onInjectableCheck(this)">ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ</label>
+    </div>
     <div class="fgroup"><label>Σχόλια Πάνος</label><textarea id="f-notes" placeholder="…"></textarea></div>
     <div class="fgroup" style="display:none"><label>Εμβολιασμός</label>
       <select id="f-emvoliasmos" onchange="emvoliasmosVal=this.value">
@@ -1521,7 +1525,7 @@ async function addEntry() {
   const now = new Date().toISOString();
   const baseRow = {
     hm_ekk: hatch||null, hm_emv: vacc||null, hm_par: null, anath: flock,
-    sxolia_panos: document.getElementById('f-notes').value.trim()||null,
+    sxolia_panos: [injectableNote(flock), document.getElementById('f-notes').value.trim()].filter(Boolean).join(' · ') || null,
     promitheutis: document.getElementById('f-supplier').value.trim()||null,
     paragelia: null,
     hm_paragelia: document.getElementById('f-orderdate').dataset.iso||null,
@@ -3041,6 +3045,18 @@ function updateFiltersBadge() {
   badge.style.display = count ? '' : 'none';
   badge.textContent = count;
   document.getElementById('btn-filters').classList.toggle('active', count > 0);
+}
+
+// ΠΡΩΤΑ / ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ: one or the other. resetForm leaves them as they are, like the dates and house,
+// so they stay ticked for the next entries until unticked by hand
+function onInjectableCheck(cb) {
+  if (cb.checked) ['f-first-inj', 'f-second-inj'].forEach(id => { if (id !== cb.id) document.getElementById(id).checked = false; });
+}
+// "ΠΡΩΤΑ ΕΝΕΣΙΜΑ Θ2" for Σχόλια Πάνος, or '' when neither box is ticked
+function injectableNote(flock) {
+  const label = document.getElementById('f-first-inj').checked ? 'ΠΡΩΤΑ ΕΝΕΣΙΜΑ'
+              : document.getElementById('f-second-inj').checked ? 'ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ' : '';
+  return label ? `${label} ${flock}` : '';
 }
 
 function resetForm() {
