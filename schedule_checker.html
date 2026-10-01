@@ -795,7 +795,7 @@ function render(){
         arrow: prev ? arrow(prev, s.hatch) : '',
         card: hcard('next-' + house, ' suggest', house, 'After confirmed hatches', 'Earliest possible', s,
           (pw ? `<div class="warn">⚠ ${pw}</div>` : '') +
-          `<div class="hc-foot"><button class="row-btn accept" onclick="event.stopPropagation();openAddModal('${house}','${iso}')">Use this date</button></div>`),
+          `<div class="hc-foot"><button class="row-btn accept" onclick="event.stopPropagation();openAddModal('${house}','${iso}',true)">Use this date</button></div>`),
       });
     };
     if(lastPlanned < 0) pushSuggestion();
@@ -854,8 +854,11 @@ function openModal(title, house, date, breed, status, saveText, ptino = ''){
   document.getElementById('modal-bg').classList.remove('hidden');
   checkModalWarn();
 }
-function openAddModal(house='', date=''){
+// fromSuggestion: added with "Use this date" → saved as kept, so the plan (and the dashed card) moves past it
+let addKeep = false;
+function openAddModal(house='', date='', fromSuggestion=false){
   editId = null;
+  addKeep = fromSuggestion;
   openModal('Add placement', house, date, '', 'Not ordered', 'Save');
 }
 function openEditModal(id){
@@ -928,7 +931,7 @@ async function saveNew(){
       data = data.map(r => r.id===editId ? updated : r);
       setSyncStatus('ok','Updated');
     } else {
-      const [inserted] = await sbInsert({house, doc_date:date, breed, status, ptino});
+      const [inserted] = await sbInsert({house, doc_date:date, breed, status, ptino, keep: addKeep && status !== 'Confirmed'});
       data.push(inserted);
       setSyncStatus('ok','Saved');
     }
