@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Feed Program — Poultry Nutrition Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
 <link rel="stylesheet" href="theme.css">
 <style>
 :root{--zoom:unset}
@@ -247,6 +247,7 @@ const MAX_PHASES = Math.max(...Object.values(BREEDS).map(b => b.phases.length));
 // ── STATE ────────────────────────────────────────────────────────
 let rows       = Array.from({length: NUM_ROWS}, () => ({id: null, house:'', breed:'', hatch:'', rearing_type:''}));
 let saveTimers = {};
+let unsaved    = new Set();   // row indices edited but not yet confirmed saved
 let isOnline   = false;   // gate — no edits until Supabase confirmed reachable
 
 // ── ONLINE GATE ──────────────────────────────────────────────────
@@ -259,8 +260,10 @@ function setOnline(online) {
   });
 }
 
+// Unsaved edits are pushed first, so the reload doesn't throw them away
 async function retryConnection() {
   setSyncState('loading', 'Connecting…');
+  for (const i of [...unsaved]) if (!await persistRow(i)) return;   // still failing — edits kept, stay offline
   await loadFromSupabase();
 }
 
@@ -316,13 +319,13 @@ async function loadFromSupabase() {
 // ── SAVE ROW (debounced 600ms) ───────────────────────────────────
 function saveRow(idx) {
   if (!isOnline) return;
-  localStorage.setItem('feed_tracker_rows', JSON.stringify(rows));
+  unsaved.add(idx);
   clearTimeout(saveTimers[idx]);
   saveTimers[idx] = setTimeout(() => persistRow(idx), 600);
 }
 
+// Returns true once the row is in Supabase; on failure the row stays in `unsaved`
 async function persistRow(idx) {
-  if (!isOnline) return;
   const r = rows[idx];
   setSyncState('saving', 'Saving…');
   try {
@@ -347,12 +350,15 @@ async function persistRow(idx) {
       });
       if (result && result[0]) rows[idx].id = result[0].id;
     }
+    unsaved.delete(idx);
     setSyncState('ok', 'Saved ✓');
     setTimeout(() => setSyncState('ok', 'Synced'), 1500);
+    return true;
   } catch(e) {
     console.error('Save error:', e);
     setOnline(false);
     setSyncState('err', 'No connection');
+    return false;
   }
 }
 
@@ -378,17 +384,15 @@ function parseFlexDate(raw) {
 
   if (isNaN(dd) || isNaN(mm) || isNaN(yy)) return null;
 
-  // Expand 2-digit year: 00-99 → 2000-2099
-  if (yy >= 0 && yy <= 99) yy += 2000;
+  // Year must be 2 digits (→ 20yy) or 4 digits
+  const ylen = parts[2].trim().length;
+  if (ylen === 2) yy += 2000;
+  else if (ylen !== 4) return null;
 
-  if (mm < 1 || mm > 12 || dd < 1 || dd > 31) return null;
-
-  // Zero-pad and build ISO
-  const iso = `${yy}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
-  // Validate via Date object
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return null;
-  return iso;
+  // Reject impossible days (31/02, 31/04…) — Date would silently roll them into the next month
+  const d = new Date(Date.UTC(yy, mm - 1, dd));
+  if (d.getUTCFullYear() !== yy || d.getUTCMonth() !== mm - 1 || d.getUTCDate() !== dd) return null;
+  return `${yy}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
 }
 
 function isoToDisplay(iso) {
@@ -472,7 +476,7 @@ function buildRows() {
         maxlength="10"
         autocomplete="off"
         ${!isOnline ? 'disabled' : ''}
-        onblur="onHatchBlur(${i}, this)"
+        onblur="onHatchBlur(${i}, this, event)"
         onkeydown="if(event.key==='Enter')this.blur()">
     </td>`;
 
@@ -627,27 +631,24 @@ ${lines.map(l => `<div class="line">${l.text}</div>`).join('')}
 }
 
 // ── EVENT HANDLERS ────────────────────────────────────────────────
-function onHatchBlur(idx, input) {
+function onHatchBlur(idx, input, ev) {
   if (!isOnline) return;
   const raw = input.value.trim();
-  if (!raw) {
-    // Cleared
-    input.classList.remove('invalid');
-    rows[idx].hatch = '';
-    saveRow(idx);
-    buildRows();   // re-render — this row now sorts to the bottom
-    return;
-  }
-  const iso = parseFlexDate(raw);
-  if (!iso) {
+  const iso = raw ? parseFlexDate(raw) : '';   // blank = cleared (row sorts to the bottom)
+  if (iso === null) {
     input.classList.add('invalid');
     showToast('Invalid date — use dd/mm/yy or dd/mm/yyyy');
     return;
   }
   input.classList.remove('invalid');
+  input.value = isoToDisplay(iso);
+  if (iso === rows[idx].hatch) return;   // unchanged — no save, no redraw, Tab keeps going
   rows[idx].hatch = iso;
   saveRow(idx);
-  buildRows();   // re-render in chronological order (also normalises display to dd/mm/yyyy)
+  // Re-render in chronological order, then put focus back where Tab/click was heading
+  const nextId = ev && ev.relatedTarget && ev.relatedTarget.id;
+  buildRows();
+  if (nextId) document.getElementById(nextId)?.focus();
 }
 
 function onHouseChange(idx, val) {
