@@ -12,7 +12,7 @@ Two users: Panos and Ελένη.
 - index.html — landing page linking all tools
 - vaccine_tracker.html — vaccine order tracking (ΕΜΒΟΛΙΑ), with an alternate house/cycle card view
 - inventory.html — vaccine stock/inventory, bidirectionally linked to vaccine_tracker
-- feed_tracker.html — feed/nutrition schedule tracking per breed
+- feed_tracker.html — feed/nutrition schedule tracking per breed, feed additives (Avidecoxx, Robenz) by day since hatch, and a "Sync from scheduler" button (confirm list before saving)
 - schedule_checker.html — rearing house hatch planner (one card per hatch, earliest-next suggestions, clashes between houses) — rules in `docs/rearing_scheduler.md`
 - truck_calculator_kamposos.html / truck_calculator_doukakis.html — truck+trailer loading calculators for two separate facilities
 - backup.py — nightly Supabase → Google Sheets backup, run by `.github/workflows/backup.yml`
@@ -34,7 +34,7 @@ Each HTML file is fully self-contained: inline `<style>` and `<script>`, no JS i
 - **Persistence pattern — list tools** (vaccine_tracker, inventory, schedule_checker): rows are read/written via direct PostgREST calls (`sbFetch` wrapping `fetch` to `${SB_URL}/rest/v1/...`). vaccine_tracker and inventory also log edits to a paired `*_history` table (`emvolia_history`, `inventory_history`) with `user_name`/`ts`/`changes_json`, used to render the changelog/history UI in edit modals; schedule_checker (`placements`) keeps no history. Follow the history convention for any new editable data.
 - **Persistence pattern — calculator tools** (truck_calculator_*): a single pinned row (`id=1`, upserted via `resolution=merge-duplicates`), last-write-wins, no history. Don't conflate this with the list-tool pattern above.
 - **"Flock"/cycle concept**: a rearing cycle is identified by *house + hatch date together*, not house alone (see `flockLabel()` in vaccine_tracker.html and the equivalent grouping in schedule_checker.html). The same house is reused across generations — anything that groups or displays "by house" needs to account for this or it will conflate unrelated flocks.
-- **Automation** (`.github/workflows/`): `backup.yml` runs `backup.py` nightly, pulling every Supabase table to a Google Sheet via `gspread`. `feed_notify.yml` emails 7-day/3-day feed-change reminders — it re-implements the feed schedule tables (`SCHEDULES`, `BREED_SCHEDULE`) as a **separate copy** inline in the workflow YAML. If `feed_tracker.html`'s schedules change, that copy has to be updated by hand or the reminders drift out of sync.
+- **Automation** (`.github/workflows/`): `backup.yml` runs `backup.py` nightly, pulling every Supabase table to a Google Sheet via `gspread`. `feed_notify.yml` emails 7-day/3-day feed-change reminders and 3-day/1-day feed-additive start reminders — it re-implements the feed schedule tables (`SCHEDULES`, `BREED_SCHEDULE`) and the additive list (`ADDITIVES`) as a **separate copy** inline in the workflow YAML. If `feed_tracker.html`'s schedules or additives change, that copy has to be updated by hand or the reminders drift out of sync. Both apply the same weekend rule (Saturday → Friday, Sunday → Monday).
 
 ## Facility structure
 Rearing houses: Θ1–Θ4 (cage), Θ5 (aviary), Θ7 (new aviary, planned — first hatch possible 25/10/2027). A1 is no longer used.

@@ -153,6 +153,7 @@ select.cell-input option:disabled{color:var(--gh-fg-subtle);}
       <span class="zoom-label" id="zoom-label">100%</span>
       <button class="zoom-btn" onclick="changeZoom(0.1)" title="Zoom in">+</button>
     </div>
+    <button class="theme-toggle" onclick="syncFromScheduler()" title="Take the latest hatches from the scheduler (shows the changes first)">⟳ Sync from scheduler</button>
     <button class="theme-toggle" onclick="printSummary()" title="Print summary">
       <span>🖨</span>
       <span>Print</span>
@@ -239,6 +240,17 @@ const BREED_SCHEDULE = {
   'H&N Coral':      null,
   'Lohman Brown':   'LOHMAN_BROWN'
 };
+
+// Products mixed into the feed, by day since hatch — same for every breed.
+// to: null = until the house is emptied (the row is cleared or gets a new hatch).
+// Duplicated by design in .github/workflows/feed_notify.yml (ADDITIVES) — change both.
+const ADDITIVES = [
+  { name: 'Avidecoxx', from: 10, to: 30 },
+  { name: 'Robenz',    from: 31, to: null },
+];
+
+// Scheduler (placements) breed → breed name used here
+const SCHEDULER_BREED = { 'ISA': 'ISA Brown', 'Hy-Line': 'Hy-Line Brown', 'Novogen': 'Novogen Brown' };
 
 const REARING_TYPES = ['Cage', 'Barn'];
 const HOUSES     = ['Θ1','Θ2','Θ3','Θ4','Θ5'];
@@ -437,7 +449,7 @@ function refreshHouseDropdowns() {
 
 // ── BUILD HEADER ─────────────────────────────────────────────────
 function buildHeader() {
-  let html = `<th style="min-width:130px">Hatch Date</th><th style="min-width:80px">House</th><th style="min-width:110px">Breed</th><th style="min-width:90px">Type</th><th style="min-width:80px">Age</th>`;
+  let html = `<th style="min-width:130px">Hatch Date</th><th style="min-width:80px">House</th><th style="min-width:110px">Breed</th><th style="min-width:90px">Type</th><th style="min-width:80px">Age</th><th style="min-width:170px">Additives</th>`;
   for (let i = 0; i < MAX_PHASES; i++) {
     html += `<th class="phase-col" style="min-width:130px">Phase ${i+1}</th>`;
   }
@@ -501,6 +513,7 @@ function buildRows() {
 
     // Age (filled in by updatePhaseDates)
     html += `<td id="age-${i}" style="white-space:nowrap"></td>`;
+    html += `<td id="add-${i}"></td>`;
 
     // Phase cells
     for (let p = 0; p < MAX_PHASES; p++) {
@@ -537,11 +550,7 @@ function computeActivePhase(r) {
   const phaseDates = breed.days.map((d, i) => {
     const dt = addDays(r.hatch, d);
     dt.setHours(0,0,0,0);
-    const dow = dt.getDay();
-    if (dow === 6 || dow === 0) {
-      movedFrom[i] = `${dow === 6 ? 'Sat' : 'Sun'} ${fmtDate(dt)}`;
-      dt.setDate(dt.getDate() + (dow === 6 ? -1 : 1));
-    }
+    movedFrom[i] = toWeekday(dt);
     return dt;
   });
 
@@ -552,6 +561,35 @@ function computeActivePhase(r) {
   }
 
   return { breed, phaseDates, movedFrom, activeIdx };
+}
+
+// Moves a Saturday back to Friday and a Sunday on to Monday (changes dt in place).
+// Returns the original day as "Sat dd/mm/yyyy" when it moved, otherwise null.
+function toWeekday(dt) {
+  const dow = dt.getDay();
+  if (dow !== 6 && dow !== 0) return null;
+  const from = `${dow === 6 ? 'Sat' : 'Sun'} ${fmtDate(dt)}`;
+  dt.setDate(dt.getDate() + (dow === 6 ? -1 : 1));
+  return from;
+}
+
+// Additive spans for a hatch date. Only the start moves off a weekend; the end stays.
+// cls uses the phase chip colours: today = in the feed now, past = finished,
+// soon = starts within 7 days, '' = later.
+function additiveSpans(hatch) {
+  if (!hatch) return [];
+  const today = new Date(); today.setHours(0,0,0,0);
+  return ADDITIVES.map(a => {
+    const start = addDays(hatch, a.from); start.setHours(0,0,0,0);
+    const movedFrom = toWeekday(start);
+    let end = null;
+    if (a.to !== null) { end = addDays(hatch, a.to); end.setHours(0,0,0,0); }
+    let cls;
+    if (today < start)          cls = Math.round((start - today) / 86400000) <= 7 ? 'soon' : '';
+    else if (end && today > end) cls = 'past';
+    else                         cls = 'today';
+    return { name: a.name, start, end, movedFrom, cls };
+  });
 }
 
 // Age in days since hatch (hatch day = 0); '—' with no hatch date or before hatching
@@ -567,6 +605,15 @@ function updatePhaseDates(rowIdx) {
   const r = rows[rowIdx];
   const ageCell = document.getElementById(`age-${rowIdx}`);
   if (ageCell) ageCell.textContent = ageText(r.hatch);
+  const addCell = document.getElementById(`add-${rowIdx}`);
+  if (addCell) {
+    const spans = additiveSpans(r.hatch);
+    addCell.innerHTML = spans.length
+      ? `<div style="display:flex;flex-direction:column;gap:6px">${spans.map(a =>
+          `<div class="phase-cell"><span class="phase-label">${a.name}</span><span class="date-chip ${a.cls}">${fmtDate(a.start)} →${a.end ? ' ' + fmtDate(a.end) : ''}</span>${a.movedFrom ? `<span class="phase-moved">from ${a.movedFrom}</span>` : ''}</div>`
+        ).join('')}</div>`
+      : `<span class="phase-empty">—</span>`;
+  }
   const active = computeActivePhase(r);
 
   // Bail early if row is incomplete — clear all phase cells
@@ -614,9 +661,10 @@ function printSummary() {
     const active = computeActivePhase(r);
     if (!active || active.activeIdx < 0) continue;   // no phase currently active
     const phaseLabel = active.breed.phases[active.activeIdx];
+    const inUse = additiveSpans(r.hatch).filter(a => a.cls === 'today').map(a => a.name);
     lines.push({
       house: r.house,
-      text: `Hatch Date: ${isoToDisplay(r.hatch)}, ${r.house}, ${r.breed}, ${r.rearing_type}, ${phaseLabel}`
+      text: `Hatch Date: ${isoToDisplay(r.hatch)}, ${r.house}, ${r.breed}, ${r.rearing_type}, ${phaseLabel}${inUse.length ? ', ' + inUse.join(' + ') : ''}`
     });
   }
   lines.sort((a, b) => parseInt(a.house.slice(1), 10) - parseInt(b.house.slice(1), 10));
@@ -637,6 +685,66 @@ ${lines.map(l => `<div class="line">${l.text}</div>`).join('')}
   win.document.close();
   win.focus();
   win.print();
+}
+
+// ── SYNC FROM SCHEDULER ───────────────────────────────────────────
+// For each house: the latest scheduler hatch that is today or earlier.
+// Sets hatch + breed (breed kept if the scheduler has none); a house with no row
+// fills an empty one (Type left blank). Nothing is saved until the user confirms the list.
+// ponytail: takes the latest past hatch even if that flock already left — the confirm list is the check
+async function syncFromScheduler() {
+  if (!isOnline) return;
+  const t = new Date();
+  const todayIso = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+  let data;
+  try {
+    data = await sbFetch(`placements?select=house,doc_date,breed&doc_date=lte.${todayIso}&order=doc_date.desc`);
+  } catch (e) {
+    console.error('Sync load error:', e);
+    showToast('Could not read the scheduler — nothing changed');
+    return;
+  }
+  const latest = {};
+  for (const p of data) if (HOUSES.includes(p.house) && !latest[p.house]) latest[p.house] = p;
+
+  const changes = [], lines = [], problems = [];
+  const taken = new Set();
+  for (const h of HOUSES) {
+    const p = latest[h];
+    if (!p) continue;
+    const breed = p.breed ? SCHEDULER_BREED[p.breed] : null;
+    if (p.breed && !breed) { problems.push(`${h}: unknown scheduler breed "${p.breed}" — skipped`); continue; }
+    const idx = rows.findIndex(r => r.house === h);
+    if (idx < 0) {
+      const empty = rows.findIndex((r, i) => !r.house && !r.hatch && !r.breed && !taken.has(i));
+      if (empty < 0) { problems.push(`${h}: no empty row to add it to — skipped`); continue; }
+      taken.add(empty);
+      changes.push({ idx: empty, house: h, hatch: p.doc_date, breed: breed || '' });
+      lines.push(`${h}: new row — hatch ${isoToDisplay(p.doc_date)}${breed ? ', ' + breed : ''} (set Type yourself)`);
+      continue;
+    }
+    const r = rows[idx];
+    const parts = [];
+    if (r.hatch !== p.doc_date) parts.push(`hatch ${r.hatch ? isoToDisplay(r.hatch) : '—'} → ${isoToDisplay(p.doc_date)}`);
+    if (breed && r.breed !== breed) parts.push(`breed ${r.breed || '—'} → ${breed}`);
+    if (!parts.length) continue;
+    changes.push({ idx, house: h, hatch: p.doc_date, breed: breed || r.breed });
+    lines.push(`${h}: ${parts.join(', ')}`);
+  }
+
+  if (!changes.length) {
+    if (problems.length) alert(problems.join('\n'));
+    else showToast('Already in sync');
+    return;
+  }
+  const msg = 'Apply these changes from the scheduler?\n\n' + lines.join('\n')
+    + (problems.length ? '\n\nNot changed:\n' + problems.join('\n') : '');
+  if (!confirm(msg)) return;
+  for (const c of changes) {
+    Object.assign(rows[c.idx], { house: c.house, hatch: c.hatch, breed: c.breed });
+    saveRow(c.idx);
+  }
+  buildRows();
 }
 
 // ── EVENT HANDLERS ────────────────────────────────────────────────

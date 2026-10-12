@@ -58,6 +58,14 @@ jobs:
 
           REMINDER_DAYS = [7, 3]   # send a reminder this many days before the feed change
 
+          # ── Feed additives — must match ADDITIVES in feed_tracker.html exactly ──
+          # Same for every breed; only the start is reminded (end = None: until the house is emptied).
+          ADDITIVES = [
+              {'name': 'Avidecoxx', 'from': 10},
+              {'name': 'Robenz',    'from': 31},
+          ]
+          ADDITIVE_REMINDER_DAYS = [3, 1]   # only these two reminders before an additive starts
+
           def get_athens_today():
               return datetime.now(zoneinfo.ZoneInfo('Europe/Athens')).date()
 
@@ -96,17 +104,37 @@ jobs:
           # ── Main logic ──
           today    = get_athens_today()
           targets  = {n: today + timedelta(days=n) for n in REMINDER_DAYS}
-          print(f"Athens date: {today}  |  Checking for feed changes on: {targets}")
+          add_targets = {n: today + timedelta(days=n) for n in ADDITIVE_REMINDER_DAYS}
+          print(f"Athens date: {today}  |  Checking for feed changes on: {targets}  |  additive starts on: {add_targets}")
 
           records = supabase_get('feed_hatches?select=*&order=row_index.asc')
           print(f"Found {len(records)} records")
 
           due = []
+          due_add = []
 
           for rec in records:
               house     = rec.get('house') or '—'
               breed     = rec.get('breed')
               hatch_str = rec.get('hatch')
+
+              # Additives need only the hatch date (they don't depend on breed)
+              if hatch_str:
+                  hatch = date.fromisoformat(hatch_str)
+                  for add in ADDITIVES:
+                      start, orig_day = adjust_for_weekend(hatch + timedelta(days=add['from']))
+                      for days_ahead, target in add_targets.items():
+                          if start == target:
+                              due_add.append({
+                                  'house':      house,
+                                  'name':       add['name'],
+                                  'start_date': start.strftime('%d/%m/%Y'),
+                                  'orig_day':   orig_day,
+                                  'days_ahead': days_ahead,
+                              })
+                              note = f" (originally {orig_day})" if orig_day else ""
+                              print(f"ADDITIVE in {days_ahead}d: {house} → {add['name']} starts {start}{note}")
+
               if not breed or not hatch_str:
                   continue
               schedule_key = BREED_SCHEDULE.get(breed)
@@ -134,25 +162,37 @@ jobs:
                           note = f" (originally {orig_day})" if orig_day else ""
                           print(f"DUE in {days_ahead}d: {house} / {breed} → {phase_label} on {change_date}{note}")
 
-          if not due:
-              print(f"No feed changes due in {REMINDER_DAYS} days.")
+          if not due and not due_add:
+              print(f"No feed changes due in {REMINDER_DAYS} days and no additives starting in {ADDITIVE_REMINDER_DAYS} days.")
           else:
               count   = len(due)
-              subject = f"🐔 Feed Change Reminder — {count} change{'s' if count > 1 else ''}"
+              n_add   = len(due_add)
+              parts   = []
+              if count: parts.append(f"{count} change{'s' if count > 1 else ''}")
+              if n_add: parts.append(f"{n_add} additive start{'s' if n_add > 1 else ''}")
+              subject = f"🐔 Feed Change Reminder — {', '.join(parts)}"
 
               # ── Plain text body ──
               text_lines = [
                   f"Feed Change Reminder",
                   f"{'='*40}",
-                  f"The following feed change{'s are' if count > 1 else ' is'} coming up:",
-                  "",
               ]
+              if count:
+                  text_lines += [f"The following feed change{'s are' if count > 1 else ' is'} coming up:", ""]
               for item in due:
                   text_lines.append(f"  House {item['house']} ({item['breed']})")
                   text_lines.append(f"  Switch to: {item['phase']}")
                   text_lines.append(f"  Change date: {item['change_date']} (in {item['days_ahead']} days)")
                   if item['orig_day']:
                       text_lines.append(f"  Note: Feed date was {item['orig_day']} — moved to avoid weekend")
+                  text_lines.append("")
+              if n_add:
+                  text_lines += ["Additives starting:", ""]
+              for item in due_add:
+                  text_lines.append(f"  House {item['house']}: start {item['name']}")
+                  text_lines.append(f"  Start date: {item['start_date']} (in {item['days_ahead']} day{'s' if item['days_ahead'] > 1 else ''})")
+                  if item['orig_day']:
+                      text_lines.append(f"  Note: Start date was {item['orig_day']} — moved to avoid weekend")
                   text_lines.append("")
               text_body = "\n".join(text_lines)
 
@@ -175,6 +215,66 @@ jobs:
                   {weekend_note}
                   """
 
+              th = 'padding:8px 12px;text-align:left;font-size:11px;color:#636c76;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #d0d7de;'
+              feed_html = ""
+              if count:
+                  feed_html = f"""
+                    <p style="margin:0 0 16px;font-size:13px;color:#636c76;">
+                      The following feed change{'s are' if count > 1 else ' is'} coming up.
+                    </p>
+                    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #d0d7de;border-radius:6px;border-collapse:collapse;overflow:hidden;">
+                      <thead>
+                        <tr style="background:#f6f8fa;">
+                          <th style="{th}">House</th>
+                          <th style="{th}">Breed</th>
+                          <th style="{th}">Switch To</th>
+                          <th style="{th}">Change Date</th>
+                          <th style="{th}">Due In</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rows_html}
+                      </tbody>
+                    </table>
+                  """
+
+              add_rows_html = ""
+              for item in due_add:
+                  weekend_note = ""
+                  if item['orig_day']:
+                      weekend_note = f'<tr><td colspan="4" style="padding:2px 12px 8px;font-size:12px;color:#9a6700;">⚠ Start date was {item["orig_day"]} — moved to avoid weekend</td></tr>'
+                  add_rows_html += f"""
+                  <tr style="border-bottom:1px solid #e0e0e0;">
+                    <td style="padding:10px 12px;font-weight:600;color:#1f2328;">{item['house']}</td>
+                    <td style="padding:10px 12px;">
+                      <span style="background:#dcfce7;color:#15803d;padding:2px 10px;border-radius:12px;font-size:13px;font-weight:500;">{item['name']}</span>
+                    </td>
+                    <td style="padding:10px 12px;font-variant-numeric:tabular-nums;color:#1f2328;">{item['start_date']}</td>
+                    <td style="padding:10px 12px;color:#636c76;">{item['days_ahead']} day{'s' if item['days_ahead'] > 1 else ''}</td>
+                  </tr>
+                  {weekend_note}
+                  """
+              add_html = ""
+              if n_add:
+                  add_html = f"""
+                    <p style="margin:{'20px' if count else '0'} 0 16px;font-size:13px;color:#636c76;">
+                      Additives starting.
+                    </p>
+                    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #d0d7de;border-radius:6px;border-collapse:collapse;overflow:hidden;">
+                      <thead>
+                        <tr style="background:#f6f8fa;">
+                          <th style="{th}">House</th>
+                          <th style="{th}">Start</th>
+                          <th style="{th}">Start Date</th>
+                          <th style="{th}">Due In</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {add_rows_html}
+                      </tbody>
+                    </table>
+                  """
+
               html_body = f"""
               <!DOCTYPE html>
               <html>
@@ -191,23 +291,8 @@ jobs:
                     <p style="margin:0 0 6px;font-size:15px;font-weight:600;color:#1f2328;">
                       Feed Change Reminder
                     </p>
-                    <p style="margin:0 0 16px;font-size:13px;color:#636c76;">
-                      The following feed change{'s are' if count > 1 else ' is'} coming up.
-                    </p>
-                    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #d0d7de;border-radius:6px;border-collapse:collapse;overflow:hidden;">
-                      <thead>
-                        <tr style="background:#f6f8fa;">
-                          <th style="padding:8px 12px;text-align:left;font-size:11px;color:#636c76;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #d0d7de;">House</th>
-                          <th style="padding:8px 12px;text-align:left;font-size:11px;color:#636c76;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #d0d7de;">Breed</th>
-                          <th style="padding:8px 12px;text-align:left;font-size:11px;color:#636c76;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #d0d7de;">Switch To</th>
-                          <th style="padding:8px 12px;text-align:left;font-size:11px;color:#636c76;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #d0d7de;">Change Date</th>
-                          <th style="padding:8px 12px;text-align:left;font-size:11px;color:#636c76;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #d0d7de;">Due In</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {rows_html}
-                      </tbody>
-                    </table>
+                    {feed_html}
+                    {add_html}
                   </div>
                   <div style="padding:12px 20px;background:#f6f8fa;border-top:1px solid #d0d7de;font-size:11px;color:#8b949e;">
                     Sent automatically by Feed Program · panosg1138.github.io/work/feed_tracker.html
@@ -218,5 +303,5 @@ jobs:
               """
 
               send_email(subject, html_body, text_body)
-              print(f"Email sent to {NOTIFY_EMAIL} for {count} feed change(s).")
+              print(f"Email sent to {NOTIFY_EMAIL} for {count} feed change(s) and {n_add} additive start(s).")
           PYEOF
