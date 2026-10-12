@@ -108,7 +108,7 @@ select.cell-input option:disabled{color:var(--gh-fg-subtle);}
 .tl-row{display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--gh-border-muted);}
 .tl-tracks{position:relative;}
 .tl-track{position:relative;height:20px;margin:3px 0;}
-.tl-seg{position:absolute;top:0;bottom:0;border-radius:4px;padding:0 6px;font-size:11px;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tl-seg{cursor:pointer;position:absolute;top:0;bottom:0;border-radius:4px;padding:0 6px;font-size:11px;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .tl-seg.now{box-shadow:inset 0 0 0 1.5px currentColor;font-weight:600;}
 .tl-today{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--gh-danger-fg);z-index:2;}
 
@@ -183,7 +183,7 @@ select.cell-input option:disabled{color:var(--gh-fg-subtle);}
       <span><i class="c-Avidecoxx"></i>Avidecoxx</span>
       <span><i class="c-Robenz"></i>Robenz</span>
       <span><i style="width:10px;height:2px;background:var(--gh-danger-fg);vertical-align:3px"></i>Today</span>
-      <span>Outlined = in use now · hover for dates</span>
+      <span>Outlined = in use now · hover or tap for dates</span>
     </div>
     <div class="tl-axis" id="tl-axis"></div>
     <div id="timeline"></div>
@@ -635,14 +635,16 @@ function renderCards() {
     const hatch = addDays(r.hatch, 0); hatch.setHours(0,0,0,0);
     const age = Math.round((today - hatch) / DAY);
     const feed = feedSpans(r), adds = additiveSpans(r.hatch);
-    const next = [...feed, ...adds].filter(x => x.start > today).sort((a, b) => a.start - b.start);
+    const next = [...feed, ...adds].filter(x => x.start >= today).sort((a, b) => a.start - b.start);   // today included: the switch is due
     const soon = next.length && Math.round((next[0].start - today) / DAY) <= 7;
 
     let now;
     if (age < 0) now = `<span class="muted">Not hatched yet</span>`;
     else {
       const f = feed.find(x => x.now);
-      now = (f ? `<span class="pill c-feed">${f.name}</span>` : `<span class="muted">${r.breed ? 'No feed schedule for this breed' : 'No breed set'}</span> `)
+      now = (f ? `<span class="pill c-feed">${f.name}</span>`
+               : feed.length ? ''   // first feed moved off a weekend hatch day — Next shows it
+               : `<span class="muted">${r.breed ? 'No feed schedule for this breed' : 'No breed set'}</span> `)
           + adds.filter(x => x.now).map(x => `<span class="pill c-${x.name}">${x.name}</span>`).join('');
     }
     const nextHtml = next.length
@@ -675,7 +677,7 @@ function renderTimeline() {
     if (end <= from || x.start >= to) return '';
     const c = cls === 'feed' ? `c-feed${i % 2 ? ' alt' : ''}` : `c-${x.name}`;
     const tip = `${x.name}: ${fmtDate(x.start)} → ${x.end ? fmtDate(x.end) : 'until the house is emptied'}`;
-    return `<div class="tl-seg ${c}${x.now ? ' now' : ''}" style="left:${pos(x.start)}%;width:${pos(end) - pos(x.start)}%" title="${tip}">${x.name}</div>`;
+    return `<div class="tl-seg ${c}${x.now ? ' now' : ''}" style="left:${pos(x.start)}%;width:${pos(end) - pos(x.start)}%" title="${tip}" onclick="showToast(this.title)">${x.name}</div>`;
   }).join('');
 
   const order = r => r.house ? HOUSES.indexOf(r.house) : HOUSES.length;
@@ -861,6 +863,8 @@ function showToast(msg) {
 applyZoom();
 buildHeader();
 // Data load triggered by onAuthStateChange after sign-in
+// A tab left open overnight would keep yesterday's "today" — redraw when it's shown again
+document.addEventListener('visibilitychange', () => { if (!document.hidden) renderOverview(); });
 </script>
 </body>
 </html>
