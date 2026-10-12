@@ -60,13 +60,11 @@ table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap;}
 thead tr{background:var(--gh-canvas-inset);border-bottom:1px solid var(--gh-border-default);}
 thead th{padding:8px 10px;font-size:11px;font-weight:600;color:var(--gh-fg-muted);text-align:left;text-transform:uppercase;letter-spacing:0.04em;border-right:1px solid var(--gh-border-muted);}
 thead th:last-child{border-right:none}
-thead th.phase-col{text-align:center;color:var(--gh-accent-fg)}
 tbody tr{border-bottom:1px solid var(--gh-border-muted);transition:background 0.1s;}
 tbody tr:last-child{border-bottom:none}
 tbody tr:hover{background:var(--gh-hover-bg)}
 tbody td{padding:9px 10px;color:var(--gh-fg-default);border-right:1px solid var(--gh-border-muted);vertical-align:middle;}
 tbody td:last-child{border-right:none}
-tbody td.phase-col{text-align:center}
 
 /* INPUTS */
 .cell-input{background:transparent;border:1px solid transparent;border-radius:4px;color:var(--gh-fg-default);font-family:'Inter',system-ui,sans-serif;font-size:13px;padding:3px 6px;width:100%;transition:border-color 0.15s,background 0.15s;outline:none;}
@@ -85,21 +83,37 @@ select.cell-input option:disabled{color:var(--gh-fg-subtle);}
 .date-text-input::placeholder{color:var(--gh-fg-subtle);}
 .date-text-input.invalid{border-color:var(--gh-danger-fg) !important;box-shadow:0 0 0 3px var(--gh-danger-subtle) !important;}
 
-/* PHASE CELLS */
-.phase-cell{display:flex;flex-direction:column;align-items:center;gap:4px;}
-.phase-label{font-size:11px;font-weight:600;color:var(--gh-fg-muted);letter-spacing:0.03em;text-transform:uppercase;}
-.phase-empty{font-size:12px;color:var(--gh-border-default);}
+/* HOUSE CARDS */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:16px;}
+.card{background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:var(--r);padding:12px 14px;font-size:13px;}
+.card.soon{border-color:var(--gh-attention-fg);}
+.card.empty{background:transparent;border-style:dashed;color:var(--gh-fg-subtle);}
+.card-hd{display:flex;justify-content:space-between;align-items:baseline;gap:8px;}
+.card-house{font-size:16px;font-weight:600;}
+.muted{color:var(--gh-fg-muted);font-size:12px;}
+.card-lbl{color:var(--gh-fg-subtle);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;margin:10px 0 4px;}
+.pill{display:inline-block;padding:2px 9px;border-radius:10px;font-size:12px;font-weight:500;margin:0 4px 4px 0;}
+.soon-txt{color:var(--gh-attention-fg);}
+/* colours shared by cards and timeline */
+.c-feed{background:var(--gh-success-subtle);color:var(--gh-success-fg);}
+.c-feed.alt{background:rgba(79,209,139,0.22);}
+.c-Avidecoxx{background:rgba(167,139,250,0.16);color:#b9a5ff;}
+.c-Robenz{background:rgba(255,146,87,0.16);color:#ff9e6b;}
 
-/* DATE CHIPS */
-.date-chip{display:inline-block;padding:2px 9px;border-radius:12px;font-size:12px;font-weight:500;background:var(--gh-accent-subtle);color:var(--gh-accent-fg);border:1px solid rgba(110,143,255,0.2);font-variant-numeric:tabular-nums;}
-.date-chip.past{background:var(--gh-canvas-inset);color:var(--gh-fg-subtle);border-color:var(--gh-border-muted);}
-.date-chip.today{background:var(--gh-success-subtle);color:var(--gh-success-fg);border-color:rgba(79,209,139,0.3);}
-.date-chip.soon{background:var(--gh-attention-subtle);color:var(--gh-attention-fg);border-color:rgba(240,180,41,0.3);}
+/* TIMELINE */
+.tl-wrap{border:1px solid var(--gh-border-default);border-radius:var(--r);background:var(--gh-canvas-subtle);padding:12px 14px;margin-bottom:16px;}
+.tl-legend{display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--gh-fg-muted);margin-bottom:8px;}
+.tl-legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px;}
+.tl-axis{position:relative;height:16px;margin-left:120px;font-size:11px;color:var(--gh-fg-subtle);}
+.tl-row{display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--gh-border-muted);}
+.tl-tracks{position:relative;}
+.tl-track{position:relative;height:20px;margin:3px 0;}
+.tl-seg{position:absolute;top:0;bottom:0;border-radius:4px;padding:0 6px;font-size:11px;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tl-seg.now{box-shadow:inset 0 0 0 1.5px currentColor;font-weight:600;}
+.tl-today{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--gh-danger-fg);z-index:2;}
 
-/* LEGEND */
-.legend{display:flex;gap:16px;align-items:center;padding:10px 16px;font-size:12px;color:var(--gh-fg-muted);flex-wrap:wrap;}
-.legend-item{display:flex;align-items:center;gap:6px}
-.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+/* EDIT TABLE (folded) */
+.edit-wrap summary{cursor:pointer;font-size:13px;font-weight:500;color:var(--gh-fg-muted);padding:6px 0 10px;}
 
 /* TOAST */
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:var(--r);padding:8px 16px;font-size:13px;color:var(--gh-fg-default);z-index:999;opacity:0;transition:opacity 0.2s;pointer-events:none;}
@@ -162,19 +176,27 @@ select.cell-input option:disabled{color:var(--gh-fg-subtle);}
 </div>
 
 <div class="main" id="main">
-  <div class="table-wrap">
-    <table>
-      <thead><tr id="header-row"></tr></thead>
-      <tbody id="table-body"></tbody>
-    </table>
+  <div class="cards" id="cards"></div>
+  <div class="tl-wrap">
+    <div class="tl-legend">
+      <span><i class="c-feed alt"></i>Feed phase</span>
+      <span><i class="c-Avidecoxx"></i>Avidecoxx</span>
+      <span><i class="c-Robenz"></i>Robenz</span>
+      <span><i style="width:10px;height:2px;background:var(--gh-danger-fg);vertical-align:3px"></i>Today</span>
+      <span>Outlined = in use now · hover for dates</span>
+    </div>
+    <div class="tl-axis" id="tl-axis"></div>
+    <div id="timeline"></div>
   </div>
-  <div class="legend">
-    <span style="font-weight:500">Legend:</span>
-    <div class="legend-item"><span class="legend-dot" style="background:var(--gh-fg-subtle)"></span> Past</div>
-    <div class="legend-item"><span class="legend-dot" style="background:var(--gh-attention-fg)"></span> Within 7 days</div>
-    <div class="legend-item"><span class="legend-dot" style="background:var(--gh-success-fg)"></span> Current</div>
-    <div class="legend-item"><span class="legend-dot" style="background:var(--gh-accent-fg)"></span> Upcoming</div>
-  </div>
+  <details class="edit-wrap">
+    <summary>Edit flocks</summary>
+    <div class="table-wrap">
+      <table>
+        <thead><tr id="header-row"></tr></thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </details>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -255,7 +277,7 @@ const SCHEDULER_BREED = { 'ISA': 'ISA Brown', 'Hy-Line': 'Hy-Line Brown', 'Novog
 const REARING_TYPES = ['Cage', 'Barn'];
 const HOUSES     = ['Θ1','Θ2','Θ3','Θ4','Θ5'];
 const NUM_ROWS   = 6;
-const MAX_PHASES = Math.max(...Object.values(BREEDS).map(b => b.phases.length));
+const TL_BACK = 56, TL_AHEAD = 112;   // timeline window: 8 weeks back, 16 weeks ahead
 
 // ── STATE ────────────────────────────────────────────────────────
 let rows       = Array.from({length: NUM_ROWS}, () => ({id: null, house:'', breed:'', hatch:'', rearing_type:''}));
@@ -458,11 +480,8 @@ function refreshHouseDropdowns() {
 
 // ── BUILD HEADER ─────────────────────────────────────────────────
 function buildHeader() {
-  let html = `<th style="min-width:130px">Hatch Date</th><th style="min-width:80px">House</th><th style="min-width:110px">Breed</th><th style="min-width:90px">Type</th><th style="min-width:80px">Age</th><th class="phase-col" style="min-width:170px">Additives</th>`;
-  for (let i = 0; i < MAX_PHASES; i++) {
-    html += `<th class="phase-col" style="min-width:130px">Phase ${i+1}</th>`;
-  }
-  document.getElementById('header-row').innerHTML = html;
+  document.getElementById('header-row').innerHTML =
+    `<th style="min-width:130px">Hatch Date</th><th style="min-width:80px">House</th><th style="min-width:110px">Breed</th><th style="min-width:90px">Type</th><th style="min-width:80px">Age</th>`;
 }
 
 // ── SORT ─────────────────────────────────────────────────────────
@@ -520,31 +539,18 @@ function buildRows() {
       ${REARING_TYPES.map(t => `<option value="${t}"${r.rearing_type===t?' selected':''}>${t}</option>`).join('')}
     </select></td>`;
 
-    // Age (filled in by updatePhaseDates)
-    html += `<td id="age-${i}" style="white-space:nowrap"></td>`;
-    html += `<td class="phase-col" id="add-${i}"></td>`;
-
-    // Phase cells
-    for (let p = 0; p < MAX_PHASES; p++) {
-      html += `<td class="phase-col" id="phase-${i}-${p}"></td>`;
-    }
+    html += `<td style="white-space:nowrap">${ageText(r.hatch)}</td>`;
     html += '</tr>';
   }
   tbody.innerHTML = html;
 
-  // Apply house exclusivity and render phase dates
   refreshHouseDropdowns();
-  for (let i = 0; i < NUM_ROWS; i++) updatePhaseDates(i);
+  renderOverview();
 }
 
-// ── UPDATE PHASE DATES ────────────────────────────────────────────
-// Green = current active phase (started but next hasn't begun yet)
-// Grey  = past phases already replaced
-// Orange = next phase due within 7 days
-// Blue  = future phases
-// Shared by updatePhaseDates (table) and printSummary (printout) so the
-// "current" phase is always computed the same way in both places.
-// Returns null if the row is incomplete.
+// ── PHASES ────────────────────────────────────────────────────────
+// Shared by the cards, the timeline and printSummary so the "current" phase
+// is always computed the same way. Returns null if the row is incomplete.
 function computeActivePhase(r) {
   if (!r.breed || !r.hatch) return null;
   const scheduleKey = BREED_SCHEDULE[r.breed];
@@ -580,8 +586,7 @@ function toWeekday(dt) {
 
 // Additive spans for a hatch date. Starts move off weekends like the feed phases;
 // each additive's end is the next one's start (the switch day), the last has none.
-// cls uses the phase chip colours: today = in the feed now, past = finished,
-// soon = starts within 7 days, '' = later.
+// now = in the feed today.
 function additiveSpans(hatch) {
   if (!hatch) return [];
   const today = new Date(); today.setHours(0,0,0,0);
@@ -592,11 +597,7 @@ function additiveSpans(hatch) {
   });
   return ADDITIVES.map((a, i) => {
     const start = starts[i], end = starts[i + 1] || null;
-    let cls;
-    if (today < start)            cls = Math.round((start - today) / 86400000) <= 7 ? 'soon' : '';
-    else if (end && today >= end) cls = 'past';
-    else                          cls = 'today';
-    return { name: a.name, start, end, cls };
+    return { name: a.name, start, end, now: start <= today && (!end || today < end) };
   });
 }
 
@@ -609,55 +610,87 @@ function ageText(hatch) {
   return days < 0 ? '—' : `${days} day${days === 1 ? '' : 's'}`;
 }
 
-function updatePhaseDates(rowIdx) {
-  const r = rows[rowIdx];
-  const ageCell = document.getElementById(`age-${rowIdx}`);
-  if (ageCell) ageCell.textContent = ageText(r.hatch);
-  const addCell = document.getElementById(`add-${rowIdx}`);
-  if (addCell) {
-    const spans = additiveSpans(r.hatch);
-    addCell.innerHTML = spans.length
-      ? `<div style="display:flex;flex-direction:column;align-items:center;gap:6px">${spans.map(a =>
-          `<div class="phase-cell"><span class="phase-label">${a.name}</span><span class="date-chip ${a.cls}">${fmtDate(a.start)} →${a.end ? ' ' + fmtDate(a.end) : ''}</span></div>`
-        ).join('')}</div>`
-      : `<span class="phase-empty">—</span>`;
-  }
-  const active = computeActivePhase(r);
+// ── OVERVIEW: house cards + timeline ─────────────────────────────
+function renderOverview() { renderCards(); renderTimeline(); }
 
-  // Bail early if row is incomplete — clear all phase cells
-  if (!active) {
-    for (let p = 0; p < MAX_PHASES; p++) {
-      const cell = document.getElementById(`phase-${rowIdx}-${p}`);
-      if (cell) cell.innerHTML = `<span class="phase-empty">—</span>`;
-    }
-    return;
-  }
+const DAY = 86400000;
+const fmtShort = d => d.toLocaleDateString('en-GB', {weekday:'short', day:'2-digit', month:'2-digit'});
+const inDays = n => n === 0 ? 'today' : `in ${n} day${n === 1 ? '' : 's'}`;
 
-  const { breed, phaseDates, activeIdx } = active;
+// Feed phases as spans: each runs until the next starts, the last has no end
+function feedSpans(r) {
+  const a = computeActivePhase(r);
+  if (!a) return [];
+  return a.phaseDates.map((start, i) => ({
+    name: a.breed.phases[i], start, end: a.phaseDates[i + 1] || null, now: i === a.activeIdx
+  }));
+}
+
+function renderCards() {
   const today = new Date(); today.setHours(0,0,0,0);
+  document.getElementById('cards').innerHTML = HOUSES.map(h => {
+    const r = rows.find(x => x.house === h && x.hatch);
+    if (!r) return `<div class="card empty"><div class="card-hd"><span class="card-house">${h}</span></div><div style="margin-top:8px">No flock</div></div>`;
 
-  for (let p = 0; p < MAX_PHASES; p++) {
-    const cell = document.getElementById(`phase-${rowIdx}-${p}`);
-    if (!cell) continue;
+    const hatch = addDays(r.hatch, 0); hatch.setHours(0,0,0,0);
+    const age = Math.round((today - hatch) / DAY);
+    const feed = feedSpans(r), adds = additiveSpans(r.hatch);
+    const next = [...feed, ...adds].filter(x => x.start > today).sort((a, b) => a.start - b.start);
+    const soon = next.length && Math.round((next[0].start - today) / DAY) <= 7;
 
-    if (p >= breed.phases.length) {
-      cell.innerHTML = `<span class="phase-empty">—</span>`;
-      continue;
+    let now;
+    if (age < 0) now = `<span class="muted">Not hatched yet</span>`;
+    else {
+      const f = feed.find(x => x.now);
+      now = (f ? `<span class="pill c-feed">${f.name}</span>` : `<span class="muted">${r.breed ? 'No feed schedule for this breed' : 'No breed set'}</span> `)
+          + adds.filter(x => x.now).map(x => `<span class="pill c-${x.name}">${x.name}</span>`).join('');
     }
+    const nextHtml = next.length
+      ? `<div class="${soon ? 'soon-txt' : ''}">${next[0].name} on ${fmtShort(next[0].start)} · ${inDays(Math.round((next[0].start - today) / DAY))}</div>`
+        + (next[1] ? `<div class="muted" style="margin-top:2px">then ${next[1].name} on ${fmtShort(next[1].start)}</div>` : '')
+      : `<div class="muted">No more changes</div>`;
 
-    const phaseDate = phaseDates[p];
-    let cls = '';
-    if (p === activeIdx) {
-      cls = 'today';                                        // green — currently on this feed
-    } else if (p < activeIdx) {
-      cls = 'past';                                         // grey  — already replaced
-    } else {
-      const diff = Math.round((phaseDate - today) / 86400000);
-      cls = diff <= 7 ? 'soon' : '';                        // orange ≤7 days, blue otherwise
-    }
+    return `<div class="card${soon ? ' soon' : ''}">
+      <div class="card-hd"><span class="card-house">${h}</span><span class="muted">${age < 0 ? `Hatches ${inDays(-age)}` : `Day ${age}`}</span></div>
+      <div class="muted">${[r.breed || 'No breed', r.rearing_type || 'No type', 'hatch ' + isoToDisplay(r.hatch)].join(' · ')}</div>
+      <div class="card-lbl">Now</div>${now}
+      <div class="card-lbl">Next</div>${nextHtml}
+    </div>`;
+  }).join('');
+}
 
-    cell.innerHTML = `<div class="phase-cell"><span class="phase-label">${breed.phases[p]}</span><span class="date-chip ${cls}">${fmtDate(phaseDate)||'—'}</span></div>`;
-  }
+function renderTimeline() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const from = new Date(today); from.setDate(from.getDate() - TL_BACK);
+  const to   = new Date(today); to.setDate(to.getDate() + TL_AHEAD);
+  const pos = d => (Math.min(Math.max(d, from), to) - from) / (to - from) * 100;
+
+  const ticks = [];
+  for (let m = new Date(from.getFullYear(), from.getMonth() + 1, 1); m < to; m.setMonth(m.getMonth() + 1))
+    ticks.push(`<span style="position:absolute;left:${pos(m)}%">${m.toLocaleDateString('en-GB', {month:'short'})}</span>`);
+  document.getElementById('tl-axis').innerHTML = ticks.join('');
+
+  const segs = (spans, cls) => spans.map((x, i) => {
+    const end = x.end || to;
+    if (end <= from || x.start >= to) return '';
+    const c = cls === 'feed' ? `c-feed${i % 2 ? ' alt' : ''}` : `c-${x.name}`;
+    const tip = `${x.name}: ${fmtDate(x.start)} → ${x.end ? fmtDate(x.end) : 'until the house is emptied'}`;
+    return `<div class="tl-seg ${c}${x.now ? ' now' : ''}" style="left:${pos(x.start)}%;width:${pos(end) - pos(x.start)}%" title="${tip}">${x.name}</div>`;
+  }).join('');
+
+  const order = r => r.house ? HOUSES.indexOf(r.house) : HOUSES.length;
+  const flocks = rows.filter(r => r.hatch).sort((a, b) => order(a) - order(b));
+  document.getElementById('timeline').innerHTML = flocks.length ? flocks.map(r => {
+    const age = Math.round((today - addDays(r.hatch, 0).setHours(0,0,0,0)) / DAY);
+    return `<div class="tl-row">
+      <div><div style="font-weight:600">${r.house || '—'}</div><div class="muted">${r.breed || 'No breed'}</div><div class="muted">${age < 0 ? `Hatches ${inDays(-age)}` : `Day ${age}`}</div></div>
+      <div class="tl-tracks">
+        <div class="tl-track">${segs(feedSpans(r), 'feed')}</div>
+        <div class="tl-track">${segs(additiveSpans(r.hatch), 'add')}</div>
+        <div class="tl-today" style="left:${pos(today)}%"></div>
+      </div>
+    </div>`;
+  }).join('') : `<div class="muted" style="padding:8px 0">No flocks yet — open "Edit flocks" or sync from the scheduler.</div>`;
 }
 
 // ── PRINT SUMMARY ─────────────────────────────────────────────────
@@ -669,7 +702,7 @@ function printSummary() {
     const active = computeActivePhase(r);
     if (!active || active.activeIdx < 0) continue;   // no phase currently active
     const phaseLabel = active.breed.phases[active.activeIdx];
-    const inUse = additiveSpans(r.hatch).filter(a => a.cls === 'today').map(a => a.name);
+    const inUse = additiveSpans(r.hatch).filter(a => a.now).map(a => a.name);
     lines.push({
       house: r.house,
       text: `Hatch Date: ${isoToDisplay(r.hatch)}, ${r.house}, ${r.breed}, ${r.rearing_type}, ${phaseLabel}${inUse.length ? ', ' + inUse.join(' + ') : ''}`
@@ -782,19 +815,21 @@ function onHouseChange(idx, val) {
   if (!isOnline) return;
   rows[idx].house = val;
   refreshHouseDropdowns();
+  renderOverview();
   saveRow(idx);
 }
 
 function onBreedChange(idx, val) {
   if (!isOnline) return;
   rows[idx].breed = val;
-  updatePhaseDates(idx);
+  renderOverview();
   saveRow(idx);
 }
 
 function onRearingTypeChange(idx, val) {
   if (!isOnline) return;
   rows[idx].rearing_type = val;
+  renderOverview();
   saveRow(idx);
 }
 

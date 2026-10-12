@@ -12,7 +12,7 @@ Two users: Panos and Ελένη.
 - index.html — landing page linking all tools
 - vaccine_tracker.html — vaccine order tracking (ΕΜΒΟΛΙΑ), with an alternate house/cycle card view
 - inventory.html — vaccine stock/inventory, bidirectionally linked to vaccine_tracker
-- feed_tracker.html — feed/nutrition schedule tracking per breed, feed additives (Avidecoxx, Robenz) by day since hatch, and a "Sync from scheduler" button (confirm list before saving)
+- feed_tracker.html — feed/nutrition schedule tracking per breed and feed additives (Avidecoxx, Robenz) by day since hatch: house cards (now / next) + a timeline, editing in a folded "Edit flocks" table, and a "Sync from scheduler" button (each change confirmed)
 - schedule_checker.html — rearing house hatch planner (one card per hatch, earliest-next suggestions, clashes between houses) — rules in `docs/rearing_scheduler.md`
 - truck_calculator_kamposos.html / truck_calculator_doukakis.html — truck+trailer loading calculators for two separate facilities
 - backup.py — nightly Supabase → Google Sheets backup, run by `.github/workflows/backup.yml`
