@@ -88,6 +88,7 @@ select.cell-input option:disabled{color:var(--gh-fg-subtle);}
 /* PHASE CELLS */
 .phase-cell{display:flex;flex-direction:column;align-items:center;gap:4px;}
 .phase-label{font-size:11px;font-weight:600;color:var(--gh-fg-muted);letter-spacing:0.03em;text-transform:uppercase;}
+.phase-moved{font-size:10px;color:var(--gh-attention-fg);}
 .phase-empty{font-size:12px;color:var(--gh-border-default);}
 
 /* DATE CHIPS */
@@ -529,10 +530,18 @@ function computeActivePhase(r) {
   const today = new Date(); today.setHours(0,0,0,0);
   const breed = BREEDS[scheduleKey];
 
-  // Build all phase Date objects once per row (not once per phase)
-  const phaseDates = breed.days.map(d => {
+  // Build all phase Date objects once per row (not once per phase).
+  // Weekend changes move to a weekday — Saturday → Friday, Sunday → Monday —
+  // the same rule as the reminder email (feed_notify.yml), so both name the same day.
+  const movedFrom = [];
+  const phaseDates = breed.days.map((d, i) => {
     const dt = addDays(r.hatch, d);
     dt.setHours(0,0,0,0);
+    const dow = dt.getDay();
+    if (dow === 6 || dow === 0) {
+      movedFrom[i] = `${dow === 6 ? 'Sat' : 'Sun'} ${fmtDate(dt)}`;
+      dt.setDate(dt.getDate() + (dow === 6 ? -1 : 1));
+    }
     return dt;
   });
 
@@ -542,7 +551,7 @@ function computeActivePhase(r) {
     if (phaseDates[i] <= today) activeIdx = i;
   }
 
-  return { breed, phaseDates, activeIdx };
+  return { breed, phaseDates, movedFrom, activeIdx };
 }
 
 // Age in days since hatch (hatch day = 0); '—' with no hatch date or before hatching
@@ -569,7 +578,7 @@ function updatePhaseDates(rowIdx) {
     return;
   }
 
-  const { breed, phaseDates, activeIdx } = active;
+  const { breed, phaseDates, movedFrom, activeIdx } = active;
   const today = new Date(); today.setHours(0,0,0,0);
 
   for (let p = 0; p < MAX_PHASES; p++) {
@@ -592,7 +601,7 @@ function updatePhaseDates(rowIdx) {
       cls = diff <= 7 ? 'soon' : '';                        // orange ≤7 days, blue otherwise
     }
 
-    cell.innerHTML = `<div class="phase-cell"><span class="phase-label">${breed.phases[p]}</span><span class="date-chip ${cls}">${fmtDate(phaseDate)||'—'}</span></div>`;
+    cell.innerHTML = `<div class="phase-cell"><span class="phase-label">${breed.phases[p]}</span><span class="date-chip ${cls}">${fmtDate(phaseDate)||'—'}</span>${movedFrom[p] ? `<span class="phase-moved">from ${movedFrom[p]}</span>` : ''}</div>`;
   }
 }
 
