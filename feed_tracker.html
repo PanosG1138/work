@@ -88,7 +88,6 @@ select.cell-input option:disabled{color:var(--gh-fg-subtle);}
 /* PHASE CELLS */
 .phase-cell{display:flex;flex-direction:column;align-items:center;gap:4px;}
 .phase-label{font-size:11px;font-weight:600;color:var(--gh-fg-muted);letter-spacing:0.03em;text-transform:uppercase;}
-.phase-moved{font-size:10px;color:var(--gh-attention-fg);}
 .phase-empty{font-size:12px;color:var(--gh-border-default);}
 
 /* DATE CHIPS */
@@ -242,11 +241,12 @@ const BREED_SCHEDULE = {
 };
 
 // Products mixed into the feed, by day since hatch — same for every breed.
-// to: null = until the house is emptied (the row is cleared or gets a new hatch).
+// Each runs until the next one starts (they switch on the same day); the last runs
+// until the house is emptied (the row is cleared or gets a new hatch).
 // Duplicated by design in .github/workflows/feed_notify.yml (ADDITIVES) — change both.
 const ADDITIVES = [
-  { name: 'Avidecoxx', from: 10, to: 30 },
-  { name: 'Robenz',    from: 31, to: null },
+  { name: 'Avidecoxx', from: 10 },
+  { name: 'Robenz',    from: 31 },
 ];
 
 // Scheduler (placements) breed → breed name used here
@@ -276,8 +276,8 @@ function setOnline(online) {
 // Unsaved edits are pushed first, so the reload doesn't throw them away
 async function retryConnection() {
   setSyncState('loading', 'Connecting…');
-  for (const i of [...unsaved]) if (!await persistRow(i)) return;   // still failing — edits kept, stay offline
-  await loadFromSupabase();
+  for (const i of [...unsaved]) await persistRow(i);
+  if (!unsaved.size) await loadFromSupabase();   // otherwise still no connection — edits kept, stay offline
 }
 
 // ── SUPABASE HELPERS ─────────────────────────────────────────────
@@ -293,8 +293,9 @@ async function sbFetch(path, options = {}) {
     }
   });
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error(err);
+    const err = new Error(await res.text());
+    err.status = res.status;   // server answered — a refusal, not a lost connection
+    throw err;
   }
   const text = await res.text();
   return text ? JSON.parse(text) : null;
@@ -369,6 +370,14 @@ async function persistRow(idx) {
     return true;
   } catch(e) {
     console.error('Save error:', e);
+    if (e.status) {
+      // The database refused this save — retrying won't help. Drop it and show what's really stored.
+      unsaved.delete(idx);
+      showToast(`Save refused by the database (${e.status}) — reloaded`);
+      loadFromSupabase();
+      return false;
+    }
+    unsaved.add(idx);   // a newer edit may have been cleared by an earlier save's success
     setOnline(false);
     setSyncState('err', 'No connection');
     return false;
@@ -449,7 +458,7 @@ function refreshHouseDropdowns() {
 
 // ── BUILD HEADER ─────────────────────────────────────────────────
 function buildHeader() {
-  let html = `<th style="min-width:130px">Hatch Date</th><th style="min-width:80px">House</th><th style="min-width:110px">Breed</th><th style="min-width:90px">Type</th><th style="min-width:80px">Age</th><th style="min-width:170px">Additives</th>`;
+  let html = `<th style="min-width:130px">Hatch Date</th><th style="min-width:80px">House</th><th style="min-width:110px">Breed</th><th style="min-width:90px">Type</th><th style="min-width:80px">Age</th><th class="phase-col" style="min-width:170px">Additives</th>`;
   for (let i = 0; i < MAX_PHASES; i++) {
     html += `<th class="phase-col" style="min-width:130px">Phase ${i+1}</th>`;
   }
@@ -513,7 +522,7 @@ function buildRows() {
 
     // Age (filled in by updatePhaseDates)
     html += `<td id="age-${i}" style="white-space:nowrap"></td>`;
-    html += `<td id="add-${i}"></td>`;
+    html += `<td class="phase-col" id="add-${i}"></td>`;
 
     // Phase cells
     for (let p = 0; p < MAX_PHASES; p++) {
@@ -546,11 +555,10 @@ function computeActivePhase(r) {
   // Build all phase Date objects once per row (not once per phase).
   // Weekend changes move to a weekday — Saturday → Friday, Sunday → Monday —
   // the same rule as the reminder email (feed_notify.yml), so both name the same day.
-  const movedFrom = [];
-  const phaseDates = breed.days.map((d, i) => {
+  const phaseDates = breed.days.map(d => {
     const dt = addDays(r.hatch, d);
     dt.setHours(0,0,0,0);
-    movedFrom[i] = toWeekday(dt);
+    toWeekday(dt);
     return dt;
   });
 
@@ -560,35 +568,35 @@ function computeActivePhase(r) {
     if (phaseDates[i] <= today) activeIdx = i;
   }
 
-  return { breed, phaseDates, movedFrom, activeIdx };
+  return { breed, phaseDates, activeIdx };
 }
 
-// Moves a Saturday back to Friday and a Sunday on to Monday (changes dt in place).
-// Returns the original day as "Sat dd/mm/yyyy" when it moved, otherwise null.
+// Moves a Saturday back to Friday and a Sunday on to Monday (changes dt in place)
 function toWeekday(dt) {
   const dow = dt.getDay();
-  if (dow !== 6 && dow !== 0) return null;
-  const from = `${dow === 6 ? 'Sat' : 'Sun'} ${fmtDate(dt)}`;
-  dt.setDate(dt.getDate() + (dow === 6 ? -1 : 1));
-  return from;
+  if (dow === 6) dt.setDate(dt.getDate() - 1);
+  if (dow === 0) dt.setDate(dt.getDate() + 1);
 }
 
-// Additive spans for a hatch date. Only the start moves off a weekend; the end stays.
+// Additive spans for a hatch date. Starts move off weekends like the feed phases;
+// each additive's end is the next one's start (the switch day), the last has none.
 // cls uses the phase chip colours: today = in the feed now, past = finished,
 // soon = starts within 7 days, '' = later.
 function additiveSpans(hatch) {
   if (!hatch) return [];
   const today = new Date(); today.setHours(0,0,0,0);
-  return ADDITIVES.map(a => {
-    const start = addDays(hatch, a.from); start.setHours(0,0,0,0);
-    const movedFrom = toWeekday(start);
-    let end = null;
-    if (a.to !== null) { end = addDays(hatch, a.to); end.setHours(0,0,0,0); }
+  const starts = ADDITIVES.map(a => {
+    const dt = addDays(hatch, a.from); dt.setHours(0,0,0,0);
+    toWeekday(dt);
+    return dt;
+  });
+  return ADDITIVES.map((a, i) => {
+    const start = starts[i], end = starts[i + 1] || null;
     let cls;
-    if (today < start)          cls = Math.round((start - today) / 86400000) <= 7 ? 'soon' : '';
-    else if (end && today > end) cls = 'past';
-    else                         cls = 'today';
-    return { name: a.name, start, end, movedFrom, cls };
+    if (today < start)            cls = Math.round((start - today) / 86400000) <= 7 ? 'soon' : '';
+    else if (end && today >= end) cls = 'past';
+    else                          cls = 'today';
+    return { name: a.name, start, end, cls };
   });
 }
 
@@ -609,8 +617,8 @@ function updatePhaseDates(rowIdx) {
   if (addCell) {
     const spans = additiveSpans(r.hatch);
     addCell.innerHTML = spans.length
-      ? `<div style="display:flex;flex-direction:column;gap:6px">${spans.map(a =>
-          `<div class="phase-cell"><span class="phase-label">${a.name}</span><span class="date-chip ${a.cls}">${fmtDate(a.start)} →${a.end ? ' ' + fmtDate(a.end) : ''}</span>${a.movedFrom ? `<span class="phase-moved">from ${a.movedFrom}</span>` : ''}</div>`
+      ? `<div style="display:flex;flex-direction:column;align-items:center;gap:6px">${spans.map(a =>
+          `<div class="phase-cell"><span class="phase-label">${a.name}</span><span class="date-chip ${a.cls}">${fmtDate(a.start)} →${a.end ? ' ' + fmtDate(a.end) : ''}</span></div>`
         ).join('')}</div>`
       : `<span class="phase-empty">—</span>`;
   }
@@ -625,7 +633,7 @@ function updatePhaseDates(rowIdx) {
     return;
   }
 
-  const { breed, phaseDates, movedFrom, activeIdx } = active;
+  const { breed, phaseDates, activeIdx } = active;
   const today = new Date(); today.setHours(0,0,0,0);
 
   for (let p = 0; p < MAX_PHASES; p++) {
@@ -648,7 +656,7 @@ function updatePhaseDates(rowIdx) {
       cls = diff <= 7 ? 'soon' : '';                        // orange ≤7 days, blue otherwise
     }
 
-    cell.innerHTML = `<div class="phase-cell"><span class="phase-label">${breed.phases[p]}</span><span class="date-chip ${cls}">${fmtDate(phaseDate)||'—'}</span>${movedFrom[p] ? `<span class="phase-moved">from ${movedFrom[p]}</span>` : ''}</div>`;
+    cell.innerHTML = `<div class="phase-cell"><span class="phase-label">${breed.phases[p]}</span><span class="date-chip ${cls}">${fmtDate(phaseDate)||'—'}</span></div>`;
   }
 }
 
@@ -690,7 +698,7 @@ ${lines.map(l => `<div class="line">${l.text}</div>`).join('')}
 // ── SYNC FROM SCHEDULER ───────────────────────────────────────────
 // For each house: the latest scheduler hatch that is today or earlier.
 // Sets hatch + breed (breed kept if the scheduler has none); a house with no row
-// fills an empty one (Type left blank). Nothing is saved until the user confirms the list.
+// fills an empty one (Type left blank). Each change is asked one by one; only the accepted ones are saved.
 // ponytail: takes the latest past hatch even if that flock already left — the confirm list is the check
 async function syncFromScheduler() {
   if (!isOnline) return;
@@ -737,14 +745,16 @@ async function syncFromScheduler() {
     else showToast('Already in sync');
     return;
   }
-  const msg = 'Apply these changes from the scheduler?\n\n' + lines.join('\n')
-    + (problems.length ? '\n\nNot changed:\n' + problems.join('\n') : '');
-  if (!confirm(msg)) return;
-  for (const c of changes) {
+  let applied = 0;
+  changes.forEach((c, k) => {
+    if (!confirm(`Change ${k+1} of ${changes.length} from the scheduler:\n\n${lines[k]}\n\nApply this one?`)) return;
     Object.assign(rows[c.idx], { house: c.house, hatch: c.hatch, breed: c.breed });
     saveRow(c.idx);
-  }
-  buildRows();
+    applied++;
+  });
+  if (problems.length) alert('Not changed:\n' + problems.join('\n'));
+  if (applied) buildRows();
+  showToast(`${applied} of ${changes.length} change${changes.length > 1 ? 's' : ''} applied`);
 }
 
 // ── EVENT HANDLERS ────────────────────────────────────────────────

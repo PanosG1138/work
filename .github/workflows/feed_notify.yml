@@ -59,7 +59,7 @@ jobs:
           REMINDER_DAYS = [7, 3]   # send a reminder this many days before the feed change
 
           # ── Feed additives — must match ADDITIVES in feed_tracker.html exactly ──
-          # Same for every breed; only the start is reminded (end = None: until the house is emptied).
+          # Same for every breed; only the start is reminded (each runs until the next one starts).
           ADDITIVES = [
               {'name': 'Avidecoxx', 'from': 10},
               {'name': 'Robenz',    'from': 31},
