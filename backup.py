@@ -122,6 +122,7 @@ def run_backup():
         ("Τοποθετήσεις",           fetch("placements",          "doc_date.asc")),
         ("Επιλυμένες Συγκρούσεις", fetch("resolved_conflicts",  "conflict_key.asc")),
         ("Ζωοτροφές",              fetch("feed_hatches",        "row_index.asc")),
+        ("Λίστα Εμβολίων",         fetch("vaccines",            "name.asc")),
         ("Φόρτωση Καμπόσος",       fetch("truck_load",          "id.asc")),
         ("Φόρτωση Δουκάκης",       fetch("truck_load_doukakis", "id.asc")),
     ]

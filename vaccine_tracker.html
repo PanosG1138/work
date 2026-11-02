@@ -353,6 +353,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
 .modal .fgroup label{font-size:12px;font-weight:500;color:var(--gh-fg-muted);margin-bottom:5px}
 .modal .fgroup input,.modal .fgroup select,.modal .fgroup textarea{font-size:14px;padding:6px 10px;color:var(--gh-fg-default);background:var(--gh-canvas-default);border-color:var(--gh-border-default)}
 .modal .fgroup input:focus,.modal .fgroup select:focus,.modal .fgroup textarea:focus{border-color:var(--gh-accent-emphasis);box-shadow:0 0 0 3px rgba(61,99,224,0.3)}
+.vname-typed{display:block;margin-top:8px;color:var(--gh-fg-default);font-weight:600}
 .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;padding-top:16px;border-top:1px solid var(--gh-border-muted)}
 .btn-primary{
   height:32px;padding:0 16px;
@@ -766,8 +767,8 @@ body.printing-card .printcard-doc{display:block}
       </datalist>
     </div>
     <div class="fgroup">
-      <label style="display:flex;align-items:center;justify-content:flex-start;gap:6px;cursor:pointer;font-weight:400"><input type="checkbox" id="f-first-inj" onchange="onInjectableCheck(this)">ΠΡΩΤΑ ΕΝΕΣΙΜΑ</label>
-      <label style="display:flex;align-items:center;justify-content:flex-start;gap:6px;cursor:pointer;font-weight:400"><input type="checkbox" id="f-second-inj" onchange="onInjectableCheck(this)">ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ</label>
+      <label style="display:flex;align-items:center;justify-content:flex-start;gap:6px;cursor:pointer;font-weight:400"><input type="checkbox" id="f-first-inj" onchange="onInjectableCheck(this, 'f-second-inj')">ΠΡΩΤΑ ΕΝΕΣΙΜΑ</label>
+      <label style="display:flex;align-items:center;justify-content:flex-start;gap:6px;cursor:pointer;font-weight:400"><input type="checkbox" id="f-second-inj" onchange="onInjectableCheck(this, 'f-first-inj')">ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ</label>
     </div>
     <div class="fgroup"><label>Σχόλια Πάνος</label><textarea id="f-notes" placeholder="…"></textarea></div>
     <div class="fgroup" style="display:none"><label>Εμβολιασμός</label>
@@ -1013,6 +1014,11 @@ body.printing-card .printcard-doc{display:block}
         <datalist id="wz-customer-dl"></datalist>
         <datalist id="wz-vaccine-dl"></datalist>
       </div>
+      <!-- vaccine step only; stays ticked for the next lines until unticked, like the side form -->
+      <div class="fgroup" id="wz-inj" style="display:none">
+        <label style="display:flex;align-items:center;justify-content:flex-start;gap:6px;cursor:pointer;font-weight:400"><input type="checkbox" id="wz-first-inj" onchange="onInjectableCheck(this, 'wz-second-inj')">ΠΡΩΤΑ ΕΝΕΣΙΜΑ</label>
+        <label style="display:flex;align-items:center;justify-content:flex-start;gap:6px;cursor:pointer;font-weight:400"><input type="checkbox" id="wz-second-inj" onchange="onInjectableCheck(this, 'wz-first-inj')">ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ</label>
+      </div>
       <div class="wizard-hint" id="wz-hint">Enter ↵ για συνέχεια</div>
 
       <div class="wizard-queue" id="wizard-queue"></div>
@@ -1044,6 +1050,14 @@ body.printing-card .printcard-doc{display:block}
       <button class="btn-secondary" onclick="resolveDuplicate('cancel')">Ακύρωση</button>
       <button class="btn-primary" id="dup-add" onclick="resolveDuplicate('add')">Προσθήκη νέας γραμμής</button>
     </div>
+  </div>
+</div>
+
+<!-- VACCINE NAME — "did you mean" / add a new name to the vaccine list -->
+<div id="vname-bg" class="modal-bg" style="display:none;z-index:400" onclick="if(event.target===this)resolveVaccineAsk(null)" onkeydown="if(event.key==='Escape')resolveVaccineAsk(null)">
+  <div class="confirm-box" style="width:440px;max-width:95vw">
+    <p id="vname-msg"></p>
+    <div id="vname-actions" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"></div>
   </div>
 </div>
 
@@ -1294,7 +1308,7 @@ function setSyncStatus(state, text) {
 async function loadData() {
   setSyncStatus('loading', 'Φόρτωση…');
   try {
-    data = await sbSelect();
+    [data] = await Promise.all([sbSelect(), loadVaccineNames()]);
     await autoMarkVaccinated();
     selectedIds.clear();
     showDone = false; updateShowDoneBtn();
@@ -1533,9 +1547,16 @@ async function addEntry() {
     created_by: currentUser, created_at: now, updated_by: currentUser, updated_at: now,
   };
 
+  const vaccines = [];
+  for (const v of typedVaccines()) {
+    const name = await resolveVaccineAlts(v);
+    if (name === null) return;
+    vaccines.push(name);
+  }
+
   // every vaccine gets every customer line, with that line's quantity
   const combos = [];
-  typedVaccines().forEach(vaccine => {
+  vaccines.forEach(vaccine => {
     entries.forEach(e => combos.push({ ...baseRow, emvolio: vaccine, pelatis: e.pelatis, posotita: e.posotita }));
   });
 
@@ -1639,6 +1660,7 @@ function wizardRenderStage() {
   back.title = back.disabled ? 'Η εκκόλαψη/αναθρεπτήριο δεν αλλάζει όσο υπάρχουν εγγραφές στη λίστα' : '';
   input.removeAttribute('list');
   if (wizardStage === 'vaccine') { input.setAttribute('list', 'wz-vaccine-dl'); wizardVaccineInput(input); }
+  document.getElementById('wz-inj').style.display = wizardStage === 'vaccine' ? '' : 'none';
   if (wizardStage === 'customer') { wizardPopulateCustomerList(); input.setAttribute('list', 'wz-customer-dl'); }
   document.getElementById('wz-hint').textContent =
     (wizardStage === 'customer' || wizardStage === 'qty') ? 'Enter ↵ για συνέχεια (προαιρετικό)' : 'Enter ↵ για συνέχεια';
@@ -1675,7 +1697,11 @@ async function wizardAdvance() {
     wizardStage = 'vaccine';
   } else if (wizardStage === 'vaccine') {
     if (!val) { toast('Εισάγετε όνομα εμβολίου', true); return; }
-    wizardDraft.vaccine = normVaccine(val);
+    const name = await resolveVaccineAlts(val);
+    if (name === null) return;
+    wizardDraft.vaccine = name;
+    wizardDraft.inj = document.getElementById('wz-first-inj').checked ? 'ΠΡΩΤΑ ΕΝΕΣΙΜΑ'
+                    : document.getElementById('wz-second-inj').checked ? 'ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ' : '';
     wizardStage = 'customer';
   } else if (wizardStage === 'customer') {
     wizardDraft.customer = val || null;
@@ -1695,7 +1721,7 @@ async function wizardAdvance() {
 
 function wizardQueueRowHTML(q, i, onRemove) {
   return '<div class="wizard-queue-row">' +
-    '<span class="wq-main">' + fmt(q.vaccDate) + ' · ' + x(vaccineLabel(q.vaccine)) + '</span>' +
+    '<span class="wq-main">' + fmt(q.vaccDate) + ' · ' + x(vaccineLabel(q.vaccine)) + (q.inj ? ' · ' + q.inj : '') + '</span>' +
     '<span class="wq-sub">' + (q.qty ? fmtPosotita(q.qty) : '—') + (q.customer ? ' · ' + x(q.customer) : '') + '</span>' +
     '<button class="row-btn del" onclick="' + onRemove + '(' + i + ')">×</button>' +
   '</div>';
@@ -1738,7 +1764,7 @@ async function wizardSaveAll() {
   const now = new Date().toISOString();
   const rows = wizardQueue.map(q => ({
     hm_ekk: wizardHatchIso, hm_emv: q.vaccDate, hm_par: null, anath: wizardFlock,
-    sxolia_panos: null, promitheutis: null, paragelia: null,
+    sxolia_panos: q.inj ? `${q.inj} ${wizardFlock}` : null, promitheutis: null, paragelia: null,
     hm_paragelia: subDays(q.vaccDate, 30), psygeio: null, emvoliasmos: null, sxolia_eleni: null,
     emvolio: q.vaccine, pelatis: q.customer, posotita: q.qty,
     created_by: currentUser, created_at: now, updated_by: currentUser, updated_at: now,
@@ -1873,6 +1899,93 @@ function sameVaccine(a, b) {
   return vaccineAlts(a).some(v => bs.includes(v.toUpperCase()));
 }
 
+// ── VACCINE NAMES ─────────────────────────────────────────────────
+// Duplicated by design in vaccine_tracker.html and inventory.html — keep both copies the same.
+// The `vaccines` table holds the one correct spelling of each name; every name saved goes
+// through resolveVaccineName: a different typing of a known name is corrected silently,
+// a typo asks "did you mean", a new name asks to be added to the list.
+let VACCINE_OPTIONS = [];
+async function loadVaccineNames() {
+  VACCINE_OPTIONS = (await sbFetch('vaccines?select=name&order=name.asc')).map(v => v.name);
+  fillVaccineList();
+}
+function fillVaccineList() {
+  const dl = document.getElementById('vaccine-list');
+  if (dl) dl.innerHTML = VACCINE_OPTIONS.map(v => `<option value="${x(v)}">`).join('');
+}
+// skeleton used for comparing: capitals, no spaces or - / . +   ("mg 6-85" → "MG685")
+const vaccineKey = s => String(s || '').toUpperCase().replace(/[\s\-\/.+]/g, '');
+// edit distance between two skeletons; swapping two neighbouring characters counts as one change
+function editDistance(a, b) {
+  const d = Array.from({length: a.length + 1}, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) {
+    d[i][j] = Math.min(d[i-1][j] + 1, d[i][j-1] + 1, d[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1));
+    if (i > 1 && j > 1 && a[i-1] === b[j-2] && a[i-2] === b[j-1]) d[i][j] = Math.min(d[i][j], d[i-2][j-2] + 1);
+  }
+  return d[a.length][b.length];
+}
+// known names closest to a typo: within 1 change (2 for names of 8+ characters); ties all returned
+function nearVaccines(name) {
+  const k = vaccineKey(name), max = k.length >= 8 ? 2 : 1;
+  let best = max + 1, out = [];
+  for (const v of VACCINE_OPTIONS) {
+    const dist = editDistance(k, vaccineKey(v));
+    if (dist < best) { best = dist; out = [v]; } else if (dist === best) out.push(v);
+  }
+  return best <= max ? out : [];
+}
+// one name → its correct spelling, or null if the user cancelled
+async function resolveVaccineName(raw) {
+  const name = String(raw || '').trim().replace(/\s+/g, ' ');
+  const exact = VACCINE_OPTIONS.find(v => vaccineKey(v) === vaccineKey(name));
+  if (exact) return exact;
+  const near = nearVaccines(name);
+  if (near.length) {
+    const pick = await askVaccineName(`Μήπως εννοείτε;<span class="vname-typed">Γράψατε: «${x(name)}»</span>`,
+      [...near.map(v => ({ label: v, value: v, primary: true })), { label: `Όχι, κράτα «${name}»`, value: '\u0000keep' }]);
+    if (pick === null) return null;
+    if (pick !== '\u0000keep') return pick;
+  }
+  const add = await askVaccineName(`Το «${x(name)}» δεν υπάρχει στη λίστα εμβολίων.<span class="vname-typed">Προσθήκη στη λίστα και αποθήκευση;</span>`,
+    [{ label: 'Προσθήκη και αποθήκευση', value: 'add', primary: true }]);
+  if (add !== 'add') return null;
+  // ignore-duplicates: the other user may have added the same name since this page loaded
+  await sbFetch('vaccines', { method: 'POST', prefer: 'resolution=ignore-duplicates',
+    body: JSON.stringify({ name, created_by: currentUser }) });
+  VACCINE_OPTIONS = [...VACCINE_OPTIONS, name].sort((a, b) => a.localeCompare(b));
+  fillVaccineList();
+  return name;
+}
+// small question window: resolves the clicked button's value, or null for Ακύρωση / Esc / outside click
+let vnameResolve = null;
+function askVaccineName(html, buttons) {
+  document.getElementById('vname-msg').innerHTML = html;
+  const acts = document.getElementById('vname-actions');
+  acts.innerHTML = '<button class="btn-secondary" data-i="-1">Ακύρωση</button>' +
+    buttons.map((b, i) => `<button class="${b.primary ? 'btn-primary' : 'btn-secondary'}" data-i="${i}">${x(b.label)}</button>`).join('');
+  acts.querySelectorAll('button').forEach(btn => btn.onclick = () => {
+    const i = +btn.dataset.i; resolveVaccineAsk(i < 0 ? null : buttons[i].value);
+  });
+  document.getElementById('vname-bg').style.display = 'flex';
+  acts.querySelector('.btn-primary').focus();
+  return new Promise(res => { vnameResolve = res; });
+}
+function resolveVaccineAsk(v) {
+  document.getElementById('vname-bg').style.display = 'none';
+  if (vnameResolve) { vnameResolve(v); vnameResolve = null; }
+}
+// every alternative of "A / B" through resolveVaccineName; null if cancelled
+async function resolveVaccineAlts(s) {
+  const out = [];
+  for (const alt of vaccineAlts(s)) {
+    const v = await resolveVaccineName(alt);
+    if (v === null) return null;
+    out.push(v);
+  }
+  return out.join(' / ');
+}
+
 // finds an existing row on the same house + hatch date + vaccination date + vaccine
 // (any alternative counts) — a likely duplicate of a new entry
 function findDuplicateRow(hatchIso, flock, vaccIso, vaccine) {
@@ -1945,6 +2058,11 @@ async function saveEdit() {
   if (dateOrderInvalid(row.hm_ekk, row.hm_emv)) {
     toast('Η ημ. εμβολιασμού δεν μπορεί να είναι πριν την εκκόλαψη', true);
     return;
+  }
+  // a changed vaccine name goes through the spelling check; an unchanged one was checked when saved
+  if (row.emvolio !== before.emvolio) {
+    row.emvolio = await resolveVaccineAlts(row.emvolio);
+    if (row.emvolio === null) return;
   }
   // fridge just set to ΝΑΙ on an order with alternatives → record which vaccine actually arrived
   if (row.psygeio === 'ΝΑΙ' && before.psygeio !== 'ΝΑΙ' && vaccineAlts(row.emvolio).length > 1) {
@@ -2563,7 +2681,10 @@ async function saveBatchEdit() {
     return;
   }
 
-  if (updates.emvolio) updates.emvolio = normVaccine(updates.emvolio);
+  if (updates.emvolio) {
+    updates.emvolio = await resolveVaccineAlts(updates.emvolio);
+    if (updates.emvolio === null) return;
+  }
   // Ψυγείο → ΝΑΙ: for each order with alternatives, ask which vaccine arrived (Ακύρωση stops the whole bulk edit)
   const arrivedFor = new Map();
   if (updates.psygeio === 'ΝΑΙ') {
@@ -2654,13 +2775,7 @@ async function confirmBatchDelete() {
 
 // ── VACCINE SMART DATALIST ────────────────────────────────────────
 // Updates the suggestion list based on the last comma-separated token being typed
-// VACCINE_OPTIONS — duplicated by design in inventory.html; keep both lists in sync
-const VACCINE_OPTIONS = [
-  'AVINEW','AVINEW NEO','BIONEW BI','BIONEW BI + COR','CLONE30',
-  'CORIPRAVAC','E.COLI','GALLIMUNE 407','GALLIMUNE SE+ST','IB 4/91','IB PRIMER','IZOVAC',
-  'LASOTA ND','Ma5','MG 6/85','NEMOVAC TRT','OLVAC B+HG','POULVAC E.COLI',
-  'RESPIVAC','SALENVAC ETC','SALMOVAC','SG-9R','TARTYLL','TS-11','VAXSAFE','VECTROMUNE'
-];
+// suggestions come from VACCINE_OPTIONS — loaded from the `vaccines` table (see VACCINE NAMES)
 
 let vacDropIdx = -1; // keyboard nav index
 
@@ -3049,8 +3164,8 @@ function updateFiltersBadge() {
 
 // ΠΡΩΤΑ / ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ: one or the other. resetForm leaves them as they are, like the dates and house,
 // so they stay ticked for the next entries until unticked by hand
-function onInjectableCheck(cb) {
-  if (cb.checked) ['f-first-inj', 'f-second-inj'].forEach(id => { if (id !== cb.id) document.getElementById(id).checked = false; });
+function onInjectableCheck(cb, otherId) {
+  if (cb.checked) document.getElementById(otherId).checked = false;
 }
 // "ΠΡΩΤΑ ΕΝΕΣΙΜΑ Θ2" for Σχόλια Πάνος, or '' when neither box is ticked
 function injectableNote(flock) {
@@ -3083,11 +3198,6 @@ document.getElementById('shell').classList.add('collapsed');
 
 resetCustLines();
 
-// Populate vaccine datalist from VACCINE_OPTIONS (datalist is in HTML above this script)
-(function(){
-  const dl = document.getElementById('vaccine-list');
-  if (dl) VACCINE_OPTIONS.forEach(v => { const o = document.createElement('option'); o.value = v; dl.appendChild(o); });
-})();
 
 // Auth is handled by onAuthStateChange above; no manual session restore needed.
 </script>

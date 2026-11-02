@@ -174,6 +174,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 
 /* ── CONFIRM DIALOG ── */
 .confirm-box{background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:var(--r);padding:24px;width:340px;text-align:center}
+.vname-typed{display:block;margin-top:8px;color:var(--gh-fg-default);font-weight:600}
 .confirm-box p{color:var(--gh-fg-muted);font-size:14px;margin-bottom:16px;line-height:1.6}
 
 /* ── TOAST ── */
@@ -270,6 +271,14 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
   </div>
 </div>
 
+<!-- VACCINE NAME — "did you mean" / add a new name to the vaccine list -->
+<div id="vname-bg" class="modal-bg" style="display:none;z-index:400" onclick="if(event.target===this)resolveVaccineAsk(null)" onkeydown="if(event.key==='Escape')resolveVaccineAsk(null)">
+  <div class="confirm-box" style="width:440px;max-width:95vw">
+    <p id="vname-msg"></p>
+    <div id="vname-actions" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <div class="shell">
@@ -335,13 +344,6 @@ const SB_KEY   = 'sb_publishable_1S3L1sNMOjr-YgwGAAD2Kg_X_3S4cTl';
 const TABLE    = 'inventory';
 const HTABLE   = 'inventory_history';
 
-// VACCINE_OPTIONS — duplicated by design in vaccine_tracker.html; keep both lists in sync
-const VACCINE_OPTIONS = [
-  'AVINEW','AVINEW NEO','BIONEW BI','BIONEW BI + COR','CLONE30',
-  'CORIPRAVAC','E.COLI','GALLIMUNE 407','GALLIMUNE SE+ST','IB 4/91','IB PRIMER','IZOVAC',
-  'LASOTA ND','Ma5','MG 6/85','NEMOVAC TRT','OLVAC B+HG','POULVAC E.COLI',
-  'RESPIVAC','SALENVAC ETC','SALMOVAC','SG-9R','TARTYLL','TS-11','VAXSAFE','VECTROMUNE'
-];
 
 // ── SUPABASE ──────────────────────────────────────────────────────
 async function sbFetch(path, opts = {}) {
@@ -433,13 +435,90 @@ function setSyncStatus(state, text) {
 async function loadData() {
   setSyncStatus('loading', 'Φόρτωση…');
   try {
-    data = await sbSelect();
+    [data] = await Promise.all([sbSelect(), loadVaccineNames()]);
     setSyncStatus('ok', 'Συνδέθηκε ✓');
     render();
   } catch(e) {
     setSyncStatus('err', 'Σφάλμα σύνδεσης');
     toast('Σφάλμα: ' + e.message, true);
   }
+}
+
+// ── VACCINE NAMES ─────────────────────────────────────────────────
+// Duplicated by design in vaccine_tracker.html and inventory.html — keep both copies the same.
+// The `vaccines` table holds the one correct spelling of each name; every name saved goes
+// through resolveVaccineName: a different typing of a known name is corrected silently,
+// a typo asks "did you mean", a new name asks to be added to the list.
+let VACCINE_OPTIONS = [];
+async function loadVaccineNames() {
+  VACCINE_OPTIONS = (await sbFetch('vaccines?select=name&order=name.asc')).map(v => v.name);
+  fillVaccineList();
+}
+function fillVaccineList() {
+  const dl = document.getElementById('vaccine-list');
+  if (dl) dl.innerHTML = VACCINE_OPTIONS.map(v => `<option value="${x(v)}">`).join('');
+}
+// skeleton used for comparing: capitals, no spaces or - / . +   ("mg 6-85" → "MG685")
+const vaccineKey = s => String(s || '').toUpperCase().replace(/[\s\-\/.+]/g, '');
+// edit distance between two skeletons; swapping two neighbouring characters counts as one change
+function editDistance(a, b) {
+  const d = Array.from({length: a.length + 1}, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) {
+    d[i][j] = Math.min(d[i-1][j] + 1, d[i][j-1] + 1, d[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1));
+    if (i > 1 && j > 1 && a[i-1] === b[j-2] && a[i-2] === b[j-1]) d[i][j] = Math.min(d[i][j], d[i-2][j-2] + 1);
+  }
+  return d[a.length][b.length];
+}
+// known names closest to a typo: within 1 change (2 for names of 8+ characters); ties all returned
+function nearVaccines(name) {
+  const k = vaccineKey(name), max = k.length >= 8 ? 2 : 1;
+  let best = max + 1, out = [];
+  for (const v of VACCINE_OPTIONS) {
+    const dist = editDistance(k, vaccineKey(v));
+    if (dist < best) { best = dist; out = [v]; } else if (dist === best) out.push(v);
+  }
+  return best <= max ? out : [];
+}
+// one name → its correct spelling, or null if the user cancelled
+async function resolveVaccineName(raw) {
+  const name = String(raw || '').trim().replace(/\s+/g, ' ');
+  const exact = VACCINE_OPTIONS.find(v => vaccineKey(v) === vaccineKey(name));
+  if (exact) return exact;
+  const near = nearVaccines(name);
+  if (near.length) {
+    const pick = await askVaccineName(`Μήπως εννοείτε;<span class="vname-typed">Γράψατε: «${x(name)}»</span>`,
+      [...near.map(v => ({ label: v, value: v, primary: true })), { label: `Όχι, κράτα «${name}»`, value: '\u0000keep' }]);
+    if (pick === null) return null;
+    if (pick !== '\u0000keep') return pick;
+  }
+  const add = await askVaccineName(`Το «${x(name)}» δεν υπάρχει στη λίστα εμβολίων.<span class="vname-typed">Προσθήκη στη λίστα και αποθήκευση;</span>`,
+    [{ label: 'Προσθήκη και αποθήκευση', value: 'add', primary: true }]);
+  if (add !== 'add') return null;
+  // ignore-duplicates: the other user may have added the same name since this page loaded
+  await sbFetch('vaccines', { method: 'POST', prefer: 'resolution=ignore-duplicates',
+    body: JSON.stringify({ name, created_by: currentUser }) });
+  VACCINE_OPTIONS = [...VACCINE_OPTIONS, name].sort((a, b) => a.localeCompare(b));
+  fillVaccineList();
+  return name;
+}
+// small question window: resolves the clicked button's value, or null for Ακύρωση / Esc / outside click
+let vnameResolve = null;
+function askVaccineName(html, buttons) {
+  document.getElementById('vname-msg').innerHTML = html;
+  const acts = document.getElementById('vname-actions');
+  acts.innerHTML = '<button class="btn-secondary" data-i="-1">Ακύρωση</button>' +
+    buttons.map((b, i) => `<button class="${b.primary ? 'btn-primary' : 'btn-secondary'}" data-i="${i}">${x(b.label)}</button>`).join('');
+  acts.querySelectorAll('button').forEach(btn => btn.onclick = () => {
+    const i = +btn.dataset.i; resolveVaccineAsk(i < 0 ? null : buttons[i].value);
+  });
+  document.getElementById('vname-bg').style.display = 'flex';
+  acts.querySelector('.btn-primary').focus();
+  return new Promise(res => { vnameResolve = res; });
+}
+function resolveVaccineAsk(v) {
+  document.getElementById('vname-bg').style.display = 'none';
+  if (vnameResolve) { vnameResolve(v); vnameResolve = null; }
 }
 
 // ── NUMBER FORMATTING ─────────────────────────────────────────────
@@ -590,13 +669,18 @@ async function loadHistory(id) {
 
 // ── SAVE ──────────────────────────────────────────────────────────
 async function saveEntry() {
-  const emvolio  = document.getElementById('m-emvolio').value.trim();
+  let emvolio    = document.getElementById('m-emvolio').value.trim();
   const posotita = rawNum(document.getElementById('m-posotita').value);
   const monada   = document.getElementById('m-monada').value;
   const sxolia   = document.getElementById('m-sxolia').value.trim() || null;
 
   if (!emvolio) { toast('Εισάγετε όνομα εμβολίου.', true); return; }
   if (Number.isNaN(posotita)) { toast('Η ποσότητα πρέπει να είναι ακέραιος αριθμός, χωρίς δεκαδικά (π.χ. 60.000)', true); return; }
+  // a new or renamed item goes through the spelling check; an unchanged name was checked when saved
+  if (emvolio !== (editId ? data.find(r => r.id === editId)?.emvolio : null)) {
+    emvolio = await resolveVaccineName(emvolio);
+    if (emvolio === null) return;
+  }
   // new items only: a second item with the same name (ignoring case and extra spaces) would split that vaccine's stock
   const sameName = s => (s || '').trim().replace(/\s+/g, ' ').toUpperCase();
   if (!editId && data.some(r => sameName(r.emvolio) === sameName(emvolio))) {
@@ -720,11 +804,6 @@ document.addEventListener('keydown', e => {
   } catch(e) {}
 })();
 
-// Populate vaccine datalist from VACCINE_OPTIONS
-(function(){
-  const dl = document.getElementById('vaccine-list');
-  if (dl) VACCINE_OPTIONS.forEach(v => { const o = document.createElement('option'); o.value = v; dl.appendChild(o); });
-})();
 
 // Auth is handled by onAuthStateChange above; no manual session restore needed.
 </script>

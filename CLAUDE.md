@@ -28,7 +28,7 @@ No build step, no package manager, no test suite, no linter — that's deliberat
 - Deploy: push to `main` — GitHub Pages serves the repo directly, no build/publish step.
 
 ## Architecture
-Each HTML file is fully self-contained: inline `<style>` and `<script>`, no JS imports, no shared JS files between tools (see gotcha below). `theme.css` (CSS custom properties for the single dark GitHub-style theme — no light theme, removed repo-wide) is the *only* thing actually shared across files — everything else that looks shared (Supabase client setup, auth, date-parsing helpers, `VACCINE_OPTIONS`) is copy-pasted independently into each tool by design, so a fix in one file does not propagate and must be applied per-file if it applies elsewhere.
+Each HTML file is fully self-contained: inline `<style>` and `<script>`, no JS imports, no shared JS files between tools (see gotcha below). `theme.css` (CSS custom properties for the single dark GitHub-style theme — no light theme, removed repo-wide) is the *only* thing actually shared across files — everything else that looks shared (Supabase client setup, auth, date-parsing helpers, the vaccine-name spelling check) is copy-pasted independently into each tool by design, so a fix in one file does not propagate and must be applied per-file if it applies elsewhere.
 
 - **Auth**: Supabase Auth (email/password), two accounts mapped to display names via a per-file `emailToDisplayName()` (`panos@internal.local` → Πάνος, `eleni@internal.local` → Ελένη). `onAuthStateChange` gates the UI and triggers the initial data load.
 - **Persistence pattern — list tools** (vaccine_tracker, inventory, schedule_checker): rows are read/written via direct PostgREST calls (`sbFetch` wrapping `fetch` to `${SB_URL}/rest/v1/...`). vaccine_tracker and inventory also log edits to a paired `*_history` table (`emvolia_history`, `inventory_history`) with `user_name`/`ts`/`changes_json`, used to render the changelog/history UI in edit modals; schedule_checker (`placements`) keeps no history. Follow the history convention for any new editable data.
@@ -52,8 +52,13 @@ Exception: vaccine_tracker.html keeps A1 in its house lists (Θ1–Θ5 + A1) by 
 
 ## Known gotchas
 - Shared JS files are risky here: a previous shared.js approach for
-  VACCINE_OPTIONS caused a 404 → ReferenceError. Vaccine list is now
-  defined inline in both HTML files (commented as duplicated-by-design).
+  VACCINE_OPTIONS caused a 404 → ReferenceError.
+- Vaccine names: the `vaccines` table (name primary key; read + insert only) is the one
+  correct spelling of each name. vaccine_tracker.html and inventory.html load it on start and
+  send every saved name through `resolveVaccineName` (block "VACCINE NAMES", duplicated by
+  design in both files): a different typing is corrected silently (skeleton = capitals without
+  spaces and - / . +), a typo within 1–2 changes asks "Μήπως εννοείτε", a new name asks to be
+  added to the table. Removing a wrongly added name is done in the database by hand.
 - Supabase access is locked to logged-in users: every tool signs in with
   Supabase Auth and sends the session token, so RLS policies must allow the
   `authenticated` role. The publishable key alone sees 0 rows on every
