@@ -272,7 +272,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 </div>
 
 <!-- VACCINE NAME — "did you mean" / add a new name to the vaccine list -->
-<div id="vname-bg" class="modal-bg" style="display:none;z-index:400" onclick="if(event.target===this)resolveVaccineAsk(null)" onkeydown="if(event.key==='Escape')resolveVaccineAsk(null)">
+<div id="vname-bg" class="modal-bg" style="display:none;z-index:400" onclick="if(event.target===this)resolveVaccineAsk(null)" onkeydown="if(event.key==='Escape'){event.stopPropagation();resolveVaccineAsk(null)}">
   <div class="confirm-box" style="width:440px;max-width:95vw">
     <p id="vname-msg"></p>
     <div id="vname-actions" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"></div>
@@ -681,9 +681,9 @@ async function saveEntry() {
     emvolio = await resolveVaccineName(emvolio);
     if (emvolio === null) return;
   }
-  // new items only: a second item with the same name (ignoring case and extra spaces) would split that vaccine's stock
+  // a second item with the same name (new or renamed; ignoring case and extra spaces) would split that vaccine's stock
   const sameName = s => (s || '').trim().replace(/\s+/g, ' ').toUpperCase();
-  if (!editId && data.some(r => sameName(r.emvolio) === sameName(emvolio))) {
+  if (data.some(r => r.id !== editId && sameName(r.emvolio) === sameName(emvolio))) {
     toast('Υπάρχει ήδη εμβόλιο με αυτό το όνομα — επεξεργαστείτε το υπάρχον', true);
     return;
   }

@@ -1054,7 +1054,7 @@ body.printing-card .printcard-doc{display:block}
 </div>
 
 <!-- VACCINE NAME — "did you mean" / add a new name to the vaccine list -->
-<div id="vname-bg" class="modal-bg" style="display:none;z-index:400" onclick="if(event.target===this)resolveVaccineAsk(null)" onkeydown="if(event.key==='Escape')resolveVaccineAsk(null)">
+<div id="vname-bg" class="modal-bg" style="display:none;z-index:400" onclick="if(event.target===this)resolveVaccineAsk(null)" onkeydown="if(event.key==='Escape'){event.stopPropagation();resolveVaccineAsk(null)}">
   <div class="confirm-box" style="width:440px;max-width:95vw">
     <p id="vname-msg"></p>
     <div id="vname-actions" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"></div>
@@ -2800,9 +2800,8 @@ function onVaccineInput(el) {
   const drop = document.getElementById('vac-dropdown');
   if (!lastToken) { drop.style.display = 'none'; onFieldChange(); return; }
 
-  const matches = VACCINE_OPTIONS.filter(v =>
-    v.toLowerCase().includes(lastToken.toLowerCase())
-  );
+  // compared like the spelling check: "mg 6-8" finds MG 6/85
+  const matches = VACCINE_OPTIONS.filter(v => vaccineKey(v).includes(vaccineKey(lastToken)));
 
   if (!matches.length) { drop.style.display = 'none'; onFieldChange(); return; }
 
