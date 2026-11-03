@@ -267,6 +267,49 @@ function resolveVaccineAsk(v) {
   if (vnameResolve) { vnameResolve(v); vnameResolve = null; }
 }
 
+// ── FEED RULES ── used by feed_tracker.html and index.html (the dashboard's "next feed change").
+// .github/workflows/feed_notify.yml keeps its own Python copy (SCHEDULES, BREED_SCHEDULE, ADDITIVES,
+// NO_ADDITIVES_HOUSES) for the reminder emails — change it too when these change.
+// Real schedules — do not invent numbers for breeds that don't have a
+// schedule key in BREED_SCHEDULE below.
+const BREEDS = {
+  'NOVOGEN':       { phases: ['0-5 Wks','6-10 Wks','11-15 Wks','16-2%'],              days: [0,35,70,105] },
+  'HY-LINE':       { phases: ['0-3 Wks','4-6 Wks','7-12 Wks','13-15 Wks','16 -2%'],  days: [0,22,42,84,105] },
+  'ISA':           { phases: ['0-5 Wks','6-10 Wks','11-16 Wks','17-2%'],              days: [0,35,70,119] },
+  'HN_WHITE':      { phases: ['0-5 Wks','6-10 Wks','11-17 Wks','Prelay'],            days: [0,36,71,120] },
+  'LOHMAN_BROWN':  { phases: ['1-3 Wks','4-8 Wks','9-17 Wks','18-5%'],                days: [0,22,57,120] }
+};
+
+// Dropdown breed name → schedule key above. null = no schedule yet (shows "—").
+const BREED_SCHEDULE = {
+  'Hy-Line Brown':  'HY-LINE',
+  'Novogen Brown':  'NOVOGEN',
+  'Novogen White':  'NOVOGEN',
+  'Novogen Tinted': 'NOVOGEN',
+  'ISA Brown':      'ISA',
+  'Dekalb White':   null,
+  'H&N Brown':      null,
+  'H&N White':      'HN_WHITE',
+  'H&N Coral':      null,
+  'Lohman Brown':   'LOHMAN_BROWN'
+};
+
+// Products mixed into the feed, by day since hatch — same for every breed.
+// Each runs until the next one starts (they switch on the same day); the last runs
+// until the house is emptied (the row is cleared or gets a new hatch).
+const ADDITIVES = [
+  { name: 'Avidecoxx', from: 10 },
+  { name: 'Robenz',    from: 31 },
+];
+const NO_ADDITIVES_HOUSES = ['Θ5', 'Θ7'];   // aviaries: never get Avidecoxx or Robenz — also in feed_notify.yml
+
+// Saturday → Friday, Sunday → Monday (feed changes and additive starts); changes d in place and returns it
+function toWeekday(d) {
+  if (d.getDay() === 6) d.setDate(d.getDate() - 1);
+  if (d.getDay() === 0) d.setDate(d.getDate() + 1);
+  return d;
+}
+
 // ── LINK HIGHLIGHT ── arrived from a homepage dashboard link (?…): scroll to the item and make it
 // glow (styles: .focus-glow in theme.css), then drop the parameters so a reload opens the page normally.
 // find(params) returns the elements to highlight, in page order. Used by vaccine_tracker.html,

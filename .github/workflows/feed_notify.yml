@@ -33,7 +33,7 @@ jobs:
           GMAIL_APP_PASS = os.environ['GMAIL_APP_PASS']
           NOTIFY_EMAIL   = os.environ['NOTIFY_EMAIL']
 
-          # ── Feed schedules — must match feed_tracker.html exactly ──
+          # ── Feed schedules — must match FEED RULES in common.js exactly ──
           SCHEDULES = {
               'NOVOGEN':      {'phases': ['0-5 Wks','6-10 Wks','11-15 Wks','16-2%'],             'days': [0,35,70,105]},
               'HY-LINE':      {'phases': ['0-3 Wks','4-6 Wks','7-12 Wks','13-15 Wks','16 -2%'], 'days': [0,22,42,84,105]},
@@ -58,14 +58,14 @@ jobs:
 
           REMINDER_DAYS = [7, 3]   # send a reminder this many days before the feed change
 
-          # ── Feed additives — must match ADDITIVES in feed_tracker.html exactly ──
+          # ── Feed additives — must match ADDITIVES in common.js (FEED RULES) exactly ──
           # Same for every breed; only the start is reminded (each runs until the next one starts).
           ADDITIVES = [
               {'name': 'Avidecoxx', 'from': 10},
               {'name': 'Robenz',    'from': 31},
           ]
           ADDITIVE_REMINDER_DAYS = [3, 1]   # only these two reminders before an additive starts
-          NO_ADDITIVES_HOUSES = ['Θ5', 'Θ7']  # aviaries: never get Avidecoxx or Robenz — must match feed_tracker.html
+          NO_ADDITIVES_HOUSES = ['Θ5', 'Θ7']  # aviaries: never get Avidecoxx or Robenz — must match common.js
 
           def get_athens_today():
               return datetime.now(zoneinfo.ZoneInfo('Europe/Athens')).date()

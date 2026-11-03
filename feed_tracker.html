@@ -6,8 +6,8 @@
 <title data-t>Ζωοτροφές — Σιτηρέσια και πρόσθετα ανά κοπάδι</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
-<script src="common.js?v=8"></script>
-<link rel="stylesheet" href="theme.css?v=8">
+<script src="common.js?v=9"></script>
+<link rel="stylesheet" href="theme.css?v=9">
 <style>
 :root{--zoom:unset}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -236,40 +236,7 @@ addTranslations({
 // ── CONFIG ───────────────────────────────────────────────────────
 
 
-// ── FEED SCHEDULES ───────────────────────────────────────────────
-// Real schedules — do not invent numbers for breeds that don't have a
-// schedule key in BREED_SCHEDULE below.
-const BREEDS = {
-  'NOVOGEN':       { phases: ['0-5 Wks','6-10 Wks','11-15 Wks','16-2%'],              days: [0,35,70,105] },
-  'HY-LINE':       { phases: ['0-3 Wks','4-6 Wks','7-12 Wks','13-15 Wks','16 -2%'],  days: [0,22,42,84,105] },
-  'ISA':           { phases: ['0-5 Wks','6-10 Wks','11-16 Wks','17-2%'],              days: [0,35,70,119] },
-  'HN_WHITE':      { phases: ['0-5 Wks','6-10 Wks','11-17 Wks','Prelay'],            days: [0,36,71,120] },
-  'LOHMAN_BROWN':  { phases: ['1-3 Wks','4-8 Wks','9-17 Wks','18-5%'],                days: [0,22,57,120] }
-};
-
-// Dropdown breed name → schedule key above. null = no schedule yet (shows "—").
-const BREED_SCHEDULE = {
-  'Hy-Line Brown':  'HY-LINE',
-  'Novogen Brown':  'NOVOGEN',
-  'Novogen White':  'NOVOGEN',
-  'Novogen Tinted': 'NOVOGEN',
-  'ISA Brown':      'ISA',
-  'Dekalb White':   null,
-  'H&N Brown':      null,
-  'H&N White':      'HN_WHITE',
-  'H&N Coral':      null,
-  'Lohman Brown':   'LOHMAN_BROWN'
-};
-
-// Products mixed into the feed, by day since hatch — same for every breed.
-// Each runs until the next one starts (they switch on the same day); the last runs
-// until the house is emptied (the row is cleared or gets a new hatch).
-// Duplicated by design in .github/workflows/feed_notify.yml (ADDITIVES) — change both.
-const ADDITIVES = [
-  { name: 'Avidecoxx', from: 10 },
-  { name: 'Robenz',    from: 31 },
-];
-const NO_ADDITIVES_HOUSES = ['Θ5', 'Θ7'];   // aviaries: never get Avidecoxx or Robenz — also in feed_notify.yml
+// ── FEED SCHEDULES ── breeds, phases, additives, aviaries and the weekend rule live in common.js (FEED RULES)
 
 // Scheduler (placements) breed → breed name used here
 const SCHEDULER_BREED = { 'ISA': 'ISA Brown', 'Hy-Line': 'Hy-Line Brown', 'Novogen': 'Novogen Brown' };
@@ -560,13 +527,6 @@ function computeActivePhase(r) {
   }
 
   return { breed, phaseDates, activeIdx };
-}
-
-// Moves a Saturday back to Friday and a Sunday on to Monday (changes dt in place)
-function toWeekday(dt) {
-  const dow = dt.getDay();
-  if (dow === 6) dt.setDate(dt.getDate() - 1);
-  if (dow === 0) dt.setDate(dt.getDate() + 1);
 }
 
 // Additive spans for a hatch date. Starts move off weekends like the feed phases;
