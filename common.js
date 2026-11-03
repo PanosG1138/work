@@ -1,5 +1,5 @@
 // ══ common.js — shared by every page of the tools site ══════════════════════════
-// Load right after the Supabase library:   <script src="common.js?v=1"></script>
+// Load right after the Supabase library:   <script src="common.js?v=N"></script>
 // Used by: index.html, vaccine_tracker.html, inventory.html, feed_tracker.html,
 //          schedule_checker.html, truck_calculator_kamposos.html, truck_calculator_doukakis.html
 // Whenever this file changes, bump ?v=N on ALL those pages in the same commit
@@ -243,7 +243,7 @@ async function resolveVaccineName(raw) {
   if (add !== 'add') return null;
   // ignore-duplicates: the other user may have added the same name since this page loaded
   await sbFetch('vaccines', { method: 'POST', prefer: 'resolution=ignore-duplicates',
-    body: JSON.stringify({ name, created_by: currentUser }) });
+    body: JSON.stringify({ name, created_by: userDisplayName(_authSession.user.email) }) });   // who is signed in
   VACCINE_OPTIONS = [...VACCINE_OPTIONS, name].sort((a, b) => a.localeCompare(b));
   fillVaccineList();
   return name;
@@ -355,21 +355,26 @@ function startPage({ onSignedIn, onSignedOut, hasUnsavedWork, translated }) {
     b.onclick = () => switchLanguage(b.dataset.lang, hasUnsavedWork);
   });
   let loadedForUser = null;
+  // The account's language wins over this device's copy: save it and reload once, before any data loads
+  // (only if the device can store it — otherwise it would reload forever). The saved login can be up to
+  // ~1 h old, so the account is asked for its current language first; offline, the saved login's is used.
+  async function startSignedIn(session) {
+    let accountLang = (session.user.user_metadata || {}).lang;
+    if (translated) {
+      try { const { data } = await _sb.auth.getUser(); if (data && data.user) accountLang = (data.user.user_metadata || {}).lang; } catch (e) {}
+      if (LANGS.includes(accountLang) && accountLang !== LANG && saveDeviceLanguage(accountLang)) { reloadPage(); return; }
+    }
+    onSignedIn(userDisplayName(session.user.email));
+  }
   _sb.auth.onAuthStateChange((event, session) => {
     _authSession = session;
     signInArea.style.display = session ? 'none' : '';
     signOutBtn.style.display = session ? '' : 'none';
     if (langSwitch) langSwitch.style.display = session ? '' : 'none';
     if (session && session.user.id !== loadedForUser) {
-      // the account's language wins over this device's copy: save it and reload once, before any data
-      // loads (only if the device can store it — otherwise it would reload forever)
-      const accountLang = (session.user.user_metadata || {}).lang;
-      if (translated && LANGS.includes(accountLang) && accountLang !== LANG && saveDeviceLanguage(accountLang)) {
-        reloadPage();
-        return;
-      }
       loadedForUser = session.user.id;
-      onSignedIn(userDisplayName(session.user.email));
+      // Run just after this event, not inside it: supabase-js warns that awaiting its own calls in here can stall.
+      setTimeout(() => startSignedIn(session), 0);
     } else if (!session) {
       loadedForUser = null;
       if (onSignedOut) onSignedOut();

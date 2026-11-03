@@ -6,8 +6,8 @@
 <title>ΚΑΜΠΟΣΟΣ — Φόρτωση Καρότσας</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
-<script src="common.js?v=10"></script>
-<link rel="stylesheet" href="theme.css?v=10">
+<script src="common.js?v=11"></script>
+<link rel="stylesheet" href="theme.css?v=11">
 <style>
   /* Crate-visualization palette — kept exact, not themed (cell layout, gap/heat-buffer
      graphics, cab/hitch icons must render identically regardless of chrome restyle). */
@@ -64,10 +64,6 @@
   .sync-badge.loading .sync-dot{animation:pulse 1.2s infinite}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.2}}
 
-  .modal-bg{position:fixed;inset:0;background:var(--gh-canvas-default);display:flex;align-items:center;justify-content:center;z-index:200}
-  .btn-primary{width:100%;height:36px;background:var(--gh-accent-emphasis);color:#fff;border:1px solid rgba(240,246,252,0.1);border-radius:var(--rs);font-family:inherit;font-weight:500;font-size:14px;cursor:pointer}
-  .btn-primary:hover{filter:brightness(1.1)}
-  .btn-primary:disabled{opacity:0.4;cursor:not-allowed}
 
   .offline-overlay{display:none;position:fixed;inset:0;background:rgba(10,12,17,0.85);z-index:150;align-items:center;justify-content:center;flex-direction:column;gap:12px;backdrop-filter:blur(3px)}
   .offline-overlay.active{display:flex}
