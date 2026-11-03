@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Feed Program — Poultry Nutrition Tracker</title>
+<title data-t>Ζωοτροφές — Σιτηρέσια και πρόσθετα ανά κοπάδι</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
 <script src="common.js?v=4"></script>
@@ -139,34 +139,34 @@ tr.focus-glow > td{animation:focusRow 1.4s ease-in-out 3}
 <!-- OFFLINE OVERLAY — shown when Supabase is unreachable -->
 <div class="offline-overlay" id="offline-overlay">
   <div class="offline-msg">
-    ⚠ No connection to database
-    <span>Editing is disabled until the connection is restored.</span>
+    <span data-t>⚠ Δεν υπάρχει σύνδεση με τη βάση</span>
+    <span data-t>Η επεξεργασία είναι απενεργοποιημένη μέχρι να επανέλθει η σύνδεση.</span>
   </div>
-  <button class="offline-retry" onclick="retryConnection()">↻ Retry</button>
+  <button class="offline-retry" onclick="retryConnection()" data-t>↻ Επανάληψη</button>
 </div>
 
 <div class="header">
   <div class="header-left">
     <span class="header-icon">🐔</span>
     <div>
-      <div class="header-title">Feed Program</div>
-      <div class="header-sub">Poultry Nutrition Tracker</div>
+      <div class="header-title" data-t>Ζωοτροφές</div>
+      <div class="header-sub" data-t>Σιτηρέσια και πρόσθετα ανά κοπάδι</div>
     </div>
   </div>
   <div class="header-right">
     <div class="sync-badge" id="sync-badge">
       <div class="sync-dot"></div>
-      <span id="sync-text">Connecting…</span>
+      <span id="sync-text">Σύνδεση…</span>
     </div>
     <div class="zoom-ctrl">
-      <button class="zoom-btn" onclick="changeZoom(-0.1)" title="Zoom out">−</button>
+      <button class="zoom-btn" onclick="changeZoom(-0.1)" data-t-title title="Σμίκρυνση">−</button>
       <span class="zoom-label" id="zoom-label">100%</span>
-      <button class="zoom-btn" onclick="changeZoom(0.1)" title="Zoom in">+</button>
+      <button class="zoom-btn" onclick="changeZoom(0.1)" data-t-title title="Μεγέθυνση">+</button>
     </div>
-    <button class="theme-toggle" onclick="syncFromScheduler()" title="Take the latest hatches from the scheduler (shows the changes first)">⟳ Sync from scheduler</button>
-    <button class="theme-toggle" onclick="printSummary()" title="Print summary">
+    <button class="theme-toggle" onclick="syncFromScheduler()" data-t-title title="Παίρνει τις τελευταίες εκκολάψεις από τον Προγραμματισμό (δείχνει πρώτα τις αλλαγές)"><span data-t>⟳ Από Προγραμματισμό</span></button>
+    <button class="theme-toggle" onclick="printSummary()" data-t-title title="Εκτύπωση σύνοψης">
       <span>🖨</span>
-      <span>Print</span>
+      <span data-t>Εκτύπωση</span>
     </button>
     <span id="common-nav"></span>
   </div>
@@ -176,17 +176,17 @@ tr.focus-glow > td{animation:focusRow 1.4s ease-in-out 3}
   <div class="cards" id="cards"></div>
   <div class="tl-wrap">
     <div class="tl-legend">
-      <span><i class="c-feed alt"></i>Feed phase</span>
+      <span><i class="c-feed alt"></i><span data-t>Σιτηρέσιο</span></span>
       <span><i class="c-Avidecoxx"></i>Avidecoxx</span>
       <span><i class="c-Robenz"></i>Robenz</span>
-      <span><i style="width:10px;height:2px;background:var(--gh-danger-fg);vertical-align:3px"></i>Today</span>
-      <span>Outlined = in use now · hover or tap for dates</span>
+      <span><i style="width:10px;height:2px;background:var(--gh-danger-fg);vertical-align:3px"></i><span data-t>Σήμερα</span></span>
+      <span data-t>Με περίγραμμα = σε χρήση τώρα · αγγίξτε για ημερομηνίες</span>
     </div>
     <div class="tl-axis" id="tl-axis"></div>
     <div id="timeline"></div>
   </div>
   <details class="edit-wrap">
-    <summary>Edit flocks</summary>
+    <summary data-t>Επεξεργασία κοπαδιών</summary>
     <div class="table-wrap">
       <table>
         <thead><tr id="header-row"></tr></thead>
@@ -199,6 +199,46 @@ tr.focus-glow > td{animation:focusRow 1.4s ease-in-out 3}
 <div class="toast" id="toast"></div>
 
 <script>
+// ── TRANSLATIONS ── this page's English (Greek text → English); shared words are in common.js.
+// The page was English-only before 2026-11-03; these are its original English texts.
+addTranslations({
+  'Ζωοτροφές — Σιτηρέσια και πρόσθετα ανά κοπάδι': 'Feed Program — Poultry Nutrition Tracker',
+  'Ζωοτροφές': 'Feed Program', 'Σιτηρέσια και πρόσθετα ανά κοπάδι': 'Poultry Nutrition Tracker',
+  '⚠ Δεν υπάρχει σύνδεση με τη βάση': '⚠ No connection to database',
+  'Η επεξεργασία είναι απενεργοποιημένη μέχρι να επανέλθει η σύνδεση.': 'Editing is disabled until the connection is restored.',
+  '↻ Επανάληψη': '↻ Retry',
+  'Σύνδεση…': 'Connecting…', 'Συγχρονίστηκε': 'Synced', 'Χωρίς σύνδεση': 'No connection',
+  'Αποθήκευση…': 'Saving…', 'Αποθηκεύτηκε ✓': 'Saved ✓',
+  'Η βάση απέρριψε την αποθήκευση ({n}) — έγινε επαναφόρτωση': 'Save refused by the database ({n}) — reloaded',
+  'Σμίκρυνση': 'Zoom out', 'Μεγέθυνση': 'Zoom in',
+  'Παίρνει τις τελευταίες εκκολάψεις από τον Προγραμματισμό (δείχνει πρώτα τις αλλαγές)': 'Take the latest hatches from the scheduler (shows the changes first)',
+  '⟳ Από Προγραμματισμό': '⟳ Sync from scheduler', 'Εκτύπωση σύνοψης': 'Print summary', 'Εκτύπωση': 'Print',
+  'Σιτηρέσιο': 'Feed phase', 'Σήμερα': 'Today', 'σήμερα': 'today',
+  'Με περίγραμμα = σε χρήση τώρα · αγγίξτε για ημερομηνίες': 'Outlined = in use now · hover or tap for dates',
+  'Επεξεργασία κοπαδιών': 'Edit flocks',
+  'Ημ. Εκκόλαψης': 'Hatch Date', 'Θάλαμος': 'House', 'Ράτσα': 'Breed', 'Τύπος': 'Type', 'Ηλικία': 'Age',
+  'ηη/μμ/εε': 'dd/mm/yy', 'Κλουβί': 'Cage', 'Δάπεδο': 'Barn',
+  '{n} ημέρα': '{n} day', '{n} ημέρες': '{n} days', 'σε {n} ημέρα': 'in {n} day', 'σε {n} ημέρες': 'in {n} days',
+  'Άδειο': 'No flock', 'Δεν έχει εκκολαφθεί ακόμα': 'Not hatched yet',
+  'Δεν υπάρχει πρόγραμμα σιτηρεσίων για αυτή τη ράτσα': 'No feed schedule for this breed', 'Δεν έχει οριστεί ράτσα': 'No breed set',
+  'Καμία άλλη αλλαγή': 'No more changes', 'Εκκόλαψη {when}': 'Hatches {when}', 'Ημέρα {n}': 'Day {n}',
+  'Χωρίς ράτσα': 'No breed', 'Χωρίς τύπο': 'No type',
+  'μέχρι να αδειάσει ο θάλαμος': 'until the house is emptied',
+  'Δεν υπάρχουν κοπάδια ακόμα — ανοίξτε «Επεξεργασία κοπαδιών» ή κάντε συγχρονισμό από τον Προγραμματισμό.': 'No flocks yet — open "Edit flocks" or sync from the scheduler.',
+  'Επιτρέψτε τα αναδυόμενα παράθυρα για να εκτυπωθεί η σύνοψη': 'Allow pop-ups for this site to print the summary',
+  'Ζωοτροφές — Τρέχουσα κατάσταση': 'Feed Program — Current Status',
+  'Δεν ήταν δυνατή η ανάγνωση του Προγραμματισμού — δεν άλλαξε τίποτα': 'Could not read the scheduler — nothing changed',
+  'άγνωστη ράτσα στον Προγραμματισμό «{breed}» — παραλείφθηκε': 'unknown scheduler breed "{breed}" — skipped',
+  'δεν υπάρχει κενή γραμμή — παραλείφθηκε': 'no empty row to add it to — skipped',
+  'νέα γραμμή — εκκόλαψη {date}{breed} (ορίστε τον Τύπο μόνοι σας)': 'new row — hatch {date}{breed} (set Type yourself)',
+  'εκκόλαψη {from} → {to}': 'hatch {from} → {to}', 'ράτσα {from} → {to}': 'breed {from} → {to}',
+  'Είναι ήδη συγχρονισμένο': 'Already in sync',
+  'Αλλαγή {k} από {n} από τον Προγραμματισμό:': 'Change {k} of {n} from the scheduler:', 'Να εφαρμοστεί;': 'Apply this one?',
+  'Δεν άλλαξαν:': 'Not changed:',
+  'Εφαρμόστηκαν {k} από {n} αλλαγές': '{k} of {n} changes applied', 'Εφαρμόστηκε {k} από {n} αλλαγή': '{k} of {n} change applied',
+  'Μη έγκυρη ημερομηνία — χρησιμοποιήστε ηη/μμ/εε ή ηη/μμ/εεεε': 'Invalid date — use dd/mm/yy or dd/mm/yyyy',
+});
+
 // ── CONFIG ───────────────────────────────────────────────────────
 
 
@@ -263,7 +303,7 @@ function setOnline(online) {
 
 // Unsaved edits are pushed first, so the reload doesn't throw them away
 async function retryConnection() {
-  setSyncState('loading', 'Connecting…');
+  setSyncState('loading', t('Σύνδεση…'));
   for (const i of [...unsaved]) await persistRow(i);
   if (!unsaved.size) await loadFromSupabase();   // otherwise still no connection — edits kept, stay offline
 }
@@ -273,7 +313,7 @@ async function retryConnection() {
 
 // ── LOAD FROM SUPABASE ───────────────────────────────────────────
 async function loadFromSupabase() {
-  setSyncState('loading', 'Connecting…');
+  setSyncState('loading', t('Σύνδεση…'));
   try {
     const data = await sbFetch('feed_hatches?select=*&order=row_index.asc');
     rows = Array.from({length: NUM_ROWS}, () => ({id: null, house:'', breed:'', hatch:'', rearing_type:''}));
@@ -290,13 +330,13 @@ async function loadFromSupabase() {
       }
     }
     setOnline(true);
-    setSyncState('ok', 'Synced');
+    setSyncState('ok', t('Συγχρονίστηκε'));
     buildRows();
     focusFromLink(q => [...document.querySelectorAll('.card')].filter(c => c.querySelector('.card-house').textContent === q.get('house')));
   } catch(e) {
     console.error('Load error:', e);
     setOnline(false);
-    setSyncState('err', 'No connection');
+    setSyncState('err', t('Χωρίς σύνδεση'));
     buildRows();   // render read-only state with whatever is in rows
   }
 }
@@ -325,7 +365,7 @@ function saveRow(idx) {
 // Returns true once the row is in Supabase; on failure the row stays in `unsaved`
 async function persistRow(idx) {
   const r = rows[idx];
-  setSyncState('saving', 'Saving…');
+  setSyncState('saving', t('Αποθήκευση…'));
   try {
     const payload = {
       row_index: idx,
@@ -349,21 +389,21 @@ async function persistRow(idx) {
       if (result && result[0]) rows[idx].id = result[0].id;
     }
     unsaved.delete(idx);
-    setSyncState('ok', 'Saved ✓');
-    setTimeout(() => setSyncState('ok', 'Synced'), 1500);
+    setSyncState('ok', t('Αποθηκεύτηκε ✓'));
+    setTimeout(() => setSyncState('ok', t('Συγχρονίστηκε')), 1500);
     return true;
   } catch(e) {
     console.error('Save error:', e);
     if (e.status) {
       // The database refused this save — retrying won't help. Drop it and show what's really stored.
       unsaved.delete(idx);
-      showToast(`Save refused by the database (${e.status}) — reloaded`);
+      showToast(t('Η βάση απέρριψε την αποθήκευση ({n}) — έγινε επαναφόρτωση', { n: e.status }));
       loadFromSupabase();
       return false;
     }
     unsaved.add(idx);   // a newer edit may have been cleared by an earlier save's success
     setOnline(false);
-    setSyncState('err', 'No connection');
+    setSyncState('err', t('Χωρίς σύνδεση'));
     return false;
   }
 }
@@ -443,7 +483,7 @@ function refreshHouseDropdowns() {
 // ── BUILD HEADER ─────────────────────────────────────────────────
 function buildHeader() {
   document.getElementById('header-row').innerHTML =
-    `<th style="min-width:130px">Hatch Date</th><th style="min-width:80px">House</th><th style="min-width:110px">Breed</th><th style="min-width:90px">Type</th><th style="min-width:80px">Age</th>`;
+    `<th style="min-width:130px">${t('Ημ. Εκκόλαψης')}</th><th style="min-width:80px">${t('Θάλαμος')}</th><th style="min-width:110px">${t('Ράτσα')}</th><th style="min-width:90px">${t('Τύπος')}</th><th style="min-width:80px">${t('Ηλικία')}</th>`;
 }
 
 // ── SORT ─────────────────────────────────────────────────────────
@@ -475,7 +515,7 @@ function buildRows() {
         class="date-text-input"
         id="hatch-${i}"
         value="${displayHatch}"
-        placeholder="dd/mm/yy"
+        placeholder="${t('ηη/μμ/εε')}"
         maxlength="10"
         autocomplete="off"
         ${!isOnline ? 'disabled' : ''}
@@ -498,7 +538,7 @@ function buildRows() {
     // Rearing type dropdown
     html += `<td><select class="cell-input" id="type-${i}" onchange="onRearingTypeChange(${i},this.value)" ${!isOnline ? 'disabled' : ''}>
       <option value="">—</option>
-      ${REARING_TYPES.map(t => `<option value="${t}"${r.rearing_type===t?' selected':''}>${t}</option>`).join('')}
+      ${REARING_TYPES.map(type => `<option value="${type}"${r.rearing_type===type?' selected':''}>${typeLabel(type)}</option>`).join('')}
     </select></td>`;
 
     html += `<td style="white-space:nowrap">${ageText(r.hatch)}</td>`;
@@ -564,21 +604,26 @@ function additiveSpans(r) {
   });
 }
 
+// Type is saved in English (Cage / Barn); shown as Κλουβί / Δάπεδο in Greek, back to Cage / Barn in English
+const TYPE_LABEL = { Cage: 'Κλουβί', Barn: 'Δάπεδο' };
+const typeLabel = type => TYPE_LABEL[type] ? t(TYPE_LABEL[type]) : type;
+
 // Age in days since hatch (hatch day = 0); '—' with no hatch date or before hatching
 function ageText(hatch) {
   if (!hatch) return '—';
   const h = addDays(hatch, 0); h.setHours(0,0,0,0);
   const today = new Date(); today.setHours(0,0,0,0);
   const days = Math.round((today - h) / 86400000);
-  return days < 0 ? '—' : `${days} day${days === 1 ? '' : 's'}`;
+  return days < 0 ? '—' : t(days === 1 ? '{n} ημέρα' : '{n} ημέρες', { n: days });
 }
 
 // ── OVERVIEW: house cards + timeline ─────────────────────────────
 function renderOverview() { renderCards(); renderTimeline(); }
 
 const DAY = 86400000;
-const fmtShort = d => d.toLocaleDateString('en-GB', {weekday:'short', day:'2-digit', month:'2-digit'});
-const inDays = n => n === 0 ? 'today' : `in ${n} day${n === 1 ? '' : 's'}`;
+const WD = ['Κυρ', 'Δευ', 'Τρί', 'Τετ', 'Πέμ', 'Παρ', 'Σάβ'];   // translated by the shared list in common.js
+const fmtShort = d => `${t(WD[d.getDay()])} ${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+const inDays = n => n === 0 ? t('σήμερα') : t(n === 1 ? 'σε {n} ημέρα' : 'σε {n} ημέρες', { n });
 
 // Feed phases as spans: each runs until the next starts, the last has no end
 function feedSpans(r) {
@@ -593,7 +638,7 @@ function renderCards() {
   const today = new Date(); today.setHours(0,0,0,0);
   document.getElementById('cards').innerHTML = HOUSES.map(h => {
     const r = rows.find(x => x.house === h && x.hatch);
-    if (!r) return `<div class="card empty"><div class="card-hd"><span class="card-house">${h}</span></div><div class="card-sub">No flock</div></div>`;
+    if (!r) return `<div class="card empty"><div class="card-hd"><span class="card-house">${h}</span></div><div class="card-sub">${t('Άδειο')}</div></div>`;
 
     const hatch = addDays(r.hatch, 0); hatch.setHours(0,0,0,0);
     const age = Math.round((today - hatch) / DAY);
@@ -603,23 +648,23 @@ function renderCards() {
     const soon = nextIn !== null && nextIn <= 7;
 
     let now;
-    if (age < 0) now = `<span class="muted">Not hatched yet</span>`;
+    if (age < 0) now = `<span class="muted">${t('Δεν έχει εκκολαφθεί ακόμα')}</span>`;
     else {
       const f = feed.find(x => x.now);
       now = (f ? `<span class="pill c-feed">${f.name}</span>`
                : feed.length ? ''   // first feed moved off a weekend hatch day — Next shows it
-               : `<span class="muted">${r.breed ? 'No feed schedule for this breed' : 'No breed set'}</span> `)
+               : `<span class="muted">${t(r.breed ? 'Δεν υπάρχει πρόγραμμα σιτηρεσίων για αυτή τη ράτσα' : 'Δεν έχει οριστεί ράτσα')}</span> `)
           + adds.filter(x => x.now).map(x => `<span class="pill c-${x.name}">${x.name}</span>`).join('');
     }
     // Next change only — the timeline below shows the rest
     const nextHtml = next.length
       ? `<div class="card-what">→ ${next[0].name}</div>
-         <div class="card-when"><span class="card-date">${fmtShort(next[0].start)}</span><span class="badge${soon ? ' warn' : ''}">${nextIn === 0 ? 'Today' : `${nextIn} day${nextIn === 1 ? '' : 's'}`}</span></div>`
-      : `<div class="card-what">No more changes</div>`;
+         <div class="card-when"><span class="card-date">${fmtShort(next[0].start)}</span><span class="badge${soon ? ' warn' : ''}">${nextIn === 0 ? t('Σήμερα') : t(nextIn === 1 ? '{n} ημέρα' : '{n} ημέρες', { n: nextIn })}</span></div>`
+      : `<div class="card-what">${t('Καμία άλλη αλλαγή')}</div>`;
 
     return `<div class="card${soon ? ' soon' : ''}">
-      <div class="card-hd"><span class="card-house">${h}</span><span class="card-day">${age < 0 ? `Hatches ${inDays(-age)}` : `Day ${age}`}</span></div>
-      <div class="card-sub">${r.breed || 'No breed'} · ${r.rearing_type || 'No type'}</div>
+      <div class="card-hd"><span class="card-house">${h}</span><span class="card-day">${age < 0 ? t('Εκκόλαψη {when}', { when: inDays(-age) }) : t('Ημέρα {n}', { n: age })}</span></div>
+      <div class="card-sub">${r.breed || t('Χωρίς ράτσα')} · ${r.rearing_type ? typeLabel(r.rearing_type) : t('Χωρίς τύπο')}</div>
       <div class="card-pills">${now}</div>
       <div class="card-next">${nextHtml}</div>
     </div>`;
@@ -634,14 +679,14 @@ function renderTimeline() {
 
   const ticks = [];
   for (let m = new Date(from.getFullYear(), from.getMonth() + 1, 1); m < to; m.setMonth(m.getMonth() + 1))
-    ticks.push(`<span style="position:absolute;left:${pos(m)}%">${m.toLocaleDateString('en-GB', {month:'short'})}</span>`);
+    ticks.push(`<span style="position:absolute;left:${pos(m)}%">${m.toLocaleDateString(LANG === 'en' ? 'en-GB' : 'el-GR', {month:'short'})}</span>`);
   document.getElementById('tl-axis').innerHTML = ticks.join('');
 
   const segs = (spans, cls) => spans.map((x, i) => {
     const end = x.end || to;
     if (end <= from || x.start >= to) return '';
     const c = cls === 'feed' ? `c-feed${i % 2 ? ' alt' : ''}` : `c-${x.name}`;
-    const tip = `${x.name}: ${fmtDate(x.start)} → ${x.end ? fmtDate(x.end) : 'until the house is emptied'}`;
+    const tip = `${x.name}: ${fmtDate(x.start)} → ${x.end ? fmtDate(x.end) : t('μέχρι να αδειάσει ο θάλαμος')}`;
     return `<div class="tl-seg ${c}${x.now ? ' now' : ''}" style="left:${pos(x.start)}%;width:${pos(end) - pos(x.start)}%" title="${tip}" onclick="showToast(this.title)">${x.name}</div>`;
   }).join('');
 
@@ -650,14 +695,14 @@ function renderTimeline() {
   document.getElementById('timeline').innerHTML = flocks.length ? flocks.map(r => {
     const age = Math.round((today - addDays(r.hatch, 0).setHours(0,0,0,0)) / DAY);
     return `<div class="tl-row">
-      <div><div style="font-weight:600">${r.house || '—'}</div><div class="muted">${r.breed || 'No breed'}</div><div class="muted">${age < 0 ? `Hatches ${inDays(-age)}` : `Day ${age}`}</div></div>
+      <div><div style="font-weight:600">${r.house || '—'}</div><div class="muted">${r.breed || t('Χωρίς ράτσα')}</div><div class="muted">${age < 0 ? t('Εκκόλαψη {when}', { when: inDays(-age) }) : t('Ημέρα {n}', { n: age })}</div></div>
       <div class="tl-tracks">
         <div class="tl-track">${segs(feedSpans(r), 'feed')}</div>
         <div class="tl-track">${segs(additiveSpans(r), 'add')}</div>
         <div class="tl-today" style="left:${pos(today)}%"></div>
       </div>
     </div>`;
-  }).join('') : `<div class="muted" style="padding:8px 0">No flocks yet — open "Edit flocks" or sync from the scheduler.</div>`;
+  }).join('') : `<div class="muted" style="padding:8px 0">${t('Δεν υπάρχουν κοπάδια ακόμα — ανοίξτε «Επεξεργασία κοπαδιών» ή κάντε συγχρονισμό από τον Προγραμματισμό.')}</div>`;
 }
 
 // ── PRINT SUMMARY ─────────────────────────────────────────────────
@@ -672,21 +717,21 @@ function printSummary() {
     const inUse = additiveSpans(r).filter(a => a.now).map(a => a.name);
     lines.push({
       house: r.house,
-      text: `Hatch Date: ${isoToDisplay(r.hatch)}, ${r.house}, ${r.breed}, ${r.rearing_type}, ${phaseLabel}${inUse.length ? ', ' + inUse.join(' + ') : ''}`
+      text: `${t('Ημ. Εκκόλαψης')}: ${isoToDisplay(r.hatch)}, ${r.house}, ${r.breed}, ${typeLabel(r.rearing_type)}, ${phaseLabel}${inUse.length ? ', ' + inUse.join(' + ') : ''}`
     });
   }
   lines.sort((a, b) => parseInt(a.house.slice(1), 10) - parseInt(b.house.slice(1), 10));
 
   const win = window.open('', '_blank');
-  if (!win) { showToast('Allow pop-ups for this site to print the summary'); return; }
-  win.document.write(`<!DOCTYPE html><html><head><title>Feed Program — Current Status</title>
+  if (!win) { showToast(t('Επιτρέψτε τα αναδυόμενα παράθυρα για να εκτυπωθεί η σύνοψη')); return; }
+  win.document.write(`<!DOCTYPE html><html><head><title>${t('Ζωοτροφές — Τρέχουσα κατάσταση')}</title>
 <style>
 body{font-family:Arial,Helvetica,sans-serif;color:#000;background:#fff;padding:24px}
 h1{font-size:18px;margin-bottom:4px}
 .date{font-size:13px;color:#555;margin-bottom:20px}
 .line{font-size:14px;margin-bottom:8px}
 </style></head><body>
-<h1>Feed Program — Current Status</h1>
+<h1>${t('Ζωοτροφές — Τρέχουσα κατάσταση')}</h1>
 <div class="date">${fmtDate(new Date())}</div>
 ${lines.map(l => `<div class="line">${l.text}</div>`).join('')}
 </body></html>`);
@@ -702,14 +747,14 @@ ${lines.map(l => `<div class="line">${l.text}</div>`).join('')}
 // ponytail: takes the latest past hatch even if that flock already left — the confirm list is the check
 async function syncFromScheduler() {
   if (!isOnline) return;
-  const t = new Date();
-  const todayIso = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+  const now = new Date();
+  const todayIso = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
   let data;
   try {
     data = await sbFetch(`placements?select=house,doc_date,breed&doc_date=lte.${todayIso}&order=doc_date.desc`);
   } catch (e) {
     console.error('Sync load error:', e);
-    showToast('Could not read the scheduler — nothing changed');
+    showToast(t('Δεν ήταν δυνατή η ανάγνωση του Προγραμματισμού — δεν άλλαξε τίποτα'));
     return;
   }
   const latest = {};
@@ -721,20 +766,20 @@ async function syncFromScheduler() {
     const p = latest[h];
     if (!p) continue;
     const breed = p.breed ? SCHEDULER_BREED[p.breed] : null;
-    if (p.breed && !breed) { problems.push(`${h}: unknown scheduler breed "${p.breed}" — skipped`); continue; }
+    if (p.breed && !breed) { problems.push(`${h}: ${t('άγνωστη ράτσα στον Προγραμματισμό «{breed}» — παραλείφθηκε', { breed: p.breed })}`); continue; }
     const idx = rows.findIndex(r => r.house === h);
     if (idx < 0) {
       const empty = rows.findIndex((r, i) => !r.house && !r.hatch && !r.breed && !taken.has(i));
-      if (empty < 0) { problems.push(`${h}: no empty row to add it to — skipped`); continue; }
+      if (empty < 0) { problems.push(`${h}: ${t('δεν υπάρχει κενή γραμμή — παραλείφθηκε')}`); continue; }
       taken.add(empty);
       changes.push({ idx: empty, house: h, hatch: p.doc_date, breed: breed || '' });
-      lines.push(`${h}: new row — hatch ${isoToDisplay(p.doc_date)}${breed ? ', ' + breed : ''} (set Type yourself)`);
+      lines.push(`${h}: ${t('νέα γραμμή — εκκόλαψη {date}{breed} (ορίστε τον Τύπο μόνοι σας)', { date: isoToDisplay(p.doc_date), breed: breed ? ', ' + breed : '' })}`);
       continue;
     }
     const r = rows[idx];
     const parts = [];
-    if (r.hatch !== p.doc_date) parts.push(`hatch ${r.hatch ? isoToDisplay(r.hatch) : '—'} → ${isoToDisplay(p.doc_date)}`);
-    if (breed && r.breed !== breed) parts.push(`breed ${r.breed || '—'} → ${breed}`);
+    if (r.hatch !== p.doc_date) parts.push(t('εκκόλαψη {from} → {to}', { from: r.hatch ? isoToDisplay(r.hatch) : '—', to: isoToDisplay(p.doc_date) }));
+    if (breed && r.breed !== breed) parts.push(t('ράτσα {from} → {to}', { from: r.breed || '—', to: breed }));
     if (!parts.length) continue;
     changes.push({ idx, house: h, hatch: p.doc_date, breed: breed || r.breed });
     lines.push(`${h}: ${parts.join(', ')}`);
@@ -742,19 +787,19 @@ async function syncFromScheduler() {
 
   if (!changes.length) {
     if (problems.length) alert(problems.join('\n'));
-    else showToast('Already in sync');
+    else showToast(t('Είναι ήδη συγχρονισμένο'));
     return;
   }
   let applied = 0;
   changes.forEach((c, k) => {
-    if (!confirm(`Change ${k+1} of ${changes.length} from the scheduler:\n\n${lines[k]}\n\nApply this one?`)) return;
+    if (!confirm(t('Αλλαγή {k} από {n} από τον Προγραμματισμό:', { k: k + 1, n: changes.length }) + `\n\n${lines[k]}\n\n` + t('Να εφαρμοστεί;'))) return;
     Object.assign(rows[c.idx], { house: c.house, hatch: c.hatch, breed: c.breed });
     saveRow(c.idx);
     applied++;
   });
-  if (problems.length) alert('Not changed:\n' + problems.join('\n'));
+  if (problems.length) alert(t('Δεν άλλαξαν:') + '\n' + problems.join('\n'));
   if (applied) buildRows();
-  showToast(`${applied} of ${changes.length} change${changes.length > 1 ? 's' : ''} applied`);
+  showToast(t(changes.length > 1 ? 'Εφαρμόστηκαν {k} από {n} αλλαγές' : 'Εφαρμόστηκε {k} από {n} αλλαγή', { k: applied, n: changes.length }));
 }
 
 // ── EVENT HANDLERS ────────────────────────────────────────────────
@@ -764,7 +809,7 @@ function onHatchBlur(idx, input, ev) {
   const iso = raw ? parseFlexDate(raw) : '';   // blank = cleared (row sorts to the bottom)
   if (iso === null) {
     input.classList.add('invalid');
-    showToast('Invalid date — use dd/mm/yy or dd/mm/yyyy');
+    showToast(t('Μη έγκυρη ημερομηνία — χρησιμοποιήστε ηη/μμ/εε ή ηη/μμ/εεεε'));
     return;
   }
   input.classList.remove('invalid');
@@ -831,7 +876,8 @@ buildHeader();
 document.addEventListener('visibilitychange', () => { if (!document.hidden) renderOverview(); });
 
 // shared sign-in, load-once guard and ⌂/Έξοδος buttons: common.js
-startPage({ onSignedIn: () => loadFromSupabase() });
+// unsaved work = edited rows not yet confirmed saved (asked before switching language)
+startPage({ onSignedIn: () => loadFromSupabase(), translated: true, hasUnsavedWork: () => unsaved.size > 0 });
 </script>
 </body>
 </html>
