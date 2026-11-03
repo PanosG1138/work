@@ -9,8 +9,8 @@
 <title data-t>ΕΜΒΟΛΙΑ — Απόθεμα</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
-<script src="common.js?v=5"></script>
-<link rel="stylesheet" href="theme.css?v=5">
+<script src="common.js?v=6"></script>
+<link rel="stylesheet" href="theme.css?v=6">
 <style>
 .theme-toggle{
   display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;
@@ -757,7 +757,7 @@ document.addEventListener('keydown', e => {
   } catch(e) {}
 })();
 
-// shared sign-in, load-once guard and ⌂/Έξοδος buttons: common.js
+// shared sign-in, load-once guard and home/Έξοδος buttons: common.js
 // unsaved work = the edit window is open (asked before switching language)
 startPage({ onSignedIn: name => initApp(name), translated: true,
   hasUnsavedWork: () => document.getElementById('edit-bg').style.display !== 'none' });

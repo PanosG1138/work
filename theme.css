@@ -51,7 +51,8 @@
 .common-nav{display:inline-flex;align-items:center;gap:6px}
 .common-nav-btn{display:inline-flex;align-items:center;height:28px;padding:0 10px;border:1px solid var(--gh-border-default);border-radius:var(--rs);background:var(--gh-canvas-subtle);color:var(--gh-fg-muted);font-family:'Inter',system-ui,sans-serif;font-size:12px;font-weight:500;text-decoration:none;cursor:pointer;white-space:nowrap}
 .common-nav-btn:hover{background:var(--gh-hover-bg);color:var(--gh-fg-default)}
-@media (max-width:600px){.common-nav-label{display:none}}   /* phones: Home shows only ⌂ */
+/* home button: an outlined house icon, no text (the tooltip says Αρχική / Home) */
+.common-home-icon{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 /* ΕΛ/EN switch in the shared buttons (common.js); the current language is highlighted */
 .common-lang{display:inline-flex;height:28px;border:1px solid var(--gh-border-default);border-radius:var(--rs);overflow:hidden}

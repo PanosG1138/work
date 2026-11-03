@@ -9,8 +9,8 @@
 <title data-t>ΕΜΒΟΛΙΑ</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
-<script src="common.js?v=5"></script>
-<link rel="stylesheet" href="theme.css?v=5">
+<script src="common.js?v=6"></script>
+<link rel="stylesheet" href="theme.css?v=6">
 <style>
 /* theme toggle button */
 .theme-toggle{
@@ -3243,7 +3243,7 @@ document.getElementById('shell').classList.add('collapsed');
 
 resetCustLines();
 
-// shared sign-in, load-once guard and ⌂/Έξοδος buttons: common.js
+// shared sign-in, load-once guard and home/Έξοδος buttons: common.js
 // unsaved work = an edit window, bulk edit or the step-by-step entry is open (asked before switching language)
 startPage({ onSignedIn: name => initApp(name), translated: true,
   hasUnsavedWork: () => ['modal-bg', 'batch-modal-bg', 'wizard-bg'].some(id => document.getElementById(id).style.display !== 'none') });

@@ -6,8 +6,8 @@
 <title data-t>Ζωοτροφές — Σιτηρέσια και πρόσθετα ανά κοπάδι</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
-<script src="common.js?v=5"></script>
-<link rel="stylesheet" href="theme.css?v=5">
+<script src="common.js?v=6"></script>
+<link rel="stylesheet" href="theme.css?v=6">
 <style>
 :root{--zoom:unset}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -875,7 +875,7 @@ buildHeader();
 // A tab left open overnight would keep yesterday's "today" — redraw when it's shown again
 document.addEventListener('visibilitychange', () => { if (!document.hidden) renderOverview(); });
 
-// shared sign-in, load-once guard and ⌂/Έξοδος buttons: common.js
+// shared sign-in, load-once guard and home/Έξοδος buttons: common.js
 // unsaved work = edited rows not yet confirmed saved (asked before switching language)
 startPage({ onSignedIn: () => loadFromSupabase(), translated: true, hasUnsavedWork: () => unsaved.size > 0 });
 </script>

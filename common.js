@@ -165,14 +165,14 @@ async function signIn() {
   if (error) errEl.textContent = error.status === 400 ? t('Λάθος email ή κωδικός.') : t('Δεν υπάρχει σύνδεση — δοκιμάστε ξανά.');
 }
 
-// ── SHARED BUTTONS ── ⌂ Αρχική · ΕΛ/EN · ← Έξοδος, drawn into the page's <span id="common-nav">.
-// The homepage gets no ⌂. ΕΛ/EN and Έξοδος stay hidden until someone is signed in.
+// ── SHARED BUTTONS ── house icon (home) · ΕΛ/EN · ← Έξοδος, drawn into the page's <span id="common-nav">.
+// The homepage gets no home button. ΕΛ/EN and Έξοδος stay hidden until someone is signed in.
 function drawNav(showLanguageSwitch) {
   const nav = document.getElementById('common-nav');
   const onHomepage = /\/(index\.html)?$/.test(location.pathname);
   nav.className = 'common-nav';
   nav.innerHTML =
-    (onHomepage ? '' : `<a class="common-nav-btn" href="index.html" title="${t('Αρχική')}">⌂<span class="common-nav-label"> ${t('Αρχική')}</span></a>`) +
+    (onHomepage ? '' : `<a class="common-nav-btn" href="index.html" title="${t('Αρχική')}" aria-label="${t('Αρχική')}"><svg class="common-home-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12H3l9-9 9 9h-2"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"/></svg></a>`) +
     (showLanguageSwitch ? `<span class="common-lang" id="common-lang" title="${t('Γλώσσα')}" style="display:none">` +
       LANGS.map(l => `<button type="button" data-lang="${l}"${l === LANG ? ' class="on"' : ''}>${l === 'el' ? 'ΕΛ' : 'EN'}</button>`).join('') +
       '</span>' : '') +

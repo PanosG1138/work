@@ -6,8 +6,8 @@
 <title data-t>Προγραμματισμός</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
-<script src="common.js?v=5"></script>
-<link rel="stylesheet" href="theme.css?v=5">
+<script src="common.js?v=6"></script>
+<link rel="stylesheet" href="theme.css?v=6">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
@@ -985,7 +985,7 @@ async function confirmDelete(){
   }catch(e){ setSyncStatus('err', t('Η διαγραφή απέτυχε: {msg}', { msg: e.message })); closeConfirm(); }
 }
 
-// shared sign-in, load-once guard and ⌂/Έξοδος buttons: common.js
+// shared sign-in, load-once guard and home/Έξοδος buttons: common.js
 // unsaved work = the add/edit window is open (asked before switching language)
 startPage({ onSignedIn: () => load(), translated: true,
   hasUnsavedWork: () => !document.getElementById('modal-bg').classList.contains('hidden') });
