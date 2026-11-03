@@ -40,6 +40,11 @@ addTranslations({
   'Αρχική': 'Home', '← Έξοδος': '← Sign out', 'Αποσύνδεση': 'Sign out', 'Αποσύνδεση;': 'Sign out?',
   'Γλώσσα': 'Language',
   'Έχετε αλλαγές που δεν αποθηκεύτηκαν. Συνέχεια;': 'You have unsaved changes. Continue?',
+  // vaccine-name questions (VACCINE NAMES below)
+  'Μήπως εννοείτε;': 'Did you mean?', 'Γράψατε: «{name}»': 'You typed: «{name}»', 'Όχι, κράτα «{name}»': 'No, keep «{name}»',
+  'Το «{name}» δεν υπάρχει στη λίστα εμβολίων.': "«{name}» isn't in the vaccine list.",
+  'Προσθήκη στη λίστα και αποθήκευση;': 'Add it to the list and save?', 'Προσθήκη και αποθήκευση': 'Add and save',
+  'Ακύρωση': 'Cancel',
   // values stored in Greek, translated on screen only
   'ΝΑΙ': 'YES', 'ΟΧΙ': 'NO', 'Αυτόματα': 'Automatic', 'Δόσεις': 'Doses', 'Κιλά': 'kg',
   // short weekday names
@@ -181,6 +186,86 @@ function drawNav(showLanguageSwitch) {
 }
 
 function signOut() { if (confirm(t('Αποσύνδεση;'))) _sb.auth.signOut(); }
+
+// text made safe to put inside HTML (same as the pages' own x())
+function escapeHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── VACCINE NAMES ── used by vaccine_tracker.html and inventory.html (each page has the
+// #vaccine-list datalist and the #vname-bg question window this code fills in).
+// The `vaccines` table holds the one correct spelling of each name; every name saved goes
+// through resolveVaccineName: a different typing of a known name is corrected silently,
+// a typo asks "did you mean", a new name asks to be added to the list.
+let VACCINE_OPTIONS = [];
+async function loadVaccineNames() {
+  VACCINE_OPTIONS = (await sbFetch('vaccines?select=name&order=name.asc')).map(v => v.name);
+  fillVaccineList();
+}
+function fillVaccineList() {
+  const dl = document.getElementById('vaccine-list');
+  if (dl) dl.innerHTML = VACCINE_OPTIONS.map(v => `<option value="${escapeHtml(v)}">`).join('');
+}
+// skeleton used for comparing: capitals, no spaces or - / . +   ("mg 6-85" → "MG685")
+const vaccineKey = s => String(s || '').toUpperCase().replace(/[\s\-\/.+]/g, '');
+// edit distance between two skeletons; swapping two neighbouring characters counts as one change
+function editDistance(a, b) {
+  const d = Array.from({length: a.length + 1}, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) {
+    d[i][j] = Math.min(d[i-1][j] + 1, d[i][j-1] + 1, d[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1));
+    if (i > 1 && j > 1 && a[i-1] === b[j-2] && a[i-2] === b[j-1]) d[i][j] = Math.min(d[i][j], d[i-2][j-2] + 1);
+  }
+  return d[a.length][b.length];
+}
+// known names closest to a typo: within 1 change (2 for names of 8+ characters); ties all returned
+function nearVaccines(name) {
+  const k = vaccineKey(name), max = k.length >= 8 ? 2 : 1;
+  let best = max + 1, out = [];
+  for (const v of VACCINE_OPTIONS) {
+    const dist = editDistance(k, vaccineKey(v));
+    if (dist < best) { best = dist; out = [v]; } else if (dist === best) out.push(v);
+  }
+  return best <= max ? out : [];
+}
+// one name → its correct spelling, or null if the user cancelled
+async function resolveVaccineName(raw) {
+  const name = String(raw || '').trim().replace(/\s+/g, ' ');
+  const exact = VACCINE_OPTIONS.find(v => vaccineKey(v) === vaccineKey(name));
+  if (exact) return exact;
+  const near = nearVaccines(name);
+  if (near.length) {
+    const pick = await askVaccineName(`${t('Μήπως εννοείτε;')}<span class="vname-typed">${t('Γράψατε: «{name}»', { name: escapeHtml(name) })}</span>`,
+      [...near.map(v => ({ label: v, value: v, primary: true })), { label: t('Όχι, κράτα «{name}»', { name }), value: '\u0000keep' }]);
+    if (pick === null) return null;
+    if (pick !== '\u0000keep') return pick;
+  }
+  const add = await askVaccineName(`${t('Το «{name}» δεν υπάρχει στη λίστα εμβολίων.', { name: escapeHtml(name) })}<span class="vname-typed">${t('Προσθήκη στη λίστα και αποθήκευση;')}</span>`,
+    [{ label: t('Προσθήκη και αποθήκευση'), value: 'add', primary: true }]);
+  if (add !== 'add') return null;
+  // ignore-duplicates: the other user may have added the same name since this page loaded
+  await sbFetch('vaccines', { method: 'POST', prefer: 'resolution=ignore-duplicates',
+    body: JSON.stringify({ name, created_by: currentUser }) });
+  VACCINE_OPTIONS = [...VACCINE_OPTIONS, name].sort((a, b) => a.localeCompare(b));
+  fillVaccineList();
+  return name;
+}
+// small question window: resolves the clicked button's value, or null for Ακύρωση / Esc / outside click
+let vnameResolve = null;
+function askVaccineName(html, buttons) {
+  document.getElementById('vname-msg').innerHTML = html;
+  const acts = document.getElementById('vname-actions');
+  acts.innerHTML = `<button class="btn-secondary" data-i="-1">${t('Ακύρωση')}</button>` +
+    buttons.map((b, i) => `<button class="${b.primary ? 'btn-primary' : 'btn-secondary'}" data-i="${i}">${escapeHtml(b.label)}</button>`).join('');
+  acts.querySelectorAll('button').forEach(btn => btn.onclick = () => {
+    const i = +btn.dataset.i; resolveVaccineAsk(i < 0 ? null : buttons[i].value);
+  });
+  document.getElementById('vname-bg').style.display = 'flex';
+  acts.querySelector('.btn-primary').focus();
+  return new Promise(res => { vnameResolve = res; });
+}
+function resolveVaccineAsk(v) {
+  document.getElementById('vname-bg').style.display = 'none';
+  if (vnameResolve) { vnameResolve(v); vnameResolve = null; }
+}
 
 // ── LINK HIGHLIGHT ── arrived from a homepage dashboard link (?…): scroll to the item and make it
 // glow (styles: .focus-glow in theme.css), then drop the parameters so a reload opens the page normally.

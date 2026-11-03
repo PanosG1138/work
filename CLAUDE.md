@@ -28,7 +28,7 @@ No build step, no package manager, no test suite, no linter — that's deliberat
 - Deploy: push to `main` — GitHub Pages serves the repo directly, no build/publish step.
 
 ## Architecture
-Each HTML file has its own inline `<style>` and `<script>`, no JS imports. Two files are shared by all 7 pages: `theme.css` (CSS custom properties for the single dark GitHub-style theme — no light theme — plus the shared sign-in box and home/Έξοδος button styles) and `common.js` (below). Everything else that looks shared (date-parsing helpers, the vaccine-name spelling check, the feed and scheduler rules copied into index.html) is still copy-pasted into each tool by design, so a fix there must be applied per-file. Moving those rules into common.js is planned one at a time (project D).
+Each HTML file has its own inline `<style>` and `<script>`, no JS imports. Two files are shared by all 7 pages: `theme.css` (CSS custom properties for the single dark GitHub-style theme — no light theme — plus the shared sign-in box and home/Έξοδος button styles) and `common.js` (below). Everything else that looks shared (date-parsing helpers, the feed and scheduler rules copied into index.html) is still copy-pasted into each tool by design, so a fix there must be applied per-file. Moving those rules into common.js is planned one at a time (project D).
 
 - **common.js** — shared by all 7 pages (design: `docs/superpowers/specs/2026-11-03-common-js-foundation-design.md`). Holds the Supabase connection (`SB_URL`, `SB_KEY`, `_sb`), `_authSession`, `sbFetch`, `userDisplayName`, `focusFromLink` (dashboard-link highlight; its `.focus-glow` styles are in theme.css), the shared sign-in box and the home (house icon) · ΕΛ/EN · ← Έξοδος buttons. Each page loads `<script src="common.js?v=N"></script>` right after supabase-js, has `<span id="common-nav"></span>` in its header (the homepage also has `<div id="common-signin">` for its inline box), and calls `startPage({ onSignedIn, onSignedOut })` as the **last line** of its script. `onSignedIn(name)` runs once per signed-in user — supabase re-sends SIGNED_IN on every tab refocus, and reloading then wiped highlights and reopened popups.
   - **Bump `?v=N` on all 7 pages in the same commit whenever common.js or theme.css changes** (`common.js?v=N`, `theme.css?v=N`; GitHub Pages lets browsers keep an old copy ~10 min).
@@ -62,8 +62,8 @@ Exception: vaccine_tracker.html keeps A1 in its house lists (Θ1–Θ5 + A1) by 
   with the pages that use it, loaded by its plain relative path, and checked on every page.
 - Vaccine names: the `vaccines` table (name primary key; read + insert only) is the one
   correct spelling of each name. vaccine_tracker.html and inventory.html load it on start and
-  send every saved name through `resolveVaccineName` (block "VACCINE NAMES", duplicated by
-  design in both files): a different typing is corrected silently (skeleton = capitals without
+  send every saved name through `resolveVaccineName` (block "VACCINE NAMES" in common.js,
+  shared by both files): a different typing is corrected silently (skeleton = capitals without
   spaces and - / . +), a typo within 1–2 changes asks "Μήπως εννοείτε", a new name asks to be
   added to the table. Removing a wrongly added name is done in the database by hand.
 - Supabase access is locked to logged-in users: every tool signs in with
