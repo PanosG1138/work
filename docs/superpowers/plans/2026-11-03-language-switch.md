@@ -10,6 +10,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-11-03-language-switch-design.md`
 
+**Outcome (2026-11-03):** Tasks 1–6 done. Task 7 dropped — the user decided the truck pages stay Greek only. So Task 8 kept the `translated` option instead of removing it: pages without an English list show no switch and stay Greek.
+
 ## Global Constraints
 
 - No build step, no new dependencies, no new table, no RLS change.

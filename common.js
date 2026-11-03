@@ -184,8 +184,8 @@ function signOut() { if (confirm(t('Αποσύνδεση;'))) _sb.auth.signOut()
 
 // ── startPage ── the one setup call each page makes, as the last line of its script:
 //   startPage({ onSignedIn: name => …, onSignedOut, hasUnsavedWork, translated })   (all but onSignedIn optional)
-// translated: true once the page has its English list (rollout — removed when all pages have one);
-//   untranslated pages stay Greek whatever the account says.
+// translated: true on pages that have an English list. Pages without one (the two truck pages —
+//   Greek only, by the user's choice) show no ΕΛ/EN switch and stay Greek whatever the account says.
 // hasUnsavedWork: () => true while the page holds edits not yet saved (asked before switching language).
 // onSignedIn(displayName) runs ONCE per signed-in user: supabase re-sends SIGNED_IN right after
 // INITIAL_SESSION and on every tab refocus, and reloading then wiped highlights and reopened
