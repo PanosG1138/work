@@ -65,6 +65,7 @@ jobs:
               {'name': 'Robenz',    'from': 31},
           ]
           ADDITIVE_REMINDER_DAYS = [3, 1]   # only these two reminders before an additive starts
+          NO_ADDITIVES_HOUSES = ['Θ5', 'Θ7']  # aviaries: never get Avidecoxx or Robenz — must match feed_tracker.html
 
           def get_athens_today():
               return datetime.now(zoneinfo.ZoneInfo('Europe/Athens')).date()
@@ -119,7 +120,7 @@ jobs:
               hatch_str = rec.get('hatch')
 
               # Additives need only the hatch date (they don't depend on breed)
-              if hatch_str:
+              if hatch_str and house not in NO_ADDITIVES_HOUSES:
                   hatch = date.fromisoformat(hatch_str)
                   for add in ADDITIVES:
                       start, orig_day = adjust_for_weekend(hatch + timedelta(days=add['from']))
