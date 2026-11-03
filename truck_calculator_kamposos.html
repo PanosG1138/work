@@ -326,6 +326,7 @@
     .totals{grid-template-columns:repeat(2,1fr);}
     h1{font-size:18px;}
   }
+@media (max-width:600px){.home-txt{display:none}}   /* phones: Home link shows only ⌂ */
 </style>
 </head>
 <body>
@@ -358,6 +359,7 @@
     </div>
     <div class="top-actions">
       <div class="sync-badge loading" id="sync-badge"><div class="sync-dot"></div><span id="sync-text">Σύνδεση…</span></div>
+      <a class="btn-tool" href="index.html" style="text-decoration:none" title="Αρχική">⌂<span class="home-txt"> Αρχική</span></a>
       <button class="btn-tool" id="btn-logout" onclick="signOut()" style="display:none">← Έξοδος</button>
       <a href="truck_calculator_doukakis.html" class="btn-tool" title="Φόρτωση Δουκάκη">🚛 ΔΟΥΚΑΚΗΣ</a>
       <button class="btn-tool" onclick="printLoad()">🖨 Εκτύπωση φόρτωσης</button>

@@ -186,6 +186,7 @@ header{
   border-radius:var(--gh-r-md);font-family:'Inter',sans-serif;font-weight:600;font-size:13px;cursor:pointer;transition:background .15s;
 }
 .btn-danger:hover{background:rgba(255,107,107,0.22)}
+@media (max-width:600px){.home-txt{display:none}}   /* phones: Home link shows only ⌂ */
 </style>
 </head>
 <body>
@@ -214,6 +215,7 @@ header{
   </div>
   <div class="header-right">
     <div class="sync-badge loading" id="sync-badge"><div class="sync-dot"></div><span id="sync-text">Loading…</span></div>
+    <a class="theme-toggle" href="index.html" style="text-decoration:none" title="Home">⌂<span class="home-txt"> Home</span></a>
     <button class="theme-toggle" id="btn-logout" onclick="signOut()" style="display:none" title="Sign out">← Sign out</button>
   </div>
 </header>

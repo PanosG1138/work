@@ -641,6 +641,7 @@ body.printing-card .printcard-doc{display:block}
 .printcard-doc th,.printcard-doc td{border:1px solid var(--gh-border-default);padding:7px 10px;text-align:left;color:var(--gh-fg-default)}
 .printcard-doc thead{background:var(--gh-canvas-subtle)}
 .printcard-doc .pc-empty{padding:20px;text-align:center;color:var(--gh-fg-muted);font-size:13px}
+@media (max-width:600px){.home-txt{display:none}}   /* phones: Home link shows only ⌂ */
 </style>
 </head>
 <body>
@@ -685,6 +686,7 @@ body.printing-card .printcard-doc{display:block}
       <div class="hstat"><div class="hstat-val" id="stat-ordered" style="color:var(--gh-success-fg)">—</div><div class="hstat-label">Παραγγέλθηκαν</div></div>
       <div class="hstat"><div class="hstat-val" id="stat-pending" style="color:var(--gh-attention-fg)">—</div><div class="hstat-label">Εκκρεμείς</div></div>
     </div>
+    <a class="theme-toggle" href="index.html" style="text-decoration:none" title="Αρχική">⌂<span class="home-txt"> Αρχική</span></a>
     <button class="theme-toggle" id="btn-logout" onclick="confirmSignOut()" style="display:none" title="Αποσύνδεση">← Έξοδος</button>
     <!-- shown only when the other user made changes since your last visit; reopens that list -->
     <button class="btn-tool" id="btn-changelog" onclick="reopenChangelog()" title="Εμφάνιση αλλαγών από άλλους χρήστες" style="display:none">📋 Αλλαγές</button>
