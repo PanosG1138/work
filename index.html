@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Poultry Operations — Tools</title>
+<title>Εργαλεία Πτηνοτροφείου</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
@@ -69,36 +69,22 @@ a.ln:hover .ln-what{color:var(--gh-fg-default)}
 .login button{padding:8px 16px;background:var(--gh-accent-emphasis);color:#fff;border:none;border-radius:6px;font-family:inherit;font-weight:500;font-size:14px;cursor:pointer}
 .login .err{font-size:12px;color:var(--gh-danger-fg);min-height:18px}
 
-.intro{text-align:center;margin-bottom:24px}
-.intro h1{font-size:18px;font-weight:600;color:var(--gh-fg-default);margin-bottom:6px}
-.intro p{font-size:14px;color:var(--gh-fg-muted);max-width:380px;margin:0 auto}
-.cards{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-  gap:16px;
-  width:100%;
-  max-width:1060px;
-}
-.card{
-  background:var(--gh-canvas-subtle);
-  border:1px solid var(--gh-border-default);
-  border-radius:var(--r);
-  padding:20px;
-  text-decoration:none;
-  color:inherit;
-  display:flex;flex-direction:column;gap:10px;
-  transition:border-color 0.15s,background 0.15s,transform 0.1s;
-  cursor:pointer;
-}
-.card:hover{
-  border-color:var(--gh-accent-fg);
-  background:var(--gh-canvas-default);
-  transform:translateY(-2px);
-}
-.card-icon{font-size:28px;line-height:1}
-.card-title{font-size:15px;font-weight:600;color:var(--gh-fg-default)}
-.card-desc{font-size:12px;color:var(--gh-fg-muted);line-height:1.6;flex:1}
-.card-footer{
+/* ── TOOL LINKS, grouped ── */
+.groups{width:100%;max-width:1060px}
+.sec{font-size:11px;font-weight:600;color:var(--gh-fg-subtle);text-transform:uppercase;letter-spacing:0.06em;margin:0 0 8px 2px}
+.tools{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-bottom:22px}
+.tool{display:flex;align-items:center;gap:12px;background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:14px;padding:12px 14px;text-decoration:none;color:inherit;transition:border-color 0.15s,background 0.15s}
+.tool:hover{border-color:var(--gh-fg-subtle);background:var(--gh-hover-bg)}
+.tool-ic{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-size:19px;flex-shrink:0}
+.tool-name{font-size:14px;font-weight:600;color:var(--gh-fg-default)}
+.tool-desc{font-size:12px;color:var(--gh-fg-muted)}
+.tool .arrow{margin-left:auto;color:var(--gh-fg-subtle);font-size:16px;transition:transform 0.15s,color 0.15s}
+.tool:hover .arrow{color:var(--gh-fg-default);transform:translateX(2px)}
+.ic-blue{background:var(--gh-accent-subtle);color:var(--gh-accent-fg)}
+.ic-green{background:var(--gh-success-subtle);color:var(--gh-success-fg)}
+.ic-amber{background:var(--gh-attention-subtle);color:var(--gh-attention-fg)}
+.ic-purple{background:rgba(163,113,247,0.12);color:#b69cff}
+footer{
   display:flex;align-items:center;justify-content:space-between;
   margin-top:4px;padding-top:12px;
   border-top:1px solid var(--gh-border-muted);
@@ -124,14 +110,15 @@ footer{
 
 <header>
   <div class="header-left">
-    <span class="logo">🐔 Poultry Operations</span>
+    <span class="logo">🐔 Εργαλεία Πτηνοτροφείου</span>
   </div>
-  <button class="hbtn" id="btn-logout" onclick="_sb.auth.signOut()" style="display:none" title="Αποσύνδεση">← Έξοδος</button>
+  <button class="hbtn" id="btn-logout" onclick="if(confirm('Αποσύνδεση;'))_sb.auth.signOut()" style="display:none" title="Αποσύνδεση">← Έξοδος</button>
 </header>
 
 <main>
   <!-- DASHBOARD — needs sign-in (same account as the tools) -->
   <section class="dash" id="dash" style="display:none">
+    <div class="sec">Θάλαμοι</div>
     <div class="pills" id="pills"></div>
     <div class="tiles" id="tiles"><div class="dash-msg">Φόρτωση…</div></div>
   </section>
@@ -144,67 +131,29 @@ footer{
     <div class="err" id="auth-error"></div>
   </form>
 
-  <div class="intro">
-    <h1>Operations Tools</h1>
-    <p>Internal tools for managing vaccine orders, inventory, and rearing house scheduling.</p>
-  </div>
-
-  <div class="cards">
-
-    <a class="card" href="vaccine_tracker.html">
-      <div class="card-icon">💉</div>
-      <div class="card-title">Vaccine Orders</div>
-      <div class="card-desc">Track and manage vaccine orders across flocks. Log order details, arrival status, and full edit history.</div>
-      <div class="card-footer">
-        <span class="card-tag tag-blue">ΕΜΒΟΛΙΑ</span>
-        <span class="card-arrow">→</span>
-      </div>
-    </a>
-
-    <a class="card" href="schedule_checker.html">
-      <div class="card-icon">📅</div>
-      <div class="card-title">Rearing Scheduler</div>
-      <div class="card-desc">Plan hatches across all 5 rearing houses. Shows each cycle's key dates and the earliest possible next hatch per house.</div>
-      <div class="card-footer">
-        <span class="card-tag tag-amber">Scheduler</span>
-        <span class="card-arrow">→</span>
-      </div>
-    </a>
-
-    <a class="card" href="feed_tracker.html">
-      <div class="card-icon">🌾</div>
-      <div class="card-title">Feed Program</div>
-      <div class="card-desc">Track poultry nutrition and feed programs. Manage feed schedules and nutritional data across flocks.</div>
-      <div class="card-footer">
-        <span class="card-tag tag-green">Nutrition</span>
-        <span class="card-arrow">→</span>
-      </div>
-    </a>
-
-    <a class="card" href="truck_calculator_kamposos.html">
-      <div class="card-icon">🚚</div>
-      <div class="card-title">Φόρτωση Καρότσας</div>
-      <div class="card-desc">Υπολογισμός φόρτωσης φορτηγού και ρυμούλκας. Θέσεις, ύψη ντάνας και σύνολα ανά ρυμουλκούμενο.</div>
-      <div class="card-footer">
-        <span class="card-tag tag-purple">ΚΑΜΠΟΣΟΣ</span>
-        <span class="card-arrow">→</span>
-      </div>
-    </a>
-
-    <a class="card" href="truck_calculator_doukakis.html">
-      <div class="card-icon">🚛</div>
-      <div class="card-title">Φόρτωση Καρότσας</div>
-      <div class="card-desc">Υπολογισμός φόρτωσης φορτηγού και ρυμούλκας. Θέσεις, ύψη ντάνας, πλάγιες και σύνολα ανά ρυμουλκούμενο.</div>
-      <div class="card-footer">
-        <span class="card-tag tag-purple">ΔΟΥΚΑΚΗΣ</span>
-        <span class="card-arrow">→</span>
-      </div>
-    </a>
-
+  <div class="groups">
+    <div class="sec">Εκτροφή</div>
+    <div class="tools">
+      <a class="tool" href="vaccine_tracker.html"><span class="tool-ic ic-blue"><i class="ti ti-vaccine" aria-hidden="true"></i></span>
+        <span><span class="tool-name">Εμβόλια</span><br><span class="tool-desc">Παραγγελίες και εμβολιασμοί ανά σμήνος</span></span><i class="ti ti-chevron-right arrow" aria-hidden="true"></i></a>
+      <a class="tool" href="inventory.html"><span class="tool-ic ic-blue"><i class="ti ti-package" aria-hidden="true"></i></span>
+        <span><span class="tool-name">Απόθεμα</span><br><span class="tool-desc">Απόθεμα εμβολίων</span></span><i class="ti ti-chevron-right arrow" aria-hidden="true"></i></a>
+      <a class="tool" href="feed_tracker.html"><span class="tool-ic ic-green"><i class="ti ti-grain" aria-hidden="true"></i></span>
+        <span><span class="tool-name">Ζωοτροφές</span><br><span class="tool-desc">Σιτηρέσια και πρόσθετα ανά σμήνος</span></span><i class="ti ti-chevron-right arrow" aria-hidden="true"></i></a>
+      <a class="tool" href="schedule_checker.html"><span class="tool-ic ic-amber"><i class="ti ti-calendar" aria-hidden="true"></i></span>
+        <span><span class="tool-name">Προγραμματισμός</span><br><span class="tool-desc">Εκκολάψεις ανά θάλαμο</span></span><i class="ti ti-chevron-right arrow" aria-hidden="true"></i></a>
+    </div>
+    <div class="sec">Φόρτωση</div>
+    <div class="tools">
+      <a class="tool" href="truck_calculator_kamposos.html"><span class="tool-ic ic-purple"><i class="ti ti-truck" aria-hidden="true"></i></span>
+        <span><span class="tool-name">Καμπόσος</span><br><span class="tool-desc">Φόρτωση καρότσας</span></span><i class="ti ti-chevron-right arrow" aria-hidden="true"></i></a>
+      <a class="tool" href="truck_calculator_doukakis.html"><span class="tool-ic ic-purple"><i class="ti ti-truck-delivery" aria-hidden="true"></i></span>
+        <span><span class="tool-name">Δουκάκης</span><br><span class="tool-desc">Φόρτωση καρότσας</span></span><i class="ti ti-chevron-right arrow" aria-hidden="true"></i></a>
+    </div>
   </div>
 </main>
 
-<footer>PanosG1138 · Internal use only</footer>
+<footer>PanosG1138 · Εσωτερική χρήση</footer>
 
 <script>
 const SB_URL = 'https://oorhbrphdbigwgizejcc.supabase.co';

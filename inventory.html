@@ -407,7 +407,7 @@ async function signIn() {
   }
 }
 
-async function signOut() { await _sb.auth.signOut(); }
+async function signOut() { if (confirm('Αποσύνδεση;')) await _sb.auth.signOut(); }
 
 _sb.auth.onAuthStateChange((event, session) => {
   _authSession = session;
