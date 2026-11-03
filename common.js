@@ -267,6 +267,16 @@ function resolveVaccineAsk(v) {
   if (vnameResolve) { vnameResolve(v); vnameResolve = null; }
 }
 
+// ── LOADING RULES ── used by schedule_checker.html and index.html. Source of truth: docs/rearing_scheduler.md.
+// Day 0 = hatch date. Loading doesn't depend on the house: every customer's pullets load from day LOAD_START
+// for LOAD_DAYS days, except Φραγκούλης/Πτηνοτροφική, always from day PTINO_LOAD_START. placements.ptino says
+// whether they're in the hatch: null = no, 'only' = only their pullets (loads 115–128),
+// 'mixed' = theirs + other customers' (loads 105–128).
+const LOAD_START = 105, PTINO_LOAD_START = 115;
+const LOAD_DAYS  = 14;
+// day since hatch the house is empty again (the flock has left; loading ended the day before), for a placement
+const emptyDay = p => (p.ptino ? PTINO_LOAD_START : LOAD_START) + LOAD_DAYS;
+
 // ── FEED RULES ── used by feed_tracker.html and index.html (the dashboard's "next feed change").
 // .github/workflows/feed_notify.yml keeps its own Python copy (SCHEDULES, BREED_SCHEDULE, ADDITIVES,
 // NO_ADDITIVES_HOUSES) for the reminder emails — change it too when these change.

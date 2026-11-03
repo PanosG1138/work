@@ -7,8 +7,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
-<script src="common.js?v=9"></script>
-<link rel="stylesheet" href="theme.css?v=9">
+<script src="common.js?v=10"></script>
+<link rel="stylesheet" href="theme.css?v=10">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{min-height:100%}
@@ -174,12 +174,9 @@ function hideDashboard() { document.getElementById('dash').style.display = 'none
 
 // sbFetch (every read/write to Supabase) lives in common.js
 
-// ── RULES — duplicated by design, keep in step with the source pages ──
-// houses + loading: schedule_checker.html (source of truth: docs/rearing_scheduler.md)
+// ── RULES ── houses: this page's own list (Θ7 hidden); loading and feed rules: common.js
 const HOUSES = ['Θ1', 'Θ2', 'Θ3', 'Θ4', 'Θ5'];   // Θ7 left out until it's built (user, 2026-11-03)
-const LOAD_START = 105, PTINO_LOAD_START = 115, LOAD_DAYS = 14;
-// day the house is empty again (the flock has left): loading ends the day before
-const emptyDay = p => (p.ptino ? PTINO_LOAD_START : LOAD_START) + LOAD_DAYS;
+// loading days and the house-empty day (emptyDay): common.js (LOADING RULES)
 // feed phases + additives + the weekend rule: common.js (FEED RULES)
 
 // ── DATES ─────────────────────────────────────────────────────────

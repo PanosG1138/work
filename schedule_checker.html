@@ -6,8 +6,8 @@
 <title data-t>Προγραμματισμός</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
-<script src="common.js?v=9"></script>
-<link rel="stylesheet" href="theme.css?v=9">
+<script src="common.js?v=10"></script>
+<link rel="stylesheet" href="theme.css?v=10">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
@@ -356,11 +356,7 @@ const RESOLVED_TABLE = 'resolved_conflicts';   // clashes marked "resolved" (con
 const HOUSES = {
   'Θ1': 'Cage', 'Θ2': 'Cage', 'Θ3': 'Cage', 'Θ4': 'Cage', 'Θ5': 'Aviary', 'Θ7': 'Aviary',
 };
-/* Loading doesn't depend on the house: every customer's pullets load from day LOAD_START for LOAD_DAYS days,
-   except Φραγκούλης/Πτηνοτροφική, always from day PTINO_LOAD_START. placements.ptino says whether they're in the hatch:
-   null = no, 'only' = only their pullets (loads 115–128), 'mixed' = theirs + other customers' (loads 105–128). */
-const LOAD_START = 105, PTINO_LOAD_START = 115;
-const LOAD_DAYS  = 14;
+/* Loading days (LOAD_START, PTINO_LOAD_START, LOAD_DAYS) and the house-empty day: common.js (LOADING RULES) */
 const CLEAN_DAYS = 25;   // house is ready CLEAN_DAYS after it is empty
 const VAX_DAYS   = [60, 82];   // "alternative vaccination parameters" (user, 2026-09-29); was [60, 90]
 const VAX_LENGTH = 7;
