@@ -9,8 +9,8 @@
 <title>ΕΜΒΟΛΙΑ</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
-<script src="common.js?v=2"></script>
-<link rel="stylesheet" href="theme.css?v=2">
+<script src="common.js?v=3"></script>
+<link rel="stylesheet" href="theme.css?v=3">
 <style>
 /* theme toggle button */
 .theme-toggle{
@@ -648,45 +648,45 @@ body.printing-card .printcard-doc{display:block}
 <!-- HEADER -->
 <header>
   <div class="header-left">
-    <div class="sidebar-toggle" onclick="toggleSidebar()" title="Εναλλαγή φόρμας">
+    <div class="sidebar-toggle" onclick="toggleSidebar()" data-t-title title="Εναλλαγή φόρμας">
       <span></span><span></span><span></span>
     </div>
     <div class="logo">
-      <span class="logo-title">ΕΜΒΟΛΙΑ</span>
+      <span data-t class="logo-title">ΕΜΒΟΛΙΑ</span>
     </div>
   </div>
   <div class="header-right">
     <div id="sync-badge" class="sync-badge loading"><div class="sync-dot"></div><span id="sync-text">Σύνδεση…</span></div>
-    <a href="inventory.html" class="btn-tool" title="Απόθεμα εμβολίων">📦 Απόθεμα</a>
+    <a data-t href="inventory.html" class="btn-tool" data-t-title title="Απόθεμα εμβολίων">📦 Απόθεμα</a>
     <div class="zoom-ctrl">
-      <button class="zoom-btn" onclick="changeZoom(-0.05)" title="Σμίκρυνση">−</button>
+      <button class="zoom-btn" onclick="changeZoom(-0.05)" data-t-title title="Σμίκρυνση">−</button>
       <span class="zoom-val" id="zoom-label">100%</span>
-      <button class="zoom-btn" onclick="changeZoom(0.05)" title="Μεγέθυνση">+</button>
+      <button class="zoom-btn" onclick="changeZoom(0.05)" data-t-title title="Μεγέθυνση">+</button>
     </div>
     <div class="hstats">
-      <div class="hstat"><div class="hstat-val" id="stat-total">—</div><div class="hstat-label">Σύνολο</div></div>
-      <div class="hstat"><div class="hstat-val" id="stat-ordered" style="color:var(--gh-success-fg)">—</div><div class="hstat-label">Παραγγέλθηκαν</div></div>
-      <div class="hstat"><div class="hstat-val" id="stat-pending" style="color:var(--gh-attention-fg)">—</div><div class="hstat-label">Εκκρεμείς</div></div>
+      <div class="hstat"><div class="hstat-val" id="stat-total">—</div><div data-t class="hstat-label">Σύνολο</div></div>
+      <div class="hstat"><div class="hstat-val" id="stat-ordered" style="color:var(--gh-success-fg)">—</div><div data-t class="hstat-label">Παραγγέλθηκαν</div></div>
+      <div class="hstat"><div class="hstat-val" id="stat-pending" style="color:var(--gh-attention-fg)">—</div><div data-t class="hstat-label">Εκκρεμείς</div></div>
     </div>
     <span id="common-nav"></span>
     <!-- shown only when the other user made changes since your last visit; reopens that list -->
-    <button class="btn-tool" id="btn-changelog" onclick="reopenChangelog()" title="Εμφάνιση αλλαγών από άλλους χρήστες" style="display:none">📋 Αλλαγές</button>
+    <button data-t class="btn-tool" id="btn-changelog" onclick="reopenChangelog()" data-t-title title="Εμφάνιση αλλαγών από άλλους χρήστες" style="display:none">📋 Αλλαγές</button>
   </div>
 </header>
 
 <!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
   <!-- Close button — mobile only -->
-  <button class="sidebar-close" style="display:none" onclick="toggleSidebar()" title="Κλείσιμο">✕</button>
+  <button class="sidebar-close" style="display:none" onclick="toggleSidebar()" data-t-title title="Κλείσιμο">✕</button>
   <div class="offline-overlay" id="sidebar-offline">
-    <div class="offline-msg">⚠ Χωρίς σύνδεση<span>Αδύνατη η αποθήκευση.<br>Ανανεώστε για να συνδεθείτε.</span></div>
-    <button class="btn-tool" style="margin-top:4px" onclick="loadData()">↺ Ανανέωση</button>
+    <div class="offline-msg"><span data-t>⚠ Χωρίς σύνδεση</span><span><span data-t>Αδύνατη η αποθήκευση.</span><br><span data-t>Ανανεώστε για να συνδεθείτε.</span></span></div>
+    <button data-t class="btn-tool" style="margin-top:4px" onclick="loadData()">↺ Ανανέωση</button>
   </div>
   <div class="sidebar-inner">
-    <button class="btn-wizard-entry" onclick="openWizard()">➕ Βήμα-προς-βήμα καταχώρηση</button>
-    <div class="wizard-entry-sub">ή συμπληρώστε τη φόρμα από κάτω</div>
+    <button data-t class="btn-wizard-entry" onclick="openWizard()">➕ Βήμα-προς-βήμα καταχώρηση</button>
+    <div data-t class="wizard-entry-sub">ή συμπληρώστε τη φόρμα από κάτω</div>
     <div class="divider"></div>
-    <div class="form-heading">+ <span>Νέα Παραγγελία</span></div>
+    <div class="form-heading">+ <span data-t>Νέα Παραγγελία</span></div>
     <div class="steps">
       <div class="step-dot active" id="step1">1</div>
       <div class="step-line" id="line1"></div>
@@ -695,94 +695,94 @@ body.printing-card .printcard-doc{display:block}
       <div class="step-dot" id="step3">3</div>
     </div>
 
-    <div class="sec-label">Βήμα 1 — Ημερομηνίες & Αναθρεπτήριο</div>
+    <div data-t class="sec-label">Βήμα 1 — Ημερομηνίες & Αναθρεπτήριο</div>
     <div class="fgroup">
-      <label>Ημ. Εκκόλαψης</label>
-      <input type="text" id="f-hatch" list="hatch-list" placeholder="ηη/μμ ή ηη/μμ/εε" onblur="onSmartDateBlur(this)" autocomplete="off">
+      <label data-t>Ημ. Εκκόλαψης</label>
+      <input type="text" id="f-hatch" list="hatch-list" data-t-placeholder placeholder="ηη/μμ ή ηη/μμ/εε" onblur="onSmartDateBlur(this)" autocomplete="off">
       <datalist id="hatch-list"></datalist>
     </div>
     <div class="fgroup">
-      <label>Αναθρεπτήριο</label>
+      <label data-t>Αναθρεπτήριο</label>
       <select id="f-flock" onchange="onFieldChange()">
-        <option value="">— επιλογή —</option>
+        <option data-t value="">— επιλογή —</option>
         <option>Θ1</option><option>Θ2</option><option>Θ3</option><option>Θ4</option><option>Θ5</option><option>Α1</option>
       </select>
     </div>
     <div class="fgroup" id="f-newhatch-gate" style="display:none">
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:400">
-        <input type="checkbox" id="f-newhatch">Νέα εκκόλαψη (δεν υπάρχει ακόμα στο σύστημα)
+        <input type="checkbox" id="f-newhatch"><span data-t>Νέα εκκόλαψη (δεν υπάρχει ακόμα στο σύστημα)</span>
       </label>
     </div>
     <div class="fgroup">
-      <label>Ημ. Εμβολιασμού</label>
-      <input type="text" id="f-vacc" placeholder="ηη/μμ ή ηη/μμ/εε" onblur="onSmartDateBlur(this)" autocomplete="off">
+      <label data-t>Ημ. Εμβολιασμού</label>
+      <input type="text" id="f-vacc" data-t-placeholder placeholder="ηη/μμ ή ηη/μμ/εε" onblur="onSmartDateBlur(this)" autocomplete="off">
     </div>
     <div class="fgroup" style="display:none">
-      <label>Ημ. Παραγγελίας <span class="calc-badge">ΑΥΤΟ −30 ημ.</span></label>
-      <input type="text" id="f-orderdate" class="calc-field" readonly placeholder="Ορίστε πρώτα ημ. εμβολιασμού…">
+      <label><span data-t>Ημ. Παραγγελίας</span> <span data-t class="calc-badge">ΑΥΤΟ −30 ημ.</span></label>
+      <input type="text" id="f-orderdate" class="calc-field" readonly data-t-placeholder placeholder="Ορίστε πρώτα ημ. εμβολιασμού…">
     </div>
 
     <div class="divider"></div>
-    <div class="sec-label">Βήμα 2 — Εμβόλιο</div>
+    <div data-t class="sec-label">Βήμα 2 — Εμβόλιο</div>
     <div class="fgroup" style="position:relative">
-      <label>Εμβόλιο</label>
-      <input type="text" id="f-vaccine" placeholder="Πληκτρολογήστε ή επιλέξτε…"
+      <label data-t>Εμβόλιο</label>
+      <input type="text" id="f-vaccine" data-t-placeholder placeholder="Πληκτρολογήστε ή επιλέξτε…"
         oninput="onVaccineInput(this)" onkeydown="onVaccineKey(event)"
         onblur="scheduleCloseVacDrop()" autocomplete="off">
       <div class="ac-dropdown" id="vac-dropdown" style="display:none"></div>
     </div>
 
     <div class="divider"></div>
-    <div class="sec-label">Βήμα 3 — Λεπτομέρειες</div>
+    <div data-t class="sec-label">Βήμα 3 — Λεπτομέρειες</div>
     <div class="fgroup">
-      <label>Πελάτες &amp; ποσότητες</label>
+      <label data-t>Πελάτες &amp; ποσότητες</label>
       <div id="cust-lines"></div>
-      <button type="button" class="btn-add-line" onclick="addCustLine()">+ Προσθήκη πελάτη</button>
+      <button data-t type="button" class="btn-add-line" onclick="addCustLine()">+ Προσθήκη πελάτη</button>
       <div class="cust-summary" id="cust-summary"></div>
       <datalist id="customer-list"></datalist>
     </div>
     <div class="fgroup">
-      <label>Προμηθευτής</label>
-      <input type="text" id="f-supplier" list="supplier-list" placeholder="Προαιρετικό…">
+      <label data-t>Προμηθευτής</label>
+      <input type="text" id="f-supplier" list="supplier-list" data-t-placeholder placeholder="Προαιρετικό…">
       <datalist id="supplier-list">
         <option value="FAENTINA"><option value="Faentina">
         <option value="ΚΟΜΠΟΥΛΗΣ"><option value="ΤΡΑΙΚΟΥΔΗΣ">
       </datalist>
     </div>
     <div class="fgroup">
-      <label style="display:flex;align-items:center;justify-content:flex-start;gap:6px;cursor:pointer;font-weight:400"><input type="checkbox" id="f-first-inj" onchange="onInjectableCheck(this, 'f-second-inj')">ΠΡΩΤΑ ΕΝΕΣΙΜΑ</label>
-      <label style="display:flex;align-items:center;justify-content:flex-start;gap:6px;cursor:pointer;font-weight:400"><input type="checkbox" id="f-second-inj" onchange="onInjectableCheck(this, 'f-first-inj')">ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ</label>
+      <label style="display:flex;align-items:center;justify-content:flex-start;gap:6px;cursor:pointer;font-weight:400"><input type="checkbox" id="f-first-inj" onchange="onInjectableCheck(this, 'f-second-inj')"><span data-t>ΠΡΩΤΑ ΕΝΕΣΙΜΑ</span></label>
+      <label style="display:flex;align-items:center;justify-content:flex-start;gap:6px;cursor:pointer;font-weight:400"><input type="checkbox" id="f-second-inj" onchange="onInjectableCheck(this, 'f-first-inj')"><span data-t>ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ</span></label>
     </div>
-    <div class="fgroup"><label>Σχόλια Πάνος</label><textarea id="f-notes" placeholder="…"></textarea></div>
-    <div class="fgroup" style="display:none"><label>Εμβολιασμός</label>
+    <div class="fgroup"><label data-t>Σχόλια Πάνος</label><textarea id="f-notes" placeholder="…"></textarea></div>
+    <div class="fgroup" style="display:none"><label data-t>Εμβολιασμός</label>
       <select id="f-emvoliasmos" onchange="emvoliasmosVal=this.value">
-        <option value="">ΟΧΙ</option>
-        <option value="ΝΑΙ">ΝΑΙ</option>
+        <option data-t value="">ΟΧΙ</option>
+        <option data-t value="ΝΑΙ">ΝΑΙ</option>
       </select>
     </div>
   </div>
   <div class="sidebar-footer">
-    <button class="btn-submit" id="btn-add" onclick="addEntry()">+ Προσθήκη στον Πίνακα</button>
-    <button class="btn-cancel" onclick="resetForm()">Καθαρισμός (διατήρηση ημερομηνιών)</button>
+    <button data-t class="btn-submit" id="btn-add" onclick="addEntry()">+ Προσθήκη στον Πίνακα</button>
+    <button data-t class="btn-cancel" onclick="resetForm()">Καθαρισμός (διατήρηση ημερομηνιών)</button>
   </div>
 </aside>
 
 <!-- MAIN -->
 <main class="main">
   <div class="toolbar">
-    <button class="btn-tool" id="btn-house-view" onclick="toggleHouseView()">🏠 Προβολή Αναθρεπτηρίων</button>
+    <button data-t class="btn-tool" id="btn-house-view" onclick="toggleHouseView()">🏠 Προβολή Αναθρεπτηρίων</button>
     <div class="search-wrap">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="search" placeholder="Αναζήτηση…" oninput="render()">
+      <input type="text" id="search" data-t-placeholder placeholder="Αναζήτηση…" oninput="render()">
     </div>
 
     <div class="tb-menu-wrap">
       <button class="btn-tool" id="btn-filters" onclick="toggleTbMenu('filters-menu',event)">
-        Φίλτρα <span class="tb-badge" id="filters-badge" style="display:none">0</span> ▾
+        <span data-t>Φίλτρα</span> <span class="tb-badge" id="filters-badge" style="display:none">0</span> ▾
       </button>
       <div class="tb-menu" id="filters-menu" style="display:none" onclick="event.stopPropagation()">
         <div>
-          <label class="filter-house-label">Αναθρεπτήριο</label>
+          <label data-t class="filter-house-label">Αναθρεπτήριο</label>
           <div class="house-chip-row" id="house-filter-row">
             <button type="button" class="house-chip" onclick="toggleHouseFilter('Θ1')">Θ1</button>
             <button type="button" class="house-chip" onclick="toggleHouseFilter('Θ2')">Θ2</button>
@@ -793,122 +793,122 @@ body.printing-card .printcard-doc{display:block}
           </div>
         </div>
         <div id="hatch-filter-wrap" style="display:none">
-          <label class="filter-house-label">Ημ. εκκόλαψης</label>
+          <label data-t class="filter-house-label">Ημ. εκκόλαψης</label>
           <div class="house-chip-row" id="hatch-filter-row"></div>
         </div>
         <select class="filter-sel" id="filt-ordered" onchange="render()" style="width:100%">
-          <option value="">Όλες οι καταστάσεις</option>
-          <option value="ΝΑΙ">Παραγγελθέντα</option>
-          <option value="-">Εκκρεμείς</option>
+          <option data-t value="">Όλες οι καταστάσεις</option>
+          <option data-t value="ΝΑΙ">Παραγγελθέντα</option>
+          <option data-t value="-">Εκκρεμείς</option>
         </select>
         <select class="filter-sel" id="filt-fridge" onchange="render()" style="width:100%">
-          <option value="">Όλα τα ψυγεία</option>
-          <option value="ΝΑΙ">Στο ψυγείο</option>
-          <option value="-">Όχι στο ψυγείο</option>
+          <option data-t value="">Όλα τα ψυγεία</option>
+          <option data-t value="ΝΑΙ">Στο ψυγείο</option>
+          <option data-t value="-">Όχι στο ψυγείο</option>
         </select>
         <div class="tb-menu-divider"></div>
-        <button class="btn-tool" id="btn-show-done" onclick="toggleShowDone()" style="width:100%">Εμφάνιση εμβολιασμένων</button>
+        <button data-t class="btn-tool" id="btn-show-done" onclick="toggleShowDone()" style="width:100%">Εμφάνιση εμβολιασμένων</button>
       </div>
     </div>
 
-    <button class="btn-tool" onclick="loadData()">↺ Ανανέωση</button>
+    <button data-t class="btn-tool" onclick="loadData()">↺ Ανανέωση</button>
 
     <div class="tb-spacer"></div>
 
     <div class="tb-menu-wrap">
-      <button class="btn-tool" onclick="toggleTbMenu('actions-menu',event)" title="Περισσότερες ενέργειες">⋯</button>
+      <button class="btn-tool" onclick="toggleTbMenu('actions-menu',event)" data-t-title title="Περισσότερες ενέργειες">⋯</button>
       <div class="tb-menu" id="actions-menu" style="display:none;right:0;left:auto" onclick="event.stopPropagation()">
         <button class="btn-tool" onclick="exportCSV()" style="width:100%">↓ CSV</button>
-        <button class="btn-tool" id="btn-print-card" onclick="openPrintCard()" style="display:none;width:100%" title="Εκτύπωση καρτέλας αναθρεπτηρίου">🖨 Καρτέλα</button>
+        <button data-t class="btn-tool" id="btn-print-card" onclick="openPrintCard()" style="display:none;width:100%" data-t-title title="Εκτύπωση καρτέλας αναθρεπτηρίου">🖨 Καρτέλα</button>
       </div>
     </div>
   </div>
 
   <!-- BATCH ACTION BAR -->
   <div class="batch-bar" id="batch-bar">
-    <span class="batch-count" id="batch-count">0 επιλεγμένα</span>
+    <span data-t class="batch-count" id="batch-count">0 επιλεγμένα</span>
     <div class="batch-sep"></div>
-    <button class="btn-batch" onclick="batchEdit()">✎ Μαζική Επεξεργασία</button>
-    <button class="btn-batch danger" onclick="batchDelete()">✕ Μαζική Διαγραφή</button>
-    <button class="btn-batch clear" onclick="clearSelection()">Αποεπιλογή</button>
+    <button data-t class="btn-batch" onclick="batchEdit()">✎ Μαζική Επεξεργασία</button>
+    <button data-t class="btn-batch danger" onclick="batchDelete()">✕ Μαζική Διαγραφή</button>
+    <button data-t class="btn-batch clear" onclick="clearSelection()">Αποεπιλογή</button>
   </div>
 
   <div class="tbl-outer" id="tbl-outer">
     <div class="tbl-scaler" id="tbl-scaler">
       <table>
         <thead><tr>
-          <th class="cb-cell sticky-l0"><input type="checkbox" id="cb-all" onchange="toggleSelectAll(this.checked)" title="Επιλογή όλων"></th>
-          <th class="sticky-l1" onclick="sortBy('hm_ekk')">Εκκόλαψη — Αναθρεπτήριο<span class="arr" id="s-hm_ekk"></span></th>
-          <th style="min-width:65px" onclick="sortBy('hm_emv')">Ημ. Εμβολιασμού<span class="arr" id="s-hm_emv"></span></th>
-          <th style="min-width:65px" onclick="sortBy('hm_paragelia')">Ημ. Παραγγελίας<span class="arr" id="s-hm_paragelia"></span></th>
-          <th onclick="sortBy('emvolio')">Εμβόλιο<span class="arr" id="s-emvolio"></span></th>
-          <th onclick="sortBy('posotita')">Ποσότητα<span class="arr" id="s-posotita"></span></th>
-          <th onclick="sortBy('pelatis')">Πελάτης<span class="arr" id="s-pelatis"></span></th>
-          <th>Σχόλια Πάνος</th>
-          <th style="min-width:50px;text-align:center" onclick="sortBy('paragelia')" title="Παραγγελία">Παρ.<span class="arr" id="s-paragelia"></span></th>
-          <th style="min-width:65px" onclick="sortBy('hm_par')">Ημ. Καταχώρησης Παραγγελίας<span class="arr" id="s-hm_par"></span></th>
-          <th>Προμηθευτής</th>
-          <th style="min-width:50px;text-align:center" title="Ψυγείο">Ψυγ.</th>
-          <th style="min-width:50px;text-align:center" onclick="sortBy('emvoliasmos')" title="Εμβολιασμός">Εμβ.<span class="arr" id="s-emvoliasmos"></span></th>
-          <th>Σχόλια Ελένη</th>
-          <th style="text-align:right">Ενέργειες</th>
+          <th class="cb-cell sticky-l0"><input type="checkbox" id="cb-all" onchange="toggleSelectAll(this.checked)" data-t-title title="Επιλογή όλων"></th>
+          <th class="sticky-l1" onclick="sortBy('hm_ekk')"><span data-t>Εκκόλαψη — Αναθρεπτήριο</span><span class="arr" id="s-hm_ekk"></span></th>
+          <th style="min-width:65px" onclick="sortBy('hm_emv')"><span data-t>Ημ. Εμβολιασμού</span><span class="arr" id="s-hm_emv"></span></th>
+          <th style="min-width:65px" onclick="sortBy('hm_paragelia')"><span data-t>Ημ. Παραγγελίας</span><span class="arr" id="s-hm_paragelia"></span></th>
+          <th onclick="sortBy('emvolio')"><span data-t>Εμβόλιο</span><span class="arr" id="s-emvolio"></span></th>
+          <th onclick="sortBy('posotita')"><span data-t>Ποσότητα</span><span class="arr" id="s-posotita"></span></th>
+          <th onclick="sortBy('pelatis')"><span data-t>Πελάτης</span><span class="arr" id="s-pelatis"></span></th>
+          <th data-t>Σχόλια Πάνος</th>
+          <th style="min-width:50px;text-align:center" onclick="sortBy('paragelia')" data-t-title title="Παραγγελία"><span data-t>Παρ.</span><span class="arr" id="s-paragelia"></span></th>
+          <th style="min-width:65px" onclick="sortBy('hm_par')"><span data-t>Ημ. Καταχώρησης Παραγγελίας</span><span class="arr" id="s-hm_par"></span></th>
+          <th data-t>Προμηθευτής</th>
+          <th data-t style="min-width:50px;text-align:center" data-t-title title="Ψυγείο">Ψυγ.</th>
+          <th style="min-width:50px;text-align:center" onclick="sortBy('emvoliasmos')" data-t-title title="Εμβολιασμός"><span data-t>Εμβ.</span><span class="arr" id="s-emvoliasmos"></span></th>
+          <th data-t>Σχόλια Ελένη</th>
+          <th data-t style="text-align:right">Ενέργειες</th>
         </tr></thead>
         <tbody id="tbody"></tbody>
         <tfoot id="tfoot" style="display:none"><tr>
-          <td colspan="5" class="total-label">Σύνολο εκκρεμών ποσοτήτων</td>
+          <td data-t colspan="5" class="total-label">Σύνολο εκκρεμών ποσοτήτων</td>
           <td class="total-val" id="total-qty">—</td>
           <td colspan="9"></td>
         </tr></tfoot>
       </table>
-      <div id="empty-state" class="empty-state" style="display:none">💉 Δεν βρέθηκαν εγγραφές.</div>
+      <div data-t id="empty-state" class="empty-state" style="display:none">💉 Δεν βρέθηκαν εγγραφές.</div>
     </div>
   </div>
 
   <div class="house-view" id="house-view" style="display:none"></div>
 </main>
 <!-- FAB: mobile-only floating add button -->
-<button class="mobile-fab" style="display:none" onclick="openSidebarMobile()" title="Νέα παραγγελία" aria-label="Νέα παραγγελία">+</button>
+<button class="mobile-fab" style="display:none" onclick="openSidebarMobile()" data-t-title title="Νέα παραγγελία" data-t-aria-label aria-label="Νέα παραγγελία">+</button>
 
 </div><!-- .shell -->
 
 <!-- EDIT MODAL -->
 <div id="modal-bg" class="modal-bg" style="display:none" onclick="if(event.target===this)closeModal()">
   <div class="modal" style="width:840px;max-width:95vw">
-    <h3>Επεξεργασία Παραγγελίας</h3>
+    <h3 data-t>Επεξεργασία Παραγγελίας</h3>
     <div class="modal-history-layout">
       <div class="modal-main">
         <div class="mgrid">
-          <div class="fgroup full"><label>Εμβόλιο</label><input type="text" id="m-vaccine" list="vaccine-list"></div>
-          <div class="fgroup"><label>Ημ. Εκκόλαψης</label><input type="text" id="m-hatch" placeholder="ηη/μμ ή ηη/μμ/εε" onblur="onSmartDateBlur(this)" autocomplete="off"></div>
-          <div class="fgroup"><label>Ημ. Εμβολιασμού</label><input type="text" id="m-vacc" placeholder="ηη/μμ ή ηη/μμ/εε" onblur="onSmartDateBlur(this)" autocomplete="off"></div>
-          <div class="fgroup"><label>Ημ. Παραγγελίας <span class="calc-badge">ΑΥΤΟ</span></label><input type="text" id="m-orderdate" class="calc-field" readonly></div>
-          <div class="fgroup"><label>Ημ. Καταχώρησης Παραγγελίας</label><input type="text" id="m-deliv" placeholder="ηη/μμ ή ηη/μμ/εε" onblur="onSmartDateBlur(this)" autocomplete="off"></div>
-          <div class="fgroup"><label>Αναθρεπτήριο</label>
+          <div class="fgroup full"><label data-t>Εμβόλιο</label><input type="text" id="m-vaccine" list="vaccine-list"></div>
+          <div class="fgroup"><label data-t>Ημ. Εκκόλαψης</label><input type="text" id="m-hatch" data-t-placeholder placeholder="ηη/μμ ή ηη/μμ/εε" onblur="onSmartDateBlur(this)" autocomplete="off"></div>
+          <div class="fgroup"><label data-t>Ημ. Εμβολιασμού</label><input type="text" id="m-vacc" data-t-placeholder placeholder="ηη/μμ ή ηη/μμ/εε" onblur="onSmartDateBlur(this)" autocomplete="off"></div>
+          <div class="fgroup"><label><span data-t>Ημ. Παραγγελίας</span> <span data-t class="calc-badge">ΑΥΤΟ</span></label><input type="text" id="m-orderdate" class="calc-field" readonly></div>
+          <div class="fgroup"><label data-t>Ημ. Καταχώρησης Παραγγελίας</label><input type="text" id="m-deliv" data-t-placeholder placeholder="ηη/μμ ή ηη/μμ/εε" onblur="onSmartDateBlur(this)" autocomplete="off"></div>
+          <div class="fgroup"><label data-t>Αναθρεπτήριο</label>
             <select id="m-flock"><option value="">—</option><option>Θ1</option><option>Θ2</option><option>Θ3</option><option>Θ4</option><option>Θ5</option><option>Α1</option></select></div>
-          <div class="fgroup"><label>Πελάτης</label><input type="text" id="m-customer"></div>
-          <div class="fgroup"><label>Ποσότητα</label><input type="text" id="m-qty" onblur="fmtQty(this)" onfocus="stripQty(this)"></div>
-          <div class="fgroup"><label>Παραγγελία</label>
-            <select id="m-ordered"><option value="">—</option><option value="ΝΑΙ">ΝΑΙ</option></select></div>
-          <div class="fgroup"><label>Ψυγείο</label>
-            <select id="m-fridge"><option value="">—</option><option value="ΝΑΙ">ΝΑΙ</option></select></div>
-          <div class="fgroup"><label>Εμβολιασμός</label><select id="m-emvoliasmos"><option value="">ΟΧΙ</option><option value="ΝΑΙ">ΝΑΙ</option></select></div>
-          <div class="fgroup"><label>Προμηθευτής</label><input type="text" id="m-supplier" list="supplier-list"></div>
-          <div class="fgroup"><label>Σχόλια Πάνος</label><input type="text" id="m-notes"></div>
-          <div class="fgroup full"><label>Σχόλια Ελένη</label><input type="text" id="m-notes2"></div>
+          <div class="fgroup"><label data-t>Πελάτης</label><input type="text" id="m-customer"></div>
+          <div class="fgroup"><label data-t>Ποσότητα</label><input type="text" id="m-qty" onblur="fmtQty(this)" onfocus="stripQty(this)"></div>
+          <div class="fgroup"><label data-t>Παραγγελία</label>
+            <select id="m-ordered"><option value="">—</option><option data-t value="ΝΑΙ">ΝΑΙ</option></select></div>
+          <div class="fgroup"><label data-t>Ψυγείο</label>
+            <select id="m-fridge"><option value="">—</option><option data-t value="ΝΑΙ">ΝΑΙ</option></select></div>
+          <div class="fgroup"><label data-t>Εμβολιασμός</label><select id="m-emvoliasmos"><option data-t value="">ΟΧΙ</option><option data-t value="ΝΑΙ">ΝΑΙ</option></select></div>
+          <div class="fgroup"><label data-t>Προμηθευτής</label><input type="text" id="m-supplier" list="supplier-list"></div>
+          <div class="fgroup"><label data-t>Σχόλια Πάνος</label><input type="text" id="m-notes"></div>
+          <div class="fgroup full"><label data-t>Σχόλια Ελένη</label><input type="text" id="m-notes2"></div>
         </div>
         <div class="modal-actions">
-          <button class="btn-danger" id="btn-modal-delete" onclick="modalDelete()">Διαγραφή</button>
+          <button data-t class="btn-danger" id="btn-modal-delete" onclick="modalDelete()">Διαγραφή</button>
           <div style="flex:1"></div>
-          <button class="btn-secondary" onclick="closeModal()">Ακύρωση</button>
-          <button class="btn-primary" id="btn-save" onclick="saveEdit()">Αποθήκευση</button>
+          <button data-t class="btn-secondary" onclick="closeModal()">Ακύρωση</button>
+          <button data-t class="btn-primary" id="btn-save" onclick="saveEdit()">Αποθήκευση</button>
         </div>
       </div>
       <!-- HISTORY -->
       <div class="modal-side">
         <div class="history-section">
-          <div class="history-title">Ιστορικό αλλαγών</div>
+          <div data-t class="history-title">Ιστορικό αλλαγών</div>
           <div class="history-list" id="history-list">
-            <div style="color:var(--gh-fg-muted);font-size:11px">Φόρτωση…</div>
+            <div data-t style="color:var(--gh-fg-muted);font-size:11px">Φόρτωση…</div>
           </div>
         </div>
       </div>
@@ -919,10 +919,10 @@ body.printing-card .printcard-doc{display:block}
 <!-- CONFIRM DELETE -->
 <div id="confirm-bg" class="modal-bg" style="display:none" onclick="if(event.target===this)closeConfirm()">
   <div class="confirm-box">
-    <p>Διαγραφή αυτής της παραγγελίας;<span class="confirm-name" id="confirm-name"></span></p>
+    <p><span data-t>Διαγραφή αυτής της παραγγελίας;</span><span class="confirm-name" id="confirm-name"></span></p>
     <div class="modal-actions" style="justify-content:center">
-      <button class="btn-secondary" onclick="closeConfirm()">Ακύρωση</button>
-      <button class="btn-primary" style="background:var(--gh-danger-fg);color:#fff" id="btn-confirm-del" onclick="confirmDelete()">Διαγραφή</button>
+      <button data-t class="btn-secondary" onclick="closeConfirm()">Ακύρωση</button>
+      <button data-t class="btn-primary" style="background:var(--gh-danger-fg);color:#fff" id="btn-confirm-del" onclick="confirmDelete()">Διαγραφή</button>
     </div>
   </div>
 </div>
@@ -930,13 +930,13 @@ body.printing-card .printcard-doc{display:block}
 <!-- BATCH EDIT MODAL -->
 <div id="batch-modal-bg" class="modal-bg" style="display:none" onclick="if(event.target===this)closeBatchModal()">
   <div class="modal" style="width:580px">
-    <div class="batch-modal-title">✎ Μαζική Επεξεργασία</div>
-    <div class="batch-modal-sub" id="batch-modal-sub">0 εγγραφές επιλεγμένες</div>
-    <p style="font-size:11px;color:var(--gh-fg-muted);margin-bottom:14px">Ενεργοποιήστε τα πεδία που θέλετε να αλλάξετε. Τα ανενεργά πεδία δεν θα τροποποιηθούν.</p>
+    <div data-t class="batch-modal-title">✎ Μαζική Επεξεργασία</div>
+    <div data-t class="batch-modal-sub" id="batch-modal-sub">0 εγγραφές επιλεγμένες</div>
+    <p data-t style="font-size:11px;color:var(--gh-fg-muted);margin-bottom:14px">Ενεργοποιήστε τα πεδία που θέλετε να αλλάξετε. Τα ανενεργά πεδία δεν θα τροποποιηθούν.</p>
     <div class="batch-field-list" id="batch-field-list"></div>
     <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeBatchModal()">Ακύρωση</button>
-      <button class="btn-primary" style="background:var(--gh-attention-fg);color:#000" id="btn-batch-save" onclick="saveBatchEdit()">Εφαρμογή σε όλα</button>
+      <button data-t class="btn-secondary" onclick="closeBatchModal()">Ακύρωση</button>
+      <button data-t class="btn-primary" style="background:var(--gh-attention-fg);color:#000" id="btn-batch-save" onclick="saveBatchEdit()">Εφαρμογή σε όλα</button>
     </div>
   </div>
 </div>
@@ -944,10 +944,10 @@ body.printing-card .printcard-doc{display:block}
 <!-- BATCH DELETE CONFIRM -->
 <div id="batch-del-bg" class="modal-bg" style="display:none" onclick="if(event.target===this)closeBatchDel()">
   <div class="confirm-box">
-    <p>Διαγραφή <span id="batch-del-count" style="color:var(--gh-danger-fg);font-weight:700"></span> εγγραφών;<br><span style="font-size:11px">Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.</span></p>
+    <p><span data-t>Διαγραφή</span> <span id="batch-del-count" style="color:var(--gh-danger-fg);font-weight:700"></span> <span data-t>εγγραφών;</span><br><span data-t style="font-size:11px">Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.</span></p>
     <div class="modal-actions" style="justify-content:center">
-      <button class="btn-secondary" onclick="closeBatchDel()">Ακύρωση</button>
-      <button class="btn-primary" style="background:var(--gh-danger-fg);color:#fff" id="btn-batch-del-confirm" onclick="confirmBatchDelete()">Διαγραφή όλων</button>
+      <button data-t class="btn-secondary" onclick="closeBatchDel()">Ακύρωση</button>
+      <button data-t class="btn-primary" style="background:var(--gh-danger-fg);color:#fff" id="btn-batch-del-confirm" onclick="confirmBatchDelete()">Διαγραφή όλων</button>
     </div>
   </div>
 </div>
@@ -955,29 +955,29 @@ body.printing-card .printcard-doc{display:block}
 <!-- STEP-THROUGH WIZARD — alternate way to add entries, one field at a time -->
 <div id="wizard-bg" class="modal-bg" style="display:none" onclick="if(event.target===this)closeWizard()">
   <div class="modal" style="width:420px">
-    <h3>Βήμα-προς-βήμα καταχώρηση</h3>
+    <h3 data-t>Βήμα-προς-βήμα καταχώρηση</h3>
 
     <!-- STEP 0 — flock context, asked once -->
     <div id="wz-context">
       <div class="fgroup">
-        <label>Ημ. Εκκόλαψης</label>
-        <input type="text" id="wz-hatch" list="hatch-list" placeholder="ηη/μμ ή ηη/μμ/εε" autocomplete="off" onblur="onSmartDateBlur(this)" onkeydown="if(event.key==='Enter')wizardStartLoop()">
+        <label data-t>Ημ. Εκκόλαψης</label>
+        <input type="text" id="wz-hatch" list="hatch-list" data-t-placeholder placeholder="ηη/μμ ή ηη/μμ/εε" autocomplete="off" onblur="onSmartDateBlur(this)" onkeydown="if(event.key==='Enter')wizardStartLoop()">
       </div>
       <div class="fgroup">
-        <label>Αναθρεπτήριο</label>
+        <label data-t>Αναθρεπτήριο</label>
         <select id="wz-flock" onchange="refreshNewHatchGate('wz-hatch','wz-flock','wz-newhatch-gate')">
-          <option value="">— επιλογή —</option>
+          <option data-t value="">— επιλογή —</option>
           <option>Θ1</option><option>Θ2</option><option>Θ3</option><option>Θ4</option><option>Θ5</option><option>Α1</option>
         </select>
       </div>
       <div class="fgroup" id="wz-newhatch-gate" style="display:none">
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:400">
-          <input type="checkbox" id="wz-newhatch">Νέα εκκόλαψη (δεν υπάρχει ακόμα στο σύστημα)
+          <input type="checkbox" id="wz-newhatch"><span data-t>Νέα εκκόλαψη (δεν υπάρχει ακόμα στο σύστημα)</span>
         </label>
       </div>
       <div class="modal-actions">
-        <button class="btn-secondary" onclick="closeWizard()">Ακύρωση</button>
-        <button class="btn-submit" onclick="wizardStartLoop()">Έναρξη →</button>
+        <button data-t class="btn-secondary" onclick="closeWizard()">Ακύρωση</button>
+        <button data-t class="btn-submit" onclick="wizardStartLoop()">Έναρξη →</button>
       </div>
     </div>
 
@@ -991,7 +991,7 @@ body.printing-card .printcard-doc{display:block}
         <div class="step-dot" id="wz-dot-qty">4</div>
       </div>
       <div class="fgroup">
-        <label id="wz-field-label">Ημ. Εμβολιασμού;</label>
+        <label data-t id="wz-field-label">Ημ. Εμβολιασμού;</label>
         <!-- preventDefault: otherwise the same Enter keypress also clicks the duplicate dialog's focused button -->
         <input type="text" id="wz-field-input" autocomplete="off" oninput="wizardVaccineInput(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();wizardAdvance()}">
         <datalist id="wz-customer-dl"></datalist>
@@ -999,17 +999,17 @@ body.printing-card .printcard-doc{display:block}
       </div>
       <!-- vaccine step only; stays ticked for the next lines until unticked, like the side form -->
       <div class="fgroup" id="wz-inj" style="display:none">
-        <label style="display:flex;align-items:center;justify-content:flex-start;gap:6px;cursor:pointer;font-weight:400"><input type="checkbox" id="wz-first-inj" onchange="onInjectableCheck(this, 'wz-second-inj')">ΠΡΩΤΑ ΕΝΕΣΙΜΑ</label>
-        <label style="display:flex;align-items:center;justify-content:flex-start;gap:6px;cursor:pointer;font-weight:400"><input type="checkbox" id="wz-second-inj" onchange="onInjectableCheck(this, 'wz-first-inj')">ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ</label>
+        <label style="display:flex;align-items:center;justify-content:flex-start;gap:6px;cursor:pointer;font-weight:400"><input type="checkbox" id="wz-first-inj" onchange="onInjectableCheck(this, 'wz-second-inj')"><span data-t>ΠΡΩΤΑ ΕΝΕΣΙΜΑ</span></label>
+        <label style="display:flex;align-items:center;justify-content:flex-start;gap:6px;cursor:pointer;font-weight:400"><input type="checkbox" id="wz-second-inj" onchange="onInjectableCheck(this, 'wz-first-inj')"><span data-t>ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ</span></label>
       </div>
-      <div class="wizard-hint" id="wz-hint">Enter ↵ για συνέχεια</div>
+      <div data-t class="wizard-hint" id="wz-hint">Enter ↵ για συνέχεια</div>
 
       <div class="wizard-queue" id="wizard-queue"></div>
 
       <div class="modal-actions">
-        <button class="btn-secondary" id="wz-back-btn" onclick="wizardBack()" style="margin-right:auto">← Πίσω</button>
-        <button class="btn-secondary" onclick="closeWizard()">Ακύρωση</button>
-        <button class="btn-primary" id="wz-finish-btn" onclick="wizardShowReview()" disabled>Ολοκλήρωση κι έλεγχος</button>
+        <button data-t class="btn-secondary" id="wz-back-btn" onclick="wizardBack()" style="margin-right:auto">← Πίσω</button>
+        <button data-t class="btn-secondary" onclick="closeWizard()">Ακύρωση</button>
+        <button data-t class="btn-primary" id="wz-finish-btn" onclick="wizardShowReview()" disabled>Ολοκλήρωση κι έλεγχος</button>
       </div>
     </div>
 
@@ -1017,8 +1017,8 @@ body.printing-card .printcard-doc{display:block}
     <div id="wz-review" style="display:none">
       <div class="wizard-queue" id="wizard-review-list"></div>
       <div class="modal-actions">
-        <button class="btn-secondary" onclick="wizardBackToLoop()">← Πίσω</button>
-        <button class="btn-primary" id="wz-save-btn" onclick="wizardSaveAll()">Αποθήκευση όλων</button>
+        <button data-t class="btn-secondary" onclick="wizardBackToLoop()">← Πίσω</button>
+        <button data-t class="btn-primary" id="wz-save-btn" onclick="wizardSaveAll()">Αποθήκευση όλων</button>
       </div>
     </div>
 
@@ -1028,10 +1028,10 @@ body.printing-card .printcard-doc{display:block}
 <!-- DUPLICATE ENTRY — add as a new row anyway, or skip -->
 <div id="dup-bg" class="modal-bg" style="display:none;z-index:300" onclick="if(event.target===this)resolveDuplicate('cancel')" onkeydown="if(event.key==='Escape')resolveDuplicate('cancel')">
   <div class="confirm-box" style="width:460px;max-width:95vw">
-    <p>Υπάρχει ήδη καταχώρηση με την ίδια εκκόλαψη, αναθρεπτήριο, ημ. εμβολιασμού και εμβόλιο:<span id="dup-detail" style="display:block;margin:10px 0;color:var(--gh-fg-default);font-weight:600"></span>Νέα γραμμή:<span id="dup-new" style="display:block;margin:6px 0 0;color:var(--gh-fg-default);font-weight:600"></span></p>
+    <p><span data-t>Υπάρχει ήδη καταχώρηση με την ίδια εκκόλαψη, αναθρεπτήριο, ημ. εμβολιασμού και εμβόλιο:</span><span id="dup-detail" style="display:block;margin:10px 0;color:var(--gh-fg-default);font-weight:600"></span><span data-t>Νέα γραμμή:</span><span id="dup-new" style="display:block;margin:6px 0 0;color:var(--gh-fg-default);font-weight:600"></span></p>
     <div class="modal-actions" style="justify-content:center;flex-wrap:wrap">
-      <button class="btn-secondary" onclick="resolveDuplicate('cancel')">Ακύρωση</button>
-      <button class="btn-primary" id="dup-add" onclick="resolveDuplicate('add')">Προσθήκη νέας γραμμής</button>
+      <button data-t class="btn-secondary" onclick="resolveDuplicate('cancel')">Ακύρωση</button>
+      <button data-t class="btn-primary" id="dup-add" onclick="resolveDuplicate('add')">Προσθήκη νέας γραμμής</button>
     </div>
   </div>
 </div>
@@ -1047,7 +1047,7 @@ body.printing-card .printcard-doc{display:block}
 <!-- WHAT ARRIVED — Ψυγείο set to ΝΑΙ on an order with alternative vaccines ("A / B") -->
 <div id="arrived-bg" class="modal-bg" style="display:none;z-index:300" onclick="if(event.target===this)resolveArrived(null)" onkeydown="if(event.key==='Escape')resolveArrived(null)">
   <div class="confirm-box" style="width:420px;max-width:95vw">
-    <p>Ποιο εμβόλιο παραλήφθηκε;<span id="arrived-detail" style="display:block;margin:8px 0 0;color:var(--gh-fg-default);font-weight:600"></span></p>
+    <p><span data-t>Ποιο εμβόλιο παραλήφθηκε;</span><span id="arrived-detail" style="display:block;margin:8px 0 0;color:var(--gh-fg-default);font-weight:600"></span></p>
     <div class="modal-actions" id="arrived-actions" style="justify-content:center;flex-wrap:wrap"></div>
   </div>
 </div>
@@ -1061,7 +1061,7 @@ body.printing-card .printcard-doc{display:block}
 
     <!-- Hatch-date picker (shown only when multiple hatch dates are visible) -->
     <div id="printcard-picker" style="display:none;margin-bottom:16px">
-      <label style="display:block;font-size:12px;font-weight:500;color:var(--gh-fg-muted);margin-bottom:6px">
+      <label data-t style="display:block;font-size:12px;font-weight:500;color:var(--gh-fg-muted);margin-bottom:6px">
         Επιλέξτε εκκόλαψη για εκτύπωση
       </label>
       <select id="printcard-select" onchange="renderPrintCard(this.value)" style="width:100%"></select>
@@ -1071,8 +1071,8 @@ body.printing-card .printcard-doc{display:block}
     <div id="printcard-content"></div>
 
     <div class="modal-actions">
-      <button class="btn-secondary" onclick="closePrintCard()">Κλείσιμο</button>
-      <button class="btn-primary" onclick="window.print()">🖨 Εκτύπωση</button>
+      <button data-t class="btn-secondary" onclick="closePrintCard()">Κλείσιμο</button>
+      <button data-t class="btn-primary" onclick="window.print()">🖨 Εκτύπωση</button>
     </div>
   </div>
 </div>
@@ -1081,13 +1081,13 @@ body.printing-card .printcard-doc{display:block}
 <div id="changelog-bg" class="modal-bg" style="display:none">
 
   <div class="changelog-modal">
-    <h3 id="changelog-title">Αλλαγές από την τελευταία σύνδεση</h3>
+    <h3 data-t id="changelog-title">Αλλαγές από την τελευταία σύνδεση</h3>
     <div class="changelog-sub" id="changelog-sub"></div>
     <div class="changelog-list" id="changelog-list">
-      <div class="cl-empty">Φόρτωση…</div>
+      <div data-t class="cl-empty">Φόρτωση…</div>
     </div>
     <div class="changelog-actions">
-      <button class="btn-primary" onclick="closeChangelog()">Κατανοητό</button>
+      <button data-t class="btn-primary" onclick="closeChangelog()">Κατανοητό</button>
     </div>
   </div>
 </div>
@@ -1096,6 +1096,103 @@ body.printing-card .printcard-doc{display:block}
 
 <datalist id="vaccine-list"></datalist>
 <script>
+// ── TRANSLATIONS ── this page's English (Greek text → English); shared words are in common.js
+addTranslations({
+  // header, status, connection
+  'ΕΜΒΟΛΙΑ': 'VACCINES', '📦 Απόθεμα': '📦 Stock', 'Απόθεμα εμβολίων': 'Vaccine stock',
+  'Σύνολο': 'Total', 'Παραγγέλθηκαν': 'Ordered', 'Εκκρεμείς': 'Pending',
+  '📋 Αλλαγές': '📋 Changes', 'Εμφάνιση αλλαγών από άλλους χρήστες': 'Show changes by other users',
+  'Εναλλαγή φόρμας': 'Toggle form', 'Σμίκρυνση': 'Zoom out', 'Μεγέθυνση': 'Zoom in', 'Κλείσιμο': 'Close',
+  'Φόρτωση…': 'Loading…', 'Συνδέθηκε ✓': 'Connected ✓', 'Σφάλμα σύνδεσης': 'Connection error',
+  'Σφάλμα φόρτωσης: {msg}': 'Loading error: {msg}',
+  '⚠ Χωρίς σύνδεση': '⚠ No connection', 'Αδύνατη η αποθήκευση.': "Can't save.", 'Ανανεώστε για να συνδεθείτε.': 'Refresh to connect.',
+  '⚠ Χωρίς σύνδεση — αδύνατη η αποθήκευση. Ανανεώστε πρώτα.': "⚠ No connection — can't save. Refresh first.",
+  '↺ Ανανέωση': '↺ Refresh', 'Ανανέωση…': 'Refreshing…',
+  // entry form
+  '➕ Βήμα-προς-βήμα καταχώρηση': '➕ Step-by-step entry', 'ή συμπληρώστε τη φόρμα από κάτω': 'or fill in the form below',
+  'Νέα Παραγγελία': 'New order', 'Νέα παραγγελία': 'New order',
+  'Βήμα 1 — Ημερομηνίες & Αναθρεπτήριο': 'Step 1 — Dates & house', 'Βήμα 2 — Εμβόλιο': 'Step 2 — Vaccine', 'Βήμα 3 — Λεπτομέρειες': 'Step 3 — Details',
+  'Ημ. Εκκόλαψης': 'Hatch date', 'Ημ. εκκόλαψης': 'Hatch date', 'Ημ. Εμβολιασμού': 'Vaccination date', 'Ημ. Παραγγελίας': 'Order date',
+  'Ημ. Καταχώρησης': 'Entry date', 'Ημ. Καταχώρησης Παραγγελίας': 'Order entry date',
+  'Αναθρεπτήριο': 'House', '— επιλογή —': '— choose —', 'Νέα εκκόλαψη (δεν υπάρχει ακόμα στο σύστημα)': 'New hatch (not in the system yet)',
+  'ΑΥΤΟ −30 ημ.': 'AUTO −30 d.', 'ΑΥΤΟ': 'AUTO',
+  'Εμβόλιο': 'Vaccine', 'Πελάτης': 'Customer', 'Ποσότητα': 'Quantity', 'Προμηθευτής': 'Supplier',
+  'Πελάτες & ποσότητες': 'Customers & quantities', '+ Προσθήκη πελάτη': '+ Add customer',
+  'Πελάτης (προαιρετικό)…': 'Customer (optional)…', 'Αφαίρεση γραμμής': 'Remove line',
+  'ΠΡΩΤΑ ΕΝΕΣΙΜΑ': 'FIRST INJECTION', 'ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ': 'SECOND INJECTION',
+  'Σχόλια Πάνος': "Πάνος's notes", 'Σχόλια Ελένη': "Ελένη's notes",
+  'Παραγγελία': 'Order', 'Ψυγείο': 'Fridge', 'Εμβολιασμός': 'Vaccination',
+  '+ Προσθήκη στον Πίνακα': '+ Add to table', 'Καθαρισμός (διατήρηση ημερομηνιών)': 'Clear (keep dates)',
+  'ηη/μμ ή ηη/μμ/εε': 'dd/mm or dd/mm/yy', 'Ορίστε πρώτα ημ. εμβολιασμού…': 'Set the vaccination date first…',
+  'Πληκτρολογήστε ή επιλέξτε…': 'Type or choose…', 'Προαιρετικό…': 'Optional…', 'π.χ. 60000': 'e.g. 60000',
+  'Θα δημιουργηθεί 1 γραμμή': '1 line will be created', 'Θα δημιουργηθούν {n} γραμμές': '{n} lines will be created',
+  'σύνολο {n}': 'total {n}', 'ανά εμβόλιο': 'per vaccine',
+  'Εισάγετε όνομα εμβολίου': 'Enter a vaccine name', 'Εισάγετε ημερομηνία εκκόλαψης': 'Enter a hatch date',
+  'Εισάγετε έγκυρη ημερομηνία εκκόλαψης': 'Enter a valid hatch date', 'Επιλέξτε αναθρεπτήριο': 'Choose a house',
+  'Εισάγετε ημερομηνία εμβολιασμού': 'Enter a vaccination date',
+  'Η ημ. εμβολιασμού δεν μπορεί να είναι πριν την εκκόλαψη': "The vaccination date can't be before the hatch",
+  'Νέα εκκόλαψη — τσεκάρετε "Νέα εκκόλαψη" για να συνεχίσετε': 'New hatch — tick "New hatch" to continue',
+  'Ένας πελάτης και μία ποσότητα ανά γραμμή — χωρίς κόμματα': 'One customer and one quantity per line — no commas',
+  'Μη έγκυρη ημερομηνία': 'Invalid date', 'Μη έγκυρη ημερομηνία — διορθώστε το κόκκινο πεδίο': 'Invalid date — fix the red field',
+  'Αποθήκευση…': 'Saving…', 'Αποθηκεύτηκε ✓': 'Saved ✓', '{n} προστέθηκαν!': '{n} added!',
+  'Σφάλμα': 'Error', 'Σφάλμα: {msg}': 'Error: {msg}',
+  // table, filters, views
+  '🏠 Προβολή Αναθρεπτηρίων': '🏠 House view', '☰ Προβολή Πίνακα': '☰ Table view',
+  'Φίλτρα': 'Filters', 'Αναζήτηση…': 'Search…', 'Περισσότερες ενέργειες': 'More actions',
+  'Όλες οι καταστάσεις': 'All statuses', 'Παραγγελθέντα': 'Ordered',
+  'Όλα τα ψυγεία': 'All (fridge)', 'Στο ψυγείο': 'In the fridge', 'Όχι στο ψυγείο': 'Not in the fridge',
+  'Εμφάνιση εμβολιασμένων': 'Show vaccinated', 'Απόκρυψη εμβολιασμένων': 'Hide vaccinated',
+  '🖨 Καρτέλα': '🖨 Sheet', 'Εκτύπωση καρτέλας αναθρεπτηρίου': 'Print house sheet',
+  '0 επιλεγμένα': '0 selected', '{n} επιλεγμένη': '{n} selected', '{n} επιλεγμένες': '{n} selected',
+  '✎ Μαζική Επεξεργασία': '✎ Bulk edit', '✕ Μαζική Διαγραφή': '✕ Bulk delete', 'Αποεπιλογή': 'Deselect', 'Επιλογή όλων': 'Select all',
+  'Εκκόλαψη — Αναθρεπτήριο': 'Hatch — House', 'Εκκόλαψη': 'Hatch',
+  'Παρ.': 'Ord.', 'Ψυγ.': 'Fr.', 'Εμβ.': 'Vacc.', 'Ενέργειες': 'Actions', 'Επεξ.': 'Edit',
+  'Σύνολο εκκρεμών ποσοτήτων': 'Total pending quantities', '💉 Δεν βρέθηκαν εγγραφές.': '💉 No records found.',
+  'Διπλό κλικ για επεξεργασία': 'Double-click to edit', '{n} εγγραφή': '{n} record', '{n} εγγραφές': '{n} records',
+  'CSV εξαχθέν': 'CSV exported', 'ή': 'or',
+  // edit window, history, delete
+  'Επεξεργασία Παραγγελίας': 'Edit order', 'Διαγραφή': 'Delete', 'Ακύρωση': 'Cancel', 'Αποθήκευση': 'Save',
+  'Ιστορικό αλλαγών': 'Change history', 'Δεν υπάρχει ιστορικό.': 'No history.', 'Σφάλμα φόρτωσης ιστορικού.': "Couldn't load history.",
+  'Καταχώρηση': 'Created', 'Επεξεργασία': 'Edited', 'κενό': 'empty',
+  'Διαγραφή αυτής της παραγγελίας;': 'Delete this order?',
+  'Διαγραφή…': 'Deleting…', 'Διαγράφηκε ✓': 'Deleted ✓', 'Η εγγραφή διαγράφηκε': 'Record deleted', 'Η εγγραφή ενημερώθηκε': 'Record updated',
+  'Η εγγραφή δεν υπάρχει πια (ίσως διαγράφηκε) — πατήστε Ανανέωση.': 'The record no longer exists (maybe deleted) — press Refresh.',
+  'από {name}': 'by {name}', 'από άλλον χρήστη': 'by another user',
+  'Η εγγραφή τροποποιήθηκε {who} ενώ την επεξεργαζόσουν.': 'The record was changed {who} while you were editing it.',
+  'Πάτα OK για να αποθηκεύσεις τις αλλαγές σου (αντικαθιστά τις αλλαγές τους)': 'Press OK to save your changes (replaces theirs)',
+  'ή Ακύρωση για να ανανεώσεις και να δεις τις νεότερες τιμές.': 'or Cancel to refresh and see the newer values.',
+  // bulk edit / delete
+  '0 εγγραφές επιλεγμένες': '0 records selected', '{n} εγγραφές επιλεγμένες': '{n} records selected',
+  'Ενεργοποιήστε τα πεδία που θέλετε να αλλάξετε. Τα ανενεργά πεδία δεν θα τροποποιηθούν.': "Turn on the fields you want to change. Fields left off won't change.",
+  'Νέα τιμή…': 'New value…', 'Δεν επιλέχθηκε κανένα πεδίο.': 'No field selected.',
+  'Η ημ. εμβολιασμού θα ήταν πριν την εκκόλαψη σε {n} εγγραφή': 'The vaccination date would be before the hatch in {n} record',
+  'Η ημ. εμβολιασμού θα ήταν πριν την εκκόλαψη σε {n} εγγραφές': 'The vaccination date would be before the hatch in {n} records',
+  'Εφαρμογή σε όλα': 'Apply to all', 'Μαζική αποθήκευση…': 'Saving all…',
+  'Ενημερώθηκαν {n} εγγραφές': '{n} records updated', '{n} δεν υπάρχουν πια': '{n} no longer exist',
+  'εγγραφών;': 'records?', 'Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.': "This can't be undone.",
+  'Διαγραφή όλων': 'Delete all', 'Μαζική διαγραφή…': 'Deleting…', 'Διαγράφηκαν ✓': 'Deleted ✓', 'Διαγράφηκαν {n} εγγραφές': '{n} records deleted',
+  // step-by-step wizard
+  'Βήμα-προς-βήμα καταχώρηση': 'Step-by-step entry', 'Έναρξη →': 'Start →',
+  'Ημ. Εμβολιασμού;': 'Vaccination date?', 'Όνομα εμβολίου;': 'Vaccine name?', 'Πελάτης;': 'Customer?', 'Ποσότητα;': 'Quantity?',
+  'Enter ↵ για συνέχεια': 'Enter ↵ to continue', 'Enter ↵ για συνέχεια (προαιρετικό)': 'Enter ↵ to continue (optional)',
+  '← Πίσω': '← Back', 'Ολοκλήρωση κι έλεγχος': 'Finish and review', 'Αποθήκευση όλων': 'Save all',
+  'Η εκκόλαψη/αναθρεπτήριο δεν αλλάζει όσο υπάρχουν εγγραφές στη λίστα': "Hatch/house can't change while the list has entries",
+  'Θα χαθούν {n} μη αποθηκευμένες εγγραφές. Κλείσιμο;': '{n} unsaved entries will be lost. Close?',
+  // duplicate, vaccine names, arrived, print, changes popup
+  'Υπάρχει ήδη καταχώρηση με την ίδια εκκόλαψη, αναθρεπτήριο, ημ. εμβολιασμού και εμβόλιο:': "There's already an entry with the same hatch, house, vaccination date and vaccine:",
+  'Νέα γραμμή:': 'New line:', 'Προσθήκη νέας γραμμής': 'Add new line',
+  'Μήπως εννοείτε;': 'Did you mean?', 'Γράψατε: «{name}»': 'You typed: «{name}»', 'Όχι, κράτα «{name}»': 'No, keep «{name}»',
+  'Το «{name}» δεν υπάρχει στη λίστα εμβολίων.': "«{name}» isn't in the vaccine list.",
+  'Προσθήκη στη λίστα και αποθήκευση;': 'Add it to the list and save?', 'Προσθήκη και αποθήκευση': 'Add and save',
+  'Ποιο εμβόλιο παραλήφθηκε;': 'Which vaccine was received?',
+  'Επιλέξτε εκκόλαψη για εκτύπωση': 'Choose a hatch to print', '🖨 Εκτύπωση': '🖨 Print',
+  'Δεν υπάρχει εκκόλαψη στα τρέχοντα αποτελέσματα.': 'No hatch in the current results.', 'Δεν υπάρχουν καταχωρημένα εμβόλια.': 'No vaccines entered.',
+  'Αλλαγές από την τελευταία σύνδεση': 'Changes since your last visit', 'Κατανοητό': 'Got it',
+  'Αλλαγές από άλλους χρήστες από {d}': 'Changes by other users since {d}',
+  '{n} αλλαγή από άλλους χρήστες': '{n} change by other users', '{n} αλλαγές από άλλους χρήστες': '{n} changes by other users',
+  '✓ Δεν υπάρχουν νέες αλλαγές από άλλους χρήστες.': '✓ No new changes by other users.', '(διαγραμμένο)': '(deleted)',
+});
+
 // ── CONFIG ────────────────────────────────────────────────────────
 const TABLE  = 'emvolia';
 const HTABLE = 'emvolia_history';
@@ -1113,7 +1210,7 @@ function initApp(name) {
 const sbSelect  = ()        => sbFetch(`${TABLE}?order=hm_emv.asc`);
 const sbInsert  = row       => sbFetch(TABLE, { method:'POST', prefer:'return=representation', body: JSON.stringify(row) });
 // PATCH returns [] when the row is gone (deleted meanwhile, e.g. in another tab) — fail with a clear message
-const ROW_GONE = 'Η εγγραφή δεν υπάρχει πια (ίσως διαγράφηκε) — πατήστε Ανανέωση.';
+const ROW_GONE = t('Η εγγραφή δεν υπάρχει πια (ίσως διαγράφηκε) — πατήστε Ανανέωση.');
 const sbUpdate  = async (id, row) => {
   const result = await sbFetch(`${TABLE}?id=eq.${id}`, { method:'PATCH', prefer:'return=representation', body: JSON.stringify(row) });
   if (!result || !result.length) throw new Error(ROW_GONE);
@@ -1248,13 +1345,13 @@ function focusFromLink(find) {
 
 // ── LOAD ──────────────────────────────────────────────────────────
 async function loadData() {
-  setSyncStatus('loading', 'Φόρτωση…');
+  setSyncStatus('loading', t('Φόρτωση…'));
   try {
     [data] = await Promise.all([sbSelect(), loadVaccineNames()]);
     await autoMarkVaccinated();
     selectedIds.clear();
     showDone = false; updateShowDoneBtn();
-    setSyncStatus('ok', 'Συνδέθηκε ✓');
+    setSyncStatus('ok', t('Συνδέθηκε ✓'));
     render();
     focusFromLink(q => {
       const ids = new Set(data.filter(r => q.has('from')
@@ -1264,8 +1361,8 @@ async function loadData() {
       return [...document.querySelectorAll('tr[data-id]')].filter(tr => ids.has(+tr.dataset.id));
     });
   } catch (e) {
-    setSyncStatus('err', 'Σφάλμα σύνδεσης');
-    toast('Σφάλμα φόρτωσης: ' + e.message, true);
+    setSyncStatus('err', t('Σφάλμα σύνδεσης'));
+    toast(t('Σφάλμα φόρτωσης: {msg}', { msg: e.message }), true);
   }
 }
 
@@ -1454,7 +1551,7 @@ function fmtPosotita(val) {
 
 function guardConnected() {
   if (!isConnected) {
-    toast('⚠ Χωρίς σύνδεση — αδύνατη η αποθήκευση. Ανανεώστε πρώτα.', true);
+    toast(t('⚠ Χωρίς σύνδεση — αδύνατη η αποθήκευση. Ανανεώστε πρώτα.'), true);
     return false;
   }
   return true;
@@ -1467,21 +1564,21 @@ async function addEntry() {
   const hatch = document.getElementById('f-hatch').dataset.iso || '';
   const vacc  = document.getElementById('f-vacc').dataset.iso  || '';
   const flock = document.getElementById('f-flock').value;
-  if (!vaccineRaw) { toast('Εισάγετε όνομα εμβολίου', true); return; }
-  if (!hatch)      { toast('Εισάγετε ημερομηνία εκκόλαψης', true); return; }
-  if (!flock)      { toast('Επιλέξτε αναθρεπτήριο', true); return; }
-  if (!vacc)       { toast('Εισάγετε ημερομηνία εμβολιασμού', true); return; }
+  if (!vaccineRaw) { toast(t('Εισάγετε όνομα εμβολίου'), true); return; }
+  if (!hatch)      { toast(t('Εισάγετε ημερομηνία εκκόλαψης'), true); return; }
+  if (!flock)      { toast(t('Επιλέξτε αναθρεπτήριο'), true); return; }
+  if (!vacc)       { toast(t('Εισάγετε ημερομηνία εμβολιασμού'), true); return; }
   if (dateOrderInvalid(hatch, vacc)) {
-    toast('Η ημ. εμβολιασμού δεν μπορεί να είναι πριν την εκκόλαψη', true);
+    toast(t('Η ημ. εμβολιασμού δεν μπορεί να είναι πριν την εκκόλαψη'), true);
     return;
   }
   if (!isKnownFlock(hatch, flock) && !document.getElementById('f-newhatch').checked) {
-    toast('Νέα εκκόλαψη — τσεκάρετε "Νέα εκκόλαψη" για να συνεχίσετε', true);
+    toast(t('Νέα εκκόλαψη — τσεκάρετε "Νέα εκκόλαψη" για να συνεχίσετε'), true);
     return;
   }
 
   const lines = readCustLines();
-  if (!lines) { toast('Ένας πελάτης και μία ποσότητα ανά γραμμή — χωρίς κόμματα', true); return; }
+  if (!lines) { toast(t('Ένας πελάτης και μία ποσότητα ανά γραμμή — χωρίς κόμματα'), true); return; }
   // no customer lines filled → one row without customer/quantity, as before
   const entries = lines.length ? lines : [{ pelatis: null, posotita: null }];
 
@@ -1520,20 +1617,20 @@ async function addEntry() {
 
   const btn = document.getElementById('btn-add');
   btn.disabled = true;
-  btn.textContent = 'Αποθήκευση…';
-  setSyncStatus('loading', 'Αποθήκευση…');
+  btn.textContent = t('Αποθήκευση…');
+  setSyncStatus('loading', t('Αποθήκευση…'));
   try {
     await insertRows(toInsert, now);
     resetForm(); render();
     // on mobile, close the drawer so the user sees the new row in the table
     if (isMobile() && sidebarOpen) toggleSidebar();
-    setSyncStatus('ok', 'Αποθηκεύτηκε ✓');
-    toast(`${toInsert.length} προστέθηκαν!`);
+    setSyncStatus('ok', t('Αποθηκεύτηκε ✓'));
+    toast(t('{n} προστέθηκαν!', { n: toInsert.length }));
   } catch (e) {
-    setSyncStatus('err', 'Σφάλμα');
-    toast('Σφάλμα: ' + e.message, true);
+    setSyncStatus('err', t('Σφάλμα'));
+    toast(t('Σφάλμα: {msg}', { msg: e.message }), true);
   } finally {
-    btn.disabled = false; btn.textContent = '+ Προσθήκη στον Πίνακα';
+    btn.disabled = false; btn.textContent = t('+ Προσθήκη στον Πίνακα');
   }
 }
 
@@ -1566,25 +1663,25 @@ function openWizard() {
 }
 
 function closeWizard() {
-  if (wizardQueue.length && !confirm(`Θα χαθούν ${wizardQueue.length} μη αποθηκευμένες εγγραφές. Κλείσιμο;`)) return;
+  if (wizardQueue.length && !confirm(t('Θα χαθούν {n} μη αποθηκευμένες εγγραφές. Κλείσιμο;', { n: wizardQueue.length }))) return;
   document.getElementById('wizard-bg').style.display = 'none';
 }
 
 function wizardStartLoop() {
   const hatchIso = parseSmartDate(document.getElementById('wz-hatch').value.trim());
   const flock = document.getElementById('wz-flock').value;
-  if (!hatchIso) { toast('Εισάγετε έγκυρη ημερομηνία εκκόλαψης', true); return; }
-  if (!flock)    { toast('Επιλέξτε αναθρεπτήριο', true); return; }
+  if (!hatchIso) { toast(t('Εισάγετε έγκυρη ημερομηνία εκκόλαψης'), true); return; }
+  if (!flock)    { toast(t('Επιλέξτε αναθρεπτήριο'), true); return; }
   // Enter fires this via keydown, which can beat the field's blur — force
   // the ISO + gate in sync here rather than relying on onSmartDateBlur alone
   document.getElementById('wz-hatch').dataset.iso = hatchIso;
   refreshNewHatchGate('wz-hatch', 'wz-flock', 'wz-newhatch-gate');
   if (!isKnownFlock(hatchIso, flock) && !document.getElementById('wz-newhatch').checked) {
-    toast('Νέα εκκόλαψη — τσεκάρετε "Νέα εκκόλαψη" για να συνεχίσετε', true);
+    toast(t('Νέα εκκόλαψη — τσεκάρετε "Νέα εκκόλαψη" για να συνεχίσετε'), true);
     return;
   }
   wizardHatchIso = hatchIso; wizardFlock = flock;
-  document.getElementById('wz-context-chip').textContent = flock + ' · Εκκόλαψη ' + fmt(hatchIso);
+  document.getElementById('wz-context-chip').textContent = flock + ' · ' + t('Εκκόλαψη') + ' ' + fmt(hatchIso);
   document.getElementById('wz-context').style.display = 'none';
   document.getElementById('wz-loop').style.display = '';
   wizardStage = 'date'; wizardDraft = {};
@@ -1598,7 +1695,7 @@ function wizardRenderStage() {
     const line = document.getElementById('wz-line-' + (i + 1));
     if (line) line.className = 'step-line' + (i < idx ? ' done' : '');
   });
-  document.getElementById('wz-field-label').textContent = WIZARD_LABELS[wizardStage];
+  document.getElementById('wz-field-label').textContent = t(WIZARD_LABELS[wizardStage]);
   const input = document.getElementById('wz-field-input');
   // a field reached with ← Πίσω (or revisited after it) shows what was typed there; a new line starts empty
   const d = wizardDraft;
@@ -1606,13 +1703,13 @@ function wizardRenderStage() {
   // from the first field, Πίσω returns to hatch date/house — only while nothing is queued for that flock
   const back = document.getElementById('wz-back-btn');
   back.disabled = idx === 0 && wizardQueue.length > 0;
-  back.title = back.disabled ? 'Η εκκόλαψη/αναθρεπτήριο δεν αλλάζει όσο υπάρχουν εγγραφές στη λίστα' : '';
+  back.title = back.disabled ? t('Η εκκόλαψη/αναθρεπτήριο δεν αλλάζει όσο υπάρχουν εγγραφές στη λίστα') : '';
   input.removeAttribute('list');
   if (wizardStage === 'vaccine') { input.setAttribute('list', 'wz-vaccine-dl'); wizardVaccineInput(input); }
   document.getElementById('wz-inj').style.display = wizardStage === 'vaccine' ? '' : 'none';
   if (wizardStage === 'customer') { wizardPopulateCustomerList(); input.setAttribute('list', 'wz-customer-dl'); }
   document.getElementById('wz-hint').textContent =
-    (wizardStage === 'customer' || wizardStage === 'qty') ? 'Enter ↵ για συνέχεια (προαιρετικό)' : 'Enter ↵ για συνέχεια';
+    t((wizardStage === 'customer' || wizardStage === 'qty') ? 'Enter ↵ για συνέχεια (προαιρετικό)' : 'Enter ↵ για συνέχεια');
   input.focus();
 }
 
@@ -1637,15 +1734,15 @@ async function wizardAdvance() {
   const val = document.getElementById('wz-field-input').value.trim();
   if (wizardStage === 'date') {
     const iso = parseSmartDate(val);
-    if (!iso) { toast('Μη έγκυρη ημερομηνία', true); return; }
+    if (!iso) { toast(t('Μη έγκυρη ημερομηνία'), true); return; }
     if (dateOrderInvalid(wizardHatchIso, iso)) {
-      toast('Η ημ. εμβολιασμού δεν μπορεί να είναι πριν την εκκόλαψη', true);
+      toast(t('Η ημ. εμβολιασμού δεν μπορεί να είναι πριν την εκκόλαψη'), true);
       return;
     }
     wizardDraft.vaccDate = iso;
     wizardStage = 'vaccine';
   } else if (wizardStage === 'vaccine') {
-    if (!val) { toast('Εισάγετε όνομα εμβολίου', true); return; }
+    if (!val) { toast(t('Εισάγετε όνομα εμβολίου'), true); return; }
     const name = await resolveVaccineAlts(val);
     if (name === null) return;
     wizardDraft.vaccine = name;
@@ -1670,7 +1767,7 @@ async function wizardAdvance() {
 
 function wizardQueueRowHTML(q, i, onRemove) {
   return '<div class="wizard-queue-row">' +
-    '<span class="wq-main">' + fmt(q.vaccDate) + ' · ' + x(vaccineLabel(q.vaccine)) + (q.inj ? ' · ' + q.inj : '') + '</span>' +
+    '<span class="wq-main">' + fmt(q.vaccDate) + ' · ' + x(vaccineLabel(q.vaccine)) + (q.inj ? ' · ' + t(q.inj) : '') + '</span>' +
     '<span class="wq-sub">' + (q.qty ? fmtPosotita(q.qty) : '—') + (q.customer ? ' · ' + x(q.customer) : '') + '</span>' +
     '<button class="row-btn del" onclick="' + onRemove + '(' + i + ')">×</button>' +
   '</div>';
@@ -1719,19 +1816,19 @@ async function wizardSaveAll() {
     created_by: currentUser, created_at: now, updated_by: currentUser, updated_at: now,
   }));
   const btn = document.getElementById('wz-save-btn');
-  btn.disabled = true; btn.textContent = 'Αποθήκευση…';
-  setSyncStatus('loading', 'Αποθήκευση…');
+  btn.disabled = true; btn.textContent = t('Αποθήκευση…');
+  setSyncStatus('loading', t('Αποθήκευση…'));
   try {
     await insertRows(rows, now);
     render();
     document.getElementById('wizard-bg').style.display = 'none';
-    setSyncStatus('ok', 'Αποθηκεύτηκε ✓');
-    toast(`${rows.length} προστέθηκαν!`);
+    setSyncStatus('ok', t('Αποθηκεύτηκε ✓'));
+    toast(t('{n} προστέθηκαν!', { n: rows.length }));
   } catch (e) {
-    setSyncStatus('err', 'Σφάλμα');
-    toast('Σφάλμα: ' + e.message, true);
+    setSyncStatus('err', t('Σφάλμα'));
+    toast(t('Σφάλμα: {msg}', { msg: e.message }), true);
   } finally {
-    btn.disabled = false; btn.textContent = 'Αποθήκευση όλων';
+    btn.disabled = false; btn.textContent = t('Αποθήκευση όλων');
   }
 }
 
@@ -1770,11 +1867,11 @@ function modalDateChange() {
 
 async function loadHistory(rowId) {
   const list = document.getElementById('history-list');
-  list.innerHTML = '<div style="color:var(--gh-fg-muted);font-size:11px">Φόρτωση…</div>';
+  list.innerHTML = `<div style="color:var(--gh-fg-muted);font-size:11px">${t('Φόρτωση…')}</div>`;
   try {
     const hist = await sbHistory(rowId);
     if (!hist || !hist.length) {
-      list.innerHTML = '<div style="color:var(--gh-fg-muted);font-size:11px">Δεν υπάρχει ιστορικό.</div>';
+      list.innerHTML = `<div style="color:var(--gh-fg-muted);font-size:11px">${t('Δεν υπάρχει ιστορικό.')}</div>`;
       return;
     }
     list.innerHTML = '';
@@ -1788,10 +1885,10 @@ async function loadHistory(rowId) {
         try {
           const changes = JSON.parse(h.changes_json);
           const lines = Object.values(changes).map(c => {
-            const from = c.from !== null && c.from !== undefined ? x(String(c.from)) : '<em style="color:var(--gh-fg-subtle)">κενό</em>';
-            const to   = c.to   !== null && c.to   !== undefined ? x(String(c.to))   : '<em style="color:var(--gh-fg-subtle)">κενό</em>';
+            const from = c.from !== null && c.from !== undefined ? x(tValue(String(c.from))) : `<em style="color:var(--gh-fg-subtle)">${t('κενό')}</em>`;
+            const to   = c.to   !== null && c.to   !== undefined ? x(tValue(String(c.to)))   : `<em style="color:var(--gh-fg-subtle)">${t('κενό')}</em>`;
             return `<div class="hi-change">` +
-              `<span class="hi-field">${x(c.label)}:</span>` +
+              `<span class="hi-field">${x(t(c.label))}:</span>` +
               `<span><span class="hi-from">${from}</span>` +
               `<span class="hi-arrow">→</span>` +
               `<span class="hi-to">${to}</span></span>` +
@@ -1803,15 +1900,15 @@ async function loadHistory(rowId) {
 
       div.innerHTML =
         `<div class="history-item-top">` +
-          `<span class="hi-user">${x(h.user_name)}</span>` +
-          `<span class="hi-action ${h.action==='created'?'created':'edited'}">${h.action==='created'?'Καταχώρηση':'Επεξεργασία'}</span>` +
+          `<span class="hi-user">${x(tValue(h.user_name))}</span>` +
+          `<span class="hi-action ${h.action==='created'?'created':'edited'}">${t(h.action==='created'?'Καταχώρηση':'Επεξεργασία')}</span>` +
         `</div>` +
         `<div class="hi-date">${fmtDt(h.ts)}</div>` +
         changesHtml;
       list.appendChild(div);
     });
   } catch(e) {
-    list.innerHTML = `<div style="color:var(--gh-fg-muted);font-size:11px">Σφάλμα φόρτωσης ιστορικού.</div>`;
+    list.innerHTML = `<div style="color:var(--gh-fg-muted);font-size:11px">${t('Σφάλμα φόρτωσης ιστορικού.')}</div>`;
   }
 }
 
@@ -1841,7 +1938,7 @@ function buildChanges(before, row) {
 const ALT_SEP = /\s+\/\s*|\s*\/\s+|(?<!\d)\/|\/(?!\d)/;
 function vaccineAlts(s) { return String(s || '').split(ALT_SEP).map(v => v.trim()).filter(Boolean); }
 function normVaccine(s) { return vaccineAlts(s).join(' / '); }
-function vaccineLabel(s) { return vaccineAlts(s).join(' ή '); }
+function vaccineLabel(s) { return vaccineAlts(s).join(` ${t('ή')} `); }
 // same vaccine if any alternative matches, ignoring case: "CLONE30 / AVINEW" vs "CLONE30"
 function sameVaccine(a, b) {
   const bs = vaccineAlts(b).map(v => v.toUpperCase());
@@ -1891,13 +1988,13 @@ async function resolveVaccineName(raw) {
   if (exact) return exact;
   const near = nearVaccines(name);
   if (near.length) {
-    const pick = await askVaccineName(`Μήπως εννοείτε;<span class="vname-typed">Γράψατε: «${x(name)}»</span>`,
-      [...near.map(v => ({ label: v, value: v, primary: true })), { label: `Όχι, κράτα «${name}»`, value: '\u0000keep' }]);
+    const pick = await askVaccineName(`${t('Μήπως εννοείτε;')}<span class="vname-typed">${t('Γράψατε: «{name}»', { name: x(name) })}</span>`,
+      [...near.map(v => ({ label: v, value: v, primary: true })), { label: t('Όχι, κράτα «{name}»', { name }), value: '\u0000keep' }]);
     if (pick === null) return null;
     if (pick !== '\u0000keep') return pick;
   }
-  const add = await askVaccineName(`Το «${x(name)}» δεν υπάρχει στη λίστα εμβολίων.<span class="vname-typed">Προσθήκη στη λίστα και αποθήκευση;</span>`,
-    [{ label: 'Προσθήκη και αποθήκευση', value: 'add', primary: true }]);
+  const add = await askVaccineName(`${t('Το «{name}» δεν υπάρχει στη λίστα εμβολίων.', { name: x(name) })}<span class="vname-typed">${t('Προσθήκη στη λίστα και αποθήκευση;')}</span>`,
+    [{ label: t('Προσθήκη και αποθήκευση'), value: 'add', primary: true }]);
   if (add !== 'add') return null;
   // ignore-duplicates: the other user may have added the same name since this page loaded
   await sbFetch('vaccines', { method: 'POST', prefer: 'resolution=ignore-duplicates',
@@ -1911,7 +2008,7 @@ let vnameResolve = null;
 function askVaccineName(html, buttons) {
   document.getElementById('vname-msg').innerHTML = html;
   const acts = document.getElementById('vname-actions');
-  acts.innerHTML = '<button class="btn-secondary" data-i="-1">Ακύρωση</button>' +
+  acts.innerHTML = `<button class="btn-secondary" data-i="-1">${t('Ακύρωση')}</button>` +
     buttons.map((b, i) => `<button class="${b.primary ? 'btn-primary' : 'btn-secondary'}" data-i="${i}">${x(b.label)}</button>`).join('');
   acts.querySelectorAll('button').forEach(btn => btn.onclick = () => {
     const i = +btn.dataset.i; resolveVaccineAsk(i < 0 ? null : buttons[i].value);
@@ -1947,7 +2044,7 @@ let arrivedResolve = null;
 function askArrived(emvolio, context) {
   document.getElementById('arrived-detail').textContent = `${context} · ${vaccineLabel(emvolio)}`;
   document.getElementById('arrived-actions').innerHTML =
-    '<button class="btn-secondary" onclick="resolveArrived(null)">Ακύρωση</button>' +
+    `<button class="btn-secondary" onclick="resolveArrived(null)">${t('Ακύρωση')}</button>` +
     vaccineAlts(emvolio).map(v => `<button class="btn-primary" data-v="${x(v)}" onclick="resolveArrived(this.dataset.v)">${x(v)}</button>`).join('');
   document.getElementById('arrived-bg').style.display = 'flex';
   document.querySelector('#arrived-actions .btn-secondary').focus();
@@ -1965,9 +2062,9 @@ function resolveArrived(vaccine) {
 let dupResolve = null;
 function askDuplicate(dup, entry) {
   document.getElementById('dup-detail').textContent =
-    `${vaccineLabel(dup.emvolio)} · Πελάτης: ${dup.pelatis || '—'} · Ποσότητα: ${fmtPosotita(dup.posotita)} · Προμηθευτής: ${dup.promitheutis || '—'}`;
+    `${vaccineLabel(dup.emvolio)} · ${t('Πελάτης')}: ${dup.pelatis || '—'} · ${t('Ποσότητα')}: ${fmtPosotita(dup.posotita)} · ${t('Προμηθευτής')}: ${dup.promitheutis || '—'}`;
   document.getElementById('dup-new').textContent =
-    `Πελάτης: ${entry.pelatis || '—'} · Ποσότητα: ${fmtPosotita(entry.posotita)}`;
+    `${t('Πελάτης')}: ${entry.pelatis || '—'} · ${t('Ποσότητα')}: ${fmtPosotita(entry.posotita)}`;
   document.getElementById('dup-bg').style.display = 'flex';
   document.getElementById('dup-add').focus();
   return new Promise(resolve => { dupResolve = resolve; });
@@ -2001,11 +2098,11 @@ async function saveEdit() {
   };
 
   if (hasBadDate(['m-hatch', 'm-vacc', 'm-deliv'])) {
-    toast('Μη έγκυρη ημερομηνία — διορθώστε το κόκκινο πεδίο', true);
+    toast(t('Μη έγκυρη ημερομηνία — διορθώστε το κόκκινο πεδίο'), true);
     return;
   }
   if (dateOrderInvalid(row.hm_ekk, row.hm_emv)) {
-    toast('Η ημ. εμβολιασμού δεν μπορεί να είναι πριν την εκκόλαψη', true);
+    toast(t('Η ημ. εμβολιασμού δεν μπορεί να είναι πριν την εκκόλαψη'), true);
     return;
   }
   // a changed vaccine name goes through the spelling check; an unchanged one was checked when saved
@@ -2023,8 +2120,8 @@ async function saveEdit() {
   const changes = buildChanges(before, row);
 
   const btn = document.getElementById('btn-save');
-  btn.disabled = true; btn.textContent = 'Αποθήκευση…';
-  setSyncStatus('loading', 'Αποθήκευση…');
+  btn.disabled = true; btn.textContent = t('Αποθήκευση…');
+  setSyncStatus('loading', t('Αποθήκευση…'));
   try {
     // ── Concurrency check ─────────────────────────────────────────
     // Fetch the current updated_at from Supabase before writing.
@@ -2032,16 +2129,16 @@ async function saveEdit() {
     if (editLoadedAt !== undefined) {
       const [fresh] = await sbFetch(`${TABLE}?id=eq.${editId}&select=updated_at,updated_by`);
       if (fresh && fresh.updated_at !== editLoadedAt) {
-        const who = fresh.updated_by ? `από ${fresh.updated_by}` : 'από άλλον χρήστη';
+        const who = fresh.updated_by ? t('από {name}', { name: tValue(fresh.updated_by) }) : t('από άλλον χρήστη');
         const overwrite = confirm(
-          `Η εγγραφή τροποποιήθηκε ${who} ενώ την επεξεργαζόσουν.\n\n` +
-          `Πάτα OK για να αποθηκεύσεις τις αλλαγές σου (αντικαθιστά τις αλλαγές τους)\n` +
-          `ή Ακύρωση για να ανανεώσεις και να δεις τις νεότερες τιμές.`
+          t('Η εγγραφή τροποποιήθηκε {who} ενώ την επεξεργαζόσουν.', { who }) + '\n\n' +
+          t('Πάτα OK για να αποθηκεύσεις τις αλλαγές σου (αντικαθιστά τις αλλαγές τους)') + '\n' +
+          t('ή Ακύρωση για να ανανεώσεις και να δεις τις νεότερες τιμές.')
         );
         if (!overwrite) {
           // reload fresh data and reopen the modal with the latest values
-          btn.disabled = false; btn.textContent = 'Αποθήκευση';
-          setSyncStatus('loading', 'Ανανέωση…');
+          btn.disabled = false; btn.textContent = t('Αποθήκευση');
+          setSyncStatus('loading', t('Ανανέωση…'));
           await loadData();
           editEntry(editId);
           return;
@@ -2059,13 +2156,13 @@ async function saveEdit() {
     }
     if (idx >= 0) data[idx] = updated;
     closeModal(); render();
-    setSyncStatus('ok', 'Αποθηκεύτηκε ✓');
-    toast('Η εγγραφή ενημερώθηκε');
+    setSyncStatus('ok', t('Αποθηκεύτηκε ✓'));
+    toast(t('Η εγγραφή ενημερώθηκε'));
   } catch (e) {
-    setSyncStatus('err', 'Σφάλμα');
-    toast('Σφάλμα: ' + e.message, true);
+    setSyncStatus('err', t('Σφάλμα'));
+    toast(t('Σφάλμα: {msg}', { msg: e.message }), true);
   } finally {
-    btn.disabled = false; btn.textContent = 'Αποθήκευση';
+    btn.disabled = false; btn.textContent = t('Αποθήκευση');
   }
 }
 
@@ -2083,19 +2180,19 @@ function promptDelete(id) {
 async function confirmDelete() {
   if (!guardConnected()) return;
   const btn = document.getElementById('btn-confirm-del');
-  btn.disabled=true; btn.textContent='Διαγραφή…';
-  setSyncStatus('loading','Διαγραφή…');
+  btn.disabled=true; btn.textContent = t('Διαγραφή…');
+  setSyncStatus('loading', t('Διαγραφή…'));
   try {
     await sbDelete(deleteId);
     data = data.filter(x => x.id !== deleteId);
     closeConfirm(); render();
-    setSyncStatus('ok','Διαγράφηκε ✓');
-    toast('Η εγγραφή διαγράφηκε');
+    setSyncStatus('ok', t('Διαγράφηκε ✓'));
+    toast(t('Η εγγραφή διαγράφηκε'));
   } catch(e) {
-    setSyncStatus('err','Σφάλμα');
-    toast('Σφάλμα: ' + e.message, true);
+    setSyncStatus('err', t('Σφάλμα'));
+    toast(t('Σφάλμα: {msg}', { msg: e.message }), true);
   } finally {
-    btn.disabled=false; btn.textContent='Διαγραφή';
+    btn.disabled=false; btn.textContent = t('Διαγραφή');
   }
 }
 function closeConfirm() { document.getElementById('confirm-bg').style.display='none'; deleteId=null; }
@@ -2185,7 +2282,7 @@ function render() {
     const fl = flockLabel(r);
 
     tr.setAttribute('data-id', r.id);
-    tr.setAttribute('title', 'Διπλό κλικ για επεξεργασία');
+    tr.setAttribute('title', t('Διπλό κλικ για επεξεργασία'));
     tr.style.cursor = 'default';
     tr.addEventListener('dblclick', e => {
       if (e.target.closest('button, input[type=checkbox]')) return;
@@ -2203,10 +2300,10 @@ function render() {
       `<td style="text-align:center">${orderDot(r)}</td>`+
       `<td>${fmt(r.hm_par)||'—'}</td>`+
       `<td style="color:var(--gh-fg-muted);font-size:11px">${x(r.promitheutis||'—')}</td>`+
-      `<td style="text-align:center"><span class="hv-dot ${fri?'yes':'no'}" title="Ψυγείο: ${fri?'ΝΑΙ':'ΟΧΙ'}"></span></td>`+
-      `<td style="text-align:center"><span class="hv-dot ${emv?'yes':'no'}" title="Εμβολιασμός: ${emv?'ΝΑΙ':'ΟΧΙ'}"></span></td>`+
+      `<td style="text-align:center"><span class="hv-dot ${fri?'yes':'no'}" title="${t('Ψυγείο')}: ${t(fri?'ΝΑΙ':'ΟΧΙ')}"></span></td>`+
+      `<td style="text-align:center"><span class="hv-dot ${emv?'yes':'no'}" title="${t('Εμβολιασμός')}: ${t(emv?'ΝΑΙ':'ΟΧΙ')}"></span></td>`+
       `<td class="td-notes" style="color:var(--gh-fg-muted);font-size:11px" title="${x(r.sxolia_eleni||'')}">${x(r.sxolia_eleni||'—')}</td>`+
-      `<td><div class="row-actions"><button class="row-btn" onclick="editEntry(${r.id})">Επεξ.</button></div></td>`;
+      `<td><div class="row-actions"><button class="row-btn" onclick="editEntry(${r.id})">${t('Επεξ.')}</button></div></td>`;
     frag.appendChild(tr);
   });
 
@@ -2259,7 +2356,7 @@ function x(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
 function orderDot(r) {
   const ord = r.paragelia === 'ΝΑΙ';
   const faentina = ord && (r.promitheutis || '').trim().toUpperCase() === 'FAENTINA';
-  return `<span class="hv-dot ${ord ? 'yes' : 'no'}${faentina ? ' faentina' : ''}" title="Παραγγελία: ${ord ? 'ΝΑΙ' : 'ΟΧΙ'}${faentina ? ' · FAENTINA' : ''}"></span>`;
+  return `<span class="hv-dot ${ord ? 'yes' : 'no'}${faentina ? ' faentina' : ''}" title="${t('Παραγγελία')}: ${t(ord ? 'ΝΑΙ' : 'ΟΧΙ')}${faentina ? ' · FAENTINA' : ''}"></span>`;
 }
 
 // ── HOUSE VIEW ────────────────────────────────────────────────────
@@ -2270,7 +2367,7 @@ let houseViewOn = false;
 function toggleHouseView() {
   houseViewOn = !houseViewOn;
   document.getElementById('btn-house-view').textContent =
-    houseViewOn ? '☰ Προβολή Πίνακα' : '🏠 Προβολή Αναθρεπτηρίων';
+    t(houseViewOn ? '☰ Προβολή Πίνακα' : '🏠 Προβολή Αναθρεπτηρίων');
   document.getElementById('tbl-outer').style.display  = houseViewOn ? 'none' : '';
   document.getElementById('house-view').style.display = houseViewOn ? '' : 'none';
   render();
@@ -2301,12 +2398,12 @@ function hvChipClass(r) {
 
 function hvRowHTML(r) {
   const fri = r.psygeio === 'ΝΑΙ';
-  return `<div class="hv-row${r.emvoliasmos === 'ΝΑΙ' ? ' done' : ''}" onclick="editEntry(${r.id})" title="Διπλό κλικ για επεξεργασία">` +
+  return `<div class="hv-row${r.emvoliasmos === 'ΝΑΙ' ? ' done' : ''}" onclick="editEntry(${r.id})" title="${t('Διπλό κλικ για επεξεργασία')}">` +
     `<span class="hv-chip ${hvChipClass(r)}">${fmt(r.hm_emv) || '—'}</span>` +
     `<span class="hv-vacc">${x(vaccineLabel(r.emvolio))}</span>` +
     (r.posotita ? `<span class="hv-qty">×${fmtPosotita(r.posotita)}</span>` : '') +
     orderDot(r) +
-    `<span class="hv-dot ${fri ? 'yes' : 'no'}" title="Ψυγείο: ${fri ? 'ΝΑΙ' : 'ΟΧΙ'}"></span>` +
+    `<span class="hv-dot ${fri ? 'yes' : 'no'}" title="${t('Ψυγείο')}: ${t(fri ? 'ΝΑΙ' : 'ΟΧΙ')}"></span>` +
   `</div>`;
 }
 
@@ -2314,8 +2411,8 @@ function hvCardHTML(g) {
   const rows = [...g.rows].sort((a, b) => (a.hm_emv || '') < (b.hm_emv || '') ? -1 : (a.hm_emv || '') > (b.hm_emv || '') ? 1 : 0);
   return `<div class="hv-card">` +
     `<div class="hv-card-head">` +
-      `<div><div class="hv-house">${x(g.anath)}</div><div class="hv-cycle">Εκκόλαψη ${fmt(g.hm_ekk) || '—'}</div></div>` +
-      `<div class="hv-count">${rows.length} εγγραφ${rows.length === 1 ? 'ή' : 'ές'}</div>` +
+      `<div><div class="hv-house">${x(g.anath)}</div><div class="hv-cycle">${t('Εκκόλαψη')} ${fmt(g.hm_ekk) || '—'}</div></div>` +
+      `<div class="hv-count">${t(rows.length === 1 ? '{n} εγγραφή' : '{n} εγγραφές', { n: rows.length })}</div>` +
     `</div>` +
     `<div class="hv-rows">` + rows.map(hvRowHTML).join('') + `</div>` +
   `</div>`;
@@ -2325,7 +2422,7 @@ function buildHouseView() {
   const groups = houseGroups();
   document.getElementById('house-view').innerHTML = groups.length
     ? groups.map(hvCardHTML).join('')
-    : '<div class="empty-state">💉 Δεν βρέθηκαν εγγραφές.</div>';
+    : `<div class="empty-state">${t('💉 Δεν βρέθηκαν εγγραφές.')}</div>`;
 }
 
 // ── ZOOM ──────────────────────────────────────────────────────────
@@ -2354,7 +2451,7 @@ function exportCSV() {
   const a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent([L.join(','),...rows].join('\n'));
   a.download = 'emvolia_export.csv'; a.click();
-  toast('CSV εξαχθέν');
+  toast(t('CSV εξαχθέν'));
 }
 
 // ── PRINT CARD — simplified per-house vaccination schedule ────────
@@ -2378,7 +2475,7 @@ function getVisibleHatchDates() {
 
 function openPrintCard() {
   const dates = getVisibleHatchDates();
-  if (!dates.length) { toast('Δεν υπάρχει εκκόλαψη στα τρέχοντα αποτελέσματα.', true); return; }
+  if (!dates.length) { toast(t('Δεν υπάρχει εκκόλαψη στα τρέχοντα αποτελέσματα.'), true); return; }
 
   const picker = document.getElementById('printcard-picker');
   const select = document.getElementById('printcard-select');
@@ -2428,17 +2525,17 @@ function renderPrintCard(key) {
     (a.hm_emv||'') < (b.hm_emv||'') ? -1 : (a.hm_emv||'') > (b.hm_emv||'') ? 1 : 0
   );
 
-  const title = `Εκκόλαψη: ${x(fmt(iso))}`;
-  const sub   = anath ? `Αναθρεπτήριο: ${x(anath)}` : '';
+  const title = `${t('Εκκόλαψη')}: ${x(fmt(iso))}`;
+  const sub   = anath ? `${t('Αναθρεπτήριο')}: ${x(anath)}` : '';
 
   let bodyHtml;
   if (!rows.length) {
-    bodyHtml = `<div class="pc-empty">Δεν υπάρχουν καταχωρημένα εμβόλια.</div>`;
+    bodyHtml = `<div class="pc-empty">${t('Δεν υπάρχουν καταχωρημένα εμβόλια.')}</div>`;
   } else {
     bodyHtml = `
       <table>
         <thead><tr>
-          <th>Ημ. Εμβολιασμού</th><th>Εμβόλιο</th><th>Ποσότητα</th>
+          <th>${t('Ημ. Εμβολιασμού')}</th><th>${t('Εμβόλιο')}</th><th>${t('Ποσότητα')}</th>
         </tr></thead>
         <tbody>
           ${rows.map(r => {
@@ -2528,7 +2625,7 @@ function updateBatchBar() {
   const n = selectedIds.size;
   const bar = document.getElementById('batch-bar');
   bar.classList.toggle('visible', n > 0);
-  document.getElementById('batch-count').textContent = n + ' επιλεγμέν' + (n === 1 ? 'η' : 'ες');
+  document.getElementById('batch-count').textContent = t(n === 1 ? '{n} επιλεγμένη' : '{n} επιλεγμένες', { n });
 }
 
 // ── BATCH EDIT ────────────────────────────────────────────────────
@@ -2553,7 +2650,7 @@ const BATCH_FIELDS = [
 function batchEdit() {
   if (!guardConnected()) return;
   if (!selectedIds.size) return;
-  document.getElementById('batch-modal-sub').textContent = selectedIds.size + ' εγγραφές επιλεγμένες';
+  document.getElementById('batch-modal-sub').textContent = t('{n} εγγραφές επιλεγμένες', { n: selectedIds.size });
 
   // build field rows
   const list = document.getElementById('batch-field-list');
@@ -2565,18 +2662,18 @@ function batchEdit() {
 
     let inputHtml;
     if (f.type === 'select') {
-      inputHtml = `<select class="field-input" id="bf-${f.key}">${f.options.map(o=>`<option value="${o}">${o||'—'}</option>`).join('')}</select>`;
+      inputHtml = `<select class="field-input" id="bf-${f.key}">${f.options.map(o=>`<option value="${o}">${o ? tValue(o) : '—'}</option>`).join('')}</select>`;
     } else if (f.type === 'date') {
-      inputHtml = `<input type="text" class="field-input" id="bf-${f.key}" placeholder="ηη/μμ ή ηη/μμ/εε" onblur="onSmartDateBlur(this)" autocomplete="off">`;
+      inputHtml = `<input type="text" class="field-input" id="bf-${f.key}" placeholder="${t('ηη/μμ ή ηη/μμ/εε')}" onblur="onSmartDateBlur(this)" autocomplete="off">`;
     } else if (f.type === 'qty') {
-      inputHtml = `<input type="text" class="field-input" id="bf-${f.key}" placeholder="π.χ. 60000" onblur="fmtQty(this)" onfocus="stripQty(this)">`;
+      inputHtml = `<input type="text" class="field-input" id="bf-${f.key}" placeholder="${t('π.χ. 60000')}" onblur="fmtQty(this)" onfocus="stripQty(this)">`;
     } else {
-      inputHtml = `<input type="text" class="field-input" id="bf-${f.key}" placeholder="Νέα τιμή…">`;
+      inputHtml = `<input type="text" class="field-input" id="bf-${f.key}" placeholder="${t('Νέα τιμή…')}">`;
     }
 
     row.innerHTML =
       `<input type="checkbox" id="bfc-${f.key}" onchange="toggleBatchField('${f.key}',this.checked)">` +
-      `<label for="bfc-${f.key}" id="bfl-${f.key}">${f.label}</label>` +
+      `<label for="bfc-${f.key}" id="bfl-${f.key}">${t(f.label)}</label>` +
       inputHtml;
     list.appendChild(row);
   });
@@ -2610,9 +2707,9 @@ async function saveBatchEdit() {
     }
   });
 
-  if (!Object.keys(updates).length) { toast('Δεν επιλέχθηκε κανένα πεδίο.', true); return; }
+  if (!Object.keys(updates).length) { toast(t('Δεν επιλέχθηκε κανένα πεδίο.'), true); return; }
   if (hasBadDate(BATCH_FIELDS.filter(f => f.type === 'date' && f.key in updates).map(f => 'bf-' + f.key))) {
-    toast('Μη έγκυρη ημερομηνία — διορθώστε το κόκκινο πεδίο', true);
+    toast(t('Μη έγκυρη ημερομηνία — διορθώστε το κόκκινο πεδίο'), true);
     return;
   }
 
@@ -2626,7 +2723,7 @@ async function saveBatchEdit() {
                                  'hm_emv' in updates ? updates.hm_emv : r.hm_emv);
   });
   if (badOrder.length) {
-    toast(`Η ημ. εμβολιασμού θα ήταν πριν την εκκόλαψη σε ${badOrder.length} εγγραφ${badOrder.length === 1 ? 'ή' : 'ές'}`, true);
+    toast(t(badOrder.length === 1 ? 'Η ημ. εμβολιασμού θα ήταν πριν την εκκόλαψη σε {n} εγγραφή' : 'Η ημ. εμβολιασμού θα ήταν πριν την εκκόλαψη σε {n} εγγραφές', { n: badOrder.length }), true);
     return;
   }
 
@@ -2653,8 +2750,8 @@ async function saveBatchEdit() {
   updates.updated_at = now;
 
   const btn = document.getElementById('btn-batch-save');
-  btn.disabled = true; btn.textContent = 'Αποθήκευση…';
-  setSyncStatus('loading', 'Μαζική αποθήκευση…');
+  btn.disabled = true; btn.textContent = t('Αποθήκευση…');
+  setSyncStatus('loading', t('Μαζική αποθήκευση…'));
 
   const ids = [...selectedIds];
 
@@ -2680,13 +2777,13 @@ async function saveBatchEdit() {
     });
 
     closeBatchModal(); clearSelection(); render();
-    setSyncStatus('ok', 'Αποθηκεύτηκε ✓');
-    toast(`Ενημερώθηκαν ${updatedRows.length} εγγραφές` + (goneIds.length ? ` · ${goneIds.length} δεν υπάρχουν πια` : ''));
+    setSyncStatus('ok', t('Αποθηκεύτηκε ✓'));
+    toast(t('Ενημερώθηκαν {n} εγγραφές', { n: updatedRows.length }) + (goneIds.length ? ' · ' + t('{n} δεν υπάρχουν πια', { n: goneIds.length }) : ''));
   } catch(e) {
-    setSyncStatus('err', 'Σφάλμα');
-    toast('Σφάλμα: ' + e.message, true);
+    setSyncStatus('err', t('Σφάλμα'));
+    toast(t('Σφάλμα: {msg}', { msg: e.message }), true);
   } finally {
-    btn.disabled = false; btn.textContent = 'Εφαρμογή σε όλα';
+    btn.disabled = false; btn.textContent = t('Εφαρμογή σε όλα');
   }
 }
 
@@ -2702,8 +2799,8 @@ function closeBatchDel() { document.getElementById('batch-del-bg').style.display
 async function confirmBatchDelete() {
   if (!guardConnected()) return;
   const btn = document.getElementById('btn-batch-del-confirm');
-  btn.disabled = true; btn.textContent = 'Διαγραφή…';
-  setSyncStatus('loading', 'Μαζική διαγραφή…');
+  btn.disabled = true; btn.textContent = t('Διαγραφή…');
+  setSyncStatus('loading', t('Μαζική διαγραφή…'));
 
   const ids = [...selectedIds];
 
@@ -2711,13 +2808,13 @@ async function confirmBatchDelete() {
     await Promise.all(ids.map(id => sbDelete(id)));
     data = data.filter(r => !ids.includes(r.id));
     closeBatchDel(); clearSelection(); render();
-    setSyncStatus('ok', 'Διαγράφηκαν ✓');
-    toast(`Διαγράφηκαν ${ids.length} εγγραφές`);
+    setSyncStatus('ok', t('Διαγράφηκαν ✓'));
+    toast(t('Διαγράφηκαν {n} εγγραφές', { n: ids.length }));
   } catch(e) {
-    setSyncStatus('err', 'Σφάλμα');
-    toast('Σφάλμα: ' + e.message, true);
+    setSyncStatus('err', t('Σφάλμα'));
+    toast(t('Σφάλμα: {msg}', { msg: e.message }), true);
   } finally {
-    btn.disabled = false; btn.textContent = 'Διαγραφή όλων';
+    btn.disabled = false; btn.textContent = t('Διαγραφή όλων');
   }
 }
 
@@ -2838,9 +2935,9 @@ function addCustLine() {
   const line = document.createElement('div');
   line.className = 'cust-line';
   line.innerHTML =
-    '<input type="text" class="cl-name" list="customer-list" placeholder="Πελάτης (προαιρετικό)…" oninput="updateCustSummary()">' +
-    '<input type="text" class="cl-qty" placeholder="Ποσότητα" oninput="updateCustSummary()" onfocus="stripQty(this)" onblur="fmtQty(this);updateCustSummary()">' +
-    '<button type="button" class="row-btn del" title="Αφαίρεση γραμμής" onclick="removeCustLine(this)">×</button>';
+    `<input type="text" class="cl-name" list="customer-list" placeholder="${t('Πελάτης (προαιρετικό)…')}" oninput="updateCustSummary()">` +
+    `<input type="text" class="cl-qty" placeholder="${t('Ποσότητα')}" oninput="updateCustSummary()" onfocus="stripQty(this)" onblur="fmtQty(this);updateCustSummary()">` +
+    `<button type="button" class="row-btn del" title="${t('Αφαίρεση γραμμής')}" onclick="removeCustLine(this)">×</button>`;
   document.getElementById('cust-lines').appendChild(line);
   updateCustSummary();
 }
@@ -2877,12 +2974,12 @@ function updateCustSummary() {
   const el = document.getElementById('cust-summary');
   const lines = readCustLines();
   el.classList.toggle('err', !lines);
-  if (!lines) { el.textContent = 'Ένας πελάτης και μία ποσότητα ανά γραμμή — χωρίς κόμματα'; return; }
+  if (!lines) { el.textContent = t('Ένας πελάτης και μία ποσότητα ανά γραμμή — χωρίς κόμματα'); return; }
   const nVacc = Math.max(typedVaccines().length, 1);
   const rows = Math.max(lines.length, 1) * nVacc;
   const total = lines.reduce((sum, l) => sum + (/^\d+$/.test(l.posotita || '') ? Number(l.posotita) : 0), 0);
-  el.textContent = (rows === 1 ? 'Θα δημιουργηθεί 1 γραμμή' : `Θα δημιουργηθούν ${rows} γραμμές`) +
-    (total ? ` · σύνολο ${total.toLocaleString('el-GR')}${nVacc > 1 ? ' ανά εμβόλιο' : ''}` : '');
+  el.textContent = (rows === 1 ? t('Θα δημιουργηθεί 1 γραμμή') : t('Θα δημιουργηθούν {n} γραμμές', { n: rows })) +
+    (total ? ' · ' + t('σύνολο {n}', { n: total.toLocaleString('el-GR') }) + (nVacc > 1 ? ' ' + t('ανά εμβόλιο') : '') : '');
 }
 
 // ── CHANGELOG ────────────────────────────────────────────────────
@@ -2904,19 +3001,19 @@ async function showChangelog(user, open) {
   try { localStorage.setItem(changelogKey(user), new Date().toISOString()); } catch(e) {}
 
   const list = document.getElementById('changelog-list');
-  list.innerHTML = '<div class="cl-empty">Φόρτωση…</div>';
+  list.innerHTML = `<div class="cl-empty">${t('Φόρτωση…')}</div>`;
 
   const sinceDisplay = new Date(since).toLocaleString('el-GR', {
     day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false
   });
   document.getElementById('changelog-sub').textContent =
-    'Αλλαγές από άλλους χρήστες από ' + sinceDisplay;
+    t('Αλλαγές από άλλους χρήστες από {d}', { d: sinceDisplay });
 
   try {
     const hist = await sbChangelog(since, user);
 
     if (!hist || !hist.length) {
-      list.innerHTML = '<div class="cl-empty">✓ Δεν υπάρχουν νέες αλλαγές από άλλους χρήστες.</div>';
+      list.innerHTML = `<div class="cl-empty">${t('✓ Δεν υπάρχουν νέες αλλαγές από άλλους χρήστες.')}</div>`;
       return;
     }
 
@@ -2924,7 +3021,7 @@ async function showChangelog(user, open) {
     list.innerHTML = '';
     hist.forEach(h => {
       const row = data.find(r => r.id === h.row_id);
-      const vaccineName = row ? vaccineLabel(row.emvolio) : '(διαγραμμένο)';
+      const vaccineName = row ? vaccineLabel(row.emvolio) : t('(διαγραμμένο)');
       // build contextual subtitle: vaccine | anath – hm_ekk
       let vaccineCtx = x(vaccineName);
       if (row) {
@@ -2942,10 +3039,10 @@ async function showChangelog(user, open) {
         try {
           const changes = JSON.parse(h.changes_json);
           const lines = Object.values(changes).map(c => {
-            const from = c.from != null ? x(String(c.from)) : '<em>κενό</em>';
-            const to   = c.to   != null ? x(String(c.to))   : '<em>κενό</em>';
+            const from = c.from != null ? x(tValue(String(c.from))) : `<em>${t('κενό')}</em>`;
+            const to   = c.to   != null ? x(tValue(String(c.to)))   : `<em>${t('κενό')}</em>`;
             return `<div class="cl-change">` +
-              `<span class="cl-field">${x(c.label)}</span>` +
+              `<span class="cl-field">${x(t(c.label))}</span>` +
               `<span class="cl-from">${from}</span>` +
               `<span style="color:var(--gh-fg-subtle)">→</span>` +
               `<span class="cl-to">${to}</span>` +
@@ -2957,8 +3054,8 @@ async function showChangelog(user, open) {
 
       div.innerHTML =
         `<div class="cl-header">` +
-          `<span class="cl-user">${x(h.user_name)}</span>` +
-          `<span class="cl-action ${h.action}">${h.action === 'created' ? 'Καταχώρηση' : 'Επεξεργασία'}</span>` +
+          `<span class="cl-user">${x(tValue(h.user_name))}</span>` +
+          `<span class="cl-action ${h.action}">${t(h.action === 'created' ? 'Καταχώρηση' : 'Επεξεργασία')}</span>` +
           `<span class="cl-vaccine">${vaccineCtx}</span>` +
           `<span class="cl-time">${fmtDt(h.ts)}</span>` +
         `</div>` +
@@ -2967,13 +3064,13 @@ async function showChangelog(user, open) {
     });
 
     document.getElementById('changelog-title').textContent =
-      hist.length + ' αλλαγ' + (hist.length === 1 ? 'ή' : 'ές') + ' από άλλους χρήστες';
+      t(hist.length === 1 ? '{n} αλλαγή από άλλους χρήστες' : '{n} αλλαγές από άλλους χρήστες', { n: hist.length });
     // show the replay button in the header for this session
     document.getElementById('btn-changelog').style.display = '';
     if (open) document.getElementById('changelog-bg').style.display = 'flex';
 
   } catch(e) {
-    list.innerHTML = `<div class="cl-empty">Σφάλμα φόρτωσης: ${x(e.message)}</div>`;
+    list.innerHTML = `<div class="cl-empty">${t('Σφάλμα φόρτωσης: {msg}', { msg: x(e.message) })}</div>`;
   }
 }
 
@@ -3082,7 +3179,7 @@ function toggleShowDone() {
 function updateShowDoneBtn() {
   const btn = document.getElementById('btn-show-done');
   if (!btn) return;
-  btn.textContent = showDone ? 'Απόκρυψη εμβολιασμένων' : 'Εμφάνιση εμβολιασμένων';
+  btn.textContent = t(showDone ? 'Απόκρυψη εμβολιασμένων' : 'Εμφάνιση εμβολιασμένων');
 }
 
 // ── TOOLBAR MENUS (Φίλτρα / ⋯) ──────────────────────────────────────
@@ -3147,7 +3244,9 @@ document.getElementById('shell').classList.add('collapsed');
 resetCustLines();
 
 // shared sign-in, load-once guard and ⌂/Έξοδος buttons: common.js
-startPage({ onSignedIn: name => initApp(name) });
+// unsaved work = an edit window, bulk edit or the step-by-step entry is open (asked before switching language)
+startPage({ onSignedIn: name => initApp(name), translated: true,
+  hasUnsavedWork: () => ['modal-bg', 'batch-modal-bg', 'wizard-bg'].some(id => document.getElementById(id).style.display !== 'none') });
 </script>
 
 </body>

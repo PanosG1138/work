@@ -61,13 +61,19 @@ function t(greek, values) {
   return text;
 }
 
+// a value stored in Greek in the database (ΝΑΙ, ΟΧΙ, Αυτόματα) shown in the reader's language;
+// any other stored value (names, notes, dates) comes back unchanged and is never reported missing
+const STORED_GREEK = ['ΝΑΙ', 'ΟΧΙ', 'Αυτόματα'];
+function tValue(value) { return STORED_GREEK.includes(value) ? t(value) : value; }
+
 // translate every tagged element: data-t (its own text — tag only elements holding just text),
-// data-t-title, data-t-placeholder. startPage runs it for the whole page.
+// data-t-title, data-t-placeholder, data-t-aria-label. startPage runs it for the whole page.
 function translatePage(root = document) {
   if (LANG === 'el') return;
   root.querySelectorAll('[data-t]').forEach(el => { el.textContent = t(el.textContent.replace(/\s+/g, ' ').trim()); });
   root.querySelectorAll('[data-t-title]').forEach(el => { el.title = t(el.title); });
   root.querySelectorAll('[data-t-placeholder]').forEach(el => { el.placeholder = t(el.placeholder); });
+  root.querySelectorAll('[data-t-aria-label]').forEach(el => { el.setAttribute('aria-label', t(el.getAttribute('aria-label'))); });
 }
 
 // device copy of the language; false when the browser blocks storage
