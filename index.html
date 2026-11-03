@@ -260,7 +260,7 @@ async function loadDashboard() {
   let placements, vacc, feed;
   try {
     [placements, vacc, feed] = await Promise.all([
-      sbFetch('placements?select=house,doc_date,breed,status,ptino&order=doc_date.asc'),
+      sbFetch('placements?select=id,house,doc_date,breed,status,ptino&order=doc_date.asc'),
       sbFetch(`emvolia?select=anath,hm_ekk,hm_emv,emvolio,paragelia,psygeio&hm_emv=gte.${todayIso}&order=hm_emv.asc`),
       sbFetch('feed_hatches?select=house,breed,hatch'),
     ]);
@@ -282,6 +282,12 @@ async function loadDashboard() {
   const notOrdered = [...week.values()].filter(w => w.notOrdered).length;
   const notArrived = [...week.values()].filter(w => !w.notOrdered && w.notArrived).length;
 
+  // links open the tool on what was clicked (focusFromLink there scrolls to it and makes it glow)
+  const enc = encodeURIComponent;
+  const vaccHref = (h, hatch, date) => `vaccine_tracker.html?house=${enc(h)}&hatch=${hatch}` + (date ? `&date=${date}` : '');
+  const feedHref = h => `feed_tracker.html?house=${enc(h)}`;
+  const hatchHref = p => p ? `schedule_checker.html?card=${p.id}` : 'schedule_checker.html';
+
   let firstFeed = null;
   const tiles = HOUSES.map(h => {
     const ps = placements.filter(p => p.house === h);
@@ -295,7 +301,7 @@ async function loadDashboard() {
       const what = next ? `εκκόλαψη σε ${n} ${n === 1 ? 'ημέρα' : 'ημέρες'}` : 'καμία προγραμματισμένη';
       return `<div class="tile empty"><div class="t-top"><div class="ring" style="background:var(--gh-canvas-subtle)"><span>—</span></div>` +
         `<div><div class="t-house">${h}</div><div class="t-sub">Άδειο</div></div></div>` +
-        line('egg', 'schedule_checker.html', nextDate, what, today) + '</div>';
+        line('egg', hatchHref(next), nextDate, what, today) + '</div>';
     }
 
     const pct = Math.min(100, Math.round(age / emptyDay(cur) * 100));
@@ -307,17 +313,17 @@ async function loadDashboard() {
     // (e.g. the real hatch day, when the plan still has the ordered one) — flag it instead of "none"
     const stray = !vDate && vacc.find(v => v.anath === h && !ps.some(p => p.doc_date === v.hm_ekk));
     const vaccLine = stray
-      ? line('vaccine', 'vaccine_tracker.html', null, `Εμβόλια: άλλη εκκόλαψη (${ddmm(parseISO(stray.hm_ekk))})`, today, 'warn')
-      : line('vaccine', 'vaccine_tracker.html', vDate && parseISO(vDate), vDate ? x(vNames) : 'κανένας καταχωρημένος', today);
+      ? line('vaccine', vaccHref(h, stray.hm_ekk), null, `Εμβόλια: άλλη εκκόλαψη (${ddmm(parseISO(stray.hm_ekk))})`, today, 'warn')
+      : line('vaccine', vDate ? vaccHref(h, cur.doc_date, vDate) : 'vaccine_tracker.html', vDate && parseISO(vDate), vDate ? x(vNames) : 'κανένας καταχωρημένος', today);
     // next feed change, only when the feed tracker has this very flock
     const fr = feed.find(f => f.house === h);
     let feedLine;
     if (!fr || fr.hatch !== cur.doc_date) {
-      feedLine = line('grain', 'feed_tracker.html', null, !fr ? 'λείπει από Ζωοτροφές' : 'Ζωοτροφές: άλλη εκκόλαψη', today, 'warn');
+      feedLine = line('grain', feedHref(h), null, !fr ? 'λείπει από Ζωοτροφές' : 'Ζωοτροφές: άλλη εκκόλαψη', today, 'warn');
     } else {
       const nf = nextFeed(fr, today);
       if (nf && (!firstFeed || nf.date < firstFeed.date)) firstFeed = { ...nf, house: h };
-      feedLine = line('grain', 'feed_tracker.html', nf && nf.date, nf ? x(nf.name) : 'καμία άλλη αλλαγή', today);
+      feedLine = line('grain', feedHref(h), nf && nf.date, nf ? x(nf.name) : 'καμία άλλη αλλαγή', today);
     }
     const [stText, stCls] = next ? (STATUS[next.status] || [x(next.status), '']) : ['καμία προγραμματισμένη', ''];
 
@@ -326,16 +332,16 @@ async function loadDashboard() {
       `<div><div class="t-house">${h}</div><div class="t-sub">${x(cur.breed || '—')} · ημέρα ${age}</div></div></div>` +
       vaccLine +
       feedLine +
-      line('egg', 'schedule_checker.html', nextDate, stText, today, stCls) +
+      line('egg', hatchHref(next), nextDate, stText, today, stCls) +
       '</div>';
   });
 
   document.getElementById('tiles').innerHTML = tiles.join('');
   document.getElementById('pills').innerHTML =
-    `<a class="pill" href="vaccine_tracker.html"><b>${week.size}</b> ${week.size === 1 ? 'εμβολιασμός' : 'εμβολιασμοί'} τις επόμενες 7 ημέρες` +
+    `<a class="pill" href="${week.size ? `vaccine_tracker.html?from=${todayIso}&to=${weekEnd}` : 'vaccine_tracker.html'}"><b>${week.size}</b> ${week.size === 1 ? 'εμβολιασμός' : 'εμβολιασμοί'} τις επόμενες 7 ημέρες` +
       (notOrdered ? ` · <span class="warn">${notOrdered} χωρίς παραγγελία</span>` : '') +
       (notArrived ? ` · ${notArrived} δεν ${notArrived === 1 ? 'έχει' : 'έχουν'} έρθει` : '') + '</a>' +
-    (firstFeed ? `<a class="pill" href="feed_tracker.html">Επόμενο σιτηρέσιο: <b>${firstFeed.house} → ${x(firstFeed.name)}</b>, ${when(firstFeed.date, today)}</a>` : '');
+    (firstFeed ? `<a class="pill" href="${feedHref(firstFeed.house)}">Επόμενο σιτηρέσιο: <b>${firstFeed.house} → ${x(firstFeed.name)}</b>, ${when(firstFeed.date, today)}</a>` : '');
 }
 // a tab left open overnight would keep yesterday's "today" — refresh when it's shown again
 document.addEventListener('visibilitychange', () => { if (!document.hidden && _authSession) loadDashboard(); });

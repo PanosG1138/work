@@ -187,6 +187,12 @@ header{
 }
 .btn-danger:hover{background:rgba(255,107,107,0.22)}
 @media (max-width:600px){.home-txt{display:none}}   /* phones: Home link shows only ⌂ */
+/* arrival from a homepage dashboard link: the item glows for a few seconds */
+.focus-glow{animation:focusGlow 3.2s ease-out}
+tr.focus-glow{animation:none}
+tr.focus-glow > td{animation:focusRow 3.2s ease-out}
+@keyframes focusGlow{0%,45%{box-shadow:0 0 0 2px var(--gh-accent-fg),0 0 16px 3px rgba(110,143,255,0.45)}100%{box-shadow:0 0 0 0 rgba(110,143,255,0)}}
+@keyframes focusRow{0%,45%{background:rgba(110,143,255,0.24)}100%{background:transparent}}
 </style>
 </head>
 <body>
@@ -661,12 +667,30 @@ async function load(){
     resolved = new Set(res.map(x => x.conflict_key).filter(k => live.has(k)));
     setSyncStatus('ok','Synced');
     render();
+    focusFromLink(q => {
+      const el = document.getElementById('card-' + q.get('card'));
+      if (el && !el.classList.contains('open')) toggleCard(el, q.get('card'));
+      return [el];
+    });
     // marks whose clash is gone (a hatch moved, or it's over) can never match again: drop them
     if(stale.length) await sbFetch(`${RESOLVED_TABLE}?conflict_key=in.(${encodeURIComponent(stale.map(k => `"${k}"`).join(','))})`, {method:'DELETE'});
   }catch(e){ setSyncStatus('err','Error: '+e.message); }
 }
 
 /* ── Render ── */
+// Arrived from a homepage dashboard link (?…): scroll to the item and make it glow, then drop the
+// parameters so a reload opens the page normally. find(params) returns the elements, in page order.
+// Duplicated by design in vaccine_tracker.html, feed_tracker.html and schedule_checker.html.
+function focusFromLink(find) {
+  const q = new URLSearchParams(location.search);
+  if (![...q.keys()].length) return;
+  history.replaceState(null, '', location.pathname);
+  const els = find(q).filter(Boolean);
+  if (!els.length) return;
+  els[0].scrollIntoView({ block: 'center' });
+  els.forEach(e => { e.classList.remove('focus-glow'); void e.offsetWidth; e.classList.add('focus-glow'); });
+}
+
 function esc(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 /* more=true: row only shows when the card is expanded */
@@ -735,7 +759,7 @@ document.addEventListener('keydown', e => { if(e.key === 'Escape') closeCustomer
 const openCards = new Set();
 function toggleCard(el, key){ if(el.classList.toggle('open')) openCards.add(key); else openCards.delete(key); }
 function hcard(key, cls, house, label, breed, s, extra, alert='', rawBreed=null, hl, ptino=null, custId=null){
-  return `<div class="hc${cls}${openCards.has(key)?' open':''}" id="card-${key}" tabindex="0" onclick="toggleCard(this,'${key}')" ` +
+  return `<div class="hc${cls}${openCards.has(String(key))?' open':''}" id="card-${key}" tabindex="0" onclick="toggleCard(this,'${key}')" ` +
     `onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();toggleCard(this,'${key}')}">` +
     `<div class="hc-top"><span>${house}</span><span class="hc-num"><span class="hc-more">${label}</span><span class="hc-chev">›</span></span></div>` +
     `<div class="hc-breed">${breed}</div>` + cardBody(house, s, rawBreed, hl, ptino) + custButton(custId) + (alert || '<div class="clash-line"></div>') + `<div class="hc-more">${extra}</div></div>`;

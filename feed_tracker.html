@@ -122,6 +122,12 @@ select.cell-input option:disabled{color:var(--gh-fg-subtle);}
 /* EDIT TABLE (folded) */
 .edit-wrap summary{cursor:pointer;font-size:13px;font-weight:500;color:var(--gh-fg-muted);padding:6px 0 10px;}
 
+/* arrival from a homepage dashboard link: the item glows for a few seconds */
+.focus-glow{animation:focusGlow 3.2s ease-out}
+tr.focus-glow{animation:none}
+tr.focus-glow > td{animation:focusRow 3.2s ease-out}
+@keyframes focusGlow{0%,45%{box-shadow:0 0 0 2px var(--gh-accent-fg),0 0 16px 3px rgba(110,143,255,0.45)}100%{box-shadow:0 0 0 0 rgba(110,143,255,0)}}
+@keyframes focusRow{0%,45%{background:rgba(110,143,255,0.24)}100%{background:transparent}}
 /* TOAST */
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:var(--r);padding:8px 16px;font-size:13px;color:var(--gh-fg-default);z-index:999;opacity:0;transition:opacity 0.2s;pointer-events:none;}
 .toast.show{opacity:1}
@@ -354,12 +360,26 @@ async function loadFromSupabase() {
     setOnline(true);
     setSyncState('ok', 'Synced');
     buildRows();
+    focusFromLink(q => [...document.querySelectorAll('.card')].filter(c => c.querySelector('.card-house').textContent === q.get('house')));
   } catch(e) {
     console.error('Load error:', e);
     setOnline(false);
     setSyncState('err', 'No connection');
     buildRows();   // render read-only state with whatever is in rows
   }
+}
+
+// Arrived from a homepage dashboard link (?…): scroll to the item and make it glow, then drop the
+// parameters so a reload opens the page normally. find(params) returns the elements, in page order.
+// Duplicated by design in vaccine_tracker.html, feed_tracker.html and schedule_checker.html.
+function focusFromLink(find) {
+  const q = new URLSearchParams(location.search);
+  if (![...q.keys()].length) return;
+  history.replaceState(null, '', location.pathname);
+  const els = find(q).filter(Boolean);
+  if (!els.length) return;
+  els[0].scrollIntoView({ block: 'center' });
+  els.forEach(e => { e.classList.remove('focus-glow'); void e.offsetWidth; e.classList.add('focus-glow'); });
 }
 
 // ── SAVE ROW (debounced 600ms) ───────────────────────────────────

@@ -584,6 +584,12 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
   .modal-side .history-list{max-height:260px;overflow-y:auto}
 }
 
+/* arrival from a homepage dashboard link: the item glows for a few seconds */
+.focus-glow{animation:focusGlow 3.2s ease-out}
+tr.focus-glow{animation:none}
+tr.focus-glow > td{animation:focusRow 3.2s ease-out}
+@keyframes focusGlow{0%,45%{box-shadow:0 0 0 2px var(--gh-accent-fg),0 0 16px 3px rgba(110,143,255,0.45)}100%{box-shadow:0 0 0 0 rgba(110,143,255,0)}}
+@keyframes focusRow{0%,45%{background:rgba(110,143,255,0.24)}100%{background:transparent}}
 .toast{
   position:fixed;bottom:20px;right:20px;
   background:var(--gh-canvas-subtle);
@@ -1306,6 +1312,19 @@ function setSyncStatus(state, text) {
   });
 }
 
+// Arrived from a homepage dashboard link (?…): scroll to the item and make it glow, then drop the
+// parameters so a reload opens the page normally. find(params) returns the elements, in page order.
+// Duplicated by design in vaccine_tracker.html, feed_tracker.html and schedule_checker.html.
+function focusFromLink(find) {
+  const q = new URLSearchParams(location.search);
+  if (![...q.keys()].length) return;
+  history.replaceState(null, '', location.pathname);
+  const els = find(q).filter(Boolean);
+  if (!els.length) return;
+  els[0].scrollIntoView({ block: 'center' });
+  els.forEach(e => { e.classList.remove('focus-glow'); void e.offsetWidth; e.classList.add('focus-glow'); });
+}
+
 // ── LOAD ──────────────────────────────────────────────────────────
 async function loadData() {
   setSyncStatus('loading', 'Φόρτωση…');
@@ -1316,6 +1335,13 @@ async function loadData() {
     showDone = false; updateShowDoneBtn();
     setSyncStatus('ok', 'Συνδέθηκε ✓');
     render();
+    focusFromLink(q => {
+      const ids = new Set(data.filter(r => q.has('from')
+        ? r.hm_emv >= q.get('from') && r.hm_emv <= q.get('to')
+        : r.anath === q.get('house') && r.hm_ekk === q.get('hatch') && (!q.get('date') || r.hm_emv === q.get('date'))
+      ).map(r => r.id));
+      return [...document.querySelectorAll('tr[data-id]')].filter(tr => ids.has(+tr.dataset.id));
+    });
   } catch (e) {
     setSyncStatus('err', 'Σφάλμα σύνδεσης');
     toast('Σφάλμα φόρτωσης: ' + e.message, true);
