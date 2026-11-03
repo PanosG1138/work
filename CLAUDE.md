@@ -9,7 +9,7 @@ Internal Greek-language poultry operations tools, hosted on GitHub Pages
 Two users: Panos and Ελένη.
 
 ## Tools
-- index.html — landing page linking all tools
+- index.html — landing page: a signed-in dashboard (one tile per rearing house: current flock, next vaccination, next feed change, next placement; plus this week's vaccinations and the next feed change) above the tool links. It keeps its own copies of the scheduler's house/loading rules and the feed tracker's feed tables (block "RULES") — change them there too when those pages' rules change.
 - vaccine_tracker.html — vaccine order tracking (ΕΜΒΟΛΙΑ), with an alternate house/cycle card view
 - inventory.html — vaccine stock/inventory, bidirectionally linked to vaccine_tracker
 - feed_tracker.html — feed/nutrition schedule tracking per breed and feed additives (Avidecoxx, Robenz) by day since hatch: house cards (now / next) + a timeline, editing in a folded "Edit flocks" table, and a "Sync from scheduler" button (each change confirmed)

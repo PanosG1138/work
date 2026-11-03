@@ -1,20 +1,22 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="el">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Poultry Operations — Tools</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
 <link rel="stylesheet" href="theme.css">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
+html,body{min-height:100%}
 body{
   background:var(--gh-canvas-default);
   color:var(--gh-fg-default);
   font-family:'Inter',system-ui,-apple-system,sans-serif;
   font-size:14px;line-height:1.5;
-  display:flex;flex-direction:column;
+  display:flex;flex-direction:column;min-height:100vh;
 }
 header{
   display:flex;align-items:center;justify-content:space-between;
@@ -24,12 +26,51 @@ header{
 }
 .header-left{display:flex;align-items:center;gap:10px}
 .logo{font-weight:600;font-size:15px;color:var(--gh-fg-default)}
+.hbtn{height:28px;padding:0 10px;border:1px solid var(--gh-border-default);border-radius:var(--rs);background:var(--gh-canvas-subtle);color:var(--gh-fg-muted);font-family:inherit;font-size:12px;font-weight:500;cursor:pointer}
+.hbtn:hover{background:var(--gh-hover-bg);color:var(--gh-fg-default)}
 main{
-  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:40px 24px;
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  padding:28px 24px 40px;
 }
-.intro{text-align:center;margin-bottom:40px}
-.intro h1{font-size:22px;font-weight:600;color:var(--gh-fg-default);margin-bottom:8px}
+
+/* ── DASHBOARD: one tile per rearing house ── */
+.dash{width:100%;max-width:1060px;margin-bottom:44px}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;min-height:34px}
+.pill{background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-muted);border-radius:999px;padding:7px 14px;font-size:13px;color:var(--gh-fg-muted);text-decoration:none}
+.pill b{color:var(--gh-fg-default);font-weight:600}
+a.pill:hover{border-color:var(--gh-border-default);color:var(--gh-fg-default)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.tile{background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:16px;padding:14px 16px}
+.tile.empty{background:transparent;border-style:dashed}
+.tile.empty .t-house{color:var(--gh-fg-subtle)}
+.t-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.ring{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;flex-shrink:0}
+.ring span{width:38px;height:38px;border-radius:50%;background:var(--gh-canvas-subtle);display:grid;place-items:center;font-size:12px;font-weight:600;color:var(--gh-fg-muted)}
+.tile.empty .ring span{background:var(--gh-canvas-default)}
+.t-house{font-size:19px;font-weight:600;line-height:1.1}
+.t-sub{font-size:12px;color:var(--gh-fg-muted)}
+.ln{display:flex;gap:9px;align-items:baseline;padding:6px 0;border-top:1px solid var(--gh-border-muted);color:inherit;text-decoration:none}
+a.ln:hover .ln-what{color:var(--gh-fg-default)}
+.ln i{font-size:15px;color:var(--gh-fg-subtle);width:16px;flex-shrink:0;position:relative;top:2px}
+.ln-when{font-weight:600;white-space:nowrap}
+.ln-what{color:var(--gh-fg-muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.ln.none .ln-when{color:var(--gh-fg-subtle);font-weight:400}
+.ln.soon .ln-when{color:var(--gh-attention-fg)}
+.warn{color:var(--gh-attention-fg)}
+.ok{color:var(--gh-success-fg)}
+.dash-msg{font-size:13px;color:var(--gh-fg-muted);padding:8px 0}
+.dash-msg.err{color:var(--gh-danger-fg)}
+
+/* sign-in, shown in place of the dashboard */
+.login{width:100%;max-width:320px;margin:0 auto 44px;display:flex;flex-direction:column;gap:8px;text-align:center}
+.login p{font-size:13px;color:var(--gh-fg-muted);margin-bottom:4px}
+.login input{background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:6px;color:var(--gh-fg-default);font-family:inherit;font-size:14px;padding:8px 10px;outline:none;text-align:center}
+.login input:focus{border-color:var(--gh-accent-emphasis)}
+.login button{padding:8px 16px;background:var(--gh-accent-emphasis);color:#fff;border:none;border-radius:6px;font-family:inherit;font-weight:500;font-size:14px;cursor:pointer}
+.login .err{font-size:12px;color:var(--gh-danger-fg);min-height:18px}
+
+.intro{text-align:center;margin-bottom:24px}
+.intro h1{font-size:18px;font-weight:600;color:var(--gh-fg-default);margin-bottom:6px}
 .intro p{font-size:14px;color:var(--gh-fg-muted);max-width:380px;margin:0 auto}
 .cards{
   display:grid;
@@ -85,9 +126,24 @@ footer{
   <div class="header-left">
     <span class="logo">🐔 Poultry Operations</span>
   </div>
+  <button class="hbtn" id="btn-logout" onclick="_sb.auth.signOut()" style="display:none" title="Αποσύνδεση">← Έξοδος</button>
 </header>
 
 <main>
+  <!-- DASHBOARD — needs sign-in (same account as the tools) -->
+  <section class="dash" id="dash" style="display:none">
+    <div class="pills" id="pills"></div>
+    <div class="tiles" id="tiles"><div class="dash-msg">Φόρτωση…</div></div>
+  </section>
+
+  <form class="login" id="login" style="display:none" onsubmit="event.preventDefault();signIn()">
+    <p>Σύνδεση για να δείτε τους θαλάμους</p>
+    <input type="email" id="auth-email" placeholder="Email…" autocomplete="username">
+    <input type="password" id="auth-password" placeholder="Κωδικός…" autocomplete="current-password">
+    <button id="auth-btn" type="submit">Είσοδος</button>
+    <div class="err" id="auth-error"></div>
+  </form>
+
   <div class="intro">
     <h1>Operations Tools</h1>
     <p>Internal tools for managing vaccine orders, inventory, and rearing house scheduling.</p>
@@ -150,5 +206,183 @@ footer{
 
 <footer>PanosG1138 · Internal use only</footer>
 
+<script>
+const SB_URL = 'https://oorhbrphdbigwgizejcc.supabase.co';
+const SB_KEY = 'sb_publishable_1S3L1sNMOjr-YgwGAAD2Kg_X_3S4cTl';
+
+// ── AUTH — same accounts and session as the tools ────────────────
+const _sb = supabase.createClient(SB_URL, SB_KEY);
+let _authSession = null;
+
+async function signIn() {
+  const btn = document.getElementById('auth-btn'), errEl = document.getElementById('auth-error');
+  btn.disabled = true; btn.textContent = 'Σύνδεση…'; errEl.textContent = '';
+  const { error } = await _sb.auth.signInWithPassword({
+    email: document.getElementById('auth-email').value.trim(),
+    password: document.getElementById('auth-password').value,
+  });
+  btn.disabled = false; btn.textContent = 'Είσοδος';
+  if (error) errEl.textContent = 'Λάθος email ή κωδικός.';
+}
+
+_sb.auth.onAuthStateChange((event, session) => {
+  _authSession = session;
+  document.getElementById('dash').style.display = session ? '' : 'none';
+  document.getElementById('login').style.display = session ? 'none' : '';
+  document.getElementById('btn-logout').style.display = session ? '' : 'none';
+  if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) loadDashboard();
+});
+
+async function sbFetch(path) {
+  const res = await fetch(`${SB_URL}/rest/v1/${path}`, {
+    headers: { apikey: SB_KEY, Authorization: `Bearer ${_authSession.access_token}` },
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+// ── RULES — duplicated by design, keep in step with the source pages ──
+// houses + loading: schedule_checker.html (source of truth: docs/rearing_scheduler.md)
+const HOUSES = ['Θ1', 'Θ2', 'Θ3', 'Θ4', 'Θ5'];   // Θ7 left out until it's built (user, 2026-11-03)
+const LOAD_START = 105, PTINO_LOAD_START = 115, LOAD_DAYS = 14;
+// day the house is empty again (the flock has left): loading ends the day before
+const emptyDay = p => (p.ptino ? PTINO_LOAD_START : LOAD_START) + LOAD_DAYS;
+// feed phases + additives: feed_tracker.html
+const BREEDS = {
+  'NOVOGEN':       { phases: ['0-5 Wks','6-10 Wks','11-15 Wks','16-2%'],              days: [0,35,70,105] },
+  'HY-LINE':       { phases: ['0-3 Wks','4-6 Wks','7-12 Wks','13-15 Wks','16 -2%'],  days: [0,22,42,84,105] },
+  'ISA':           { phases: ['0-5 Wks','6-10 Wks','11-16 Wks','17-2%'],              days: [0,35,70,119] },
+  'HN_WHITE':      { phases: ['0-5 Wks','6-10 Wks','11-17 Wks','Prelay'],            days: [0,36,71,120] },
+  'LOHMAN_BROWN':  { phases: ['1-3 Wks','4-8 Wks','9-17 Wks','18-5%'],                days: [0,22,57,120] }
+};
+const BREED_SCHEDULE = {
+  'Hy-Line Brown': 'HY-LINE', 'Novogen Brown': 'NOVOGEN', 'Novogen White': 'NOVOGEN', 'Novogen Tinted': 'NOVOGEN',
+  'ISA Brown': 'ISA', 'Dekalb White': null, 'H&N Brown': null, 'H&N White': 'HN_WHITE', 'H&N Coral': null,
+  'Lohman Brown': 'LOHMAN_BROWN'
+};
+const ADDITIVES = [ { name: 'Avidecoxx', from: 10 }, { name: 'Robenz', from: 31 } ];
+const NO_ADDITIVES_HOUSES = ['Θ5', 'Θ7'];
+
+// ── DATES ─────────────────────────────────────────────────────────
+const DAY = 86400000;
+const WD = ['Κυρ','Δευ','Τρί','Τετ','Πέμ','Παρ','Σάβ'];
+const parseISO = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const daysBetween = (a, b) => Math.round((b - a) / DAY);
+const isoOf = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const ddmm = d => `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+// "Σήμερα", "Αύριο", "Σάβ 07/11"; another year gets its year: "25/01/27"
+function when(d, today) {
+  const n = daysBetween(today, d);
+  if (n === 0) return 'Σήμερα';
+  if (n === 1) return 'Αύριο';
+  return d.getFullYear() === today.getFullYear() ? `${WD[d.getDay()]} ${ddmm(d)}` : `${ddmm(d)}/${String(d.getFullYear()).slice(2)}`;
+}
+// Saturday → Friday, Sunday → Monday (feed changes and additive starts, as in feed_tracker.html)
+function toWeekday(d) {
+  if (d.getDay() === 6) d.setDate(d.getDate() - 1);
+  if (d.getDay() === 0) d.setDate(d.getDate() + 1);
+  return d;
+}
+// next feed phase or additive start on or after today for a feed_hatches row, or null
+function nextFeed(r, today) {
+  const hatch = parseISO(r.hatch);
+  const key = BREED_SCHEDULE[r.breed];
+  const events = key ? BREEDS[key].days.map((d, i) => ({ date: toWeekday(addDays(hatch, d)), name: BREEDS[key].phases[i] })) : [];
+  if (!NO_ADDITIVES_HOUSES.includes(r.house))
+    ADDITIVES.forEach(a => events.push({ date: toWeekday(addDays(hatch, a.from)), name: a.name }));
+  return events.filter(e => e.date >= today).sort((a, b) => a.date - b.date)[0] || null;
+}
+
+function x(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+const STATUS = { 'Confirmed': ['επιβεβαιωμένη', 'ok'], 'Requested': ['ζητήθηκε', ''], 'Not ordered': ['χωρίς επιβεβαίωση', ''] };
+
+// one line of a tile: icon, date (orange today/tomorrow), what — links to its tool
+function line(icon, href, date, what, today, cls = '') {
+  const soon = date && daysBetween(today, date) <= 1;
+  return `<a class="ln${soon ? ' soon' : ''}${date ? '' : ' none'}" href="${href}"><i class="ti ti-${icon}" aria-hidden="true"></i>` +
+    `<span class="ln-when">${date ? when(date, today) : '—'}</span><span class="ln-what ${cls}">${what}</span></a>`;
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────
+async function loadDashboard() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayIso = isoOf(today);
+  let placements, vacc, feed;
+  try {
+    [placements, vacc, feed] = await Promise.all([
+      sbFetch('placements?select=house,doc_date,breed,status,ptino&order=doc_date.asc'),
+      sbFetch(`emvolia?select=anath,hm_ekk,hm_emv,emvolio,paragelia,psygeio&hm_emv=gte.${todayIso}&order=hm_emv.asc`),
+      sbFetch('feed_hatches?select=house,breed,hatch'),
+    ]);
+  } catch (e) {
+    document.getElementById('tiles').innerHTML = `<div class="dash-msg err">Σφάλμα φόρτωσης: ${x(e.message)}</div>`;
+    return;
+  }
+
+  // a vaccination = house + hatch + date + vaccine (customer lines of the same one count once)
+  const vkey = v => [v.anath, v.hm_ekk, v.hm_emv, v.emvolio].join('|');
+  const weekEnd = isoOf(addDays(today, 6));
+  const week = new Map();
+  vacc.filter(v => v.hm_emv <= weekEnd).forEach(v => {
+    const k = vkey(v), w = week.get(k) || { notOrdered: false, notArrived: false };
+    if (v.paragelia !== 'ΝΑΙ') w.notOrdered = true;
+    else if (v.psygeio !== 'ΝΑΙ') w.notArrived = true;
+    week.set(k, w);
+  });
+  const notOrdered = [...week.values()].filter(w => w.notOrdered).length;
+  const notArrived = [...week.values()].filter(w => !w.notOrdered && w.notArrived).length;
+
+  let firstFeed = null;
+  const tiles = HOUSES.map(h => {
+    const ps = placements.filter(p => p.house === h);
+    const cur = ps.filter(p => p.doc_date <= todayIso).at(-1);
+    const age = cur ? daysBetween(parseISO(cur.doc_date), today) : null;
+    const next = ps.find(p => p.doc_date > todayIso);
+    const nextDate = next && parseISO(next.doc_date);
+
+    if (!cur || age >= emptyDay(cur)) {   // no flock in the house now
+      const what = next ? `εκκόλαψη σε ${daysBetween(today, nextDate)} ημέρες` : 'καμία προγραμματισμένη';
+      return `<div class="tile empty"><div class="t-top"><div class="ring" style="background:var(--gh-canvas-subtle)"><span>—</span></div>` +
+        `<div><div class="t-house">${h}</div><div class="t-sub">Άδειο</div></div></div>` +
+        line('egg', 'schedule_checker.html', nextDate, what, today) + '</div>';
+    }
+
+    const pct = Math.min(100, Math.round(age / emptyDay(cur) * 100));
+    // next vaccination of this flock: all vaccines of its first upcoming date
+    const mine = vacc.filter(v => v.anath === h && v.hm_ekk === cur.doc_date);
+    const vDate = mine.length ? mine[0].hm_emv : null;
+    const vNames = [...new Set(mine.filter(v => v.hm_emv === vDate).map(v => (v.emvolio || '').replace(/ \/ /g, ' ή ')))].join(', ');
+    // next feed change, only when the feed tracker has this very flock
+    const fr = feed.find(f => f.house === h);
+    let feedLine;
+    if (!fr || fr.hatch !== cur.doc_date) {
+      feedLine = line('grain', 'feed_tracker.html', null, !fr ? 'λείπει από Ζωοτροφές' : 'Ζωοτροφές: άλλη εκκόλαψη', today, 'warn');
+    } else {
+      const nf = nextFeed(fr, today);
+      if (nf && (!firstFeed || nf.date < firstFeed.date)) firstFeed = { ...nf, house: h };
+      feedLine = line('grain', 'feed_tracker.html', nf && nf.date, nf ? x(nf.name) : 'καμία άλλη αλλαγή', today);
+    }
+    const [stText, stCls] = next ? (STATUS[next.status] || [x(next.status), '']) : ['καμία προγραμματισμένη', ''];
+
+    return `<div class="tile"><div class="t-top">` +
+      `<div class="ring" style="background:conic-gradient(var(--gh-success-fg) ${pct}%,var(--gh-border-default) 0)"><span>${age}</span></div>` +
+      `<div><div class="t-house">${h}</div><div class="t-sub">${x(cur.breed || '—')} · ημέρα ${age}</div></div></div>` +
+      line('vaccine', 'vaccine_tracker.html', vDate && parseISO(vDate), vDate ? x(vNames) : 'κανένας καταχωρημένος', today) +
+      feedLine +
+      line('egg', 'schedule_checker.html', nextDate, stText, today, stCls) +
+      '</div>';
+  });
+
+  document.getElementById('tiles').innerHTML = tiles.join('');
+  document.getElementById('pills').innerHTML =
+    `<a class="pill" href="vaccine_tracker.html"><b>${week.size}</b> ${week.size === 1 ? 'εμβολιασμός' : 'εμβολιασμοί'} τις επόμενες 7 ημέρες` +
+      (notOrdered ? ` · <span class="warn">${notOrdered} χωρίς παραγγελία</span>` : '') +
+      (notArrived ? ` · ${notArrived} δεν ${notArrived === 1 ? 'έχει' : 'έχουν'} έρθει` : '') + '</a>' +
+    (firstFeed ? `<a class="pill" href="feed_tracker.html">Επόμενο σιτηρέσιο: <b>${firstFeed.house} → ${x(firstFeed.name)}</b>, ${when(firstFeed.date, today)}</a>` : '');
+}
+// a tab left open overnight would keep yesterday's "today" — refresh when it's shown again
+document.addEventListener('visibilitychange', () => { if (!document.hidden && _authSession) loadDashboard(); });
+</script>
 </body>
 </html>
