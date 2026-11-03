@@ -9,7 +9,8 @@
 <title>ΕΜΒΟΛΙΑ</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="theme.css">
+<script src="common.js?v=1"></script>
+<link rel="stylesheet" href="theme.css?v=1">
 <style>
 /* theme toggle button */
 .theme-toggle{
@@ -421,16 +422,6 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
 .hi-to{color:var(--gh-success-fg);font-weight:500;word-break:break-word}
 
 /* ── NAME / PASSWORD GATE ── */
-.name-gate{
-  background:var(--gh-canvas-subtle);
-  border:1px solid var(--gh-border-default);
-  border-radius:var(--r);padding:32px;width:380px;text-align:center;
-}
-.name-gate h2{font-weight:700;font-size:20px;color:var(--gh-fg-default);margin-bottom:8px}
-.name-gate p{font-size:13px;color:var(--gh-fg-muted);margin-bottom:22px;line-height:1.6}
-.name-gate input{text-align:center;font-size:15px;padding:8px;margin-bottom:12px;letter-spacing:0.02em}
-.name-gate .btn-primary{width:100%;height:36px;font-size:14px}
-.gate-error{font-size:12px;color:var(--gh-danger-fg);margin-top:8px;min-height:18px}
 
 /* ── CUSTOM AUTOCOMPLETE DROPDOWN ── */
 .ac-dropdown{
@@ -647,24 +638,9 @@ body.printing-card .printcard-doc{display:block}
 .printcard-doc th,.printcard-doc td{border:1px solid var(--gh-border-default);padding:7px 10px;text-align:left;color:var(--gh-fg-default)}
 .printcard-doc thead{background:var(--gh-canvas-subtle)}
 .printcard-doc .pc-empty{padding:20px;text-align:center;color:var(--gh-fg-muted);font-size:13px}
-@media (max-width:600px){.home-txt{display:none}}   /* phones: Home link shows only ⌂ */
 </style>
 </head>
 <body>
-
-<!-- AUTH GATE -->
-<div id="auth-gate" class="modal-bg" style="background:var(--gh-canvas-default)">
-  <div class="name-gate">
-    <h2>ΕΜΒΟΛΙΑ</h2>
-    <p>Παρακολούθηση Παραγγελιών<br>Σύνδεση</p>
-    <input type="email" id="auth-email" placeholder="Email…" autocomplete="username"
-           onkeydown="if(event.key==='Enter')document.getElementById('auth-password').focus()">
-    <input type="password" id="auth-password" placeholder="Κωδικός…"
-           autocomplete="current-password" onkeydown="if(event.key==='Enter')signIn()">
-    <button class="btn-primary" id="auth-btn" onclick="signIn()">Είσοδος</button>
-    <div class="gate-error" id="auth-error"></div>
-  </div>
-</div>
 
 <div class="shell" id="shell">
 <div class="mobile-backdrop" id="mobile-backdrop" onclick="toggleSidebar()"></div>
@@ -692,8 +668,7 @@ body.printing-card .printcard-doc{display:block}
       <div class="hstat"><div class="hstat-val" id="stat-ordered" style="color:var(--gh-success-fg)">—</div><div class="hstat-label">Παραγγέλθηκαν</div></div>
       <div class="hstat"><div class="hstat-val" id="stat-pending" style="color:var(--gh-attention-fg)">—</div><div class="hstat-label">Εκκρεμείς</div></div>
     </div>
-    <a class="theme-toggle" href="index.html" style="text-decoration:none" title="Αρχική">⌂<span class="home-txt"> Αρχική</span></a>
-    <button class="theme-toggle" id="btn-logout" onclick="confirmSignOut()" style="display:none" title="Αποσύνδεση">← Έξοδος</button>
+    <span id="common-nav"></span>
     <!-- shown only when the other user made changes since your last visit; reopens that list -->
     <button class="btn-tool" id="btn-changelog" onclick="reopenChangelog()" title="Εμφάνιση αλλαγών από άλλους χρήστες" style="display:none">📋 Αλλαγές</button>
   </div>
@@ -1122,51 +1097,9 @@ body.printing-card .printcard-doc{display:block}
 <datalist id="vaccine-list"></datalist>
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────
-const SB_URL = 'https://oorhbrphdbigwgizejcc.supabase.co';
-const SB_KEY = 'sb_publishable_1S3L1sNMOjr-YgwGAAD2Kg_X_3S4cTl';
 const TABLE  = 'emvolia';
 const HTABLE = 'emvolia_history';
 
-// ── AUTH ──────────────────────────────────────────────────────────
-const _sb = supabase.createClient(SB_URL, SB_KEY);
-let _authSession = null;
-
-function emailToDisplayName(email) {
-  const m = {'panos@internal.local':'Πάνος','eleni@internal.local':'Ελένη'};
-  return m[email] || email.split('@')[0];
-}
-
-async function signIn() {
-  const email = document.getElementById('auth-email').value.trim();
-  const pw    = document.getElementById('auth-password').value;
-  const btn   = document.getElementById('auth-btn');
-  const errEl = document.getElementById('auth-error');
-  btn.disabled = true; btn.textContent = 'Σύνδεση…';
-  errEl.textContent = '';
-  const { error } = await _sb.auth.signInWithPassword({ email, password: pw });
-  if (error) {
-    errEl.textContent = 'Λάθος email ή κωδικός.';
-    btn.disabled = false; btn.textContent = 'Είσοδος';
-  }
-}
-
-async function signOut() { await _sb.auth.signOut(); }
-function confirmSignOut() { if (confirm('Αποσύνδεση;')) signOut(); }
-
-// supabase re-sends SIGNED_IN on every tab refocus: load once per signed-in user, not each time
-let _loadedFor = null;
-_sb.auth.onAuthStateChange((event, session) => {
-  _authSession = session;
-  const isNew = session && session.user.id !== _loadedFor;
-  _loadedFor = session ? session.user.id : null;
-  document.getElementById('auth-gate').style.display = session ? 'none' : 'flex';
-  document.getElementById('btn-logout').style.display = session ? '' : 'none';
-  if (isNew) {
-    initApp(emailToDisplayName(session.user.email));
-  } else if (!session) {
-    setTimeout(() => { const e = document.getElementById('auth-email'); if(e) e.focus(); }, 100);
-  }
-});
 
 function initApp(name) {
   currentUser = name;
@@ -1175,24 +1108,7 @@ function initApp(name) {
 }
 
 // ── SUPABASE ──────────────────────────────────────────────────────
-async function sbFetch(path, opts = {}) {
-  const res = await fetch(`${SB_URL}/rest/v1/${path}`, {
-    ...opts,
-    headers: {
-      'apikey': SB_KEY,
-      'Authorization': `Bearer ${_authSession.access_token}`,
-      'Content-Type': 'application/json',
-      'Prefer': opts.prefer || '',
-      ...opts.headers,
-    },
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || err.hint || `HTTP ${res.status}`);
-  }
-  const text = await res.text();
-  return text ? JSON.parse(text) : null;
-}
+// sbFetch (every read/write to Supabase) lives in common.js
 
 const sbSelect  = ()        => sbFetch(`${TABLE}?order=hm_emv.asc`);
 const sbInsert  = row       => sbFetch(TABLE, { method:'POST', prefer:'return=representation', body: JSON.stringify(row) });
@@ -3230,8 +3146,8 @@ document.getElementById('shell').classList.add('collapsed');
 
 resetCustLines();
 
-
-// Auth is handled by onAuthStateChange above; no manual session restore needed.
+// shared sign-in, load-once guard and ⌂/Έξοδος buttons: common.js
+startPage({ onSignedIn: name => initApp(name) });
 </script>
 
 </body>

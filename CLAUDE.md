@@ -28,10 +28,15 @@ No build step, no package manager, no test suite, no linter — that's deliberat
 - Deploy: push to `main` — GitHub Pages serves the repo directly, no build/publish step.
 
 ## Architecture
-Each HTML file is fully self-contained: inline `<style>` and `<script>`, no JS imports, no shared JS files between tools (see gotcha below). `theme.css` (CSS custom properties for the single dark GitHub-style theme — no light theme, removed repo-wide) is the *only* thing actually shared across files — everything else that looks shared (Supabase client setup, auth, date-parsing helpers, the vaccine-name spelling check) is copy-pasted independently into each tool by design, so a fix in one file does not propagate and must be applied per-file if it applies elsewhere.
+Each HTML file has its own inline `<style>` and `<script>`, no JS imports. Two files are shared by all 7 pages: `theme.css` (CSS custom properties for the single dark GitHub-style theme — no light theme — plus the shared sign-in box and ⌂/Έξοδος button styles) and `common.js` (below). Everything else that looks shared (date-parsing helpers, the vaccine-name spelling check, the feed and scheduler rules copied into index.html) is still copy-pasted into each tool by design, so a fix there must be applied per-file. Moving those into common.js is planned one at a time (projects C and D).
 
-- **Auth**: Supabase Auth (email/password), two accounts mapped to display names via a per-file `emailToDisplayName()` (`panos@internal.local` → Πάνος, `eleni@internal.local` → Ελένη). `onAuthStateChange` gates the UI and triggers the initial data load.
-- **Persistence pattern — list tools** (vaccine_tracker, inventory, schedule_checker): rows are read/written via direct PostgREST calls (`sbFetch` wrapping `fetch` to `${SB_URL}/rest/v1/...`). vaccine_tracker and inventory also log edits to a paired `*_history` table (`emvolia_history`, `inventory_history`) with `user_name`/`ts`/`changes_json`, used to render the changelog/history UI in edit modals; schedule_checker (`placements`) keeps no history. Follow the history convention for any new editable data.
+- **common.js** — shared by all 7 pages (design: `docs/superpowers/specs/2026-11-03-common-js-foundation-design.md`). Holds the Supabase connection (`SB_URL`, `SB_KEY`, `_sb`), `_authSession`, `sbFetch`, `userDisplayName`, the shared sign-in box and the ⌂ Αρχική · ← Έξοδος buttons. Each page loads `<script src="common.js?v=N"></script>` right after supabase-js, has `<span id="common-nav"></span>` in its header (the homepage also has `<div id="common-signin">` for its inline box), and calls `startPage({ onSignedIn, onSignedOut })` as the **last line** of its script. `onSignedIn(name)` runs once per signed-in user — supabase re-sends SIGNED_IN on every tab refocus, and reloading then wiped highlights and reopened popups.
+  - **Bump `?v=N` on all 7 pages in the same commit whenever common.js or theme.css changes** (`common.js?v=N`, `theme.css?v=N`; GitHub Pages lets browsers keep an old copy ~10 min).
+  - One bug there breaks every page: test every page after changing it (check scripts: see the plan in `docs/superpowers/plans/`).
+  - `feed_notify.yml` and `backup.py` (Python on GitHub) can't use it — their copies of rules stay duplicated.
+
+- **Auth**: Supabase Auth (email/password), two accounts mapped to display names by `userDisplayName()` in common.js (`panos@internal.local` → Πάνος, `eleni@internal.local` → Ελένη). `startPage` in common.js gates the UI and triggers the page's initial data load.
+- **Persistence pattern — list tools** (vaccine_tracker, inventory, schedule_checker): rows are read/written via direct PostgREST calls (`sbFetch` in common.js, wrapping `fetch` to `${SB_URL}/rest/v1/...`; a refusal throws with `.status`, an empty reply returns `null`). vaccine_tracker and inventory also log edits to a paired `*_history` table (`emvolia_history`, `inventory_history`) with `user_name`/`ts`/`changes_json`, used to render the changelog/history UI in edit modals; schedule_checker (`placements`) keeps no history. Follow the history convention for any new editable data.
 - **Persistence pattern — calculator tools** (truck_calculator_*): a single pinned row (`id=1`, upserted via `resolution=merge-duplicates`), last-write-wins, no history. Don't conflate this with the list-tool pattern above.
 - **"Flock"/cycle concept**: a rearing cycle is identified by *house + hatch date together*, not house alone (see `flockLabel()` in vaccine_tracker.html and the equivalent grouping in schedule_checker.html). The same house is reused across generations — anything that groups or displays "by house" needs to account for this or it will conflate unrelated flocks.
 - **Automation** (`.github/workflows/`): `backup.yml` runs `backup.py` nightly, pulling every Supabase table to a Google Sheet via `gspread`. `feed_notify.yml` emails 7-day/3-day feed-change reminders and 3-day/1-day feed-additive start reminders — it re-implements the feed schedule tables (`SCHEDULES`, `BREED_SCHEDULE`) and the additive list (`ADDITIVES`) as a **separate copy** inline in the workflow YAML. If `feed_tracker.html`'s schedules or additives change, that copy has to be updated by hand or the reminders drift out of sync. Both apply the same weekend rule (Saturday → Friday, Sunday → Monday).
@@ -52,7 +57,8 @@ Exception: vaccine_tracker.html keeps A1 in its house lists (Θ1–Θ5 + A1) by 
 
 ## Known gotchas
 - Shared JS files are risky here: a previous shared.js approach for
-  VACCINE_OPTIONS caused a 404 → ReferenceError.
+  VACCINE_OPTIONS caused a 404 → ReferenceError. common.js must always be committed together
+  with the pages that use it, loaded by its plain relative path, and checked on every page.
 - Vaccine names: the `vaccines` table (name primary key; read + insert only) is the one
   correct spelling of each name. vaccine_tracker.html and inventory.html load it on start and
   send every saved name through `resolveVaccineName` (block "VACCINE NAMES", duplicated by
@@ -67,6 +73,11 @@ Exception: vaccine_tracker.html keeps A1 in its house lists (Θ1–Θ5 + A1) by 
   `[]` or 0 rows), check that table's `authenticated` policies first.
 - <datalist> must be inside <body>, not floating outside it (caused a
   past bug).
+
+## Code style
+Clear names, a short comment saying what each block does and who uses it, `// ── NAME ──`
+section banners — so code is easy to find by search and reference (especially in common.js,
+where a page no longer shows its whole story in one file).
 
 ## Workflow
 - I review every diff before commit.

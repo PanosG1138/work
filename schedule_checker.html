@@ -6,7 +6,8 @@
 <title>Rearing House Scheduler</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="theme.css">
+<script src="common.js?v=1"></script>
+<link rel="stylesheet" href="theme.css?v=1">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
@@ -186,7 +187,6 @@ header{
   border-radius:var(--gh-r-md);font-family:'Inter',sans-serif;font-weight:600;font-size:13px;cursor:pointer;transition:background .15s;
 }
 .btn-danger:hover{background:rgba(255,107,107,0.22)}
-@media (max-width:600px){.home-txt{display:none}}   /* phones: Home link shows only ⌂ */
 /* arrival from a homepage dashboard link: a red outline pulses three times */
 .focus-glow{animation:focusGlow 1.4s ease-in-out 3}
 tr.focus-glow{animation:none}
@@ -197,23 +197,6 @@ tr.focus-glow > td{animation:focusRow 1.4s ease-in-out 3}
 </head>
 <body>
 
-<!-- AUTH GATE -->
-<div id="auth-gate" style="position:fixed;inset:0;background:var(--gh-canvas-default);display:flex;align-items:center;justify-content:center;z-index:9999;font-family:'Inter',system-ui,sans-serif">
-  <div style="background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:12px;padding:32px;width:360px;text-align:center">
-    <h2 style="font-weight:700;font-size:20px;color:var(--gh-fg-default);margin-bottom:8px">Rearing House Scheduler</h2>
-    <p style="font-size:13px;color:var(--gh-fg-muted);margin-bottom:22px">Σύνδεση</p>
-    <input type="email" id="auth-email" placeholder="Email…" autocomplete="username"
-      style="width:100%;background:var(--gh-canvas-inset);border:1px solid var(--gh-border-default);border-radius:6px;color:var(--gh-fg-default);font-family:inherit;font-size:14px;padding:8px 10px;outline:none;margin-bottom:10px;box-sizing:border-box;text-align:center"
-      onkeydown="if(event.key==='Enter')document.getElementById('auth-password').focus()">
-    <input type="password" id="auth-password" placeholder="Κωδικός…" autocomplete="current-password"
-      style="width:100%;background:var(--gh-canvas-inset);border:1px solid var(--gh-border-default);border-radius:6px;color:var(--gh-fg-default);font-family:inherit;font-size:14px;padding:8px 10px;outline:none;margin-bottom:12px;box-sizing:border-box;text-align:center"
-      onkeydown="if(event.key==='Enter')signIn()">
-    <button id="auth-btn" onclick="signIn()"
-      style="width:100%;padding:8px 16px;background:var(--gh-accent-fg);color:#fff;border:none;border-radius:6px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer">Είσοδος</button>
-    <div id="auth-error" style="font-size:12px;color:var(--gh-danger-fg);margin-top:8px;min-height:18px"></div>
-  </div>
-</div>
-
 <header>
   <div class="header-left">
     <span class="logo-title">🐔 Rearing House Scheduler</span>
@@ -221,8 +204,7 @@ tr.focus-glow > td{animation:focusRow 1.4s ease-in-out 3}
   </div>
   <div class="header-right">
     <div class="sync-badge loading" id="sync-badge"><div class="sync-dot"></div><span id="sync-text">Loading…</span></div>
-    <a class="theme-toggle" href="index.html" style="text-decoration:none" title="Home">⌂<span class="home-txt"> Home</span></a>
-    <button class="theme-toggle" id="btn-logout" onclick="signOut()" style="display:none" title="Sign out">← Sign out</button>
+    <span id="common-nav"></span>
   </div>
 </header>
 
@@ -313,45 +295,9 @@ tr.focus-glow > td{animation:focusRow 1.4s ease-in-out 3}
 </div>
 
 <script>
-const SB_URL  = 'https://oorhbrphdbigwgizejcc.supabase.co';
-const SB_KEY  = 'sb_publishable_1S3L1sNMOjr-YgwGAAD2Kg_X_3S4cTl';
 const TABLE   = 'placements';
 const RESOLVED_TABLE = 'resolved_conflicts';   // clashes marked "resolved" (conflict_key)
 
-// ── AUTH ──────────────────────────────────────────────────────────
-const _sb = supabase.createClient(SB_URL, SB_KEY);
-let _authSession = null;
-
-async function signIn() {
-  const email = document.getElementById('auth-email').value.trim();
-  const pw    = document.getElementById('auth-password').value;
-  const btn   = document.getElementById('auth-btn');
-  const errEl = document.getElementById('auth-error');
-  btn.disabled = true; btn.textContent = 'Σύνδεση…';
-  errEl.textContent = '';
-  const { error } = await _sb.auth.signInWithPassword({ email, password: pw });
-  if (error) {
-    errEl.textContent = 'Λάθος email ή κωδικός.';
-    btn.disabled = false; btn.textContent = 'Είσοδος';
-  }
-}
-
-async function signOut() { if (confirm('Sign out?')) await _sb.auth.signOut(); }
-
-// supabase re-sends SIGNED_IN on every tab refocus: load once per signed-in user, not each time
-let _loadedFor = null;
-_sb.auth.onAuthStateChange((event, session) => {
-  _authSession = session;
-  const isNew = session && session.user.id !== _loadedFor;
-  _loadedFor = session ? session.user.id : null;
-  document.getElementById('auth-gate').style.display = session ? 'none' : 'flex';
-  document.getElementById('btn-logout').style.display = session ? '' : 'none';
-  if (isNew) {
-    load();
-  } else if (!session) {
-    setTimeout(() => { const e = document.getElementById('auth-email'); if(e) e.focus(); }, 100);
-  }
-});
 
 /* ── Houses & cycle timings — source of truth: docs/rearing_scheduler.md ──
    Day 0 = hatch date. Loading/cleaning are the planning maximums, not typical values. */
@@ -376,19 +322,7 @@ function placeDays(breed){ return breed === 'Novogen' ? [1] : breed ? [2] : [1, 
 const STATUS_CLASS = { 'Confirmed':'b-ok', 'Requested':'b-rq', 'Not ordered':'b-no' };
 
 /* ── Supabase ── */
-async function sbFetch(path, opts={}){
-  const res = await fetch(`${SB_URL}/rest/v1/${path}`, {
-    ...opts,
-    headers:{
-      'apikey': SB_KEY, 'Authorization': `Bearer ${_authSession.access_token}`,
-      'Content-Type': 'application/json', 'Prefer': opts.prefer||'',
-      ...opts.headers,
-    },
-  });
-  if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.message||e.hint||`HTTP ${res.status}`); }
-  const text = await res.text();
-  return text ? JSON.parse(text) : null;
-}
+// sbFetch (every read/write to Supabase) lives in common.js
 const sbSelect = ()  => sbFetch(`${TABLE}?order=doc_date.asc`);
 const sbInsert = row => sbFetch(TABLE, {method:'POST', prefer:'return=representation', body:JSON.stringify(row)});
 const sbDelete = id  => sbFetch(`${TABLE}?id=eq.${id}`, {method:'DELETE'});
@@ -988,6 +922,8 @@ async function confirmDelete(){
   }catch(e){ setSyncStatus('err','Delete failed: '+e.message); closeConfirm(); }
 }
 
+// shared sign-in, load-once guard and ⌂/Έξοδος buttons: common.js
+startPage({ onSignedIn: () => load() });
 </script>
 </body>
 </html>

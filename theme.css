@@ -36,3 +36,19 @@
   /* Zoom */
   --zoom:1;
 }
+
+/* ── SHARED SIGN-IN + BUTTONS — drawn by common.js on every page ── */
+.common-signin-cover{position:fixed;inset:0;z-index:9999;background:var(--gh-canvas-default);display:flex;align-items:center;justify-content:center}
+.common-signin-box{background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:var(--gh-r-lg);padding:32px;width:360px;max-width:92vw;margin:0 auto;display:flex;flex-direction:column;gap:10px;text-align:center;font-family:'Inter',system-ui,sans-serif;box-sizing:border-box}
+#common-signin{margin-bottom:44px}
+.common-signin-box h2{font-size:20px;font-weight:700;color:var(--gh-fg-default);margin:0}
+.common-signin-box p{font-size:13px;color:var(--gh-fg-muted);margin:0 0 10px}
+.common-signin-box input{background:var(--gh-canvas-default);border:1px solid var(--gh-border-default);border-radius:6px;color:var(--gh-fg-default);font-family:inherit;font-size:14px;padding:8px 10px;outline:none;text-align:center}
+.common-signin-box input:focus{border-color:var(--gh-accent-emphasis)}
+.common-signin-box button{padding:8px 16px;background:var(--gh-accent-emphasis);color:#fff;border:none;border-radius:6px;font-family:inherit;font-weight:500;font-size:14px;cursor:pointer}
+.common-signin-box button:disabled{opacity:0.6;cursor:default}
+.common-signin-error{font-size:12px;color:var(--gh-danger-fg);min-height:18px}
+.common-nav{display:inline-flex;align-items:center;gap:6px}
+.common-nav-btn{display:inline-flex;align-items:center;height:28px;padding:0 10px;border:1px solid var(--gh-border-default);border-radius:var(--rs);background:var(--gh-canvas-subtle);color:var(--gh-fg-muted);font-family:'Inter',system-ui,sans-serif;font-size:12px;font-weight:500;text-decoration:none;cursor:pointer;white-space:nowrap}
+.common-nav-btn:hover{background:var(--gh-hover-bg);color:var(--gh-fg-default)}
+@media (max-width:600px){.common-nav-label{display:none}}   /* phones: Home shows only ⌂ */

@@ -6,7 +6,8 @@
 <title>Feed Program — Poultry Nutrition Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="theme.css">
+<script src="common.js?v=1"></script>
+<link rel="stylesheet" href="theme.css?v=1">
 <style>
 :root{--zoom:unset}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -131,27 +132,9 @@ tr.focus-glow > td{animation:focusRow 1.4s ease-in-out 3}
 /* TOAST */
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:var(--r);padding:8px 16px;font-size:13px;color:var(--gh-fg-default);z-index:999;opacity:0;transition:opacity 0.2s;pointer-events:none;}
 .toast.show{opacity:1}
-@media (max-width:600px){.home-txt{display:none}}   /* phones: Home link shows only ⌂ */
 </style>
 </head>
 <body>
-
-<!-- AUTH GATE -->
-<div id="auth-gate" style="position:fixed;inset:0;background:var(--gh-canvas-default);display:flex;align-items:center;justify-content:center;z-index:9999;font-family:'Inter',system-ui,sans-serif">
-  <div style="background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:8px;padding:32px;width:360px;text-align:center">
-    <h2 style="font-weight:700;font-size:20px;color:var(--gh-fg-default);margin-bottom:8px">Feed Program</h2>
-    <p style="font-size:13px;color:var(--gh-fg-muted);margin-bottom:22px">Σύνδεση</p>
-    <input type="email" id="auth-email" placeholder="Email…" autocomplete="username"
-      style="width:100%;background:var(--gh-canvas-default);border:1px solid var(--gh-border-default);border-radius:6px;color:var(--gh-fg-default);font-family:inherit;font-size:14px;padding:8px 10px;outline:none;margin-bottom:10px;box-sizing:border-box;text-align:center"
-      onkeydown="if(event.key==='Enter')document.getElementById('auth-password').focus()">
-    <input type="password" id="auth-password" placeholder="Κωδικός…" autocomplete="current-password"
-      style="width:100%;background:var(--gh-canvas-default);border:1px solid var(--gh-border-default);border-radius:6px;color:var(--gh-fg-default);font-family:inherit;font-size:14px;padding:8px 10px;outline:none;margin-bottom:12px;box-sizing:border-box;text-align:center"
-      onkeydown="if(event.key==='Enter')signIn()">
-    <button id="auth-btn" onclick="signIn()"
-      style="width:100%;padding:8px 16px;background:var(--gh-accent-emphasis);color:#fff;border:none;border-radius:6px;font-family:inherit;font-weight:500;font-size:14px;cursor:pointer">Είσοδος</button>
-    <div id="auth-error" style="font-size:12px;color:var(--gh-danger-fg);margin-top:8px;min-height:18px"></div>
-  </div>
-</div>
 
 <!-- OFFLINE OVERLAY — shown when Supabase is unreachable -->
 <div class="offline-overlay" id="offline-overlay">
@@ -185,8 +168,7 @@ tr.focus-glow > td{animation:focusRow 1.4s ease-in-out 3}
       <span>🖨</span>
       <span>Print</span>
     </button>
-    <a class="theme-toggle" href="index.html" style="text-decoration:none" title="Home">⌂<span class="home-txt"> Home</span></a>
-    <button class="theme-toggle" id="btn-logout" onclick="signOut()" style="display:none" title="Sign out">← Sign out</button>
+    <span id="common-nav"></span>
   </div>
 </div>
 
@@ -218,43 +200,7 @@ tr.focus-glow > td{animation:focusRow 1.4s ease-in-out 3}
 
 <script>
 // ── CONFIG ───────────────────────────────────────────────────────
-const SB_URL = 'https://oorhbrphdbigwgizejcc.supabase.co';
-const SB_KEY = 'sb_publishable_1S3L1sNMOjr-YgwGAAD2Kg_X_3S4cTl';
 
-// ── AUTH ──────────────────────────────────────────────────────────
-const _sb = supabase.createClient(SB_URL, SB_KEY);
-let _authSession = null;
-
-async function signIn() {
-  const email = document.getElementById('auth-email').value.trim();
-  const pw    = document.getElementById('auth-password').value;
-  const btn   = document.getElementById('auth-btn');
-  const errEl = document.getElementById('auth-error');
-  btn.disabled = true; btn.textContent = 'Σύνδεση…';
-  errEl.textContent = '';
-  const { error } = await _sb.auth.signInWithPassword({ email, password: pw });
-  if (error) {
-    errEl.textContent = 'Λάθος email ή κωδικός.';
-    btn.disabled = false; btn.textContent = 'Είσοδος';
-  }
-}
-
-async function signOut() { if (confirm('Sign out?')) await _sb.auth.signOut(); }
-
-// supabase re-sends SIGNED_IN on every tab refocus: load once per signed-in user, not each time
-let _loadedFor = null;
-_sb.auth.onAuthStateChange((event, session) => {
-  _authSession = session;
-  const isNew = session && session.user.id !== _loadedFor;
-  _loadedFor = session ? session.user.id : null;
-  document.getElementById('auth-gate').style.display = session ? 'none' : 'flex';
-  document.getElementById('btn-logout').style.display = session ? '' : 'none';
-  if (isNew) {
-    loadFromSupabase();
-  } else if (!session) {
-    setTimeout(() => { const e = document.getElementById('auth-email'); if(e) e.focus(); }, 100);
-  }
-});
 
 // ── FEED SCHEDULES ───────────────────────────────────────────────
 // Real schedules — do not invent numbers for breeds that don't have a
@@ -323,25 +269,7 @@ async function retryConnection() {
 }
 
 // ── SUPABASE HELPERS ─────────────────────────────────────────────
-async function sbFetch(path, options = {}) {
-  const res = await fetch(`${SB_URL}/rest/v1/${path}`, {
-    ...options,
-    headers: {
-      'apikey':        SB_KEY,
-      'Authorization': `Bearer ${_authSession.access_token}`,
-      'Content-Type':  'application/json',
-      'Prefer':        options.prefer || '',
-      ...(options.headers || {})
-    }
-  });
-  if (!res.ok) {
-    const err = new Error(await res.text());
-    err.status = res.status;   // server answered — a refusal, not a lost connection
-    throw err;
-  }
-  const text = await res.text();
-  return text ? JSON.parse(text) : null;
-}
+// sbFetch (every read/write to Supabase) lives in common.js
 
 // ── LOAD FROM SUPABASE ───────────────────────────────────────────
 async function loadFromSupabase() {
@@ -899,9 +827,11 @@ function showToast(msg) {
 // ── INIT ──────────────────────────────────────────────────────────
 applyZoom();
 buildHeader();
-// Data load triggered by onAuthStateChange after sign-in
 // A tab left open overnight would keep yesterday's "today" — redraw when it's shown again
 document.addEventListener('visibilitychange', () => { if (!document.hidden) renderOverview(); });
+
+// shared sign-in, load-once guard and ⌂/Έξοδος buttons: common.js
+startPage({ onSignedIn: () => loadFromSupabase() });
 </script>
 </body>
 </html>

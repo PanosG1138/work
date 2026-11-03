@@ -82,7 +82,7 @@ Five labelled sections, each with a short comment saying what it does and which 
 
 ### Sign-in screen
 
-- Heading `🐔 Εργαλεία Πτηνοτροφείου`, subline `Σύνδεση` — same on every page.
+- Heading `🐔 Georgasopoulos`, subline `Σύνδεση` — same on every page.
 - Enter in email → focus password; Enter in password → sign in.
 - Errors: status 400 → `Λάθος email ή κωδικός.`; anything else → `Δεν υπάρχει σύνδεση — δοκιμάστε ξανά.`
 - Styled in `theme.css` (classes prefixed `common-`), together with the shared nav buttons.
