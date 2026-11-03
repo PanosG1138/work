@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rearing House Scheduler</title>
+<title data-t>Προγραμματισμός</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
 <script src="common.js?v=4"></script>
@@ -193,33 +193,35 @@ tr.focus-glow{animation:none}
 tr.focus-glow > td{animation:focusRow 1.4s ease-in-out 3}
 @keyframes focusGlow{50%{box-shadow:0 0 0 2px var(--gh-danger-fg),0 0 18px 4px rgba(255,107,107,0.5)}}
 @keyframes focusRow{50%{background:rgba(255,107,107,0.16);box-shadow:inset 0 2px 0 var(--gh-danger-fg),inset 0 -2px 0 var(--gh-danger-fg)}}
+/* card rows: label and value each stay whole ("Εμβ. 1" must not break); a value too long for the row drops to its own line, right-aligned */
+.hc-row{flex-wrap:wrap;column-gap:4px;row-gap:0}.hc-row>span{white-space:nowrap}.hc-row>span:last-child{margin-left:auto}
 </style>
 </head>
 <body>
 
 <header>
   <div class="header-left">
-    <span class="logo-title">🐔 Rearing House Scheduler</span>
-    <span class="logo-sub">Hatch planning per house</span>
+    <span class="logo-title" data-t>🐔 Προγραμματισμός</span>
+    <span class="logo-sub" data-t>Εκκολάψεις ανά θάλαμο</span>
   </div>
   <div class="header-right">
-    <div class="sync-badge loading" id="sync-badge"><div class="sync-dot"></div><span id="sync-text">Loading…</span></div>
+    <div class="sync-badge loading" id="sync-badge"><div class="sync-dot"></div><span id="sync-text">Φόρτωση…</span></div>
     <span id="common-nav"></span>
   </div>
 </header>
 
 <div class="main">
   <div class="toolbar">
-    <button class="btn-primary" onclick="openAddModal()">+ Add placement</button>
+    <button class="btn-primary" onclick="openAddModal()" data-t>+ Νέα τοποθέτηση</button>
     <div class="legend">
-      <span><span class="swatch" style="border-color:var(--magenta)"></span>hatched</span>
-      <span><span class="swatch" style="border-color:var(--gh-success-fg)"></span>confirmed</span>
-      <span><span class="swatch" style="border-color:var(--soft-orange)"></span>requested, not confirmed</span>
-      <span><span class="swatch" style="border-color:#fff"></span>not ordered</span>
-      <span><b class="a-ok">▼ N d</b> days the house stands empty before the next hatch</span>
-      <span><b class="a-bad">▼ N d</b> (red) less than the 25 cleaning days</span>
-      <span>Dashed card = earliest placement after the confirmed, kept and hatched hatches</span>
-      <span><b style="color:var(--gh-danger-fg)">⚠ clash</b> vaccination/loading dates overlapping another house's (loading vs Vax 1 doesn't count), or same chick-placement day</span>
+      <span><span class="swatch" style="border-color:var(--magenta)"></span><span data-t>εκκολάφθηκε</span></span>
+      <span><span class="swatch" style="border-color:var(--gh-success-fg)"></span><span data-t>επιβεβαιώθηκε</span></span>
+      <span><span class="swatch" style="border-color:var(--soft-orange)"></span><span data-t>ζητήθηκε, δεν επιβεβαιώθηκε</span></span>
+      <span><span class="swatch" style="border-color:#fff"></span><span data-t>χωρίς παραγγελία</span></span>
+      <span><b class="a-ok" data-t>▼ N ημ.</b> <span data-t>ημέρες που ο θάλαμος μένει άδειος πριν την επόμενη εκκόλαψη</span></span>
+      <span><b class="a-bad" data-t>▼ N ημ.</b> <span data-t>(κόκκινο) λιγότερες από τις 25 ημέρες καθαρισμού</span></span>
+      <span data-t>Διακεκομμένη κάρτα = νωρίτερη τοποθέτηση μετά τις επιβεβαιωμένες, κρατημένες και εκκολαφθείσες εκκολάψεις</span>
+      <span><b style="color:var(--gh-danger-fg)" data-t>⚠ σύγκρουση</b> <span data-t>ημερομηνίες εμβολιασμού/φόρτωσης που επικαλύπτονται με άλλου θαλάμου (η φόρτωση με το Εμβ. 1 δεν μετράει), ή ίδια ημέρα τοποθέτησης νεοσσών</span></span>
     </div>
   </div>
   <div id="clashes"></div>
@@ -229,44 +231,44 @@ tr.focus-glow > td{animation:focusRow 1.4s ease-in-out 3}
 <!-- Add/Edit modal -->
 <div class="modal-bg hidden" id="modal-bg">
   <div class="modal">
-    <h3 id="modal-title">Add placement</h3>
+    <h3 id="modal-title" data-t>Νέα τοποθέτηση</h3>
     <div class="fgroup">
-      <label>Rearing house</label>
+      <label data-t>Θάλαμος</label>
       <select id="m-house">
-        <option value="">— select —</option>
+        <option value="" data-t>— επιλογή —</option>
         <option>Θ1</option><option>Θ2</option><option>Θ3</option>
         <option>Θ4</option><option>Θ5</option><option>Θ7</option>
       </select>
     </div>
     <div class="fgroup">
-      <label>Hatch date</label>
+      <label data-t>Ημ. εκκόλαψης</label>
       <input type="date" id="m-date" />
     </div>
     <div class="fgroup">
-      <label>Breed</label>
+      <label data-t>Ράτσα</label>
       <select id="m-breed">
-        <option value="">— not decided —</option>
+        <option value="" data-t>— δεν αποφασίστηκε —</option>
         <option>ISA</option><option>Hy-Line</option><option>Novogen</option><option>H&amp;N</option>
       </select>
     </div>
     <div class="fgroup">
-      <label>Πτηνοτροφική (Φραγκούλης) in this hatch</label>
+      <label data-t>Πτηνοτροφική (Φραγκούλης) σε αυτή την εκκόλαψη</label>
       <select id="m-ptino">
-        <option value="">No</option>
-        <option value="only">Only Πτηνοτροφική (loads day 115–128)</option>
-        <option value="mixed">Πτηνοτροφική + other customers (loads day 105–128)</option>
+        <option value="" data-t>Όχι</option>
+        <option value="only" data-t>Μόνο Πτηνοτροφική (φόρτωση ημέρα 115–128)</option>
+        <option value="mixed" data-t>Πτηνοτροφική + άλλοι πελάτες (φόρτωση ημέρα 105–128)</option>
       </select>
     </div>
     <div class="fgroup">
-      <label>Status</label>
+      <label data-t>Κατάσταση</label>
       <select id="m-status">
-        <option>Not ordered</option><option>Requested</option><option>Confirmed</option>
+        <option value="Not ordered" data-t>Χωρίς παραγγελία</option><option value="Requested" data-t>Ζητήθηκε</option><option value="Confirmed" data-t>Επιβεβαιώθηκε</option>
       </select>
     </div>
     <div class="warn-box" id="m-warn"></div>
     <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
-      <button class="btn-primary" id="m-save" onclick="saveNew()" disabled>Save</button>
+      <button class="btn-secondary" onclick="closeModal()" data-t>Ακύρωση</button>
+      <button class="btn-primary" id="m-save" onclick="saveNew()" disabled data-t>Αποθήκευση</button>
     </div>
   </div>
 </div>
@@ -276,7 +278,7 @@ tr.focus-glow > td{animation:focusRow 1.4s ease-in-out 3}
   <div class="modal cust-modal" role="dialog" aria-modal="true" aria-labelledby="cust-title">
     <div class="cust-head">
       <div><h3 id="cust-title"></h3><div class="muted" id="cust-sub"></div></div>
-      <button class="row-btn" id="cust-close" onclick="closeCustomers()" aria-label="Close">✕</button>
+      <button class="row-btn" id="cust-close" onclick="closeCustomers()" data-t-aria-label aria-label="Κλείσιμο">✕</button>
     </div>
     <div id="cust-body"></div>
     <div class="cust-cap" id="cust-cap"></div>
@@ -286,15 +288,71 @@ tr.focus-glow > td{animation:focusRow 1.4s ease-in-out 3}
 <!-- Delete confirm -->
 <div class="confirm-bg hidden" id="confirm-bg">
   <div class="confirm-box">
-    <p>Delete this placement?<br><strong id="confirm-detail" style="color:var(--gh-danger-fg)"></strong></p>
+    <p><span data-t>Διαγραφή αυτής της τοποθέτησης;</span><br><strong id="confirm-detail" style="color:var(--gh-danger-fg)"></strong></p>
     <div class="confirm-actions">
-      <button class="btn-secondary" onclick="closeConfirm()">Cancel</button>
-      <button class="btn-danger" onclick="confirmDelete()">Delete</button>
+      <button class="btn-secondary" onclick="closeConfirm()" data-t>Ακύρωση</button>
+      <button class="btn-danger" onclick="confirmDelete()" data-t>Διαγραφή</button>
     </div>
   </div>
 </div>
 
 <script>
+// ── TRANSLATIONS ── this page's English (Greek text → English); shared words are in common.js.
+// The page was English-only before 2026-11-03; these are its original English texts. Aviary is never translated.
+addTranslations({
+  'Προγραμματισμός': 'Rearing House Scheduler', '🐔 Προγραμματισμός': '🐔 Rearing House Scheduler', 'Εκκολάψεις ανά θάλαμο': 'Hatch planning per house',
+  'Φόρτωση…': 'Loading...', 'Συγχρονίστηκε': 'Synced', 'Σφάλμα: {msg}': 'Error: {msg}',
+  'Αποθήκευση…': 'Saving...', 'Αποθηκεύτηκε': 'Saved', 'Ενημερώθηκε': 'Updated', 'Διαγράφηκε': 'Deleted',
+  'Η αποθήκευση απέτυχε: {msg}': 'Save failed: {msg}', 'Η διαγραφή απέτυχε: {msg}': 'Delete failed: {msg}',
+  'Η βάση απέρριψε την ενημέρωση (0 γραμμές) — ελέγξτε την πολιτική UPDATE του πίνακα placements για συνδεδεμένους χρήστες.': 'Update was rejected by the database (0 rows returned) — check that the placements table has an UPDATE policy for logged-in (authenticated) users.',
+  'Άγνωστος θάλαμος «{house}» στο placements — αναμενόταν ένας από: {list}': 'Unknown house "{house}" in placements — expected one of {list}',
+  'Η τοποθέτηση {id} δεν βρέθηκε': 'Placement {id} not found',
+  // legend
+  '+ Νέα τοποθέτηση': '+ Add placement',
+  'εκκολάφθηκε': 'hatched', 'επιβεβαιώθηκε': 'confirmed', 'ζητήθηκε, δεν επιβεβαιώθηκε': 'requested, not confirmed', 'χωρίς παραγγελία': 'not ordered',
+  '▼ N ημ.': '▼ N d', 'ημέρες που ο θάλαμος μένει άδειος πριν την επόμενη εκκόλαψη': 'days the house stands empty before the next hatch',
+  '(κόκκινο) λιγότερες από τις 25 ημέρες καθαρισμού': '(red) less than the 25 cleaning days',
+  'Διακεκομμένη κάρτα = νωρίτερη τοποθέτηση μετά τις επιβεβαιωμένες, κρατημένες και εκκολαφθείσες εκκολάψεις': 'Dashed card = earliest placement after the confirmed, kept and hatched hatches',
+  '⚠ σύγκρουση': '⚠ clash',
+  'ημερομηνίες εμβολιασμού/φόρτωσης που επικαλύπτονται με άλλου θαλάμου (η φόρτωση με το Εμβ. 1 δεν μετράει), ή ίδια ημέρα τοποθέτησης νεοσσών': "vaccination/loading dates overlapping another house's (loading vs Vax 1 doesn't count), or same chick-placement day",
+  // clash panel and suggested moves
+  '⚠ {n} ανοιχτή σύγκρουση': '⚠ {n} open clash', '⚠ {n} ανοιχτές συγκρούσεις': '⚠ {n} open clashes', 'Καμία ανοιχτή σύγκρουση': 'No open clashes',
+  '{n} επιλυμένες': '{n} resolved', 'Επιλυμένες ({n})': 'Resolved ({n})',
+  'Πρόταση μετακίνησης': 'Suggest move', 'Επιλύθηκε': 'Mark resolved', 'Αναίρεση επίλυσης': 'Unresolve', 'Εφαρμογή': 'Apply',
+  'ίδια ημέρα': 'same day', 'επικάλυψη {n} ημ.': '{n} d overlap', '(εκκόλαψη {d})': '(hatch {d})', 'ημ.': 'd', 'και': 'and',
+  'Και οι δύο εκκολάψεις είναι σταθερές (εκκολάφθηκαν, επιβεβαιώθηκαν ή ζητήθηκαν) — δεν μετακινείται τίποτα.': 'Both hatches are fixed (hatched, confirmed or requested) — nothing to move.',
+  'Καμία μετακίνηση εντός {n} ημερών δεν τη λύνει χωρίς να χαλάσει την ετοιμότητα θαλάμου, το κενό ενός ζεύγους ή να προσθέσει συγκρούσεις.': "No move within {n} days clears it without breaking house readiness, a pair's gap or adding clashes.",
+  'Μετακίνηση {moves} ({d}) → απομένει {n} ανοιχτή σύγκρουση': 'Move {moves} ({d}) → {n} open clash left',
+  'Μετακίνηση {moves} ({d}) → απομένουν {n} ανοιχτές συγκρούσεις': 'Move {moves} ({d}) → {n} open clashes left',
+  '{n} ημ. από την πλησιέστερη εκκόλαψη του {house} (πρέπει {min}–{max})': '{n} d from nearest {house} hatch (should be {min}–{max})',
+  // cards
+  'Τοποθέτηση νεοσσών': 'Placement', 'Τοποθέτηση': 'Placement', 'Εμβ. 1': 'Vax 1', 'Εμβ. 2': 'Vax 2', 'Φόρτωση': 'Loading',
+  'Εκτροφή': 'Rearing', 'Κλουβί': 'Cage', 'Εκτροφή: {sys}': '{sys} rearing', 'Μόνο': 'Only', 'Με άλλους πελάτες': 'With other customers',
+  'Εκκόλαψη': 'Hatch', 'εκκόλαψη': 'hatch', 'Ημέρα {n}': 'Day {n}', 'Άδειο': 'Empty', 'Έτοιμο': 'Ready', 'ή': 'or', 'Ράτσα —': 'Breed —',
+  'Επιβεβαιώθηκε': 'Confirmed', 'Ζητήθηκε': 'Requested', 'Χωρίς παραγγελία': 'Not ordered',
+  'Στον θάλαμο · {n} ημ.': 'In house · {n} d old', 'Κρατημένη ημερομηνία': 'Date kept',
+  'Κράτηση ημερομηνίας': 'Keep this date', 'Αναίρεση κράτησης': 'Undo keep',
+  'Μετά τις επιβεβαιωμένες εκκολάψεις': 'After confirmed hatches', 'Νωρίτερη δυνατή': 'Earliest possible', 'Χρήση αυτής της ημερομηνίας': 'Use this date',
+  '⚠ {n} σύγκρουση': '⚠ {n} clash', '⚠ {n} συγκρούσεις': '⚠ {n} clashes', 'Εμφάνιση και στις δύο κάρτες': 'Show on both cards',
+  'Επεξ.': 'Edit', 'Διαγρ.': 'Del',
+  // customers window
+  'Πελάτες': 'Customers', 'Πελάτης': 'Customer', 'Σύνολο': 'Total', 'Δεν υπάρχουν πελάτες ακόμα.': 'No customers yet.',
+  'Χωρητικότητα {n}': 'Capacity {n}', '{n} πάνω': '{n} over', '{n} ελεύθερα': '{n} free', 'Κλείσιμο': 'Close',
+  // add / edit window, delete
+  'Νέα τοποθέτηση': 'Add placement', 'Επεξεργασία τοποθέτησης': 'Edit placement', 'Αποθήκευση': 'Save', 'Ενημέρωση': 'Update', 'Ακύρωση': 'Cancel',
+  'Θάλαμος': 'Rearing house', '— επιλογή —': '— select —', 'Ημ. εκκόλαψης': 'Hatch date', 'Ράτσα': 'Breed', '— δεν αποφασίστηκε —': '— not decided —',
+  'Πτηνοτροφική (Φραγκούλης) σε αυτή την εκκόλαψη': 'Πτηνοτροφική (Φραγκούλης) in this hatch', 'Όχι': 'No',
+  'Μόνο Πτηνοτροφική (φόρτωση ημέρα 115–128)': 'Only Πτηνοτροφική (loads day 115–128)',
+  'Πτηνοτροφική + άλλοι πελάτες (φόρτωση ημέρα 105–128)': 'Πτηνοτροφική + other customers (loads day 105–128)',
+  'Κατάσταση': 'Status',
+  'Ο {house} δεν είναι έτοιμος πριν τις {ready} (ο προηγούμενος κύκλος εκκολάφθηκε {prev}).': '{house} is not ready until {ready} (previous cycle hatched {prev}).',
+  'Αυτός ο κύκλος κρατά τον {house} κατειλημμένο μέχρι {ready}, μετά την επόμενη εκκόλαψη στις {next}.': 'This cycle keeps {house} busy until {ready}, after the next hatch on {next}.',
+  'Σύγκρουση: {what}': 'Clash: {what}',
+  'Ο {house} δεν μπορεί να πάρει εκκόλαψη πριν τις {d}.': "{house} can't take a hatch before {d}.",
+  'Ο {house} έχει ήδη τοποθέτηση με εκκόλαψη {d} — επεξεργαστείτε εκείνη.': '{house} already has a placement hatching {d} — edit that one instead.',
+  'Διαγραφή αυτής της τοποθέτησης;': 'Delete this placement?', 'Διαγραφή': 'Delete',
+});
+
 const TABLE   = 'placements';
 const RESOLVED_TABLE = 'resolved_conflicts';   // clashes marked "resolved" (conflict_key)
 
@@ -320,6 +378,10 @@ const MAX_SHIFT = 120;    // suggested moves look this many days either way
 /* days from hatch to chick placement: Novogen next day, ISA/Hy-Line/H&N two days; no breed yet = either */
 function placeDays(breed){ return breed === 'Novogen' ? [1] : breed ? [2] : [1, 2]; }
 const STATUS_CLASS = { 'Confirmed':'b-ok', 'Requested':'b-rq', 'Not ordered':'b-no' };
+// status, house type and Πτηνοτροφική choice are saved in English; shown through t() (Aviary is never translated — user)
+const STATUS_LABEL = { 'Confirmed': 'Επιβεβαιώθηκε', 'Requested': 'Ζητήθηκε', 'Not ordered': 'Χωρίς παραγγελία' };
+const statusLabel = st => STATUS_LABEL[st] ? t(STATUS_LABEL[st]) : esc(st);
+const systemLabel = sys => sys === 'Cage' ? t('Κλουβί') : sys;
 
 /* ── Supabase ── */
 // sbFetch (every read/write to Supabase) lives in common.js
@@ -330,7 +392,7 @@ const sbSelectResolved = () => sbFetch(`${RESOLVED_TABLE}?select=conflict_key`);
 async function sbUpdate(id, row){
   const result = await sbFetch(`${TABLE}?id=eq.${id}`, {method:'PATCH', prefer:'return=representation', body:JSON.stringify(row)});
   if(!result || !result.length){
-    throw new Error('Update was rejected by the database (0 rows returned) — check that the placements table has an UPDATE policy for logged-in (authenticated) users.');
+    throw new Error(t('Η βάση απέρριψε την ενημέρωση (0 γραμμές) — ελέγξτε την πολιτική UPDATE του πίνακα placements για συνδεδεμένους χρήστες.'));
   }
   return result;
 }
@@ -356,12 +418,12 @@ function isoDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(
 function daysBetween(a, b){ return Math.round((b-a)/86400000); }  // rounded: DST-safe
 function fmt(d){ return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getFullYear()).slice(2); }
 function fmtShort(d){ return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0'); }
-function today(){ const t=new Date(); t.setHours(0,0,0,0); return t; }
+function today(){ const d=new Date(); d.setHours(0,0,0,0); return d; }
 
 /* Every date of one cycle, derived from house + hatch date + whether Πτηνοτροφική is in the hatch (ptino). */
 function getSchedule(house, hatchIso, ptino = null){
   const system = HOUSES[house];
-  if(!system) throw new Error(`Unknown house "${house}" in placements — expected one of ${Object.keys(HOUSES).join(', ')}`);
+  if(!system) throw new Error(t('Άγνωστος θάλαμος «{house}» στο placements — αναμενόταν ένας από: {list}', { house, list: Object.keys(HOUSES).join(', ') }));
   const hatch = parseISO(hatchIso);
   const loadStart = addDays(hatch, ptino === 'only' ? PTINO_LOAD_START : LOAD_START);
   const loadEnd = addDays(hatch, (ptino ? PTINO_LOAD_START : LOAD_START) + LOAD_DAYS - 1);
@@ -392,7 +454,7 @@ function pairWarning(house, hatch, excludeId){
   const p = pairOf(house), g = pairPartnerGap(house, hatch, excludeId);
   if(g===null || (Math.abs(g)>=p.min && Math.abs(g)<=p.max)) return null;
   const other = p.houses.find(h=>h!==house);
-  return `${Math.abs(g)} d from nearest ${other} hatch (should be ${p.min}–${p.max})`;
+  return t('{n} ημ. από την πλησιέστερη εκκόλαψη του {house} (πρέπει {min}–{max})', { n: Math.abs(g), house: other, min: p.min, max: p.max });
 }
 
 /* ── Next-hatch suggestions ──────────────────────────────────────────
@@ -408,10 +470,10 @@ const planned = r => r.status === 'Confirmed' || r.keep || r.doc_date <= isoDate
 function plannedOf(house){ return cyclesOf(house).filter(planned); }
 function earliestFor(house){
   const cycles = plannedOf(house);
-  const t = HOUSE_FROM[house] ? maxDate(today(), parseISO(HOUSE_FROM[house])) : today();
-  if(!cycles.length) return t;
+  const todayD = HOUSE_FROM[house] ? maxDate(today(), parseISO(HOUSE_FROM[house])) : today();
+  if(!cycles.length) return todayD;
   const ready = scheduleOf(cycles[cycles.length-1]).ready;
-  return maxDate(ready, t);
+  return maxDate(ready, todayD);
 }
 function maxDate(a, b){ return a > b ? a : b; }
 
@@ -449,7 +511,7 @@ function suggestNext(){
    least one day (no buffer) — except loading vs Vax 1, which never clashes; placements clash only with
    another placement on the same day. The two houses of a pair (Θ1/Θ2, Θ4/Θ5) never clash with each other. Events already over (before today) are ignored.
    A clash's key includes both event dates, so a "resolved" mark stops applying once either hatch moves. */
-const KIND = { place:'Placement', vax1:'Vax 1', vax2:'Vax 2', load:'Loading' };
+const KIND = { place:'Τοποθέτηση νεοσσών', vax1:'Εμβ. 1', vax2:'Εμβ. 2', load:'Φόρτωση' };   // shown through t()
 function eventsOf(r){
   const s = scheduleOf(r);
   const days = placeDays(r.breed).map(d => addDays(s.hatch, d));
@@ -462,8 +524,8 @@ function eventsOf(r){
 }
 const sameGroup = (a, b) => a === b || (!!pairOf(a) && pairOf(a) === pairOf(b));
 function findClashes(rows){
-  const t = today();
-  const evs = rows.flatMap(eventsOf).filter(e => e.end >= t);
+  const todayD = today();
+  const evs = rows.flatMap(eventsOf).filter(e => e.end >= todayD);
   const out = [];
   for(let i = 0; i < evs.length; i++) for(let j = i+1; j < evs.length; j++){
     let [a, b] = [evs[i], evs[j]];
@@ -486,8 +548,8 @@ function findClashes(rows){
 }
 const openClashes = rows => findClashes(rows).filter(c => !resolved.has(c.key));
 function when(e){ return e.kind === 'place' ? placeText(parseISO(e.r.doc_date), e.r.breed) : range(e.start, e.end); }
-function gapText(c){ return c.a.kind === 'place' ? 'same day' : `${c.overlap} d overlap`; }
-function evText(e){ return `<b>${e.r.house}</b> ${KIND[e.kind]} ${when(e)} <span class="muted">(hatch ${fmt(parseISO(e.r.doc_date))})</span>`; }
+function gapText(c){ return c.a.kind === 'place' ? t('ίδια ημέρα') : t('επικάλυψη {n} ημ.', { n: c.overlap }); }
+function evText(e){ return `<b>${e.r.house}</b> ${t(KIND[e.kind])} ${when(e)} <span class="muted">${t('(εκκόλαψη {d})', { d: fmt(parseISO(e.r.doc_date)) })}</span>`; }
 
 /* Run fn with `data` swapped for a hypothetical copy — the house/pair helpers all read the global. */
 function withData(rows, fn){ const saved = data; data = rows; try{ return fn(); } finally{ data = saved; } }
@@ -542,38 +604,39 @@ function suggestFix(key){
   const sig = dataSig();
   if(!best){
     const fixed = ![c.a, c.b].some(e => movable(e.r));
-    fixes[key] = { sig, moves: [], html: `<span class="muted">${fixed ? 'Both hatches are fixed (hatched, confirmed or requested) — nothing to move.'
-      : `No move within ${MAX_SHIFT} days clears it without breaking house readiness, a pair's gap or adding clashes.`}</span>` };
+    fixes[key] = { sig, moves: [], html: `<span class="muted">${fixed ? t('Και οι δύο εκκολάψεις είναι σταθερές (εκκολάφθηκαν, επιβεβαιώθηκαν ή ζητήθηκαν) — δεν μετακινείται τίποτα.')
+      : t('Καμία μετακίνηση εντός {n} ημερών δεν τη λύνει χωρίς να χαλάσει την ετοιμότητα θαλάμου, το κενό ενός ζεύγους ή να προσθέσει συγκρούσεις.', { n: MAX_SHIFT })}</span>` };
   } else {
     const txt = best.moves.map(([id, date]) => { const r = data.find(x => x.id === id);
-      return `<b>${r.house}</b> ${fmt(parseISO(r.doc_date))} → <b>${fmt(parseISO(date))}</b>`; }).join(' and ');
-    fixes[key] = { sig, moves: best.moves, html: `Move ${txt} (${best.d > 0 ? '+' : '−'}${Math.abs(best.d)} d) → ${best.left} open clash${best.left === 1 ? '' : 'es'} left ` +
-      `<button class="row-btn accept" onclick="applyFix('${key}')">Apply</button>` };
+      return `<b>${r.house}</b> ${fmt(parseISO(r.doc_date))} → <b>${fmt(parseISO(date))}</b>`; }).join(` ${t('και')} `);
+    fixes[key] = { sig, moves: best.moves, html: t(best.left === 1 ? 'Μετακίνηση {moves} ({d}) → απομένει {n} ανοιχτή σύγκρουση' : 'Μετακίνηση {moves} ({d}) → απομένουν {n} ανοιχτές συγκρούσεις',
+        { moves: txt, d: `${best.d > 0 ? '+' : '−'}${Math.abs(best.d)} ${t('ημ.')}`, n: best.left }) + ' ' +
+      `<button class="row-btn accept" onclick="applyFix('${key}')">${t('Εφαρμογή')}</button>` };
   }
   render();
 }
 async function applyFix(key){
   const f = fixes[key];
   if(!f || f.sig !== dataSig()) return render();
-  setSyncStatus('loading','Saving...');
+  setSyncStatus('loading', t('Αποθήκευση…'));
   try{
     for(const [id, date] of f.moves){
       const [updated] = await sbUpdate(id, {doc_date: date});
       data = data.map(x => x.id === id ? updated : x);
     }
-    setSyncStatus('ok','Updated');
-  }catch(e){ setSyncStatus('err','Save failed: '+e.message); }
+    setSyncStatus('ok', t('Ενημερώθηκε'));
+  }catch(e){ setSyncStatus('err', t('Η αποθήκευση απέτυχε: {msg}', { msg: e.message })); }
   render();
 }
 async function setResolved(key, on){
-  setSyncStatus('loading','Saving...');
+  setSyncStatus('loading', t('Αποθήκευση…'));
   try{
     if(on) await sbFetch(`${RESOLVED_TABLE}?on_conflict=conflict_key`, {method:'POST', prefer:'resolution=ignore-duplicates', body:JSON.stringify({conflict_key:key})});
     else   await sbFetch(`${RESOLVED_TABLE}?conflict_key=eq.${encodeURIComponent(key)}`, {method:'DELETE'});
     on ? resolved.add(key) : resolved.delete(key);
-    setSyncStatus('ok','Updated');
+    setSyncStatus('ok', t('Ενημερώθηκε'));
     render();
-  }catch(e){ setSyncStatus('err','Save failed: '+e.message); }
+  }catch(e){ setSyncStatus('err', t('Η αποθήκευση απέτυχε: {msg}', { msg: e.message })); }
 }
 
 function renderClashes(all){
@@ -582,20 +645,20 @@ function renderClashes(all){
   const item = (c, btns) => `<div class="clash-item"><span class="clash-what">${evText(c.a)} ↔ ${evText(c.b)} <span class="muted">· ${gapText(c)}</span></span>${btns}` +
     (fixes[c.key]?.sig === sig ? `<div class="clash-fix">${fixes[c.key].html}</div>` : '') + '</div>';
   const list = open.map(c => item(c,
-    `<button class="row-btn" onclick="suggestFix('${c.key}')">Suggest move</button>` +
-    `<button class="row-btn" onclick="setResolved('${c.key}', true)">Mark resolved</button>`)).join('');
-  const doneList = done.map(c => item(c, `<button class="row-btn" onclick="setResolved('${c.key}', false)">Unresolve</button>`)).join('');
+    `<button class="row-btn" onclick="suggestFix('${c.key}')">${t('Πρόταση μετακίνησης')}</button>` +
+    `<button class="row-btn" onclick="setResolved('${c.key}', true)">${t('Επιλύθηκε')}</button>`)).join('');
+  const doneList = done.map(c => item(c, `<button class="row-btn" onclick="setResolved('${c.key}', false)">${t('Αναίρεση επίλυσης')}</button>`)).join('');
   document.getElementById('clashes').innerHTML = !all.length ? '' :
     `<details class="clash-panel"${clashPanelOpen ? ' open' : ''} ontoggle="clashPanelOpen=this.open">` +
-    `<summary class="${open.length ? 'bad' : ''}">${open.length ? `⚠ ${open.length} open clash${open.length === 1 ? '' : 'es'}` : 'No open clashes'}` +
-    `${done.length ? ` <span class="muted">· ${done.length} resolved</span>` : ''}</summary>${list}` +
-    (done.length ? `<details${resolvedOpen ? ' open' : ''} ontoggle="event.stopPropagation();resolvedOpen=this.open"><summary>Resolved (${done.length})</summary>${doneList}</details>` : '') +
+    `<summary class="${open.length ? 'bad' : ''}">${open.length ? t(open.length === 1 ? '⚠ {n} ανοιχτή σύγκρουση' : '⚠ {n} ανοιχτές συγκρούσεις', { n: open.length }) : t('Καμία ανοιχτή σύγκρουση')}` +
+    `${done.length ? ` <span class="muted">· ${t('{n} επιλυμένες', { n: done.length })}</span>` : ''}</summary>${list}` +
+    (done.length ? `<details${resolvedOpen ? ' open' : ''} ontoggle="event.stopPropagation();resolvedOpen=this.open"><summary>${t('Επιλυμένες ({n})', { n: done.length })}</summary>${doneList}</details>` : '') +
     `</details>`;
 }
 
 /* ── Load ── */
 async function load(){
-  setSyncStatus('loading','Loading...');
+  setSyncStatus('loading', t('Φόρτωση…'));
   try{
     const [rows, res] = await Promise.all([sbSelect(), sbSelectResolved()]);
     rows.forEach(r => getSchedule(r.house, r.doc_date));  // fail fast on unknown houses
@@ -603,7 +666,7 @@ async function load(){
     const live = new Set(findClashes(rows).map(c => c.key));
     const stale = res.map(x => x.conflict_key).filter(k => !live.has(k));
     resolved = new Set(res.map(x => x.conflict_key).filter(k => live.has(k)));
-    setSyncStatus('ok','Synced');
+    setSyncStatus('ok', t('Συγχρονίστηκε'));
     render();
     focusFromLink(q => {
       const el = document.getElementById('card-' + q.get('card'));
@@ -612,7 +675,7 @@ async function load(){
     });
     // marks whose clash is gone (a hatch moved, or it's over) can never match again: drop them
     if(stale.length) await sbFetch(`${RESOLVED_TABLE}?conflict_key=in.(${encodeURIComponent(stale.map(k => `"${k}"`).join(','))})`, {method:'DELETE'});
-  }catch(e){ setSyncStatus('err','Error: '+e.message); }
+  }catch(e){ setSyncStatus('err', t('Σφάλμα: {msg}', { msg: e.message })); }
 }
 
 /* ── Render ── */
@@ -639,23 +702,23 @@ function range(a, b){ return `${fmtShort(a)} – ${fmt(b)}`; }
 function placeText(hatch, breed){
   const [d1, d2] = placeDays(breed).map(d => addDays(hatch, d));
   if(!d2) return fmt(d1);
-  return (d1.getMonth() === d2.getMonth() ? String(d1.getDate()).padStart(2,'0') : fmtShort(d1)) + ' or ' + fmt(d2);
+  return (d1.getMonth() === d2.getMonth() ? String(d1.getDate()).padStart(2,'0') : fmtShort(d1)) + ` ${t('ή')} ` + fmt(d2);
 }
 
 /* Collapsed: Hatch, loading start (day 105, or 115 for a Πτηνοτροφική-only hatch), Ready. Expanded: everything.
    breed sets the chick-placement day; hl = event kinds whose rows to highlight (a clash clicked on a card). */
-const PTINO_TEXT = { only: 'Only', mixed: 'With other customers' };
+const PTINO_TEXT = { only: 'Μόνο', mixed: 'Με άλλους πελάτες' };   // shown through t()
 function cardBody(house, s, breed, hl = new Set(), ptino = null){
-  return row('Rearing', s.system, false, true) +
-    (ptino ? row('Πτηνοτροφική', PTINO_TEXT[ptino], false, true) : '') +
-    row('Hatch', fmt(s.hatch), true) +
-    row('Placement', placeText(s.hatch, breed), false, true, hl.has('place')) +
-    row('Vax 1', range(...s.vax[0]), false, true, hl.has('vax1')) +
-    row('Vax 2', range(...s.vax[1]), false, true, hl.has('vax2')) +
-    row(`Day ${daysBetween(s.hatch, s.loadStart)}`, fmt(s.loadStart)) +
-    row('Loading', range(s.loadStart, s.loadEnd), false, true, hl.has('load')) +
-    row('Empty', fmt(s.empty), true, true) +
-    row('Ready', fmt(s.ready));
+  return row(t('Εκτροφή'), systemLabel(s.system), false, true) +
+    (ptino ? row('Πτηνοτροφική', t(PTINO_TEXT[ptino]), false, true) : '') +
+    row(t('Εκκόλαψη'), fmt(s.hatch), true) +
+    row(t('Τοποθέτηση'), placeText(s.hatch, breed), false, true, hl.has('place')) +   // short: "Τοποθέτηση νεοσσών" doesn't fit a card (user)
+    row(t(KIND.vax1), range(...s.vax[0]), false, true, hl.has('vax1')) +
+    row(t(KIND.vax2), range(...s.vax[1]), false, true, hl.has('vax2')) +
+    row(t('Ημέρα {n}', { n: daysBetween(s.hatch, s.loadStart) }), fmt(s.loadStart)) +
+    row(t(KIND.load), range(s.loadStart, s.loadEnd), false, true, hl.has('load')) +
+    row(t('Άδειο'), fmt(s.empty), true, true) +
+    row(t('Έτοιμο'), fmt(s.ready));
 }
 
 /* Customers of a hatch: a "Customers" button on the card (total booked, red when over capacity) opens a pop-up
@@ -670,23 +733,23 @@ function custButton(id){
   if(!id) return '<button class="row-btn cust-btn" style="visibility:hidden" tabindex="-1">·</button>';
   const r = data.find(x => x.id === id), total = booked(r), over = total > CAPACITY[r.house];
   return `<button class="row-btn cust-btn${over ? ' over' : ''}" onclick="event.stopPropagation();openCustomers('${id}')">` +
-    `<span>Customers</span><span>${total ? nf(total) : '—'}</span></button>`;
+    `<span>${t('Πελάτες')}</span><span>${total ? nf(total) : '—'}</span></button>`;
 }
 function openCustomers(id){
   const r = data.find(x => x.id === id), list = r.customers || [], cap = CAPACITY[r.house];
   const total = booked(r), left = cap - total, sum = k => list.reduce((s, c) => s + c[k], 0);
   const n = v => v ? nf(v) : '–';
-  document.getElementById('cust-title').textContent = `${r.house} · hatch ${fmt(parseISO(r.doc_date))}`;
-  document.getElementById('cust-sub').textContent = [r.breed || 'Breed —', HOUSES[r.house] + ' rearing'].join(' · ');
-  document.getElementById('cust-body').innerHTML = !list.length ? '<p class="muted">No customers yet.</p>' :
-    '<table class="cust-table"><tr><th>Customer</th><th>Κ</th><th>Λ</th><th>C</th><th>Total</th></tr>' +
+  document.getElementById('cust-title').textContent = `${r.house} · ${t('εκκόλαψη')} ${fmt(parseISO(r.doc_date))}`;
+  document.getElementById('cust-sub').textContent = [r.breed || t('Ράτσα —'), t('Εκτροφή: {sys}', { sys: systemLabel(HOUSES[r.house]) })].join(' · ');
+  document.getElementById('cust-body').innerHTML = !list.length ? `<p class="muted">${t('Δεν υπάρχουν πελάτες ακόμα.')}</p>` :
+    `<table class="cust-table"><tr><th>${t('Πελάτης')}</th><th>Κ</th><th>Λ</th><th>C</th><th>${t('Σύνολο')}</th></tr>` +
     list.map(c => { const [name, ...rest] = c.name.split(' - ');
       return `<tr><td><span${PTINO_RE.test(c.name) ? ' class="pt"' : ''}>${esc(name)}</span>` +
         (rest.length ? `<div class="cust-note">${esc(rest.join(' · '))}</div>` : '') +
         `</td><td>${n(c.k)}</td><td>${n(c.l)}</td><td>${n(c.c)}</td><td>${n(c.k + c.l + c.c)}</td></tr>`; }).join('') +
-    `<tr class="tot"><td>Total</td><td>${n(sum('k'))}</td><td>${n(sum('l'))}</td><td>${n(sum('c'))}</td><td>${n(total)}</td></tr></table>`;
-  document.getElementById('cust-cap').innerHTML = `<span class="muted">Capacity ${nf(cap)}</span>` +
-    `<span class="${left < 0 ? 'over' : 'free'}">${left < 0 ? nf(-left) + ' over' : nf(left) + ' free'}</span>`;
+    `<tr class="tot"><td>${t('Σύνολο')}</td><td>${n(sum('k'))}</td><td>${n(sum('l'))}</td><td>${n(sum('c'))}</td><td>${n(total)}</td></tr></table>`;
+  document.getElementById('cust-cap').innerHTML = `<span class="muted">${t('Χωρητικότητα {n}', { n: nf(cap) })}</span>` +
+    `<span class="${left < 0 ? 'over' : 'free'}">${left < 0 ? t('{n} πάνω', { n: nf(-left) }) : t('{n} ελεύθερα', { n: nf(left) })}</span>`;
   document.getElementById('cust-bg').classList.remove('hidden');
   document.getElementById('cust-close').focus();
 }
@@ -717,24 +780,24 @@ function focusClash(key, fromId){
 
 /* Days the house stands empty: from the previous flock's empty day to this hatch; red when under CLEAN_DAYS (not ready). */
 function arrow(prev, hatch){
-  return `<div class="arrow ${hatch >= prev.ready ? 'a-ok' : 'a-bad'}">${daysBetween(prev.empty, hatch)} d</div>`;
+  return `<div class="arrow ${hatch >= prev.ready ? 'a-ok' : 'a-bad'}">${daysBetween(prev.empty, hatch)} ${t('ημ.')}</div>`;
 }
 
 /* "Keep this date": plan with an unconfirmed hatch as if it were confirmed; clicking again undoes it */
 async function toggleKeep(id){
   const r = data.find(x => x.id === id);
-  setSyncStatus('loading','Saving...');
+  setSyncStatus('loading', t('Αποθήκευση…'));
   try{
     const [updated] = await sbUpdate(id, {keep: !r.keep});
     data = data.map(x => x.id === id ? updated : x);
-    setSyncStatus('ok','Updated');
+    setSyncStatus('ok', t('Ενημερώθηκε'));
     render();
-  }catch(e){ setSyncStatus('err','Save failed: '+e.message); }
+  }catch(e){ setSyncStatus('err', t('Η αποθήκευση απέτυχε: {msg}', { msg: e.message })); }
 }
 
 function render(){
   const el = document.getElementById('view');
-  const t = today();
+  const todayD = today();
   const next = suggestNext();
   const clashes = findClashes(data);
   renderClashes(clashes);
@@ -757,37 +820,37 @@ function render(){
       const pw = pairWarning(house, s.hatch);
       slots.push({
         arrow: prev ? arrow(prev, s.hatch) : '',
-        card: hcard('next-' + house, ' suggest', house, 'After confirmed hatches', 'Earliest possible', s,
+        card: hcard('next-' + house, ' suggest', house, t('Μετά τις επιβεβαιωμένες εκκολάψεις'), t('Νωρίτερη δυνατή'), s,
           (pw ? `<div class="warn">⚠ ${pw}</div>` : '') +
-          `<div class="hc-foot"><button class="row-btn accept" onclick="event.stopPropagation();openAddModal('${house}','${iso}',true)">Use this date</button></div>`),
+          `<div class="hc-foot"><button class="row-btn accept" onclick="event.stopPropagation();openAddModal('${house}','${iso}',true)">${t('Χρήση αυτής της ημερομηνίας')}</button></div>`),
       });
     };
     if(lastPlanned < 0) pushSuggestion();
     cycles.forEach((r, i) => {
       const s = scheduleOf(r);
       // completed cycles (house already emptied) are never shown; they still feed the next arrow
-      if(s.empty >= t){
-        const hatched = s.hatch <= t;
+      if(s.empty >= todayD){
+        const hatched = s.hatch <= todayD;
         const confirmed = r.status === 'Confirmed';
-        const badge = (hatched ? `<span class="badge b-now">In house · ${daysBetween(s.hatch, t)} d old</span>`
-                    :            `<span class="badge ${STATUS_CLASS[r.status]}">${esc(r.status)}</span>`) +
-                    (r.keep && !confirmed ? ` <span class="badge b-rq">Date kept</span>` : '');
+        const badge = (hatched ? `<span class="badge b-now">${t('Στον θάλαμο · {n} ημ.', { n: daysBetween(s.hatch, todayD) })}</span>`
+                    :            `<span class="badge ${STATUS_CLASS[r.status]}">${statusLabel(r.status)}</span>`) +
+                    (r.keep && !confirmed ? ` <span class="badge b-rq">${t('Κρατημένη ημερομηνία')}</span>` : '');
         const keepBtn = confirmed ? '' :
-          `<button class="row-btn keep" onclick="event.stopPropagation();toggleKeep('${r.id}')">${r.keep ? 'Undo keep' : 'Keep this date'}</button>`;
+          `<button class="row-btn keep" onclick="event.stopPropagation();toggleKeep('${r.id}')">${t(r.keep ? 'Αναίρεση κράτησης' : 'Κράτηση ημερομηνίας')}</button>`;
         const outline = hatched ? ' hatched' : confirmed ? ' confirmed' : r.status === 'Requested' ? ' requested' : ' unconfirmed';
         const pw = pairWarning(house, s.hatch, r.id);
         const mine = openOf(r.id);
-        const clashLine = mine.length ? `<div class="clash-line">⚠ ${mine.length} clash${mine.length === 1 ? '' : 'es'}</div>` : '';
+        const clashLine = mine.length ? `<div class="clash-line">${t(mine.length === 1 ? '⚠ {n} σύγκρουση' : '⚠ {n} συγκρούσεις', { n: mine.length })}</div>` : '';
         const clashList = mine.map(c => { const [me, other] = c.a.r.id === r.id ? [c.a, c.b] : [c.b, c.a];
           return `<div class="clash-row${c.key === focusKey ? ' on' : ''}">` +
-            `<span class="clash-link" title="Show on both cards" onclick="event.stopPropagation();focusClash('${c.key}','${r.id}')">${KIND[me.kind]} ↔ ${other.r.house} ${KIND[other.kind]} ${when(other)} · ${gapText(c)}</span>` +
-            `<button class="tick" title="Mark resolved" aria-label="Mark resolved" onclick="event.stopPropagation();setResolved('${c.key}', true)">✓</button></div>`; }).join('');
+            `<span class="clash-link" title="${t('Εμφάνιση και στις δύο κάρτες')}" onclick="event.stopPropagation();focusClash('${c.key}','${r.id}')">${t(KIND[me.kind])} ↔ ${other.r.house} ${t(KIND[other.kind])} ${when(other)} · ${gapText(c)}</span>` +
+            `<button class="tick" title="${t('Επιλύθηκε')}" aria-label="${t('Επιλύθηκε')}" onclick="event.stopPropagation();setResolved('${c.key}', true)">✓</button></div>`; }).join('');
         slots.push({
           arrow: prev ? arrow(prev, s.hatch) : '',
-          card: hcard(r.id, outline, house, `#${i+1}`, esc(r.breed||'Breed —'), s,
+          card: hcard(r.id, outline, house, `#${i+1}`, esc(r.breed||t('Ράτσα —')), s,
             badge + (pw ? `<div class="warn">⚠ ${pw}</div>` : '') + clashList +
-            `<div class="hc-foot"><button class="row-btn" onclick="event.stopPropagation();openEditModal('${r.id}')">Edit</button>` +
-            `<button class="row-btn del" onclick="event.stopPropagation();askDelete('${r.id}')">Del</button>${keepBtn}</div>`, clashLine, r.breed, hlOf(r.id), r.ptino, r.id),
+            `<div class="hc-foot"><button class="row-btn" onclick="event.stopPropagation();openEditModal('${r.id}')">${t('Επεξ.')}</button>` +
+            `<button class="row-btn del" onclick="event.stopPropagation();askDelete('${r.id}')">${t('Διαγρ.')}</button>${keepBtn}</div>`, clashLine, r.breed, hlOf(r.id), r.ptino, r.id),
         });
       }
       prev = s;
@@ -796,7 +859,7 @@ function render(){
     return slots;
   });
 
-  let html = houses.map(house => `<div class="house-head"><div class="house-name">${house}</div><div class="house-sys">${HOUSES[house]} rearing</div></div>`).join('');
+  let html = houses.map(house => `<div class="house-head"><div class="house-name">${house}</div><div class="house-sys">${t('Εκτροφή: {sys}', { sys: systemLabel(HOUSES[house]) })}</div></div>`).join('');
   const rowsCount = Math.max(...cols.map(c => c.length));
   for(let k = 0; k < rowsCount; k++){
     html += cols.map(c => c[k]?.arrow || '<div></div>').join('');
@@ -823,13 +886,13 @@ let addKeep = false;
 function openAddModal(house='', date='', fromSuggestion=false){
   editId = null;
   addKeep = fromSuggestion;
-  openModal('Add placement', house, date, '', 'Not ordered', 'Save');
+  openModal(t('Νέα τοποθέτηση'), house, date, '', 'Not ordered', t('Αποθήκευση'));
 }
 function openEditModal(id){
   const r = data.find(x=>x.id==id);
-  if(!r) throw new Error(`Placement ${id} not found`);
+  if(!r) throw new Error(t('Η τοποθέτηση {id} δεν βρέθηκε', { id }));
   editId = r.id;
-  openModal('Edit placement', r.house, r.doc_date, r.breed||'', r.status, 'Update', r.ptino||'');
+  openModal(t('Επεξεργασία τοποθέτησης'), r.house, r.doc_date, r.breed||'', r.status, t('Ενημέρωση'), r.ptino||'');
 }
 function closeModal(){
   document.getElementById('modal-bg').classList.add('hidden');
@@ -853,23 +916,23 @@ function checkModalWarn(){
     const after  = others.find(r=>r.doc_date > date);
     if(before){
       const ready = scheduleOf(before).ready;
-      if(hatch < ready) warnings.push(`${house} is not ready until ${fmt(ready)} (previous cycle hatched ${fmt(parseISO(before.doc_date))}).`);
+      if(hatch < ready) warnings.push(t('Ο {house} δεν είναι έτοιμος πριν τις {ready} (ο προηγούμενος κύκλος εκκολάφθηκε {prev}).', { house, ready: fmt(ready), prev: fmt(parseISO(before.doc_date)) }));
     }
     if(after){
       const ready = getSchedule(house, date, ptino).ready;
-      if(parseISO(after.doc_date) < ready) warnings.push(`This cycle keeps ${house} busy until ${fmt(ready)}, after the next hatch on ${fmt(parseISO(after.doc_date))}.`);
+      if(parseISO(after.doc_date) < ready) warnings.push(t('Αυτός ο κύκλος κρατά τον {house} κατειλημμένο μέχρι {ready}, μετά την επόμενη εκκόλαψη στις {next}.', { house, ready: fmt(ready), next: fmt(parseISO(after.doc_date)) }));
     }
     const pw = pairWarning(house, hatch, editId);
     if(pw) warnings.push(`${house}: ${pw}.`);
     const me = { id: editId || 'new', house, doc_date: date, breed: document.getElementById('m-breed').value || null, ptino };
     openClashes([...data.filter(r => r.id !== editId), me]).filter(c => c.a.r === me || c.b.r === me).forEach(c => {
       const [mine, other] = c.a.r === me ? [c.a, c.b] : [c.b, c.a];
-      warnings.push(`Clash: ${KIND[mine.kind]} ↔ ${other.r.house} ${KIND[other.kind]} ${when(other)} (${gapText(c)}).`);
+      warnings.push(t('Σύγκρουση: {what}', { what: `${t(KIND[mine.kind])} ↔ ${other.r.house} ${t(KIND[other.kind])} ${when(other)} (${gapText(c)}).` }));
     });
-    if(HOUSE_FROM[house] && date < HOUSE_FROM[house]) warnings.push(`${house} can't take a hatch before ${fmt(parseISO(HOUSE_FROM[house]))}.`);
+    if(HOUSE_FROM[house] && date < HOUSE_FROM[house]) warnings.push(t('Ο {house} δεν μπορεί να πάρει εκκόλαψη πριν τις {d}.', { house, d: fmt(parseISO(HOUSE_FROM[house])) }));
     // one placement per house + hatch date (unique in the database too)
     if(others.some(r => r.doc_date === date)){
-      warnings.unshift(`${house} already has a placement hatching ${fmt(hatch)} — edit that one instead.`);
+      warnings.unshift(t('Ο {house} έχει ήδη τοποθέτηση με εκκόλαψη {d} — επεξεργαστείτε εκείνη.', { house, d: fmt(hatch) }));
       document.getElementById('m-save').disabled = true;
     }
   }
@@ -887,26 +950,26 @@ async function saveNew(){
   const btn = document.getElementById('m-save');
   btn.disabled = true;
   const origText = btn.textContent;
-  btn.textContent = 'Saving...';
+  btn.textContent = t('Αποθήκευση…');
   try{
     if(editId){
       // keep only means something while unconfirmed, so confirming clears it
       const [updated] = await sbUpdate(editId, {doc_date:date, breed, status, ptino, ...(status === 'Confirmed' && {keep:false})});
       data = data.map(r => r.id===editId ? updated : r);
-      setSyncStatus('ok','Updated');
+      setSyncStatus('ok', t('Ενημερώθηκε'));
     } else {
       const [inserted] = await sbInsert({house, doc_date:date, breed, status, ptino, keep: addKeep && status !== 'Confirmed'});
       data.push(inserted);
-      setSyncStatus('ok','Saved');
+      setSyncStatus('ok', t('Αποθηκεύτηκε'));
     }
     closeModal(); render();
-  }catch(e){ setSyncStatus('err','Save failed: '+e.message); }
+  }catch(e){ setSyncStatus('err', t('Η αποθήκευση απέτυχε: {msg}', { msg: e.message })); }
   finally{ btn.disabled = false; btn.textContent = origText; }
 }
 
 function askDelete(id){
   const r = data.find(x=>x.id==id);
-  if(!r) throw new Error(`Placement ${id} not found`);
+  if(!r) throw new Error(t('Η τοποθέτηση {id} δεν βρέθηκε', { id }));
   deleteId = r.id;
   document.getElementById('confirm-detail').textContent = `${r.house} — ${fmt(parseISO(r.doc_date))}`;
   document.getElementById('confirm-bg').classList.remove('hidden');
@@ -918,12 +981,14 @@ async function confirmDelete(){
     await sbDelete(deleteId);
     data = data.filter(r=>r.id!==deleteId);
     closeConfirm(); render();
-    setSyncStatus('ok','Deleted');
-  }catch(e){ setSyncStatus('err','Delete failed: '+e.message); closeConfirm(); }
+    setSyncStatus('ok', t('Διαγράφηκε'));
+  }catch(e){ setSyncStatus('err', t('Η διαγραφή απέτυχε: {msg}', { msg: e.message })); closeConfirm(); }
 }
 
 // shared sign-in, load-once guard and ⌂/Έξοδος buttons: common.js
-startPage({ onSignedIn: () => load() });
+// unsaved work = the add/edit window is open (asked before switching language)
+startPage({ onSignedIn: () => load(), translated: true,
+  hasUnsavedWork: () => !document.getElementById('modal-bg').classList.contains('hidden') });
 </script>
 </body>
 </html>

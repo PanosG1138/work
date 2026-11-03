@@ -153,7 +153,7 @@ addTranslations({
   'Προγραμματισμός': 'Scheduling', 'Εκκολάψεις ανά θάλαμο': 'Hatches per house',
   'Φόρτωση καρότσας': 'Truck loading', 'PanosG1138 · Εσωτερική χρήση': 'PanosG1138 · Internal use',
   'Σήμερα': 'Today', 'Αύριο': 'Tomorrow',
-  'επιβεβαιωμένη': 'confirmed', 'ζητήθηκε': 'requested', 'χωρίς επιβεβαίωση': 'not confirmed',
+  'επιβεβαιώθηκε': 'confirmed', 'ζητήθηκε': 'requested', 'χωρίς παραγγελία': 'not ordered',
   'καμία προγραμματισμένη': 'none planned', 'Άδειο': 'Empty',
   'εκκόλαψη σε {n} ημέρα': 'hatch in {n} day', 'εκκόλαψη σε {n} ημέρες': 'hatch in {n} days',
   'Σφάλμα φόρτωσης: {msg}': 'Loading error: {msg}', 'ή': 'or',
@@ -228,7 +228,7 @@ function nextFeed(r, today) {
 }
 
 function x(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-const STATUS = { 'Confirmed': ['επιβεβαιωμένη', 'ok'], 'Requested': ['ζητήθηκε', ''], 'Not ordered': ['χωρίς επιβεβαίωση', ''] };
+const STATUS = { 'Confirmed': ['επιβεβαιώθηκε', 'ok'], 'Requested': ['ζητήθηκε', ''], 'Not ordered': ['χωρίς παραγγελία', ''] };   // same words as schedule_checker.html (user)
 
 // one line of a tile: icon, date (orange today/tomorrow), what — links to its tool
 function line(icon, href, date, what, today, cls = '') {
