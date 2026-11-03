@@ -174,12 +174,16 @@ async function signIn() {
   if (error) errEl.textContent = error.status === 400 ? 'Λάθος email ή κωδικός.' : 'Δεν υπάρχει σύνδεση — δοκιμάστε ξανά.';
 }
 
+// supabase re-sends SIGNED_IN on every tab refocus: load once per signed-in user, not each time
+let _loadedFor = null;
 _sb.auth.onAuthStateChange((event, session) => {
   _authSession = session;
+  const isNew = session && session.user.id !== _loadedFor;
+  _loadedFor = session ? session.user.id : null;
   document.getElementById('dash').style.display = session ? '' : 'none';
   document.getElementById('login').style.display = session ? 'none' : '';
   document.getElementById('btn-logout').style.display = session ? '' : 'none';
-  if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) loadDashboard();
+  if (isNew) loadDashboard();
 });
 
 async function sbFetch(path) {

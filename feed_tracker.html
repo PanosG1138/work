@@ -122,12 +122,12 @@ select.cell-input option:disabled{color:var(--gh-fg-subtle);}
 /* EDIT TABLE (folded) */
 .edit-wrap summary{cursor:pointer;font-size:13px;font-weight:500;color:var(--gh-fg-muted);padding:6px 0 10px;}
 
-/* arrival from a homepage dashboard link: the item glows for a few seconds */
-.focus-glow{animation:focusGlow 3.2s ease-out}
+/* arrival from a homepage dashboard link: a red outline pulses three times */
+.focus-glow{animation:focusGlow 1.4s ease-in-out 3}
 tr.focus-glow{animation:none}
-tr.focus-glow > td{animation:focusRow 3.2s ease-out}
-@keyframes focusGlow{0%,45%{box-shadow:0 0 0 2px var(--gh-accent-fg),0 0 16px 3px rgba(110,143,255,0.45)}100%{box-shadow:0 0 0 0 rgba(110,143,255,0)}}
-@keyframes focusRow{0%,45%{background:rgba(110,143,255,0.24)}100%{background:transparent}}
+tr.focus-glow > td{animation:focusRow 1.4s ease-in-out 3}
+@keyframes focusGlow{50%{box-shadow:0 0 0 2px var(--gh-danger-fg),0 0 18px 4px rgba(255,107,107,0.5)}}
+@keyframes focusRow{50%{background:rgba(255,107,107,0.16);box-shadow:inset 0 2px 0 var(--gh-danger-fg),inset 0 -2px 0 var(--gh-danger-fg)}}
 /* TOAST */
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:var(--r);padding:8px 16px;font-size:13px;color:var(--gh-fg-default);z-index:999;opacity:0;transition:opacity 0.2s;pointer-events:none;}
 .toast.show{opacity:1}
@@ -241,11 +241,15 @@ async function signIn() {
 
 async function signOut() { if (confirm('Sign out?')) await _sb.auth.signOut(); }
 
+// supabase re-sends SIGNED_IN on every tab refocus: load once per signed-in user, not each time
+let _loadedFor = null;
 _sb.auth.onAuthStateChange((event, session) => {
   _authSession = session;
+  const isNew = session && session.user.id !== _loadedFor;
+  _loadedFor = session ? session.user.id : null;
   document.getElementById('auth-gate').style.display = session ? 'none' : 'flex';
   document.getElementById('btn-logout').style.display = session ? '' : 'none';
-  if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
+  if (isNew) {
     loadFromSupabase();
   } else if (!session) {
     setTimeout(() => { const e = document.getElementById('auth-email'); if(e) e.focus(); }, 100);

@@ -409,11 +409,15 @@ async function signIn() {
 
 async function signOut() { if (confirm('Αποσύνδεση;')) await _sb.auth.signOut(); }
 
+// supabase re-sends SIGNED_IN on every tab refocus: load once per signed-in user, not each time
+let _loadedFor = null;
 _sb.auth.onAuthStateChange((event, session) => {
   _authSession = session;
+  const isNew = session && session.user.id !== _loadedFor;
+  _loadedFor = session ? session.user.id : null;
   document.getElementById('auth-gate').style.display = session ? 'none' : 'flex';
   document.getElementById('btn-logout').style.display = session ? '' : 'none';
-  if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
+  if (isNew) {
     initApp(emailToDisplayName(session.user.email));
   } else if (!session) {
     setTimeout(() => { const e = document.getElementById('auth-email'); if(e) e.focus(); }, 100);
