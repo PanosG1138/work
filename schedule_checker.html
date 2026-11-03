@@ -6,8 +6,8 @@
 <title data-t>Προγραμματισμός</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
-<script src="common.js?v=6"></script>
-<link rel="stylesheet" href="theme.css?v=6">
+<script src="common.js?v=7"></script>
+<link rel="stylesheet" href="theme.css?v=7">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
@@ -187,12 +187,6 @@ header{
   border-radius:var(--gh-r-md);font-family:'Inter',sans-serif;font-weight:600;font-size:13px;cursor:pointer;transition:background .15s;
 }
 .btn-danger:hover{background:rgba(255,107,107,0.22)}
-/* arrival from a homepage dashboard link: a red outline pulses three times */
-.focus-glow{animation:focusGlow 1.4s ease-in-out 3}
-tr.focus-glow{animation:none}
-tr.focus-glow > td{animation:focusRow 1.4s ease-in-out 3}
-@keyframes focusGlow{50%{box-shadow:0 0 0 2px var(--gh-danger-fg),0 0 18px 4px rgba(255,107,107,0.5)}}
-@keyframes focusRow{50%{background:rgba(255,107,107,0.16);box-shadow:inset 0 2px 0 var(--gh-danger-fg),inset 0 -2px 0 var(--gh-danger-fg)}}
 /* card rows: label and value each stay whole ("Εμβ. 1" must not break); a value too long for the row drops to its own line, right-aligned */
 .hc-row{flex-wrap:wrap;column-gap:4px;row-gap:0}.hc-row>span{white-space:nowrap}.hc-row>span:last-child{margin-left:auto}
 </style>
@@ -679,18 +673,7 @@ async function load(){
 }
 
 /* ── Render ── */
-// Arrived from a homepage dashboard link (?…): scroll to the item and make it glow, then drop the
-// parameters so a reload opens the page normally. find(params) returns the elements, in page order.
-// Duplicated by design in vaccine_tracker.html, feed_tracker.html and schedule_checker.html.
-function focusFromLink(find) {
-  const q = new URLSearchParams(location.search);
-  if (![...q.keys()].length) return;
-  history.replaceState(null, '', location.pathname);
-  const els = find(q).filter(Boolean);
-  if (!els.length) return;
-  els[0].scrollIntoView({ block: 'center' });
-  els.forEach(e => { e.classList.remove('focus-glow'); void e.offsetWidth; e.classList.add('focus-glow'); });
-}
+// focusFromLink (dashboard-link highlight) lives in common.js
 
 function esc(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 

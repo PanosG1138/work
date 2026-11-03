@@ -59,3 +59,11 @@
 .common-lang button{border:none;background:var(--gh-canvas-subtle);color:var(--gh-fg-muted);font-family:'Inter',system-ui,sans-serif;font-size:12px;font-weight:500;padding:0 8px;cursor:pointer}
 .common-lang button:hover{color:var(--gh-fg-default);background:var(--gh-hover-bg)}
 .common-lang button.on{background:var(--gh-accent-subtle);color:var(--gh-accent-fg);cursor:default}
+
+/* ── LINK HIGHLIGHT ── (focusFromLink in common.js) */
+/* a red outline pulses three times; table rows glow through their cells */
+.focus-glow{animation:focusGlow 1.4s ease-in-out 3}
+tr.focus-glow{animation:none}
+tr.focus-glow > td{animation:focusRow 1.4s ease-in-out 3}
+@keyframes focusGlow{50%{box-shadow:0 0 0 2px var(--gh-danger-fg),0 0 18px 4px rgba(255,107,107,0.5)}}
+@keyframes focusRow{50%{background:rgba(255,107,107,0.16);box-shadow:inset 0 2px 0 var(--gh-danger-fg),inset 0 -2px 0 var(--gh-danger-fg)}}

@@ -182,6 +182,20 @@ function drawNav(showLanguageSwitch) {
 
 function signOut() { if (confirm(t('Αποσύνδεση;'))) _sb.auth.signOut(); }
 
+// ── LINK HIGHLIGHT ── arrived from a homepage dashboard link (?…): scroll to the item and make it
+// glow (styles: .focus-glow in theme.css), then drop the parameters so a reload opens the page normally.
+// find(params) returns the elements to highlight, in page order. Used by vaccine_tracker.html,
+// feed_tracker.html and schedule_checker.html, each after its data has loaded and been drawn.
+function focusFromLink(find) {
+  const q = new URLSearchParams(location.search);
+  if (![...q.keys()].length) return;
+  history.replaceState(null, '', location.pathname);
+  const els = find(q).filter(Boolean);
+  if (!els.length) return;
+  els[0].scrollIntoView({ block: 'center' });
+  els.forEach(e => { e.classList.remove('focus-glow'); void e.offsetWidth; e.classList.add('focus-glow'); });
+}
+
 // ── startPage ── the one setup call each page makes, as the last line of its script:
 //   startPage({ onSignedIn: name => …, onSignedOut, hasUnsavedWork, translated })   (all but onSignedIn optional)
 // translated: true on pages that have an English list. Pages without one (the two truck pages —
