@@ -6,11 +6,11 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>ΕΜΒΟΛΙΑ — Απόθεμα</title>
+<title data-t>ΕΜΒΟΛΙΑ — Απόθεμα</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
-<script src="common.js?v=3"></script>
-<link rel="stylesheet" href="theme.css?v=3">
+<script src="common.js?v=4"></script>
+<link rel="stylesheet" href="theme.css?v=4">
 <style>
 .theme-toggle{
   display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;
@@ -201,39 +201,39 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 <!-- EDIT MODAL -->
 <div id="edit-bg" class="modal-bg" style="display:none">
   <div class="modal">
-    <h3 id="modal-title">Εμβόλιο</h3>
+    <h3 data-t id="modal-title">Εμβόλιο</h3>
     <div class="fgroup">
-      <label>Εμβόλιο</label>
-      <input type="text" id="m-emvolio" list="vaccine-list" placeholder="Όνομα εμβολίου…">
+      <label data-t>Εμβόλιο</label>
+      <input type="text" id="m-emvolio" list="vaccine-list" data-t-placeholder placeholder="Όνομα εμβολίου…">
       <datalist id="vaccine-list"></datalist>
     </div>
     <div class="fgroup">
-      <label>Ποσότητα σε απόθεμα</label>
-      <input type="text" id="m-posotita" placeholder="π.χ. 60.000" onblur="fmtInput(this)" onfocus="stripFmt(this)">
+      <label data-t>Ποσότητα σε απόθεμα</label>
+      <input type="text" id="m-posotita" data-t-placeholder placeholder="π.χ. 60.000" onblur="fmtInput(this)" onfocus="stripFmt(this)">
     </div>
     <div class="fgroup">
-      <label>Μονάδα</label>
+      <label data-t>Μονάδα</label>
       <select id="m-monada">
-        <option value="Δόσεις" selected>Δόσεις</option>
-        <option value="Κιλά">Κιλά</option>
+        <option data-t value="Δόσεις" selected>Δόσεις</option>
+        <option data-t value="Κιλά">Κιλά</option>
       </select>
     </div>
     <div class="fgroup">
-      <label>Σχόλια</label>
-      <textarea id="m-sxolia" rows="2" placeholder="Προαιρετικό…"></textarea>
+      <label data-t>Σχόλια</label>
+      <textarea id="m-sxolia" rows="2" data-t-placeholder placeholder="Προαιρετικό…"></textarea>
     </div>
 
     <!-- History -->
     <div class="history-section" id="history-section" style="display:none">
-      <div class="history-title">Ιστορικό αλλαγών</div>
+      <div data-t class="history-title">Ιστορικό αλλαγών</div>
       <div class="history-list" id="history-list"></div>
     </div>
 
     <div class="modal-actions">
-      <button class="btn-danger" id="btn-modal-delete" onclick="promptDelete()">Διαγραφή</button>
+      <button data-t class="btn-danger" id="btn-modal-delete" onclick="promptDelete()">Διαγραφή</button>
       <div style="flex:1"></div>
-      <button class="btn-secondary" onclick="closeModal()">Ακύρωση</button>
-      <button class="btn-primary" id="btn-save" onclick="saveEntry()">Αποθήκευση</button>
+      <button data-t class="btn-secondary" onclick="closeModal()">Ακύρωση</button>
+      <button data-t class="btn-primary" id="btn-save" onclick="saveEntry()">Αποθήκευση</button>
     </div>
   </div>
 </div>
@@ -241,10 +241,10 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 <!-- CONFIRM DELETE -->
 <div id="confirm-bg" class="modal-bg" style="display:none">
   <div class="confirm-box">
-    <p>Διαγραφή του εμβολίου από το απόθεμα;<br><strong id="confirm-name" style="color:var(--gh-danger-fg)"></strong></p>
+    <p><span data-t>Διαγραφή του εμβολίου από το απόθεμα;</span><br><strong id="confirm-name" style="color:var(--gh-danger-fg)"></strong></p>
     <div style="display:flex;gap:8px;justify-content:center">
-      <button class="btn-secondary" onclick="closeConfirm()">Ακύρωση</button>
-      <button class="btn-danger" onclick="confirmDelete()">Διαγραφή</button>
+      <button data-t class="btn-secondary" onclick="closeConfirm()">Ακύρωση</button>
+      <button data-t class="btn-danger" onclick="confirmDelete()">Διαγραφή</button>
     </div>
   </div>
 </div>
@@ -262,14 +262,14 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 <div class="shell">
 <header>
   <div class="header-left">
-    <a href="vaccine_tracker.html" class="btn-back" title="Πίσω στις παραγγελίες">← Παραγγελίες</a>
-    <span class="logo-title">Απόθεμα</span>
-    <span class="logo-sub">εμβολίων</span>
+    <a data-t href="vaccine_tracker.html" class="btn-back" data-t-title title="Πίσω στις παραγγελίες">← Παραγγελίες</a>
+    <span data-t class="logo-title">Απόθεμα</span>
+    <span data-t class="logo-sub">εμβολίων</span>
   </div>
   <div class="header-right">
     <div id="sync-badge" class="sync-badge loading"><div class="sync-dot"></div><span id="sync-text">Σύνδεση…</span></div>
     <div class="zoom-ctrl">
-      <label>Μέγεθος</label>
+      <label data-t>Μέγεθος</label>
       <input type="range" id="zoom-range" min="0.5" max="1.2" step="0.05" value="1" oninput="setZoom(this.value)">
       <span class="zoom-val" id="zoom-label">100%</span>
     </div>
@@ -286,11 +286,11 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
   <div class="toolbar">
     <div class="search-wrap">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="search" placeholder="Αναζήτηση εμβολίου…" oninput="render()">
+      <input type="text" id="search" data-t-placeholder placeholder="Αναζήτηση εμβολίου…" oninput="render()">
     </div>
-    <button class="btn-primary" onclick="openNew()">+ Νέο εμβόλιο</button>
-    <button class="btn-tool" onclick="loadData()">↺ Ανανέωση</button>
-    <button class="btn-tool" onclick="window.print()">🖨 Εκτύπωση</button>
+    <button data-t class="btn-primary" onclick="openNew()">+ Νέο εμβόλιο</button>
+    <button data-t class="btn-tool" onclick="loadData()">↺ Ανανέωση</button>
+    <button data-t class="btn-tool" onclick="window.print()">🖨 Εκτύπωση</button>
   </div>
 
   <!-- Table -->
@@ -299,15 +299,15 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
       <table>
       <thead>
         <tr>
-          <th onclick="sortBy('emvolio')">Εμβόλιο<span class="arr" id="s-emvolio"></span></th>
-          <th onclick="sortBy('posotita')">Ποσότητα<span class="arr" id="s-posotita"></span></th>
-          <th onclick="sortBy('monada')">Μονάδα<span class="arr" id="s-monada"></span></th>
-          <th onclick="sortBy('sxolia')">Σχόλια<span class="arr" id="s-sxolia"></span></th>
-          <th>Ενέργειες</th>
+          <th onclick="sortBy('emvolio')"><span data-t>Εμβόλιο</span><span class="arr" id="s-emvolio"></span></th>
+          <th onclick="sortBy('posotita')"><span data-t>Ποσότητα</span><span class="arr" id="s-posotita"></span></th>
+          <th onclick="sortBy('monada')"><span data-t>Μονάδα</span><span class="arr" id="s-monada"></span></th>
+          <th onclick="sortBy('sxolia')"><span data-t>Σχόλια</span><span class="arr" id="s-sxolia"></span></th>
+          <th data-t>Ενέργειες</th>
         </tr>
       </thead>
       <tbody id="tbody">
-        <tr><td colspan="5" class="empty-state">Φόρτωση…</td></tr>
+        <tr><td data-t colspan="5" class="empty-state">Φόρτωση…</td></tr>
       </tbody>
     </table>
     </div><!-- tbl-scaler -->
@@ -316,6 +316,35 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 </div>
 
 <script>
+// ── TRANSLATIONS ── this page's English (Greek text → English); shared words are in common.js
+addTranslations({
+  'ΕΜΒΟΛΙΑ — Απόθεμα': 'VACCINES — Stock',
+  '← Παραγγελίες': '← Orders', 'Πίσω στις παραγγελίες': 'Back to orders', 'Απόθεμα': 'Stock', 'εμβολίων': 'of vaccines',
+  'Μέγεθος': 'Size', 'Αναζήτηση εμβολίου…': 'Search vaccine…',
+  '+ Νέο εμβόλιο': '+ New vaccine', '↺ Ανανέωση': '↺ Refresh', '🖨 Εκτύπωση': '🖨 Print',
+  'Εμβόλιο': 'Vaccine', 'Ποσότητα': 'Quantity', 'Μονάδα': 'Unit', 'Σχόλια': 'Notes', 'Ενέργειες': 'Actions', 'Επεξ.': 'Edit',
+  'Ποσότητα σε απόθεμα': 'Quantity in stock',
+  'Όνομα εμβολίου…': 'Vaccine name…', 'π.χ. 60.000': 'e.g. 60.000', 'Προαιρετικό…': 'Optional…',
+  'Ιστορικό αλλαγών': 'Change history', 'Φόρτωση…': 'Loading…', 'Δεν υπάρχει ιστορικό.': 'No history.', 'Σφάλμα φόρτωσης.': 'Loading error.',
+  'Διαγραφή': 'Delete', 'Ακύρωση': 'Cancel', 'Αποθήκευση': 'Save', 'Αποθήκευση…': 'Saving…',
+  'Διαγραφή του εμβολίου από το απόθεμα;': 'Delete this vaccine from stock?',
+  'Δεν βρέθηκαν αποτελέσματα.': 'No results found.', 'Δεν υπάρχουν εγγραφές.': 'No records.',
+  'Εισάγετε όνομα εμβολίου.': 'Enter a vaccine name.',
+  'Η ποσότητα πρέπει να είναι ακέραιος αριθμός, χωρίς δεκαδικά (π.χ. 60.000)': 'The quantity must be a whole number, no decimals (e.g. 60.000)',
+  'Υπάρχει ήδη εμβόλιο με αυτό το όνομα — επεξεργαστείτε το υπάρχον': 'A vaccine with this name already exists — edit that one',
+  'Το εμβόλιο τροποποιήθηκε {who} ενώ το επεξεργαζόσουν.': 'The vaccine was changed {who} while you were editing it.',
+  'από {name}': 'by {name}', 'από άλλον χρήστη': 'by another user',
+  'Πάτα OK για να αποθηκεύσεις τις αλλαγές σου (αντικαθιστά τις αλλαγές τους)': 'Press OK to save your changes (replaces theirs)',
+  'ή Ακύρωση για να ανανεώσεις και να δεις τις νεότερες τιμές.': 'or Cancel to refresh and see the newer values.',
+  'Ενημερώθηκε ✓': 'Updated ✓', 'Προστέθηκε ✓': 'Added ✓', 'Αποθηκεύτηκε ✓': 'Saved ✓', 'Διαγράφηκε.': 'Deleted.',
+  'Σφάλμα': 'Error', 'Σφάλμα: {msg}': 'Error: {msg}', 'Σφάλμα διαγραφής: {msg}': 'Delete error: {msg}',
+  'Συνδέθηκε ✓': 'Connected ✓', 'Σφάλμα σύνδεσης': 'Connection error',
+  'Η εγγραφή δεν υπάρχει πια (ίσως διαγράφηκε) — πατήστε Ανανέωση.': 'The record no longer exists (maybe deleted) — press Refresh.',
+  'Μήπως εννοείτε;': 'Did you mean?', 'Γράψατε: «{name}»': 'You typed: «{name}»', 'Όχι, κράτα «{name}»': 'No, keep «{name}»',
+  'Το «{name}» δεν υπάρχει στη λίστα εμβολίων.': "«{name}» isn't in the vaccine list.",
+  'Προσθήκη στη λίστα και αποθήκευση;': 'Add it to the list and save?', 'Προσθήκη και αποθήκευση': 'Add and save',
+});
+
 // ── CONFIG ────────────────────────────────────────────────────────
 const TABLE    = 'inventory';
 const HTABLE   = 'inventory_history';
@@ -327,7 +356,7 @@ const HTABLE   = 'inventory_history';
 const sbSelect  = ()        => sbFetch(`${TABLE}?order=emvolio.asc`);
 const sbInsert  = row       => sbFetch(TABLE, { method:'POST', prefer:'return=representation', body: JSON.stringify(row) });
 // PATCH returns [] when the row is gone (deleted meanwhile, e.g. in another tab) — fail with a clear message
-const ROW_GONE = 'Η εγγραφή δεν υπάρχει πια (ίσως διαγράφηκε) — πατήστε Ανανέωση.';
+const ROW_GONE = t('Η εγγραφή δεν υπάρχει πια (ίσως διαγράφηκε) — πατήστε Ανανέωση.');
 const sbUpdate  = async (id, row) => {
   const result = await sbFetch(`${TABLE}?id=eq.${id}`, { method:'PATCH', prefer:'return=representation', body: JSON.stringify(row) });
   if (!result || !result.length) throw new Error(ROW_GONE);
@@ -357,14 +386,14 @@ function setSyncStatus(state, text) {
 
 // ── DATA ──────────────────────────────────────────────────────────
 async function loadData() {
-  setSyncStatus('loading', 'Φόρτωση…');
+  setSyncStatus('loading', t('Φόρτωση…'));
   try {
     [data] = await Promise.all([sbSelect(), loadVaccineNames()]);
-    setSyncStatus('ok', 'Συνδέθηκε ✓');
+    setSyncStatus('ok', t('Συνδέθηκε ✓'));
     render();
   } catch(e) {
-    setSyncStatus('err', 'Σφάλμα σύνδεσης');
-    toast('Σφάλμα: ' + e.message, true);
+    setSyncStatus('err', t('Σφάλμα σύνδεσης'));
+    toast(t('Σφάλμα: {msg}', { msg: e.message }), true);
   }
 }
 
@@ -411,13 +440,13 @@ async function resolveVaccineName(raw) {
   if (exact) return exact;
   const near = nearVaccines(name);
   if (near.length) {
-    const pick = await askVaccineName(`Μήπως εννοείτε;<span class="vname-typed">Γράψατε: «${x(name)}»</span>`,
-      [...near.map(v => ({ label: v, value: v, primary: true })), { label: `Όχι, κράτα «${name}»`, value: '\u0000keep' }]);
+    const pick = await askVaccineName(`${t('Μήπως εννοείτε;')}<span class="vname-typed">${t('Γράψατε: «{name}»', { name: x(name) })}</span>`,
+      [...near.map(v => ({ label: v, value: v, primary: true })), { label: t('Όχι, κράτα «{name}»', { name }), value: '\u0000keep' }]);
     if (pick === null) return null;
     if (pick !== '\u0000keep') return pick;
   }
-  const add = await askVaccineName(`Το «${x(name)}» δεν υπάρχει στη λίστα εμβολίων.<span class="vname-typed">Προσθήκη στη λίστα και αποθήκευση;</span>`,
-    [{ label: 'Προσθήκη και αποθήκευση', value: 'add', primary: true }]);
+  const add = await askVaccineName(`${t('Το «{name}» δεν υπάρχει στη λίστα εμβολίων.', { name: x(name) })}<span class="vname-typed">${t('Προσθήκη στη λίστα και αποθήκευση;')}</span>`,
+    [{ label: t('Προσθήκη και αποθήκευση'), value: 'add', primary: true }]);
   if (add !== 'add') return null;
   // ignore-duplicates: the other user may have added the same name since this page loaded
   await sbFetch('vaccines', { method: 'POST', prefer: 'resolution=ignore-duplicates',
@@ -431,7 +460,7 @@ let vnameResolve = null;
 function askVaccineName(html, buttons) {
   document.getElementById('vname-msg').innerHTML = html;
   const acts = document.getElementById('vname-actions');
-  acts.innerHTML = '<button class="btn-secondary" data-i="-1">Ακύρωση</button>' +
+  acts.innerHTML = `<button class="btn-secondary" data-i="-1">${t('Ακύρωση')}</button>` +
     buttons.map((b, i) => `<button class="${b.primary ? 'btn-primary' : 'btn-secondary'}" data-i="${i}">${x(b.label)}</button>`).join('');
   acts.querySelectorAll('button').forEach(btn => btn.onclick = () => {
     const i = +btn.dataset.i; resolveVaccineAsk(i < 0 ? null : buttons[i].value);
@@ -507,7 +536,7 @@ function render() {
   // table
   const tbody = document.getElementById('tbody');
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="5" class="empty-state">${q ? 'Δεν βρέθηκαν αποτελέσματα.' : 'Δεν υπάρχουν εγγραφές.'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="empty-state">${t(q ? 'Δεν βρέθηκαν αποτελέσματα.' : 'Δεν υπάρχουν εγγραφές.')}</td></tr>`;
     return;
   }
 
@@ -520,9 +549,9 @@ function render() {
     tr.innerHTML =
       `<td style="font-weight:600">${x(r.emvolio)}</td>`+
       `<td class="qty-cell">${fmtNum(qty)}</td>`+
-      `<td style="color:var(--gh-fg-muted)">${x(r.monada||'—')}</td>`+
+      `<td style="color:var(--gh-fg-muted)">${x(tValue(r.monada)||'—')}</td>`+
       `<td style="color:var(--gh-fg-muted);font-size:12px">${x(r.sxolia||'—')}</td>`+
-      `<td><button class="btn-secondary" style="height:26px;padding:0 10px;font-size:12px" onclick="openEdit(${r.id})">Επεξ.</button></td>`;
+      `<td><button class="btn-secondary" style="height:26px;padding:0 10px;font-size:12px" onclick="openEdit(${r.id})">${t('Επεξ.')}</button></td>`;
     frag.appendChild(tr);
   });
   tbody.innerHTML = '';
@@ -532,7 +561,7 @@ function render() {
 // ── MODAL ─────────────────────────────────────────────────────────
 function openNew() {
   editId = null;
-  document.getElementById('modal-title').textContent = '+ Νέο εμβόλιο';
+  document.getElementById('modal-title').textContent = t('+ Νέο εμβόλιο');
   document.getElementById('m-emvolio').value = '';
   document.getElementById('m-posotita').value = '';
   document.getElementById('m-monada').value = 'Δόσεις';
@@ -570,11 +599,11 @@ async function loadHistory(id) {
   const section = document.getElementById('history-section');
   const list    = document.getElementById('history-list');
   section.style.display = 'block';
-  list.innerHTML = '<div style="color:var(--gh-fg-muted);font-size:11px">Φόρτωση…</div>';
+  list.innerHTML = `<div style="color:var(--gh-fg-muted);font-size:11px">${t('Φόρτωση…')}</div>`;
   try {
     const hist = await sbHistory(id);
     if (!hist || !hist.length) {
-      list.innerHTML = '<div style="color:var(--gh-fg-muted);font-size:11px">Δεν υπάρχει ιστορικό.</div>';
+      list.innerHTML = `<div style="color:var(--gh-fg-muted);font-size:11px">${t('Δεν υπάρχει ιστορικό.')}</div>`;
       return;
     }
     list.innerHTML = hist.map(h => {
@@ -582,12 +611,12 @@ async function loadHistory(id) {
         ? `<div class="hi-delta"><span class="hi-from">${fmtNum(h.posotita_before)}</span> → <span class="hi-to">${fmtNum(h.posotita_after)}</span></div>`
         : '';
       return `<div class="history-item">
-        <div class="hi-row"><span class="hi-user">${x(h.user_name)}</span><span class="hi-date">${fmtDt(h.ts)}</span></div>
+        <div class="hi-row"><span class="hi-user">${x(tValue(h.user_name))}</span><span class="hi-date">${fmtDt(h.ts)}</span></div>
         ${delta}
       </div>`;
     }).join('');
   } catch(e) {
-    list.innerHTML = '<div style="color:var(--gh-fg-muted);font-size:11px">Σφάλμα φόρτωσης.</div>';
+    list.innerHTML = `<div style="color:var(--gh-fg-muted);font-size:11px">${t('Σφάλμα φόρτωσης.')}</div>`;
   }
 }
 
@@ -598,8 +627,8 @@ async function saveEntry() {
   const monada   = document.getElementById('m-monada').value;
   const sxolia   = document.getElementById('m-sxolia').value.trim() || null;
 
-  if (!emvolio) { toast('Εισάγετε όνομα εμβολίου.', true); return; }
-  if (Number.isNaN(posotita)) { toast('Η ποσότητα πρέπει να είναι ακέραιος αριθμός, χωρίς δεκαδικά (π.χ. 60.000)', true); return; }
+  if (!emvolio) { toast(t('Εισάγετε όνομα εμβολίου.'), true); return; }
+  if (Number.isNaN(posotita)) { toast(t('Η ποσότητα πρέπει να είναι ακέραιος αριθμός, χωρίς δεκαδικά (π.χ. 60.000)'), true); return; }
   // a new or renamed item goes through the spelling check; an unchanged name was checked when saved
   if (emvolio !== (editId ? data.find(r => r.id === editId)?.emvolio : null)) {
     emvolio = await resolveVaccineName(emvolio);
@@ -608,14 +637,14 @@ async function saveEntry() {
   // a second item with the same name (new or renamed; ignoring case and extra spaces) would split that vaccine's stock
   const sameName = s => (s || '').trim().replace(/\s+/g, ' ').toUpperCase();
   if (data.some(r => r.id !== editId && sameName(r.emvolio) === sameName(emvolio))) {
-    toast('Υπάρχει ήδη εμβόλιο με αυτό το όνομα — επεξεργαστείτε το υπάρχον', true);
+    toast(t('Υπάρχει ήδη εμβόλιο με αυτό το όνομα — επεξεργαστείτε το υπάρχον'), true);
     return;
   }
 
   const now = new Date().toISOString();
   const btn = document.getElementById('btn-save');
-  btn.disabled = true; btn.textContent = 'Αποθήκευση…';
-  setSyncStatus('loading', 'Αποθήκευση…');
+  btn.disabled = true; btn.textContent = t('Αποθήκευση…');
+  setSyncStatus('loading', t('Αποθήκευση…'));
 
   try {
     if (editId) {
@@ -623,9 +652,9 @@ async function saveEntry() {
       // and log history against the stored quantity rather than the stale one on screen
       const [fresh] = await sbFetch(`${TABLE}?id=eq.${editId}&select=posotita,updated_at,updated_by`);
       if (fresh && fresh.updated_at !== editLoadedAt && !confirm(
-        `Το εμβόλιο τροποποιήθηκε ${fresh.updated_by ? 'από ' + fresh.updated_by : 'από άλλον χρήστη'} ενώ το επεξεργαζόσουν.\n\n` +
-        `Πάτα OK για να αποθηκεύσεις τις αλλαγές σου (αντικαθιστά τις αλλαγές τους)\n` +
-        `ή Ακύρωση για να ανανεώσεις και να δεις τις νεότερες τιμές.`
+        t('Το εμβόλιο τροποποιήθηκε {who} ενώ το επεξεργαζόσουν.', { who: fresh.updated_by ? t('από {name}', { name: tValue(fresh.updated_by) }) : t('από άλλον χρήστη') }) + '\n\n' +
+        t('Πάτα OK για να αποθηκεύσεις τις αλλαγές σου (αντικαθιστά τις αλλαγές τους)') + '\n' +
+        t('ή Ακύρωση για να ανανεώσεις και να δεις τις νεότερες τιμές.')
       )) {
         const id = editId;
         closeModal();
@@ -642,7 +671,7 @@ async function saveEntry() {
       }
       const idx = data.findIndex(r => r.id === editId);
       if (idx >= 0) data[idx] = updated;
-      toast('Ενημερώθηκε ✓');
+      toast(t('Ενημερώθηκε ✓'));
     } else {
       // new entry
       const row = { emvolio, posotita, monada, sxolia,
@@ -651,15 +680,15 @@ async function saveEntry() {
       await sbHInsert({ inventory_id: inserted.id, user_name: currentUser, ts: now,
         posotita_before: null, posotita_after: posotita });
       data.unshift({ ...inserted, _new: true });
-      toast('Προστέθηκε ✓');
+      toast(t('Προστέθηκε ✓'));
     }
     closeModal(); render();
-    setSyncStatus('ok', 'Αποθηκεύτηκε ✓');
+    setSyncStatus('ok', t('Αποθηκεύτηκε ✓'));
   } catch(e) {
-    setSyncStatus('err', 'Σφάλμα');
-    toast('Σφάλμα: ' + e.message, true);
+    setSyncStatus('err', t('Σφάλμα'));
+    toast(t('Σφάλμα: {msg}', { msg: e.message }), true);
   } finally {
-    btn.disabled = false; btn.textContent = 'Αποθήκευση';
+    btn.disabled = false; btn.textContent = t('Αποθήκευση');
   }
 }
 
@@ -682,11 +711,11 @@ async function confirmDelete() {
     await sbDelete(deleteId);
     data = data.filter(r => r.id !== deleteId);
     closeConfirm(); render();
-    toast('Διαγράφηκε.');
-    setSyncStatus('ok', 'Αποθηκεύτηκε ✓');
+    toast(t('Διαγράφηκε.'));
+    setSyncStatus('ok', t('Αποθηκεύτηκε ✓'));
   } catch(e) {
-    toast('Σφάλμα διαγραφής: ' + e.message, true);
-    setSyncStatus('err', 'Σφάλμα');
+    toast(t('Σφάλμα διαγραφής: {msg}', { msg: e.message }), true);
+    setSyncStatus('err', t('Σφάλμα'));
   }
 }
 
@@ -729,7 +758,9 @@ document.addEventListener('keydown', e => {
 })();
 
 // shared sign-in, load-once guard and ⌂/Έξοδος buttons: common.js
-startPage({ onSignedIn: name => initApp(name) });
+// unsaved work = the edit window is open (asked before switching language)
+startPage({ onSignedIn: name => initApp(name), translated: true,
+  hasUnsavedWork: () => document.getElementById('edit-bg').style.display !== 'none' });
 </script>
 </body>
 </html>

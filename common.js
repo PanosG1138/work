@@ -41,7 +41,7 @@ addTranslations({
   'Γλώσσα': 'Language',
   'Έχετε αλλαγές που δεν αποθηκεύτηκαν. Συνέχεια;': 'You have unsaved changes. Continue?',
   // values stored in Greek, translated on screen only
-  'ΝΑΙ': 'YES', 'ΟΧΙ': 'NO', 'Αυτόματα': 'Automatic',
+  'ΝΑΙ': 'YES', 'ΟΧΙ': 'NO', 'Αυτόματα': 'Automatic', 'Δόσεις': 'Doses', 'Κιλά': 'kg',
   // short weekday names
   'Κυρ': 'Sun', 'Δευ': 'Mon', 'Τρί': 'Tue', 'Τετ': 'Wed', 'Πέμ': 'Thu', 'Παρ': 'Fri', 'Σάβ': 'Sat',
 });
@@ -61,9 +61,9 @@ function t(greek, values) {
   return text;
 }
 
-// a value stored in Greek in the database (ΝΑΙ, ΟΧΙ, Αυτόματα) shown in the reader's language;
+// a value stored in Greek in the database (ΝΑΙ, ΟΧΙ, Αυτόματα, the stock unit) shown in the reader's language;
 // any other stored value (names, notes, dates) comes back unchanged and is never reported missing
-const STORED_GREEK = ['ΝΑΙ', 'ΟΧΙ', 'Αυτόματα'];
+const STORED_GREEK = ['ΝΑΙ', 'ΟΧΙ', 'Αυτόματα', 'Δόσεις', 'Κιλά'];
 function tValue(value) { return STORED_GREEK.includes(value) ? t(value) : value; }
 
 // translate every tagged element: data-t (its own text — tag only elements holding just text),
