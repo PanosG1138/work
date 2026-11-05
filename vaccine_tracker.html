@@ -1132,7 +1132,7 @@ addTranslations({
   'Εκκόλαψη — Αναθρεπτήριο': 'Hatch — House', 'Εκκόλαψη': 'Hatch',
   'Παρ.': 'Ord.', 'Ψυγ.': 'Fr.', 'Εμβ.': 'Vacc.', 'Ενέργειες': 'Actions', 'Επεξ.': 'Edit',
   'Σύνολο εκκρεμών ποσοτήτων': 'Total pending quantities', '💉 Δεν βρέθηκαν εγγραφές.': '💉 No records found.',
-  'Διπλό κλικ για επεξεργασία': 'Double-click to edit', '{n} εγγραφή': '{n} record', '{n} εγγραφές': '{n} records',
+  'Διπλό κλικ για επεξεργασία': 'Double-click to edit', 'Κλικ για επεξεργασία': 'Click to edit', '{n} εγγραφή': '{n} record', '{n} εγγραφές': '{n} records',
   'CSV εξαχθέν': 'CSV exported', 'ή': 'or',
   // edit window, history, delete
   'Επεξεργασία Παραγγελίας': 'Edit order', 'Διαγραφή': 'Delete', 'Ακύρωση': 'Cancel', 'Αποθήκευση': 'Save',
@@ -1202,7 +1202,7 @@ const sbHistory = rowId     => sbFetch(`${HTABLE}?row_id=eq.${rowId}&order=ts.as
 const sbHInsert = entry     => sbFetch(HTABLE, { method:'POST', body: JSON.stringify(entry) });
 // fetch history entries by other users since a given timestamp, joined with vaccine name via row_id
 const sbChangelog = (since, user) =>
-  sbFetch(`${HTABLE}?ts=gt.${since}&user_name=neq.${encodeURIComponent(user)}&order=ts.desc&limit=50`);
+  sbFetch(`${HTABLE}?ts=gt.${since}&user_name=neq.${encodeURIComponent(user)}&order=ts.desc`);
 
 // ── STATE ─────────────────────────────────────────────────────────
 let data = [], sortCol = 'hm_emv', sortDir = 1;
@@ -1977,9 +1977,11 @@ async function saveEdit() {
   const g  = id => document.getElementById(id).value;
   const gd = id => document.getElementById(id).dataset.iso || null;
   const now = new Date().toISOString();
+  // the row being saved, remembered now: Esc closes the window (editId = null) while a save is still running
+  const id = editId, loadedAt = editLoadedAt;
 
   // snapshot before state for diff
-  const idx = data.findIndex(x => x.id === editId);
+  const idx = data.findIndex(x => x.id === id);
   const before = idx >= 0 ? { ...data[idx] } : {};
 
   const row = {
@@ -2022,9 +2024,9 @@ async function saveEdit() {
     // ── Concurrency check ─────────────────────────────────────────
     // Fetch the current updated_at from Supabase before writing.
     // If it differs from what we loaded, someone else saved in the meantime.
-    if (editLoadedAt !== undefined) {
-      const [fresh] = await sbFetch(`${TABLE}?id=eq.${editId}&select=updated_at,updated_by`);
-      if (fresh && fresh.updated_at !== editLoadedAt) {
+    if (loadedAt !== undefined) {
+      const [fresh] = await sbFetch(`${TABLE}?id=eq.${id}&select=updated_at,updated_by`);
+      if (fresh && fresh.updated_at !== loadedAt) {
         const who = fresh.updated_by ? t('από {name}', { name: tValue(fresh.updated_by) }) : t('από άλλον χρήστη');
         const overwrite = confirm(
           t('Η εγγραφή τροποποιήθηκε {who} ενώ την επεξεργαζόσουν.', { who }) + '\n\n' +
@@ -2036,17 +2038,17 @@ async function saveEdit() {
           btn.disabled = false; btn.textContent = t('Αποθήκευση');
           setSyncStatus('loading', t('Ανανέωση…'));
           await loadData();
-          editEntry(editId);
+          editEntry(id);
           return;
         }
       }
     }
     // ─────────────────────────────────────────────────────────────
-    const [updated] = await sbUpdate(editId, row);
+    const [updated] = await sbUpdate(id, row);
     // only log history if something actually changed
     if (Object.keys(changes).length > 0) {
       await sbHInsert({
-        row_id: editId, action: 'edited', user_name: currentUser, ts: now,
+        row_id: id, action: 'edited', user_name: currentUser, ts: now,
         changes_json: JSON.stringify(changes),
       });
     }
@@ -2294,7 +2296,7 @@ function hvChipClass(r) {
 
 function hvRowHTML(r) {
   const fri = r.psygeio === 'ΝΑΙ';
-  return `<div class="hv-row${r.emvoliasmos === 'ΝΑΙ' ? ' done' : ''}" onclick="editEntry(${r.id})" title="${t('Διπλό κλικ για επεξεργασία')}">` +
+  return `<div class="hv-row${r.emvoliasmos === 'ΝΑΙ' ? ' done' : ''}" onclick="editEntry(${r.id})" title="${t('Κλικ για επεξεργασία')}">` +
     `<span class="hv-chip ${hvChipClass(r)}">${fmt(r.hm_emv) || '—'}</span>` +
     `<span class="hv-vacc">${x(vaccineLabel(r.emvolio))}</span>` +
     (r.posotita ? `<span class="hv-qty">×${fmtPosotita(r.posotita)}</span>` : '') +
@@ -2892,9 +2894,9 @@ async function showChangelog(user, open) {
     since = new Date(Date.now() - 7 * 86400000).toISOString();
   }
 
-  // save current timestamp as the new "last seen" before fetching
-  // (so any changes made during this session count as seen next time)
-  try { localStorage.setItem(changelogKey(user), new Date().toISOString()); } catch(e) {}
+  // the new "last seen" is taken now but saved only after the changes loaded — a failed load
+  // (bad connection) must not mark them as seen, or they'd never be shown
+  const seenAt = new Date().toISOString();
 
   const list = document.getElementById('changelog-list');
   list.innerHTML = `<div class="cl-empty">${t('Φόρτωση…')}</div>`;
@@ -2907,6 +2909,7 @@ async function showChangelog(user, open) {
 
   try {
     const hist = await sbChangelog(since, user);
+    try { localStorage.setItem(changelogKey(user), seenAt); } catch(e) {}
 
     if (!hist || !hist.length) {
       list.innerHTML = `<div class="cl-empty">${t('✓ Δεν υπάρχουν νέες αλλαγές από άλλους χρήστες.')}</div>`;

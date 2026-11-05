@@ -47,7 +47,7 @@ Per hatch the scheduler looks at four events: chick placement, Vaccination 1, Va
 Loading (the loading days in the table above, per the hatch's Πτηνοτροφική setting; all houses follow
 the same rules).
 
-- **Chick placement** = hatch **+2 days** for ISA, Hy-Line (Pluriton) and H&N, **+1 day** for
+- **Chick placement** = hatch **+2 days** for ISA, Hy-Line (Pluriton) and H&N (White, Brown, Coral), **+1 day** for
   Novogen. No breed chosen yet = either day. Two placements clash **only on the same day**.
 - **Vaccination / loading**: vax–vax, loading–Vax 2 and loading–loading of two houses clash only
   when they **share at least one day** — no buffer before or after. **Loading never clashes with

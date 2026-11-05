@@ -202,7 +202,7 @@ jobs:
               for item in due:
                   weekend_note = ""
                   if item['orig_day']:
-                      weekend_note = f'<tr><td colspan="2" style="padding:2px 12px 8px;font-size:12px;color:#9a6700;">⚠ Feed date was {item["orig_day"]} — moved to avoid weekend</td></tr>'
+                      weekend_note = f'<tr><td colspan="5" style="padding:2px 12px 8px;font-size:12px;color:#9a6700;">⚠ Feed date was {item["orig_day"]} — moved to avoid weekend</td></tr>'
                   rows_html += f"""
                   <tr style="border-bottom:1px solid #e0e0e0;">
                     <td style="padding:10px 12px;font-weight:600;color:#1f2328;">{item['house']}</td>

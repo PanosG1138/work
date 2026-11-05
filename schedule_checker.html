@@ -234,7 +234,7 @@ header{
       <label data-t>Ράτσα</label>
       <select id="m-breed">
         <option value="" data-t>— δεν αποφασίστηκε —</option>
-        <option>ISA</option><option>Hy-Line</option><option>Novogen</option><option>H&amp;N</option>
+        <option>ISA</option><option>Hy-Line</option><option>Novogen</option><option>H&amp;N White</option><option>H&amp;N Brown</option><option>H&amp;N Coral</option>
       </select>
     </div>
     <div class="fgroup">
@@ -357,7 +357,7 @@ const HOUSE_FROM = { 'Θ7': '2027-10-25' };   // new house: no hatch possible be
 const PAIRS = [ { houses: ['Θ1', 'Θ2'], min: 7, max: 12 }, { houses: ['Θ4', 'Θ5'], min: 7, max: 15 } ];
 const pairOf = house => PAIRS.find(p => p.houses.includes(house));
 const MAX_SHIFT = 120;    // suggested moves look this many days either way
-/* days from hatch to chick placement: Novogen next day, ISA/Hy-Line/H&N two days; no breed yet = either */
+/* days from hatch to chick placement: Novogen next day, ISA/Hy-Line/H&N (White, Brown, Coral) two days; no breed yet = either */
 function placeDays(breed){ return breed === 'Novogen' ? [1] : breed ? [2] : [1, 2]; }
 const STATUS_CLASS = { 'Confirmed':'b-ok', 'Requested':'b-rq', 'Not ordered':'b-no' };
 // status, house type and Πτηνοτροφική choice are saved in English; shown through t() (Aviary is never translated — user)
@@ -725,7 +725,7 @@ function openCustomers(id){
   document.getElementById('cust-close').focus();
 }
 function closeCustomers(){ document.getElementById('cust-bg').classList.add('hidden'); }
-document.addEventListener('keydown', e => { if(e.key === 'Escape') closeCustomers(); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape'){ closeCustomers(); closeModal(); closeConfirm(); } });
 
 /* Card shell: click (or Enter/Space) toggles expanded; state survives re-renders, not page reloads. */
 const openCards = new Set();
@@ -918,15 +918,16 @@ async function saveNew(){
   const status = document.getElementById('m-status').value;
   const ptino  = document.getElementById('m-ptino').value || null;
   if(!house || !date) return;
+  const id = editId;   // remembered now: Esc closes the window (editId = null) while a save is still running
   const btn = document.getElementById('m-save');
   btn.disabled = true;
   const origText = btn.textContent;
   btn.textContent = t('Αποθήκευση…');
   try{
-    if(editId){
+    if(id){
       // keep only means something while unconfirmed, so confirming clears it
-      const [updated] = await sbUpdate(editId, {doc_date:date, breed, status, ptino, ...(status === 'Confirmed' && {keep:false})});
-      data = data.map(r => r.id===editId ? updated : r);
+      const [updated] = await sbUpdate(id, {doc_date:date, breed, status, ptino, ...(status === 'Confirmed' && {keep:false})});
+      data = data.map(r => r.id===id ? updated : r);
       setSyncStatus('ok', t('Ενημερώθηκε'));
     } else {
       const [inserted] = await sbInsert({house, doc_date:date, breed, status, ptino, keep: addKeep && status !== 'Confirmed'});

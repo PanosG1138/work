@@ -239,7 +239,8 @@ addTranslations({
 // ── FEED SCHEDULES ── breeds, phases, additives, aviaries and the weekend rule live in common.js (FEED RULES)
 
 // Scheduler (placements) breed → breed name used here
-const SCHEDULER_BREED = { 'ISA': 'ISA Brown', 'Hy-Line': 'Hy-Line Brown', 'Novogen': 'Novogen Brown' };
+const SCHEDULER_BREED = { 'ISA': 'ISA Brown', 'Hy-Line': 'Hy-Line Brown', 'Novogen': 'Novogen Brown',
+  'H&N White': 'H&N White', 'H&N Brown': 'H&N Brown', 'H&N Coral': 'H&N Coral' };
 
 const REARING_TYPES = ['Cage', 'Barn'];
 const HOUSES     = ['Θ1','Θ2','Θ3','Θ4','Θ5'];
@@ -789,7 +790,8 @@ function onRearingTypeChange(idx, val) {
 }
 
 // ── ZOOM ──────────────────────────────────────────────────────────
-let zoom = parseFloat(localStorage.getItem('feed_zoom') || '1');
+let zoom = 1;
+try { zoom = parseFloat(localStorage.getItem('feed_zoom') || '1'); } catch (e) {}   // storage blocked: default size
 function applyZoom() {
   zoom = Math.max(0.5, Math.min(2, Math.round(zoom * 10) / 10));
   const m = document.getElementById('main');
@@ -797,7 +799,7 @@ function applyZoom() {
   m.style.width          = `calc(100% / ${zoom})`;
   m.style.transformOrigin = 'top left';
   document.getElementById('zoom-label').textContent = Math.round(zoom * 100) + '%';
-  localStorage.setItem('feed_zoom', zoom);
+  try { localStorage.setItem('feed_zoom', zoom); } catch (e) {}
 }
 function changeZoom(delta) { zoom += delta; applyZoom(); }
 

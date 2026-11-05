@@ -536,6 +536,7 @@ async function loadHistory(id) {
 
 // ── SAVE ──────────────────────────────────────────────────────────
 async function saveEntry() {
+  const id = editId;   // remembered now: Esc closes the window (editId = null) while a save is still running
   let emvolio    = document.getElementById('m-emvolio').value.trim();
   const posotita = rawNum(document.getElementById('m-posotita').value);
   const monada   = document.getElementById('m-monada').value;
@@ -544,13 +545,13 @@ async function saveEntry() {
   if (!emvolio) { toast(t('Εισάγετε όνομα εμβολίου.'), true); return; }
   if (Number.isNaN(posotita)) { toast(t('Η ποσότητα πρέπει να είναι ακέραιος αριθμός, χωρίς δεκαδικά (π.χ. 60.000)'), true); return; }
   // a new or renamed item goes through the spelling check; an unchanged name was checked when saved
-  if (emvolio !== (editId ? data.find(r => r.id === editId)?.emvolio : null)) {
+  if (emvolio !== (id ? data.find(r => r.id === id)?.emvolio : null)) {
     emvolio = await resolveVaccineName(emvolio);
     if (emvolio === null) return;
   }
   // a second item with the same name (new or renamed; ignoring case and extra spaces) would split that vaccine's stock
   const sameName = s => (s || '').trim().replace(/\s+/g, ' ').toUpperCase();
-  if (data.some(r => r.id !== editId && sameName(r.emvolio) === sameName(emvolio))) {
+  if (data.some(r => r.id !== id && sameName(r.emvolio) === sameName(emvolio))) {
     toast(t('Υπάρχει ήδη εμβόλιο με αυτό το όνομα — επεξεργαστείτε το υπάρχον'), true);
     return;
   }
@@ -561,29 +562,28 @@ async function saveEntry() {
   setSyncStatus('loading', t('Αποθήκευση…'));
 
   try {
-    if (editId) {
+    if (id) {
       // re-read the item: if the other user saved it since this window opened, ask before overwriting,
       // and log history against the stored quantity rather than the stale one on screen
-      const [fresh] = await sbFetch(`${TABLE}?id=eq.${editId}&select=posotita,updated_at,updated_by`);
+      const [fresh] = await sbFetch(`${TABLE}?id=eq.${id}&select=posotita,updated_at,updated_by`);
       if (fresh && fresh.updated_at !== editLoadedAt && !confirm(
         t('Το εμβόλιο τροποποιήθηκε {who} ενώ το επεξεργαζόσουν.', { who: fresh.updated_by ? t('από {name}', { name: tValue(fresh.updated_by) }) : t('από άλλον χρήστη') }) + '\n\n' +
         t('Πάτα OK για να αποθηκεύσεις τις αλλαγές σου (αντικαθιστά τις αλλαγές τους)') + '\n' +
         t('ή Ακύρωση για να ανανεώσεις και να δεις τις νεότερες τιμές.')
       )) {
-        const id = editId;
         closeModal();
         await loadData();
         openEdit(id);
         return;
       }
       const row = { emvolio, posotita, monada, sxolia, updated_by: currentUser, updated_at: now };
-      const [updated] = await sbUpdate(editId, row);   // throws ROW_GONE if the item was deleted
+      const [updated] = await sbUpdate(id, row);   // throws ROW_GONE if the item was deleted
       // only log if qty changed
       if (String(fresh.posotita ?? '') !== String(posotita ?? '')) {
-        await sbHInsert({ inventory_id: editId, user_name: currentUser, ts: now,
+        await sbHInsert({ inventory_id: id, user_name: currentUser, ts: now,
           posotita_before: fresh.posotita, posotita_after: posotita });
       }
-      const idx = data.findIndex(r => r.id === editId);
+      const idx = data.findIndex(r => r.id === id);
       if (idx >= 0) data[idx] = updated;
       toast(t('Ενημερώθηκε ✓'));
     } else {
