@@ -580,7 +580,7 @@ async function saveEntry() {
       const [updated] = await sbUpdate(id, row);   // throws ROW_GONE if the item was deleted
       // only log if qty changed
       if (String(fresh.posotita ?? '') !== String(posotita ?? '')) {
-        await sbHInsert({ inventory_id: id, user_name: currentUser, ts: now,
+        await sbHInsert({ inventory_id: id, emvolio, user_name: currentUser, ts: now,
           posotita_before: fresh.posotita, posotita_after: posotita });
       }
       const idx = data.findIndex(r => r.id === id);
@@ -591,7 +591,7 @@ async function saveEntry() {
       const row = { emvolio, posotita, monada, sxolia,
         created_by: currentUser, created_at: now, updated_by: currentUser, updated_at: now };
       const [inserted] = await sbInsert(row);
-      await sbHInsert({ inventory_id: inserted.id, user_name: currentUser, ts: now,
+      await sbHInsert({ inventory_id: inserted.id, emvolio, user_name: currentUser, ts: now,
         posotita_before: null, posotita_after: posotita });
       data.unshift({ ...inserted, _new: true });
       toast(t('Προστέθηκε ✓'));
@@ -620,10 +620,13 @@ function closeConfirm() {
   deleteId = null;
 }
 async function confirmDelete() {
-  if (!deleteId) return;
+  const r = data.find(x => x.id === deleteId);   // remembered now: Esc clears deleteId
+  if (!r) return;
   try {
-    await sbDelete(deleteId);
-    data = data.filter(r => r.id !== deleteId);
+    await sbDelete(r.id);
+    await sbHInsert({ inventory_id: r.id, emvolio: r.emvolio, user_name: currentUser, ts: new Date().toISOString(),
+      posotita_before: r.posotita, posotita_after: null });   // history stays after a delete
+    data = data.filter(x => x.id !== r.id);
     closeConfirm(); render();
     toast(t('Διαγράφηκε.'));
     setSyncStatus('ok', t('Αποθηκεύτηκε ✓'));

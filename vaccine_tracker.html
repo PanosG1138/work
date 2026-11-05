@@ -439,6 +439,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
 .cl-action{font-size:11px;padding:1px 7px;border-radius:99px;border:1px solid;font-weight:500}
 .cl-action.created{color:var(--gh-success-fg);border-color:rgba(79,209,139,0.4);background:var(--gh-success-subtle)}
 .cl-action.edited{color:var(--gh-attention-fg);border-color:rgba(240,180,41,0.4);background:var(--gh-attention-subtle)}
+.cl-action.deleted{color:var(--gh-danger-fg);border-color:rgba(255,107,107,0.4);background:var(--gh-danger-subtle)}
 .cl-vaccine{font-size:12px;font-weight:600;color:var(--gh-accent-fg)}
 .cl-ctx{font-size:11px;font-weight:400;color:var(--gh-fg-muted)}
 .cl-time{font-size:11px;color:var(--gh-fg-muted);margin-left:auto}
@@ -1137,7 +1138,7 @@ addTranslations({
   // edit window, history, delete
   'Επεξεργασία Παραγγελίας': 'Edit order', 'Διαγραφή': 'Delete', 'Ακύρωση': 'Cancel', 'Αποθήκευση': 'Save',
   'Ιστορικό αλλαγών': 'Change history', 'Δεν υπάρχει ιστορικό.': 'No history.', 'Σφάλμα φόρτωσης ιστορικού.': "Couldn't load history.",
-  'Καταχώρηση': 'Created', 'Επεξεργασία': 'Edited', 'κενό': 'empty',
+  'Καταχώρηση': 'Created', 'Επεξεργασία': 'Edited', 'Διαγράφηκε': 'Deleted', 'κενό': 'empty',
   'Διαγραφή αυτής της παραγγελίας;': 'Delete this order?',
   'Διαγραφή…': 'Deleting…', 'Διαγράφηκε ✓': 'Deleted ✓', 'Η εγγραφή διαγράφηκε': 'Record deleted', 'Η εγγραφή ενημερώθηκε': 'Record updated',
   'Η εγγραφή δεν υπάρχει πια (ίσως διαγράφηκε) — πατήστε Ανανέωση.': 'The record no longer exists (maybe deleted) — press Refresh.',
@@ -2077,12 +2078,14 @@ function promptDelete(id) {
 
 async function confirmDelete() {
   if (!guardConnected()) return;
+  const row = data.find(x => x.id === deleteId);   // remembered now: Esc clears deleteId
   const btn = document.getElementById('btn-confirm-del');
   btn.disabled=true; btn.textContent = t('Διαγραφή…');
   setSyncStatus('loading', t('Διαγραφή…'));
   try {
-    await sbDelete(deleteId);
-    data = data.filter(x => x.id !== deleteId);
+    await sbDelete(row.id);
+    await logDeleted([row]);
+    data = data.filter(x => x.id !== row.id);
     closeConfirm(); render();
     setSyncStatus('ok', t('Διαγράφηκε ✓'));
     toast(t('Η εγγραφή διαγράφηκε'));
@@ -2094,6 +2097,15 @@ async function confirmDelete() {
   }
 }
 function closeConfirm() { document.getElementById('confirm-bg').style.display='none'; deleteId=null; }
+
+// one 'deleted' history entry per row, holding its last values (every field → empty), so the other
+// user's changes popup shows what was deleted. Used by confirmDelete and confirmBatchDelete.
+function logDeleted(rows) {
+  const now = new Date().toISOString();
+  const emptied = Object.fromEntries(Object.keys(FIELD_LABELS).map(k => [k, null]));
+  return Promise.all(rows.map(r => sbHInsert({ row_id: r.id, action: 'deleted', user_name: currentUser, ts: now,
+    changes_json: JSON.stringify(buildChanges(r, emptied)) })));
+}
 
 // ── RENDER ────────────────────────────────────────────────────────
 // combined flock label: "04/07/2026 – Θ3"
@@ -2704,6 +2716,7 @@ async function confirmBatchDelete() {
 
   try {
     await Promise.all(ids.map(id => sbDelete(id)));
+    await logDeleted(data.filter(r => ids.includes(r.id)));
     data = data.filter(r => !ids.includes(r.id));
     closeBatchDel(); clearSelection(); render();
     setSyncStatus('ok', t('Διαγράφηκαν ✓'));
@@ -2919,7 +2932,8 @@ async function showChangelog(user, open) {
     // group by row_id to get vaccine name from data (already loaded)
     list.innerHTML = '';
     hist.forEach(h => {
-      const row = data.find(r => r.id === h.row_id);
+      const lastValues = () => Object.fromEntries(Object.entries(JSON.parse(h.changes_json)).map(([k, c]) => [k, c.from]));
+      const row = data.find(r => r.id === h.row_id) || (h.action === 'deleted' && h.changes_json ? lastValues() : null);
       const vaccineName = row ? vaccineLabel(row.emvolio) : t('(διαγραμμένο)');
       // build contextual subtitle: vaccine | anath – hm_ekk
       let vaccineCtx = x(vaccineName);
@@ -2954,7 +2968,7 @@ async function showChangelog(user, open) {
       div.innerHTML =
         `<div class="cl-header">` +
           `<span class="cl-user">${x(tValue(h.user_name))}</span>` +
-          `<span class="cl-action ${h.action}">${t(h.action === 'created' ? 'Καταχώρηση' : 'Επεξεργασία')}</span>` +
+          `<span class="cl-action ${h.action}">${t({ created: 'Καταχώρηση', deleted: 'Διαγράφηκε' }[h.action] || 'Επεξεργασία')}</span>` +
           `<span class="cl-vaccine">${vaccineCtx}</span>` +
           `<span class="cl-time">${fmtDt(h.ts)}</span>` +
         `</div>` +

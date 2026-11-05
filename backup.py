@@ -43,8 +43,8 @@ INVENTORY_COLUMNS = ["id", "emvolio", "posotita", "monada", "sxolia",
 INVENTORY_HEADERS = ["ID", "ΕΜΒΟΛΙΟ", "ΠΟΣΟΤΗΤΑ", "ΜΟΝΑΔΑ", "ΣΧΟΛΙΑ",
                      "ΔΗΜΙΟΥΡΓΗΘΗΚΕ ΑΠΟ", "ΔΗΜΙΟΥΡΓΗΘΗΚΕ", "ΕΠΕΞΕΡΓΑΣΤΗΚΕ ΑΠΟ", "ΕΠΕΞΕΡΓΑΣΤΗΚΕ"]
 
-INV_HISTORY_COLUMNS = ["id", "inventory_id", "user_name", "ts", "posotita_before", "posotita_after"]
-INV_HISTORY_HEADERS = ["ID", "INVENTORY ID", "ΧΡΗΣΤΗΣ", "ΧΡΟΝΟΣ", "ΠΟΣΟΤΗΤΑ ΠΡΙΝ", "ΠΟΣΟΤΗΤΑ ΜΕΤΑ"]
+INV_HISTORY_COLUMNS = ["id", "inventory_id", "emvolio", "user_name", "ts", "posotita_before", "posotita_after"]
+INV_HISTORY_HEADERS = ["ID", "INVENTORY ID", "ΕΜΒΟΛΙΟ", "ΧΡΗΣΤΗΣ", "ΧΡΟΝΟΣ", "ΠΟΣΟΤΗΤΑ ΠΡΙΝ", "ΠΟΣΟΤΗΤΑ ΜΕΤΑ"]
 
 # ── FETCH ─────────────────────────────────────────────────────────
 def fetch(table, order):
