@@ -127,6 +127,8 @@ header{
 .cust-table .pt{color:var(--gh-accent-fg);font-weight:600}
 .cust-table .tot td{font-weight:700;border-bottom:none}
 .cust-note{font-size:11.5px;color:var(--gh-fg-muted)}
+.cust-table .has-note{cursor:pointer}
+.note-mark{margin-left:4px;font-size:11px;color:var(--gh-fg-muted)}
 .cust-cap{display:flex;justify-content:space-between;margin-top:12px;font-size:13px}
 .cust-cap .free{color:var(--gh-success-fg)}
 .cust-cap .over{color:var(--gh-danger-fg);font-weight:700}
@@ -701,7 +703,7 @@ function cardBody(house, s, breed, hl = new Set(), ptino = null, chicks = null){
 
 /* Customers of a hatch: a "Customers" button on the card (total booked, red when over capacity) opens a pop-up
    table. customers = placements.customers, copied from ΠΑΡΑΓΓΕΛΙΕΣ - ΝΕΟ ΠΛΑΝΟ.xlsx:
-   [{name: column F text, k, l, c}] (BROWN / WHITE / CORAL). */
+   [{name: column F text, note: column G text (2027+ tabs only), k, l, c}] (BROWN / WHITE / CORAL). */
 const CAPACITY = { 'Θ1': 52000, 'Θ2': 51000, 'Θ3': 52000, 'Θ4': 52000, 'Θ5': 64000, 'Θ7': 70000 };
 const PTINO_RE = /^(Πτηνοτροφική|Φραγκούλης)/;   // not "Φραγκου", a different customer
 const nf = n => n.toLocaleString('el-GR');
@@ -721,9 +723,13 @@ function openCustomers(id){
   document.getElementById('cust-sub').textContent = [r.breed || t('Ράτσα —'), t('Εκτροφή: {sys}', { sys: systemLabel(HOUSES[r.house]) })].join(' · ');
   document.getElementById('cust-body').innerHTML = !list.length ? `<p class="muted">${t('Δεν υπάρχουν πελάτες ακόμα.')}</p>` :
     `<table class="cust-table"><tr><th>${t('Πελάτης')}</th><th>Κ</th><th>Λ</th><th>C</th><th>${t('Σύνολο')}</th></tr>` +
-    list.map(c => { const [name, ...rest] = c.name.split(' - ');
-      return `<tr><td><span${PTINO_RE.test(c.name) ? ' class="pt"' : ''}>${esc(name)}</span>` +
-        (rest.length ? `<div class="cust-note">${esc(rest.join(' · '))}</div>` : '') +
+    // 2027+ tabs: name and note are separate (columns F and G); older tabs: "name - note" in one cell
+    // only the name shows; a note gets a small ⓘ — hover shows it as a tooltip, a click opens it under the name
+    list.map(c => { const [name, ...rest] = c.note != null ? [c.name, ...(c.note ? c.note.split(' - ') : [])] : c.name.split(' - ');
+      const note = rest.join(' · '), cls = [PTINO_RE.test(c.name) && 'pt', note && 'has-note'].filter(Boolean).join(' ');
+      return `<tr><td><span${cls ? ` class="${cls}"` : ''}${note ? ` title="${esc(note)}" onclick="this.nextElementSibling.hidden^=1"` : ''}>` +
+        `${esc(name)}${note ? '<span class="note-mark">ⓘ</span>' : ''}</span>` +
+        (note ? `<div class="cust-note" hidden>${esc(note)}</div>` : '') +
         `</td><td>${n(c.k)}</td><td>${n(c.l)}</td><td>${n(c.c)}</td><td>${n(c.k + c.l + c.c)}</td></tr>`; }).join('') +
     `<tr class="tot"><td>${t('Σύνολο')}</td><td>${n(sum('k'))}</td><td>${n(sum('l'))}</td><td>${n(sum('c'))}</td><td>${n(total)}</td></tr></table>`;
   document.getElementById('cust-cap').innerHTML = `<span class="muted">${t('Χωρητικότητα {n}', { n: nf(cap) })}</span>` +
