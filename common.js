@@ -1,7 +1,8 @@
 // ══ common.js — shared by every page of the tools site ══════════════════════════
 // Load right after the Supabase library:   <script src="common.js?v=N"></script>
 // Used by: index.html, vaccine_tracker.html, inventory.html, feed_tracker.html,
-//          schedule_checker.html, truck_calculator_kamposos.html, truck_calculator_doukakis.html
+//          schedule_checker.html, vaccine_programme.html, truck_calculator_kamposos.html,
+//          truck_calculator_doukakis.html
 // Whenever this file changes, bump ?v=N on ALL those pages in the same commit
 // (GitHub Pages lets browsers keep an old copy for ~10 minutes).
 // Each page calls startPage({...}) as the LAST line of its script — see startPage below.
@@ -37,7 +38,7 @@ addTranslations({
   'Σύνδεση': 'Sign in', 'Είσοδος': 'Log in', 'Σύνδεση…': 'Logging in…', 'Κωδικός…': 'Password…',
   'Λάθος email ή κωδικός.': 'Wrong email or password.',
   'Δεν υπάρχει σύνδεση — δοκιμάστε ξανά.': 'No connection — try again.',
-  'Αρχική': 'Home', '← Έξοδος': '← Sign out', 'Αποσύνδεση': 'Sign out', 'Αποσύνδεση;': 'Sign out?',
+  'Αρχική': 'Home', 'Αποσύνδεση': 'Sign out', 'Αποσύνδεση;': 'Sign out?',
   'Γλώσσα': 'Language',
   'Έχετε αλλαγές που δεν αποθηκεύτηκαν. Συνέχεια;': 'You have unsaved changes. Continue?',
   // vaccine-name questions (VACCINE NAMES below)
@@ -170,18 +171,21 @@ async function signIn() {
   if (error) errEl.textContent = error.status === 400 ? t('Λάθος email ή κωδικός.') : t('Δεν υπάρχει σύνδεση — δοκιμάστε ξανά.');
 }
 
-// ── SHARED BUTTONS ── house icon (home) · ΕΛ/EN · ← Έξοδος, drawn into the page's <span id="common-nav">.
-// The homepage gets no home button. ΕΛ/EN and Έξοδος stay hidden until someone is signed in.
+// ── SHARED BUTTONS ── sign-out icon · ΕΛ/EN · house icon + Αρχική, drawn into the page's <span id="common-nav">.
+// Home sits last, the largest and easiest to hit (user, 2026-11-06). The homepage gets no home button.
+// Sign-out and ΕΛ/EN stay hidden until someone is signed in.
 function drawNav(showLanguageSwitch) {
   const nav = document.getElementById('common-nav');
   const onHomepage = /\/(index\.html)?$/.test(location.pathname);
   nav.className = 'common-nav';
   nav.innerHTML =
-    (onHomepage ? '' : `<a class="common-nav-btn" href="index.html" title="${t('Αρχική')}" aria-label="${t('Αρχική')}"><svg class="common-home-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12H3l9-9 9 9h-2"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"/></svg></a>`) +
+    `<button type="button" class="common-nav-btn" id="common-signout" title="${t('Αποσύνδεση')}" aria-label="${t('Αποσύνδεση')}" style="display:none">` +
+      '<svg class="common-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2"/><path d="M9 12h12l-3-3"/><path d="M18 15l3-3"/></svg></button>' +
     (showLanguageSwitch ? `<span class="common-lang" id="common-lang" title="${t('Γλώσσα')}" style="display:none">` +
       LANGS.map(l => `<button type="button" data-lang="${l}"${l === LANG ? ' class="on"' : ''}>${l === 'el' ? 'ΕΛ' : 'EN'}</button>`).join('') +
       '</span>' : '') +
-    `<button type="button" class="common-nav-btn" id="common-signout" title="${t('Αποσύνδεση')}" style="display:none">${t('← Έξοδος')}</button>`;
+    (onHomepage ? '' : '<a class="common-nav-btn" href="index.html"><svg class="common-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12H3l9-9 9 9h-2"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"/></svg>' +
+      `${t('Αρχική')}</a>`);
   document.getElementById('common-signout').onclick = signOut;
 }
 
