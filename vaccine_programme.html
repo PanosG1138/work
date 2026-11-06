@@ -6,8 +6,8 @@
 <title data-t>ΕΜΒΟΛΙΑ — Πρόγραμμα</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
-<script src="common.js?v=13"></script>
-<link rel="stylesheet" href="theme.css?v=13">
+<script src="common.js?v=14"></script>
+<link rel="stylesheet" href="theme.css?v=14">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--gh-canvas-default);color:var(--gh-fg-default);font-family:'Inter',system-ui,-apple-system,sans-serif;font-size:14px;line-height:1.5}
@@ -89,12 +89,15 @@ select.cell.on{border-color:rgba(79,209,139,0.5);color:var(--gh-success-fg);back
       <div class="fgroup"><label data-t>Εμβόλιο</label><input type="text" id="m-vaccine" list="vaccine-list" data-t-placeholder placeholder="Όνομα εμβολίου…"></div>
       <div class="fgroup"><label data-t>Ποσότητα</label>
         <select id="m-rule" onchange="syncModal()">
-          <option value="placed" data-t>= Νεοσσοί × συντελεστή</option>
+          <option value="placed" data-t>= Νεοσσοί + % ÷ αριθμό</option>
           <option value="fixed" data-t>Σταθερή ποσότητα</option>
         </select></div>
       <div id="m-placed">
-        <div class="fgroup"><label data-t>Συντελεστής</label><input type="text" id="m-factor"></div>
-        <div class="fgroup"><label data-t>Στρογγυλοποίηση προς τα πάνω σε</label><input type="text" id="m-round"></div>
+        <div class="fgroup"><label data-t>Επιπλέον %</label><input type="text" id="m-pct" oninput="showExample()"></div>
+        <div class="fgroup"><label data-t>Διαίρεση με</label><input type="number" id="m-div" min="1" step="1" oninput="showExample()"></div>
+        <div class="fgroup"><label data-t>Στρογγυλοποίηση προς τα πάνω σε</label><select id="m-round" onchange="showExample()">
+          <option value="1000">1.000</option><option value="5000">5.000</option><option value="10000">10.000</option></select></div>
+        <p class="muted" id="m-example" style="font-size:12px;margin:-4px 0 12px"></p>
       </div>
       <div id="m-fixed-wrap" class="fgroup"><label data-t>Σταθερή ποσότητα</label><input type="text" id="m-fixed"></div>
       <div class="fgroup"><label data-t>Μονάδα</label>
@@ -191,15 +194,15 @@ addTranslations({
   'Πελάτης': 'Customer', 'Εμείς': 'Us', 'ΚΟΡΥΖΑ': 'CORYZA',
   'Προμηθευτής ανά εμβόλιο': 'Supplier per vaccine', 'Ο προμηθευτής που προτείνεται σε κάθε νέα γραμμή.': 'The supplier suggested for every new row.', 'Προμηθευτής': 'Supplier',
   'Γραμμή προγράμματος': 'Programme row', 'Είδος': 'Type', 'ΠΡΩΤΑ ΕΝΕΣΙΜΑ': 'FIRST INJECTIONS', 'ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ': 'SECOND INJECTIONS',
-  'Όνομα εμβολίου…': 'Vaccine name…', '= Νεοσσοί × συντελεστή': '= chicks placed × factor', 'Σταθερή ποσότητα': 'Fixed quantity',
-  'Συντελεστής': 'Factor', 'Στρογγυλοποίηση προς τα πάνω σε': 'Round up to', 'Μονάδα': 'Unit', 'Μπουκαλάκια': 'Bottles',
+  'Όνομα εμβολίου…': 'Vaccine name…', '= Νεοσσοί + % ÷ αριθμό': '= chicks placed + % ÷ number', 'Σταθερή ποσότητα': 'Fixed quantity',
+  'Επιπλέον %': 'Extra %', 'Διαίρεση με': 'Divide by', 'Στρογγυλοποίηση προς τα πάνω σε': 'Round up to', 'Μονάδα': 'Unit', 'Μπουκαλάκια': 'Bottles',
   'Διαγραφή': 'Delete', 'Αποθήκευση': 'Save',
   'Φόρτωση…': 'Loading…', 'Συνδέθηκε ✓': 'Connected ✓', 'Σφάλμα σύνδεσης': 'Connection error', 'Σφάλμα: {msg}': 'Error: {msg}',
   'Αποθηκεύτηκε ✓': 'Saved ✓', 'Διαγράφηκε.': 'Deleted.', 'Δεν υπάρχουν γραμμές.': 'No rows.',
-  'ενέσιμα πελατών': "customers' injections", '= Νεοσσοί': '= chicks placed', '= Νεοσσοί × {f}, στρογγ. {step}': '= chicks placed × {f}, rounded up to {step}',
+  'ενέσιμα πελατών': "customers' injections", '= Νεοσσοί': '= chicks placed', 'στρογγ. {step}': 'rounded up to {step}', 'Π.χ. {n} νεοσσοί → {exact} → {qty}': 'E.g. {n} chicks → {exact} → {qty}',
   'Η ημέρα πρέπει να είναι ακέραιος από 1 και πάνω.': 'The day must be a whole number from 1 up.',
   'Εισάγετε όνομα εμβολίου.': 'Enter a vaccine name.',
-  'Ο συντελεστής και η στρογγυλοποίηση πρέπει να είναι θετικοί αριθμοί.': 'The factor and the rounding must be positive numbers.',
+  'Το % πρέπει να είναι 0 ή θετικό και η διαίρεση ακέραιος από 1 και πάνω.': 'The % must be 0 or more and the divisor a whole number from 1 up.',
   'Η σταθερή ποσότητα πρέπει να είναι θετικός αριθμός.': 'The fixed quantity must be a positive number.',
   'Η εγγραφή δεν υπάρχει πια — ανανεώστε τη σελίδα.': 'The record no longer exists — reload the page.',
   'Διαγραφή της γραμμής «{name}» (ημέρα {day});': 'Delete the row «{name}» (day {day})?',
@@ -229,9 +232,18 @@ const nf = n => Number(n).toLocaleString('el-GR');
 function ruleText(r) {
   if (r.kind !== 'general') return t('ενέσιμα πελατών');
   if (r.rule === 'fixed') return `${nf(r.fixed_qty)} ${t(r.unit)}`;
-  const factor = Number(r.factor), step = Number(r.round_to);
-  return factor === 1 && step <= 1000 ? t('= Νεοσσοί')
-    : t('= Νεοσσοί × {f}, στρογγ. {step}', { f: String(factor).replace('.', ','), step: nf(step) });
+  const pct = Number(r.extra_pct), div = Number(r.divide_by);
+  return t('= Νεοσσοί') + (pct ? ` + ${String(pct).replace('.', ',')}%` : '') + (div > 1 ? ` ÷ ${div}` : '')
+    + ', ' + t('στρογγ. {step}', { step: nf(r.round_to) });
+}
+// worked example under the formula fields: 54.000 chicks → 56.700 → 57.000
+const EXAMPLE_CHICKS = 54000;
+function showExample() {
+  const r = { rule: 'placed', extra_pct: Number((document.getElementById('m-pct').value.trim() || '0').replace(',', '.')),
+    divide_by: Number(document.getElementById('m-div').value), round_to: Number(document.getElementById('m-round').value) };
+  const ok = r.extra_pct >= 0 && Number.isInteger(r.divide_by) && r.divide_by >= 1;
+  document.getElementById('m-example').textContent = ok ? t('Π.χ. {n} νεοσσοί → {exact} → {qty}',
+    { n: nf(EXAMPLE_CHICKS), exact: nf(Math.round(planExact(r, EXAMPLE_CHICKS))), qty: nf(planQty(r, EXAMPLE_CHICKS)) }) : '';
 }
 
 // ── SYNC BADGE + TOAST ──
@@ -301,13 +313,13 @@ function syncModal() {
 // id null = new row
 function openProg(id) {
   editId = id;
-  const r = programme.find(x => x.id === id) || { day: '', kind: 'general', vaccine: '', rule: 'placed', factor: 1, round_to: 1000, fixed_qty: '', unit: 'Δόσεις' };
+  const r = programme.find(x => x.id === id) || { day: '', kind: 'general', vaccine: '', rule: 'placed', extra_pct: 0, divide_by: 1, round_to: 1000, fixed_qty: '', unit: 'Δόσεις' };
   const set = (el, v) => { document.getElementById(el).value = v ?? ''; };
   set('m-day', r.day); set('m-kind', r.kind); set('m-vaccine', r.vaccine); set('m-rule', r.rule);
-  set('m-factor', String(r.factor).replace('.', ',')); set('m-round', nf(r.round_to));
+  set('m-pct', String(r.extra_pct).replace('.', ',')); set('m-div', r.divide_by); set('m-round', String(r.round_to));
   set('m-fixed', r.fixed_qty == null || r.fixed_qty === '' ? '' : String(r.fixed_qty).replace('.', ',')); set('m-unit', r.unit);
   document.getElementById('m-delete').style.display = id ? '' : 'none';
-  syncModal();
+  syncModal(); showExample();
   document.getElementById('prog-bg').style.display = 'flex';
 }
 function closeProg() { document.getElementById('prog-bg').style.display = 'none'; editId = null; }
@@ -315,14 +327,14 @@ const parseNum = s => Number(String(s).trim().replace(/\./g, '').replace(',', '.
 async function saveProg() {
   const id = editId;   // remembered now: Esc closes the window (editId = null) while a save is still running
   const g = el => document.getElementById(el).value.trim();
-  const row = { day: Number(g('m-day')), kind: g('m-kind'), vaccine: null, rule: 'placed', factor: 1, round_to: 1000, fixed_qty: null, unit: 'Δόσεις' };
+  const row = { day: Number(g('m-day')), kind: g('m-kind'), vaccine: null, rule: 'placed', extra_pct: 0, divide_by: 1, round_to: 1000, fixed_qty: null, unit: 'Δόσεις' };
   if (!Number.isInteger(row.day) || row.day < 1) { toast(t('Η ημέρα πρέπει να είναι ακέραιος από 1 και πάνω.'), true); return; }
   if (row.kind === 'general') {
     if (!g('m-vaccine')) { toast(t('Εισάγετε όνομα εμβολίου.'), true); return; }
     row.rule = g('m-rule'); row.unit = g('m-unit');
     if (row.rule === 'placed') {
-      row.factor = Number(g('m-factor').replace(',', '.')); row.round_to = parseNum(g('m-round'));
-      if (!(row.factor > 0) || !Number.isInteger(row.round_to) || row.round_to < 1) { toast(t('Ο συντελεστής και η στρογγυλοποίηση πρέπει να είναι θετικοί αριθμοί.'), true); return; }
+      row.extra_pct = Number((g('m-pct') || '0').replace(',', '.')); row.divide_by = Number(g('m-div')); row.round_to = Number(g('m-round'));
+      if (!(row.extra_pct >= 0) || !Number.isInteger(row.divide_by) || row.divide_by < 1) { toast(t('Το % πρέπει να είναι 0 ή θετικό και η διαίρεση ακέραιος από 1 και πάνω.'), true); return; }
     } else {
       row.fixed_qty = Number(g('m-fixed').replace(',', '.'));
       if (!(row.fixed_qty > 0)) { toast(t('Η σταθερή ποσότητα πρέπει να είναι θετικός αριθμός.'), true); return; }

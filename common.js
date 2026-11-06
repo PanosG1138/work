@@ -278,6 +278,11 @@ const customerName = s => String(s || '').split(' - ')[0].trim();
 // ΚΟΡΥΖΑ is a column of the injectables grid, not a product: one of these is picked for each hatch
 const CORYZA = 'ΚΟΡΥΖΑ';
 const CORYZA_PRODUCTS = ['BIONEW BI + COR', 'CORIPRAVAC'];
+// a programme row's quantity before rounding: chicks + extra %, divided by divide_by
+const planExact = (r, chicks) => chicks * (100 + Number(r.extra_pct)) / 100 / Number(r.divide_by);
+// ... and after: rounded up to round_to (the 1e-9 stops 56.700,0000001 rounding past 57.000) — or the fixed amount
+const planQty = (r, chicks) => r.rule === 'fixed' ? Number(r.fixed_qty)
+  : Math.ceil(planExact(r, chicks) / r.round_to - 1e-9) * r.round_to;
 
 // ── LOADING RULES ── used by schedule_checker.html and index.html. Source of truth: docs/rearing_scheduler.md.
 // Day 0 = hatch date. Loading doesn't depend on the house: every customer's pullets load from day LOAD_START

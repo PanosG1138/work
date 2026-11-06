@@ -49,8 +49,8 @@ Linked from the vaccine tracker. Translated (ΕΛ/EN) like the other tool pages.
 | day | days after hatch (date = hatch + day) |
 | vaccine | name from the `vaccines` table; NULL on the two placeholder rows |
 | kind | `general` · `injectables_1` (ΠΡΩΤΑ ΕΝΕΣΙΜΑ) · `injectables_2` (ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ) |
-| rule | `placed` (= chicks placed × factor, rounded up to round_to) or `fixed` (fixed_qty) |
-| factor, round_to | for `placed`: default 1 and 1.000. The old IB 4/91 + Ma5 formula is factor 0.65, round_to 10.000 |
+| rule | `placed` (= (chicks placed + extra_pct %) ÷ divide_by, rounded up to round_to) or `fixed` (fixed_qty) |
+| extra_pct, divide_by, round_to | for `placed`: default 0 %, ÷ 1, 1.000; round_to is 1.000, 5.000 or 10.000. E.g. SALMOVAC +5 %: 54.000 → 56.700 → 57.000 (or 60.000). The IB 4/91 + Ma5 formula is +30 % ÷ 2 |
 | fixed_qty, unit | for `fixed`, e.g. TARTYLL 5 Κιλά |
 
 Seed (from ΕΜΒΟΛΙΑΚΟ Θ3 05/11/2026; days 0, 2 and the ΖΥΓΑΡΙΑ rows left out):

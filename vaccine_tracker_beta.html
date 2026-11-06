@@ -9,8 +9,8 @@
 <title data-t>ΕΜΒΟΛΙΑ — Beta</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
-<script src="common.js?v=13"></script>
-<link rel="stylesheet" href="theme.css?v=13">
+<script src="common.js?v=14"></script>
+<link rel="stylesheet" href="theme.css?v=14">
 <style>
 /* theme toggle button */
 
@@ -346,7 +346,8 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
 .plan-modal select.cell{padding:2px 4px;font-size:12px}
 /* vaccine names get the room (35%): tick, date, quantity and supplier columns have set shares */
 .plan-general{table-layout:fixed}
-.plan-general th:nth-child(1){width:5%}.plan-general th:nth-child(2){width:23%}.plan-general th:nth-child(4){width:17%}.plan-general th:nth-child(5){width:20%}
+.plan-general th:nth-child(1){width:5%}.plan-general th:nth-child(2){width:22%}.plan-general th:nth-child(4){width:22%}.plan-general th:nth-child(5){width:18%}
+.plan-qty{display:flex;gap:4px}.plan-qty select{width:auto;padding:2px 4px;font-size:12px}
 .plan-sec select{width:auto;display:inline-block;padding:3px 8px;font-size:12px}
 .plan-modal select.cell.on{border-color:rgba(79,209,139,0.5);color:var(--gh-success-fg)}
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(4px)}
@@ -1121,7 +1122,7 @@ body.printing-card .printcard-doc{display:block}
 // ── TRANSLATIONS ── this page's English (Greek text → English); shared words are in common.js
 addTranslations({
   'ΕΜΒΟΛΙΑ — Beta': 'VACCINES — Beta', 'Δοκιμαστική έκδοση — πατήστε για την κανονική': 'Test version — click for the normal one',
-  'Νέα εκκόλαψη από πρόγραμμα': 'New hatch from programme', '🗓 Νέα εκκόλαψη από πρόγραμμα': '🗓 New hatch from programme',
+  'Νέα εκκόλαψη από πρόγραμμα': 'New hatch from programme', 'Στρογγυλοποίηση προς τα πάνω σε': 'Round up to', '🗓 Νέα εκκόλαψη από πρόγραμμα': '🗓 New hatch from programme',
   'Επιλέξτε εκκόλαψη': 'Choose a hatch', 'έχει ήδη γραμμές': 'already has rows',
   'χωρίς Νεοσσούς — συμπληρώστε τους στον Προγραμματισμό': 'no chicks placed — fill them in on the scheduler',
   'Νεοσσοί': 'Chicks placed', 'Δεν υπάρχουν εκκολάψεις.': 'No hatches.', 'Εμβόλια': 'Vaccines', '+ Γραμμή': '+ Row',
@@ -3207,8 +3208,7 @@ let plan = null;       // the preview being edited; null = choosing the hatch
 
 const LEFTOVER = 'ΥΠΟΛΟΙΠΑ';   // the chicks no customer has booked (chicks placed − booked)
 const UNIT_TEXT = { Κιλά: 'ΚΙΛΑ', Μπουκαλάκια: 'ΜΠΟΥΚΑΛΑΚΙΑ' };   // how Ποσότητα writes non-dose units
-// one programme row's quantity for a hatch: chicks × factor, rounded up to round_to — or the fixed amount
-const planQty = (r, chicks) => r.rule === 'fixed' ? Number(r.fixed_qty) : Math.ceil(chicks * Number(r.factor) / r.round_to) * r.round_to;
+// a programme row's quantity for a hatch: planQty (common.js, VACCINE PLANNING)
 // Ποσότητα as the tracker stores it: "55000" for doses, "5 ΚΙΛΑ" otherwise
 const posotitaText = (qty, unit) => UNIT_TEXT[unit] ? `${String(qty).replace('.', ',')} ${UNIT_TEXT[unit]}` : String(qty);
 // Πελάτης as the tracker writes it: capitals without accents ("Βενιζέλος" → "ΒΕΝΙΖΕΛΟΣ")
@@ -3247,7 +3247,8 @@ function pickPlan(id) {
   const p = planData.placements.find(x => x.id === id);
   const customers = hatchCustomers(p);
   const general = planData.programme.filter(r => r.kind === 'general').map(r => ({ include: true, vaccine: r.vaccine,
-    date: subDays(p.doc_date, -r.day), posotita: posotitaText(planQty(r, p.chicks), r.unit), supplier: planData.supplier[r.vaccine] || '' }));
+    date: subDays(p.doc_date, -r.day), posotita: posotitaText(planQty(r, p.chicks), r.unit), supplier: planData.supplier[r.vaccine] || '',
+    prog: r, round_to: r.round_to }));   // prog + round_to: the round-up switch (placed rows only)
   const usualPayer = (c, round, v) => (planData.usual.find(u => u.customer === c && u.round === round && u.vaccine === v) || {}).payer || '';
   const rounds = [1, 2].map(round => {
     const placeholder = planData.programme.find(r => r.kind === `injectables_${round}`);
@@ -3276,7 +3277,9 @@ function renderPlan() {
     <td><input type="checkbox"${g.include ? ' checked' : ''} onchange="plan.general[${i}].include = this.checked"></td>
     <td><input type="date" value="${g.date}" onchange="plan.general[${i}].date = this.value"></td>
     <td><input type="text" list="vaccine-list" value="${x(g.vaccine)}" onchange="plan.general[${i}].vaccine = this.value.trim()"></td>
-    <td><input type="text" value="${x(g.posotita)}" onchange="plan.general[${i}].posotita = this.value.trim()"></td>
+    <td><div class="plan-qty"><input type="text" value="${x(g.posotita)}" onchange="plan.general[${i}].posotita = this.value.trim()">${g.prog && g.prog.rule === 'placed'
+      ? `<select title="${t('Στρογγυλοποίηση προς τα πάνω σε')}" onchange="planRound(${i}, this.value)">${[1000, 5000, 10000].map(s =>
+        `<option value="${s}"${s === g.round_to ? ' selected' : ''}>${s.toLocaleString('el-GR')}</option>`).join('')}</select>` : ''}</div></td>
     <td><input type="text" list="plan-supplier-list" value="${x(g.supplier)}" onchange="plan.general[${i}].supplier = this.value.trim().toUpperCase()"></td></tr>`).join('');
   const payerOptions = (c, now) => [['', '—'], ['us', t('Εμείς')], ...(c.leftover ? [] : [['customer', t('Πελάτης')]])]
     .map(([k, label]) => `<option value="${k}"${k === now ? ' selected' : ''}>${label}</option>`).join('');
@@ -3294,6 +3297,13 @@ function renderPlan() {
     plan.rounds.map(roundHtml).join('') +
     (plan.customers.length ? '' : `<p class="muted">${t('Η εκκόλαψη δεν έχει πελάτες στον Προγραμματισμό.')}</p>`);
 }
+// the round-up switch on a vaccine row: recompute its Ποσότητα from the programme row
+function planRound(i, step) {
+  const g = plan.general[i];
+  g.round_to = Number(step);
+  g.posotita = posotitaText(planQty({ ...g.prog, round_to: g.round_to }, plan.placement.chicks), g.prog.unit);
+  renderPlan();
+}
 function planCell(sel) {
   plan.rounds[Number(sel.dataset.k)].cells[sel.dataset.c][sel.dataset.v] = sel.value;
   sel.classList.toggle('on', !!sel.value);
@@ -3309,7 +3319,7 @@ function buildPlanRows(plan) {
     const payer = r.cells[c.name][v];
     if (!payer) return;
     const emvolio = v === CORYZA ? r.coryza : v;
-    rows.push({ ...base, emvolio, hm_emv: r.date, hm_paragelia: subDays(r.date, 30), posotita: String(c.qty),
+    rows.push({ ...base, emvolio, hm_emv: r.date, hm_paragelia: subDays(r.date, 30), posotita: String(Math.ceil(c.qty / 1000) * 1000),   // birds rounded up to 1.000
       pelatis: c.leftover ? LEFTOVER : pelatisName(c.name), payer: payer === 'customer' ? pelatisName(c.name) : null,
       promitheutis: planData.supplier[emvolio] || null, sxolia_panos: `${r.round === 1 ? 'ΠΡΩΤΑ' : 'ΔΕΥΤΕΡΑ'} ΕΝΕΣΙΜΑ ${p.house}` });
   })));
