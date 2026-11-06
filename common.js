@@ -194,6 +194,16 @@ function signOut() { if (confirm(t('Αποσύνδεση;'))) _sb.auth.signOut()
 // text made safe to put inside HTML (same as the pages' own x())
 function escapeHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+// ── WINDOW BACKGROUND CLICKS ── windows close on a click on their dark background (onclick="if(event.target===this)…").
+// Selecting text by dragging and letting go outside the window also counts as such a click, so it closed the
+// window mid-edit: a background click now counts only when the press started on the background too.
+let pressStartedOn = null;
+document.addEventListener('mousedown', e => { pressStartedOn = e.target; }, true);
+document.addEventListener('click', e => {
+  const closesOnBackground = (e.target.getAttribute && e.target.getAttribute('onclick') || '').includes('event.target===this');
+  if (closesOnBackground && pressStartedOn !== e.target) e.stopPropagation();
+}, true);
+
 // ── VACCINE NAMES ── used by vaccine_tracker.html and inventory.html (each page has the
 // #vaccine-list datalist and the #vname-bg question window this code fills in).
 // The `vaccines` table holds the one correct spelling of each name; every name saved goes
