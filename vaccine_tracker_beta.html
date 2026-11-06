@@ -38,6 +38,17 @@ body{
 }
 .shell.collapsed{--sidebar-w:0px}
 
+/* ── TABS ── (showTab) the entry sidebar belongs to Εμβόλια only */
+.shell.tab-other{--sidebar-w:0px}
+.shell.tab-other .sidebar-toggle{visibility:hidden}
+.tabs{display:flex;align-items:center;gap:2px;border-bottom:1px solid var(--gh-border-default);overflow-x:auto;flex-shrink:0}
+.tabs .tab{padding:7px 12px;border:none;border-bottom:2px solid transparent;background:none;color:var(--gh-fg-muted);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;text-decoration:none;white-space:nowrap}
+.tabs .tab:hover{color:var(--gh-fg-default)}
+.tabs .tab.on{color:var(--gh-fg-default);border-bottom-color:var(--gh-accent-fg)}
+.tab-panel{display:flex;flex-direction:column;gap:10px;flex:1;min-height:0}
+.tab-panel[hidden]{display:none}
+.tab-soon{color:var(--gh-fg-muted);font-size:13px;padding:24px 0}
+
 /* ── HEADER ── */
 header{
   grid-column:1/-1;
@@ -663,8 +674,6 @@ body.printing-card .printcard-doc{display:block}
   </div>
   <div class="header-right">
     <div id="sync-badge" class="sync-badge loading"><div class="sync-dot"></div><span id="sync-text">Σύνδεση…</span></div>
-    <a data-t href="inventory.html" class="btn-tool" data-t-title title="Απόθεμα εμβολίων">📦 Απόθεμα</a>
-    <a data-t href="vaccine_programme.html" class="btn-tool" data-t-title title="Πρόγραμμα εμβολίων και συνήθη ενέσιμα πελατών">🗓 Πρόγραμμα</a>
     <div class="zoom-ctrl">
       <button class="zoom-btn" onclick="changeZoom(-0.05)" data-t-title title="Σμίκρυνση">−</button>
       <span class="zoom-val" id="zoom-label">100%</span>
@@ -691,7 +700,6 @@ body.printing-card .printcard-doc{display:block}
   </div>
   <div class="sidebar-inner">
     <button data-t class="btn-wizard-entry" onclick="openWizard()">➕ Βήμα-προς-βήμα καταχώρηση</button>
-    <button data-t class="btn-wizard-entry" onclick="openPlan()">🗓 Νέα εκκόλαψη από πρόγραμμα</button>
     <div data-t class="wizard-entry-sub">ή συμπληρώστε τη φόρμα από κάτω</div>
     <div class="divider"></div>
     <div class="form-heading">+ <span data-t>Νέα Παραγγελία</span></div>
@@ -777,6 +785,16 @@ body.printing-card .printcard-doc{display:block}
 
 <!-- MAIN -->
 <main class="main">
+  <nav class="tabs">
+    <button data-t class="tab on" data-tab="vaccines" onclick="showTab('vaccines')">Εμβόλια</button>
+    <button data-t class="tab" data-tab="programmes" onclick="showTab('programmes')">Προγράμματα εκκολάψεων</button>
+    <button data-t class="tab" data-tab="orders" onclick="showTab('orders')">Παραγγελίες</button>
+    <button data-t class="tab" data-tab="bin" onclick="showTab('bin')">Κάδος</button>
+    <span class="tb-spacer"></span>
+    <a data-t class="tab" href="inventory.html" data-t-title title="Απόθεμα εμβολίων">📦 Απόθεμα</a>
+    <a data-t class="tab" href="vaccine_programme.html" data-t-title title="Πρόγραμμα εμβολίων και συνήθη ενέσιμα πελατών">🗓 Πρόγραμμα</a>
+  </nav>
+  <div class="tab-panel" id="tab-vaccines">
   <div class="toolbar">
     <button data-t class="btn-tool" id="btn-house-view" onclick="toggleHouseView()">🏠 Προβολή Αναθρεπτηρίων</button>
     <div class="search-wrap">
@@ -873,6 +891,13 @@ body.printing-card .printcard-doc{display:block}
   </div>
 
   <div class="house-view" id="house-view" style="display:none"></div>
+  </div>
+  <!-- filled by later steps: drafts per hatch (programmes), orders, bin -->
+  <div class="tab-panel" id="tab-programmes" hidden>
+    <div><button data-t class="btn-wizard-entry" style="width:auto;padding:0 16px" onclick="openPlan()">🗓 Νέα εκκόλαψη από πρόγραμμα</button></div>
+  </div>
+  <div class="tab-panel" id="tab-orders" hidden><p data-t class="tab-soon">Σύντομα εδώ.</p></div>
+  <div class="tab-panel" id="tab-bin" hidden><p data-t class="tab-soon">Σύντομα εδώ.</p></div>
 </main>
 <!-- FAB: mobile-only floating add button -->
 <button class="mobile-fab" style="display:none" onclick="openSidebarMobile()" data-t-title title="Νέα παραγγελία" data-t-aria-label aria-label="Νέα παραγγελία">+</button>
@@ -1121,6 +1146,7 @@ body.printing-card .printcard-doc{display:block}
 <script>
 // ── TRANSLATIONS ── this page's English (Greek text → English); shared words are in common.js
 addTranslations({
+  'Προγράμματα εκκολάψεων': 'Hatch programmes', 'Παραγγελίες': 'Orders', 'Κάδος': 'Bin', 'Σύντομα εδώ.': 'Coming soon.',
   'ΕΜΒΟΛΙΑ — Beta': 'VACCINES — Beta', 'Δοκιμαστική έκδοση — πατήστε για την κανονική': 'Test version — click for the normal one',
   'Νέα εκκόλαψη από πρόγραμμα': 'New hatch from programme', 'Στρογγυλοποίηση προς τα πάνω σε': 'Round up to', '🗓 Νέα εκκόλαψη από πρόγραμμα': '🗓 New hatch from programme',
   'Επιλέξτε εκκόλαψη': 'Choose a hatch', 'έχει ήδη γραμμές': 'already has rows',
@@ -3362,6 +3388,17 @@ async function savePlan() {
 }
 // Esc closes the plan window (the vaccine-name question stops Esc itself)
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('plan-bg').style.display === 'flex') closePlan(); });
+
+// ── TABS ── one panel per tab; the tab is kept in the URL hash (#bin) so links and reloads return to it
+const TABS = ['vaccines', 'programmes', 'orders', 'bin'];
+function showTab(name) {
+  if (!TABS.includes(name)) name = 'vaccines';
+  TABS.forEach(tab => { document.getElementById('tab-' + tab).hidden = tab !== name; });
+  document.querySelectorAll('.tabs .tab[data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
+  document.querySelector('.shell').classList.toggle('tab-other', name !== 'vaccines');
+  history.replaceState(null, '', location.pathname + location.search + (name === 'vaccines' ? '' : '#' + name));
+}
+showTab(location.hash.slice(1));
 
 // ── INIT ──────────────────────────────────────────────────────────
 // sidebarOpen already defaults to false — collapse the desktop shell to match
