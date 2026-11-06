@@ -9,8 +9,8 @@
 <title data-t>ΕΜΒΟΛΙΑ</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
-<script src="common.js?v=12"></script>
-<link rel="stylesheet" href="theme.css?v=12">
+<script src="common.js?v=13"></script>
+<link rel="stylesheet" href="theme.css?v=13">
 <style>
 /* theme toggle button */
 
@@ -646,6 +646,7 @@ body.printing-card .printcard-doc{display:block}
     <div id="sync-badge" class="sync-badge loading"><div class="sync-dot"></div><span id="sync-text">Σύνδεση…</span></div>
     <a data-t href="inventory.html" class="btn-tool" data-t-title title="Απόθεμα εμβολίων">📦 Απόθεμα</a>
     <a data-t href="vaccine_programme.html" class="btn-tool" data-t-title title="Πρόγραμμα εμβολίων και συνήθη ενέσιμα πελατών">🗓 Πρόγραμμα</a>
+    <a data-t href="vaccine_tracker_beta.html" class="btn-tool" data-t-title title="Δοκιμαστική έκδοση με τις νέες λειτουργίες">🧪 Beta</a>
     <div class="zoom-ctrl">
       <button class="zoom-btn" onclick="changeZoom(-0.05)" data-t-title title="Σμίκρυνση">−</button>
       <span class="zoom-val" id="zoom-label">100%</span>
@@ -1086,6 +1087,7 @@ body.printing-card .printcard-doc{display:block}
 <script>
 // ── TRANSLATIONS ── this page's English (Greek text → English); shared words are in common.js
 addTranslations({
+  '🧪 Beta': '🧪 Beta', 'Δοκιμαστική έκδοση με τις νέες λειτουργίες': 'Test version with the new features',
   '🗓 Πρόγραμμα': '🗓 Programme', 'Πρόγραμμα εμβολίων και συνήθη ενέσιμα πελατών': "Vaccine programme and customers' usual injections",
   // header, status, connection
   'ΕΜΒΟΛΙΑ': 'VACCINES', '📦 Απόθεμα': '📦 Stock', 'Απόθεμα εμβολίων': 'Vaccine stock',

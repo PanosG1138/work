@@ -2,7 +2,7 @@
 // Load right after the Supabase library:   <script src="common.js?v=N"></script>
 // Used by: index.html, vaccine_tracker.html, inventory.html, feed_tracker.html,
 //          schedule_checker.html, vaccine_programme.html, truck_calculator_kamposos.html,
-//          truck_calculator_doukakis.html
+//          truck_calculator_doukakis.html, vaccine_tracker_beta.html (until it replaces vaccine_tracker.html)
 // Whenever this file changes, bump ?v=N on ALL those pages in the same commit
 // (GitHub Pages lets browsers keep an old copy for ~10 minutes).
 // Each page calls startPage({...}) as the LAST line of its script — see startPage below.
@@ -270,6 +270,14 @@ function resolveVaccineAsk(v) {
   document.getElementById('vname-bg').style.display = 'none';
   if (vnameResolve) { vnameResolve(v); vnameResolve = null; }
 }
+
+// ── VACCINE PLANNING ── used by vaccine_programme.html and vaccine_tracker_beta.html.
+// Design: docs/superpowers/specs/2026-11-06-vaccine-planning-design.md
+// customer = text before " - " in placements.customers ("Συντιχάκης - από Δεκ 2026" → "Συντιχάκης")
+const customerName = s => String(s || '').split(' - ')[0].trim();
+// ΚΟΡΥΖΑ is a column of the injectables grid, not a product: one of these is picked for each hatch
+const CORYZA = 'ΚΟΡΥΖΑ';
+const CORYZA_PRODUCTS = ['BIONEW BI + COR', 'CORIPRAVAC'];
 
 // ── LOADING RULES ── used by schedule_checker.html and index.html. Source of truth: docs/rearing_scheduler.md.
 // Day 0 = hatch date. Loading doesn't depend on the house: every customer's pullets load from day LOAD_START

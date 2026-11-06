@@ -24,13 +24,13 @@ SB_HEADERS = {
 # ── COLUMN DEFINITIONS ────────────────────────────────────────────
 DATA_COLUMNS = [
     "id", "emvolio", "hm_ekk", "hm_emv", "hm_par", "hm_paragelia",
-    "anath", "pelatis", "posotita", "sxolia_panos", "sxolia_eleni",
+    "anath", "pelatis", "payer", "posotita", "sxolia_panos", "sxolia_eleni",
     "promitheutis", "paragelia", "psygeio", "emvoliasmos",
     "created_by", "created_at", "updated_by", "updated_at",
 ]
 DATA_HEADERS = [
     "ID", "ΕΜΒΟΛΙΟ", "ΗΜ. ΕΚΚΟΛΑΨΗΣ", "ΗΜ. ΕΜΒΟΛΙΑΣΜΟΥ", "ΗΜ. ΚΑΤΑΧΩΡΗΣΗΣ",
-    "ΗΜ. ΠΑΡΑΓΓΕΛΙΑΣ", "ΑΝΑΘΡΕΠΤΗΡΙΟ", "ΠΕΛΑΤΗΣ", "ΠΟΣΟΤΗΤΑ",
+    "ΗΜ. ΠΑΡΑΓΓΕΛΙΑΣ", "ΑΝΑΘΡΕΠΤΗΡΙΟ", "ΠΕΛΑΤΗΣ", "ΠΛΗΡΩΝΕΙ", "ΠΟΣΟΤΗΤΑ",
     "ΣΧΟΛΙΑ ΠΑΝΟΣ", "ΣΧΟΛΙΑ ΕΛΕΝΗ", "ΠΡΟΜΗΘΕΥΤΗΣ", "ΠΑΡΑΓΓΕΛΙΑ", "ΨΥΓΕΙΟ", "ΕΜΒΟΛΙΑΣΜΟΣ",
     "ΔΗΜΙΟΥΡΓΗΘΗΚΕ ΑΠΟ", "ΔΗΜΙΟΥΡΓΗΘΗΚΕ", "ΕΠΕΞΕΡΓΑΣΤΗΚΕ ΑΠΟ", "ΕΠΕΞΕΡΓΑΣΤΗΚΕ",
 ]

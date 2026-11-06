@@ -6,8 +6,8 @@
 <title data-t>ΕΜΒΟΛΙΑ — Πρόγραμμα</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
-<script src="common.js?v=12"></script>
-<link rel="stylesheet" href="theme.css?v=12">
+<script src="common.js?v=13"></script>
+<link rel="stylesheet" href="theme.css?v=13">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--gh-canvas-default);color:var(--gh-fg-default);font-family:'Inter',system-ui,-apple-system,sans-serif;font-size:14px;line-height:1.5}
@@ -211,7 +211,6 @@ addTranslations({
 // ── TABLES ──
 const PROG = 'vaccine_programme', INJ = 'injectables', CUST = 'customer_injectables', HIST = 'settings_history';
 const KIND_LABEL = { injectables_1: 'ΠΡΩΤΑ ΕΝΕΣΙΜΑ', injectables_2: 'ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ' };   // shown through t()
-const CORYZA = 'ΚΟΡΥΖΑ';   // a grid column, not a product: BIONEW BI + COR or CORIPRAVAC is picked per hatch
 // grid cell: '' = not ticked, 'us' = ticked and we pay, 'customer' = ticked and billed to the customer
 const PAYER_LABEL = { '': '—', us: 'Εμείς', customer: 'Πελάτης' };
 
@@ -219,9 +218,7 @@ const PAYER_LABEL = { '': '—', us: 'Εμείς', customer: 'Πελάτης' };
 let programme = [], injectables = [], customerInj = [], customers = [], suppliers = [];
 let currentUser = '', editId = null;
 
-// ── RULES ── (step 2's wizard uses the same customerName rule)
-// customer = text before " - " in placements.customers ("Συντιχάκης - από Δεκ 2026" → "Συντιχάκης")
-const customerName = s => String(s || '').split(' - ')[0].trim();
+// ── RULES ── (customerName and CORYZA: common.js, VACCINE PLANNING)
 // every customer booked in the scheduler plus those already in the usual lists — unique, sorted
 function customerList(placements, usual) {
   const names = placements.flatMap(p => (p.customers || []).map(c => customerName(c.name))).concat(usual.map(u => u.customer));
