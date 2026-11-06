@@ -13,7 +13,8 @@ Two users: Panos and Ελένη.
 - vaccine_tracker.html — vaccine order tracking (ΕΜΒΟΛΙΑ), with an alternate house/cycle card view
 - inventory.html — vaccine stock/inventory, bidirectionally linked to vaccine_tracker
 - feed_tracker.html — feed/nutrition schedule tracking per breed and feed additives (Avidecoxx, Robenz) by day since hatch: house cards (now / next) + a timeline, editing in a folded "Edit flocks" table, and a "Sync from scheduler" button (each change confirmed)
-- schedule_checker.html — rearing house hatch planner (one card per hatch, earliest-next suggestions, clashes between houses) — rules in `docs/rearing_scheduler.md`
+- schedule_checker.html — rearing house hatch planner (one card per hatch, earliest-next suggestions, clashes between houses; Νεοσσοί = chicks placed, `placements.chicks`) — rules in `docs/rearing_scheduler.md`
+- vaccine_programme.html — settings for vaccine planning: the saved programme (`vaccine_programme`), injectables per round (`injectables`, ΚΟΡΥΖΑ = a column whose product is picked per hatch), customers' usual injectables (`customer_injectables`, payer us/customer), default supplier per vaccine (`vaccines.supplier`); every change logged to `settings_history`. Design: `docs/superpowers/specs/2026-11-06-vaccine-planning-design.md`
 - truck_calculator_kamposos.html / truck_calculator_doukakis.html — truck+trailer loading calculators for two separate facilities
 - backup.py — nightly Supabase → Google Sheets backup, run by `.github/workflows/backup.yml`
 
@@ -60,7 +61,7 @@ Exception: vaccine_tracker.html keeps A1 in its house lists (Θ1–Θ5 + A1) by 
 - Shared JS files are risky here: a previous shared.js approach for
   VACCINE_OPTIONS caused a 404 → ReferenceError. common.js must always be committed together
   with the pages that use it, loaded by its plain relative path, and checked on every page.
-- Vaccine names: the `vaccines` table (name primary key; read + insert only) is the one
+- Vaccine names: the `vaccines` table (name primary key; read + insert only, plus UPDATE of the `supplier` column only — column grant) is the one
   correct spelling of each name. vaccine_tracker.html and inventory.html load it on start and
   send every saved name through `resolveVaccineName` (block "VACCINE NAMES" in common.js,
   shared by both files): a different typing is corrected silently (skeleton = capitals without

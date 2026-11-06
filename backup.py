@@ -62,7 +62,7 @@ def cleanup_old_history():
     cutoff = (datetime.now(timezone.utc) - timedelta(days=183)).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     deleted_total = 0
-    for table in ["emvolia_history", "inventory_history"]:
+    for table in ["emvolia_history", "inventory_history", "settings_history"]:
         url = f"{SUPABASE_URL}/rest/v1/{table}?ts=lt.{cutoff}"
         r = requests.delete(url, headers={**SB_HEADERS, "Prefer": "return=representation"}, timeout=30)
         if r.ok:
@@ -125,6 +125,10 @@ def run_backup():
         ("Λίστα Εμβολίων",         fetch("vaccines",            "name.asc")),
         ("Φόρτωση Καμπόσος",       fetch("truck_load",          "id.asc")),
         ("Φόρτωση Δουκάκης",       fetch("truck_load_doukakis", "id.asc")),
+        ("Πρόγραμμα Εμβολίων",     fetch("vaccine_programme",    "day.asc")),
+        ("Ενέσιμα ανά Γύρο",       fetch("injectables",          "round.asc")),
+        ("Ενέσιμα Πελατών",        fetch("customer_injectables", "customer.asc")),
+        ("Ιστορικό Ρυθμίσεων",     fetch("settings_history",     "ts.desc")),
     ]
 
     print("\nWriting to Google Sheets…")

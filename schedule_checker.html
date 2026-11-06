@@ -238,6 +238,10 @@ header{
       </select>
     </div>
     <div class="fgroup">
+      <label data-t>Νεοσσοί (τοποθετημένοι)</label>
+      <input type="text" id="m-chicks" inputmode="numeric" data-t-placeholder placeholder="π.χ. 55.000" />
+    </div>
+    <div class="fgroup">
       <label data-t>Πτηνοτροφική (Φραγκούλης) σε αυτή την εκκόλαψη</label>
       <select id="m-ptino">
         <option value="" data-t>Όχι</option>
@@ -314,6 +318,8 @@ addTranslations({
   // cards
   'Τοποθέτηση νεοσσών': 'Placement', 'Τοποθέτηση': 'Placement', 'Εμβ. 1': 'Vax 1', 'Εμβ. 2': 'Vax 2', 'Φόρτωση': 'Loading',
   'Εκτροφή': 'Rearing', 'Κλουβί': 'Cage', 'Εκτροφή: {sys}': '{sys} rearing', 'Μόνο': 'Only', 'Με άλλους πελάτες': 'With other customers',
+  'Νεοσσοί': 'Chicks placed', 'Νεοσσοί (τοποθετημένοι)': 'Chicks placed', 'π.χ. 55.000': 'e.g. 55.000',
+  'Οι νεοσσοί πρέπει να είναι ακέραιος αριθμός (π.χ. 55.000).': 'Chicks placed must be a whole number (e.g. 55.000).',
   'Εκκόλαψη': 'Hatch', 'εκκόλαψη': 'hatch', 'Ημέρα {n}': 'Day {n}', 'Άδειο': 'Empty', 'Έτοιμο': 'Ready', 'ή': 'or', 'Ράτσα —': 'Breed —',
   'Επιβεβαιώθηκε': 'Confirmed', 'Ζητήθηκε': 'Requested', 'Χωρίς παραγγελία': 'Not ordered',
   'Στον θάλαμο · {n} ημ.': 'In house · {n} d old', 'Κρατημένη ημερομηνία': 'Date kept',
@@ -679,10 +685,11 @@ function placeText(hatch, breed){
 /* Collapsed: Hatch, loading start (day 105, or 115 for a Πτηνοτροφική-only hatch), Ready. Expanded: everything.
    breed sets the chick-placement day; hl = event kinds whose rows to highlight (a clash clicked on a card). */
 const PTINO_TEXT = { only: 'Μόνο', mixed: 'Με άλλους πελάτες' };   // shown through t()
-function cardBody(house, s, breed, hl = new Set(), ptino = null){
+function cardBody(house, s, breed, hl = new Set(), ptino = null, chicks = null){
   return row(t('Εκτροφή'), systemLabel(s.system), false, true) +
     (ptino ? row('Πτηνοτροφική', t(PTINO_TEXT[ptino]), false, true) : '') +
     row(t('Εκκόλαψη'), fmt(s.hatch), true) +
+    row(t('Νεοσσοί'), chicks ? nf(chicks) : '—', false, true) +
     row(t('Τοποθέτηση'), placeText(s.hatch, breed), false, true, hl.has('place')) +   // short: "Τοποθέτηση νεοσσών" doesn't fit a card (user)
     row(t(KIND.vax1), range(...s.vax[0]), false, true, hl.has('vax1')) +
     row(t(KIND.vax2), range(...s.vax[1]), false, true, hl.has('vax2')) +
@@ -734,7 +741,7 @@ function hcard(key, cls, house, label, breed, s, extra, alert='', rawBreed=null,
   return `<div class="hc${cls}${openCards.has(String(key))?' open':''}" id="card-${key}" tabindex="0" onclick="toggleCard(this,'${key}')" ` +
     `onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();toggleCard(this,'${key}')}">` +
     `<div class="hc-top"><span>${house}</span><span class="hc-num"><span class="hc-more">${label}</span><span class="hc-chev">›</span></span></div>` +
-    `<div class="hc-breed">${breed}</div>` + cardBody(house, s, rawBreed, hl, ptino) + custButton(custId) + (alert || '<div class="clash-line"></div>') + `<div class="hc-more">${extra}</div></div>`;
+    `<div class="hc-breed">${breed}</div>` + cardBody(house, s, rawBreed, hl, ptino, custId && data.find(x => x.id === custId).chicks) + custButton(custId) + (alert || '<div class="clash-line"></div>') + `<div class="hc-more">${extra}</div></div>`;
 }
 
 /* Clicking a clash on a card lights up the clashing rows on both cards (opening the other card) and
@@ -840,7 +847,7 @@ function render(){
 }
 
 /* ── Add/Edit modal ── */
-function openModal(title, house, date, breed, status, saveText, ptino = ''){
+function openModal(title, house, date, breed, status, saveText, ptino = '', chicks = null){
   document.getElementById('modal-title').textContent = title;
   document.getElementById('m-house').value  = house;
   document.getElementById('m-house').disabled = !!editId;
@@ -848,6 +855,7 @@ function openModal(title, house, date, breed, status, saveText, ptino = ''){
   document.getElementById('m-breed').value  = breed;
   document.getElementById('m-status').value = status;
   document.getElementById('m-ptino').value  = ptino;
+  document.getElementById('m-chicks').value = chicks ? nf(chicks) : '';
   document.getElementById('m-save').textContent = saveText;
   document.getElementById('modal-bg').classList.remove('hidden');
   checkModalWarn();
@@ -863,7 +871,7 @@ function openEditModal(id){
   const r = data.find(x=>x.id==id);
   if(!r) throw new Error(t('Η τοποθέτηση {id} δεν βρέθηκε', { id }));
   editId = r.id;
-  openModal(t('Επεξεργασία τοποθέτησης'), r.house, r.doc_date, r.breed||'', r.status, t('Ενημέρωση'), r.ptino||'');
+  openModal(t('Επεξεργασία τοποθέτησης'), r.house, r.doc_date, r.breed||'', r.status, t('Ενημέρωση'), r.ptino||'', r.chicks);
 }
 function closeModal(){
   document.getElementById('modal-bg').classList.add('hidden');
@@ -918,6 +926,10 @@ async function saveNew(){
   const status = document.getElementById('m-status').value;
   const ptino  = document.getElementById('m-ptino').value || null;
   if(!house || !date) return;
+  // chicks placed: a whole number, dots allowed as thousands ("55.000"); empty = not known yet
+  const chicksText = document.getElementById('m-chicks').value.trim();
+  if(chicksText && !/^(\d{1,3}(\.\d{3})+|\d+)$/.test(chicksText)){ setSyncStatus('err', t('Οι νεοσσοί πρέπει να είναι ακέραιος αριθμός (π.χ. 55.000).')); return; }
+  const chicks = chicksText ? Number(chicksText.replace(/\./g, '')) : null;
   const id = editId;   // remembered now: Esc closes the window (editId = null) while a save is still running
   const btn = document.getElementById('m-save');
   btn.disabled = true;
@@ -926,11 +938,11 @@ async function saveNew(){
   try{
     if(id){
       // keep only means something while unconfirmed, so confirming clears it
-      const [updated] = await sbUpdate(id, {doc_date:date, breed, status, ptino, ...(status === 'Confirmed' && {keep:false})});
+      const [updated] = await sbUpdate(id, {doc_date:date, breed, status, ptino, chicks, ...(status === 'Confirmed' && {keep:false})});
       data = data.map(r => r.id===id ? updated : r);
       setSyncStatus('ok', t('Ενημερώθηκε'));
     } else {
-      const [inserted] = await sbInsert({house, doc_date:date, breed, status, ptino, keep: addKeep && status !== 'Confirmed'});
+      const [inserted] = await sbInsert({house, doc_date:date, breed, status, ptino, chicks, keep: addKeep && status !== 'Confirmed'});
       data.push(inserted);
       setSyncStatus('ok', t('Αποθηκεύτηκε'));
     }

@@ -158,10 +158,13 @@ Secrets: reuses GMAIL_USER / GMAIL_APP_PASS; new VACCINE_NOTIFY_EMAIL = info@geo
 
 ## Switch-over (with step 3)
 
-Go-live date = the day step 3 is deployed. For entries vaccinated on/after it that already exist:
+Go-live date = the day the beta starts (step 3 deployed in the beta); the coverage view covers
+entries vaccinated on/after it. At the switch, entries that the beta's orders don't already cover:
 Παραγγελία ΝΑΙ → one order per entry of its quantity (ordered_on = hm_paragelia or today);
 Ψυγείο ΝΑΙ → an arrival of the same quantity. Customer-billed rows (e.g. ΣΥΝΤΙΧΑΚΗΣ) get payer set
 by hand in the switch-over review: the conversion is shown to the user as a table before it runs.
+During the beta, rows ticked in the old tracker but without beta orders show "Λείπει" in the beta —
+expected until either Eleni records them in the beta or the switch converts them.
 
 ## Database changes
 
@@ -172,12 +175,34 @@ backup.py gets the new tables.
 
 ## Build order
 
-1. Settings page + `vaccines.supplier` + `placements.chicks` (scheduler field).
-2. "Νέα εκκόλαψη από πρόγραμμα" + qty/unit/payer columns.
-3. Orders, arrivals, coverage view, statuses, Παραγγελίες tab, homepage counts, switch-over.
-4. Morning email.
+1. Settings page + `vaccines.supplier` + `placements.chicks` (scheduler field). Only adds; live 2026-11-06.
+2. "Νέα εκκόλαψη από πρόγραμμα" — in the beta page (below).
+3. Orders, arrivals, coverage view, statuses, Παραγγελίες tab — in the beta page.
+   Then the switch (homepage counts, switch-over, beta replaces the tracker).
+4. Morning email — switched on only after the switch.
 
 Each step: tested with made-up data, shown to the user, committed only on "commit".
+
+## Beta page for steps 2–3 (decided 2026-11-06)
+
+Steps 2–3 are built in a copy of the tracker, `vaccine_tracker_beta.html`, so they can be tried
+side by side with real data while Eleni keeps using `vaccine_tracker.html` unchanged.
+
+- Both pages read and write the same `emvolia` rows. During the beta nothing the old tracker uses
+  changes meaning: `posotita` stays free text and stays the truth. The coverage view parses
+  numbers from it ("60000", "60.000", "5 ΚΙΛΑ"); rows it can't parse show "χωρίς ποσότητα".
+  The qty + unit split of section 4 happens at the switch, not before.
+- New columns/tables the old tracker ignores: `emvolia.payer`, `vaccine_orders`, `vaccine_arrivals`,
+  `vaccine_orders_history`. Orders and deliveries recorded in the beta are real records.
+- The old tracker's Παραγγελία / Ψυγείο ticks keep working as today and are not touched by the
+  beta. The beta shows each row's computed status next to the old ticks, so the two can be compared.
+- The wizard in the beta creates real rows (they appear in the old tracker too). To try it without
+  that, use its preview and cancel, or plan a test hatch and delete it afterwards.
+- The beta is linked only from the vaccine tracker (a small "Beta" button), not from the homepage.
+- The switch, when the user is happy: the beta's code replaces vaccine_tracker.html (one commit),
+  the beta file is deleted, the switch-over conversion (below) runs once, homepage counts move to
+  the statuses, then step 4's email is switched on. If the beta disappoints, delete it and its
+  tables; the old tracker never changed.
 
 ## Testing
 
@@ -192,10 +217,10 @@ Each step: tested with made-up data, shown to the user, committed only on "commi
 
 Stock (Απόθεμα) linked to arrivals and vaccinations · expiry dates · reading the ΕΜΒΟΛΙΑΚΟ Excel.
 
-## Open point for the user's review
+## ΥΠΟΛΟΙΠΑ row (decided 2026-11-06)
 
-1. ΥΠΟΛΟΙΠΑ row in the injectables grid (explained to the user 2026-11-06, answer pending): the
-   chicks placed but not booked by any customer (Θ3 05/11: 55.000 − 50.000 = 5.000) also reach
-   day 60/82 and may be sold later. Past hatches sometimes ordered injectables for them under
-   pelatis "ΥΠΟΛΟΙΠΑ" (e.g. Θ1 17/08: SG-9R 10.000). Question: offer that row in the grid, unticked
-   by default — or leave it out and add such rows by hand?
+The chicks placed but not booked by any customer (Θ3 05/11: 55.000 − 50.000 = 5.000) also reach
+day 60/82 and may be sold later; past hatches sometimes ordered injectables for them under pelatis
+"ΥΠΟΛΟΙΠΑ" (e.g. Θ1 17/08: SG-9R 10.000). The injectables grid always offers a ΥΠΟΛΟΙΠΑ row,
+quantity = chicks placed − booked, **all boxes unticked by default**, payer = us. It is not shown
+when nothing is left over (placed ≤ booked).

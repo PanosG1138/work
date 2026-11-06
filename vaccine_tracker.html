@@ -499,6 +499,8 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
   /* hide Απόθεμα text, keep emoji */
   a.btn-tool[href="inventory.html"]{font-size:0}
   a.btn-tool[href="inventory.html"]::before{content:"📦";font-size:16px}
+  a.btn-tool[href="vaccine_programme.html"]{font-size:0}
+  a.btn-tool[href="vaccine_programme.html"]::before{content:"🗓";font-size:16px}
 
   /* ── Toolbar: search full width, filters below ── */
   .toolbar{
@@ -643,6 +645,7 @@ body.printing-card .printcard-doc{display:block}
   <div class="header-right">
     <div id="sync-badge" class="sync-badge loading"><div class="sync-dot"></div><span id="sync-text">Σύνδεση…</span></div>
     <a data-t href="inventory.html" class="btn-tool" data-t-title title="Απόθεμα εμβολίων">📦 Απόθεμα</a>
+    <a data-t href="vaccine_programme.html" class="btn-tool" data-t-title title="Πρόγραμμα εμβολίων και συνήθη ενέσιμα πελατών">🗓 Πρόγραμμα</a>
     <div class="zoom-ctrl">
       <button class="zoom-btn" onclick="changeZoom(-0.05)" data-t-title title="Σμίκρυνση">−</button>
       <span class="zoom-val" id="zoom-label">100%</span>
@@ -1083,6 +1086,7 @@ body.printing-card .printcard-doc{display:block}
 <script>
 // ── TRANSLATIONS ── this page's English (Greek text → English); shared words are in common.js
 addTranslations({
+  '🗓 Πρόγραμμα': '🗓 Programme', 'Πρόγραμμα εμβολίων και συνήθη ενέσιμα πελατών': "Vaccine programme and customers' usual injections",
   // header, status, connection
   'ΕΜΒΟΛΙΑ': 'VACCINES', '📦 Απόθεμα': '📦 Stock', 'Απόθεμα εμβολίων': 'Vaccine stock',
   'Σύνολο': 'Total', 'Παραγγέλθηκαν': 'Ordered', 'Εκκρεμείς': 'Pending',

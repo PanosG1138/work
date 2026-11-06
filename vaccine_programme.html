@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-t>ΕΜΒΟΛΙΑ — Πρόγραμμα</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
+<script src="common.js?v=11"></script>
+<link rel="stylesheet" href="theme.css?v=11">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--gh-canvas-default);color:var(--gh-fg-default);font-family:'Inter',system-ui,-apple-system,sans-serif;font-size:14px;line-height:1.5}
+
+/* ── HEADER ── */
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 16px;height:48px;border-bottom:1px solid var(--gh-border-default);position:sticky;top:0;background:var(--gh-canvas-default);z-index:50}
+.header-left,.header-right{display:flex;align-items:center;gap:12px}
+.logo-title{font-weight:600;font-size:15px}
+.btn-back{display:flex;align-items:center;height:28px;padding:0 12px;border:1px solid var(--gh-border-default);border-radius:var(--rs);background:var(--gh-canvas-subtle);color:var(--gh-fg-muted);font-size:12px;font-weight:500;text-decoration:none}
+.btn-back:hover{background:var(--gh-hover-bg);color:var(--gh-fg-default)}
+.sync-badge{display:flex;align-items:center;gap:5px;font-size:12px;padding:0 10px;height:24px;border-radius:99px;border:1px solid var(--gh-border-default);background:var(--gh-canvas-subtle);color:var(--gh-fg-muted);white-space:nowrap}
+.sync-badge.ok{border-color:rgba(79,209,139,0.4);color:var(--gh-success-fg);background:var(--gh-success-subtle)}
+.sync-badge.err{border-color:rgba(255,107,107,0.4);color:var(--gh-danger-fg);background:var(--gh-danger-subtle)}
+.sync-badge.loading{border-color:rgba(240,180,41,0.4);color:var(--gh-attention-fg);background:var(--gh-attention-subtle)}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+
+/* ── SECTIONS ── */
+main{max-width:1100px;margin:0 auto;padding:20px 16px 48px;display:flex;flex-direction:column;gap:28px}
+section h2{font-size:16px;font-weight:600;margin-bottom:4px}
+.hint{color:var(--gh-fg-muted);font-size:13px;margin-bottom:10px}
+.muted{color:var(--gh-fg-muted)}
+.row-between{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.tbl{overflow-x:auto;border:1px solid var(--gh-border-default);border-radius:var(--rs)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{padding:7px 12px;text-align:left;font-size:12px;font-weight:600;background:var(--gh-canvas-subtle);border-bottom:1px solid var(--gh-border-default);white-space:nowrap}
+td{padding:6px 12px;border-bottom:1px solid var(--gh-border-muted);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+.empty-state{padding:24px;text-align:center;color:var(--gh-fg-muted)}
+.rounds{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:800px){.rounds{grid-template-columns:1fr}}
+.round-title{font-size:13px;font-weight:600;margin-bottom:6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 4px 2px 10px;border:1px solid var(--gh-border-default);border-radius:99px;background:var(--gh-canvas-subtle);font-size:12px}
+.chip button{border:none;background:none;color:var(--gh-fg-muted);cursor:pointer;font-size:14px;padding:0 4px}
+.chip button:hover{color:var(--gh-danger-fg)}
+
+/* ── FORM CONTROLS + BUTTONS ── */
+input[type=text],input[type=number],select{background:var(--gh-canvas-default);border:1px solid var(--gh-border-default);border-radius:var(--rs);color:var(--gh-fg-default);font-family:inherit;font-size:13px;padding:5px 8px;outline:none}
+input:focus,select:focus{border-color:var(--gh-accent-emphasis)}
+select.cell{padding:3px 6px;font-size:12px;min-width:84px}
+select.cell.on{border-color:rgba(79,209,139,0.5);color:var(--gh-success-fg);background:var(--gh-success-subtle)}
+.btn-primary,.btn-secondary,.btn-danger{height:30px;padding:0 14px;border-radius:var(--rs);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer}
+.btn-primary{background:var(--gh-accent-emphasis);color:#fff;border:1px solid rgba(240,246,252,0.1)}
+.btn-secondary{background:var(--gh-canvas-subtle);color:var(--gh-fg-default);border:1px solid var(--gh-border-default)}
+.btn-secondary:hover{background:var(--gh-hover-bg)}
+.btn-danger{background:var(--gh-danger-subtle);color:var(--gh-danger-fg);border:1px solid rgba(255,107,107,0.4)}
+.btn-sm{height:26px;padding:0 10px;font-size:12px}
+
+/* ── MODAL + TOAST ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:200}
+.modal{background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:var(--r);padding:22px;width:420px;max-width:95vw;max-height:90vh;overflow-y:auto}
+.modal h3{font-size:16px;font-weight:600;margin-bottom:16px}
+.fgroup{margin-bottom:12px}
+.fgroup label{display:block;font-size:12px;font-weight:500;color:var(--gh-fg-muted);margin-bottom:4px}
+.fgroup input,.fgroup select{width:100%}
+.modal-actions{display:flex;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid var(--gh-border-muted)}
+.confirm-box{background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:var(--r);padding:24px;text-align:center}
+.confirm-box p{color:var(--gh-fg-muted);margin-bottom:16px;line-height:1.6}
+.vname-typed{display:block;margin-top:8px;color:var(--gh-fg-default);font-weight:600}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);padding:10px 16px;border-radius:var(--rs);font-size:13px;z-index:999;opacity:0;transform:translateY(60px);transition:all .25s;pointer-events:none;max-width:340px}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.err{background:var(--gh-danger-subtle);border-color:rgba(255,107,107,0.4);color:var(--gh-danger-fg)}
+</style>
+</head>
+<body>
+
+<!-- PROGRAMME ROW — add / edit window -->
+<div id="prog-bg" class="modal-bg" style="display:none" onclick="if(event.target===this)closeProg()">
+  <div class="modal">
+    <h3 data-t>Γραμμή προγράμματος</h3>
+    <div class="fgroup"><label data-t>Ημέρα</label><input type="number" id="m-day" min="1" step="1"></div>
+    <div class="fgroup"><label data-t>Είδος</label>
+      <select id="m-kind" onchange="syncModal()">
+        <option value="general" data-t>Εμβόλιο</option>
+        <option value="injectables_1" data-t>ΠΡΩΤΑ ΕΝΕΣΙΜΑ</option>
+        <option value="injectables_2" data-t>ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ</option>
+      </select></div>
+    <div id="m-general">
+      <div class="fgroup"><label data-t>Εμβόλιο</label><input type="text" id="m-vaccine" list="vaccine-list" data-t-placeholder placeholder="Όνομα εμβολίου…"></div>
+      <div class="fgroup"><label data-t>Ποσότητα</label>
+        <select id="m-rule" onchange="syncModal()">
+          <option value="placed" data-t>= Νεοσσοί × συντελεστή</option>
+          <option value="fixed" data-t>Σταθερή ποσότητα</option>
+        </select></div>
+      <div id="m-placed">
+        <div class="fgroup"><label data-t>Συντελεστής</label><input type="text" id="m-factor"></div>
+        <div class="fgroup"><label data-t>Στρογγυλοποίηση προς τα πάνω σε</label><input type="text" id="m-round"></div>
+      </div>
+      <div id="m-fixed-wrap" class="fgroup"><label data-t>Σταθερή ποσότητα</label><input type="text" id="m-fixed"></div>
+      <div class="fgroup"><label data-t>Μονάδα</label>
+        <select id="m-unit"><option value="Δόσεις" data-t>Δόσεις</option><option value="Κιλά" data-t>Κιλά</option><option value="Μπουκαλάκια" data-t>Μπουκαλάκια</option></select></div>
+    </div>
+    <div class="modal-actions">
+      <button data-t class="btn-danger" id="m-delete" onclick="deleteProg()">Διαγραφή</button>
+      <div style="flex:1"></div>
+      <button data-t class="btn-secondary" onclick="closeProg()">Ακύρωση</button>
+      <button data-t class="btn-primary" onclick="saveProg()">Αποθήκευση</button>
+    </div>
+  </div>
+</div>
+
+<!-- VACCINE NAME — "did you mean" / add a new name (filled by common.js) -->
+<div id="vname-bg" class="modal-bg" style="display:none;z-index:400" onclick="if(event.target===this)resolveVaccineAsk(null)" onkeydown="if(event.key==='Escape'){event.stopPropagation();resolveVaccineAsk(null)}">
+  <div class="confirm-box" style="width:440px;max-width:95vw">
+    <p id="vname-msg"></p>
+    <div id="vname-actions" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<header>
+  <div class="header-left">
+    <a data-t href="vaccine_tracker.html" class="btn-back" data-t-title title="Πίσω στις παραγγελίες">← Παραγγελίες</a>
+    <span data-t class="logo-title">Πρόγραμμα εμβολίων</span>
+  </div>
+  <div class="header-right">
+    <div id="sync-badge" class="sync-badge loading"><div class="sync-dot"></div><span id="sync-text">…</span></div>
+    <span id="common-nav"></span>
+  </div>
+</header>
+
+<main>
+  <datalist id="vaccine-list"></datalist>
+  <datalist id="supplier-list"></datalist>
+
+  <section>
+    <div class="row-between">
+      <div><h2 data-t>Πρόγραμμα</h2>
+        <p data-t class="hint">Κάθε νέα εκκόλαψη αντιγράφει αυτές τις γραμμές. Η ημέρα μετράει από την εκκόλαψη (ημέρα 0).</p></div>
+      <button data-t class="btn-primary" onclick="openProg(null)">+ Γραμμή</button>
+    </div>
+    <div class="tbl"><table>
+      <thead><tr><th data-t>Ημέρα</th><th data-t>Εμβόλιο</th><th data-t>Ποσότητα</th><th data-t>Ενέργειες</th></tr></thead>
+      <tbody id="prog-body"></tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2 data-t>Ενέσιμα ανά γύρο</h2>
+    <p data-t class="hint">Οι στήλες του πίνακα πελατών. Η ΚΟΡΥΖΑ είναι στήλη: το προϊόν (BIONEW BI + COR ή CORIPRAVAC) επιλέγεται σε κάθε εκκόλαψη.</p>
+    <div class="rounds">
+      <div><div data-t class="round-title">1ος γύρος (ΠΡΩΤΑ ΕΝΕΣΙΜΑ)</div><div class="chips" id="inj-1"></div>
+        <select id="inj-add-1" onchange="addInjectable(1, this.value)"></select></div>
+      <div><div data-t class="round-title">2ος γύρος (ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ)</div><div class="chips" id="inj-2"></div>
+        <select id="inj-add-2" onchange="addInjectable(2, this.value)"></select></div>
+    </div>
+  </section>
+
+  <section>
+    <h2 data-t>Συνήθη ενέσιμα πελατών</h2>
+    <p data-t class="hint">Προεπιλέγονται σε κάθε νέα εκκόλαψη και αλλάζουν εκεί όταν χρειάζεται. «Εμείς» = τα πληρώνουμε εμείς, «Πελάτης» = τιμολογούνται απευθείας στον πελάτη.</p>
+    <div data-t class="round-title">1ος γύρος (ΠΡΩΤΑ ΕΝΕΣΙΜΑ)</div>
+    <div class="tbl" id="cust-1" style="margin-bottom:16px"></div>
+    <div data-t class="round-title">2ος γύρος (ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ)</div>
+    <div class="tbl" id="cust-2"></div>
+  </section>
+
+  <section>
+    <h2 data-t>Προμηθευτής ανά εμβόλιο</h2>
+    <p data-t class="hint">Ο προμηθευτής που προτείνεται σε κάθε νέα γραμμή.</p>
+    <div class="tbl"><table>
+      <thead><tr><th data-t>Εμβόλιο</th><th data-t>Προμηθευτής</th></tr></thead>
+      <tbody id="sup-body"></tbody>
+    </table></div>
+  </section>
+</main>
+
+<script>
+// ── TRANSLATIONS ── this page's English (Greek text → English); shared words are in common.js
+addTranslations({
+  'ΕΜΒΟΛΙΑ — Πρόγραμμα': 'VACCINES — Programme', '← Παραγγελίες': '← Orders', 'Πίσω στις παραγγελίες': 'Back to orders',
+  'Πρόγραμμα εμβολίων': 'Vaccine programme', 'Πρόγραμμα': 'Programme', '+ Γραμμή': '+ Row',
+  'Κάθε νέα εκκόλαψη αντιγράφει αυτές τις γραμμές. Η ημέρα μετράει από την εκκόλαψη (ημέρα 0).': 'Every new hatch copies these rows. The day counts from the hatch (day 0).',
+  'Ημέρα': 'Day', 'Εμβόλιο': 'Vaccine', 'Ποσότητα': 'Quantity', 'Ενέργειες': 'Actions', 'Επεξ.': 'Edit',
+  'Ενέσιμα ανά γύρο': 'Injections per round',
+  'Οι στήλες του πίνακα πελατών. Η ΚΟΡΥΖΑ είναι στήλη: το προϊόν (BIONEW BI + COR ή CORIPRAVAC) επιλέγεται σε κάθε εκκόλαψη.': "The columns of the customers' table. CORYZA is a column: the product (BIONEW BI + COR or CORIPRAVAC) is picked for each hatch.",
+  '1ος γύρος (ΠΡΩΤΑ ΕΝΕΣΙΜΑ)': '1st round (FIRST INJECTIONS)', '2ος γύρος (ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ)': '2nd round (SECOND INJECTIONS)',
+  'Συνήθη ενέσιμα πελατών': "Customers' usual injections",
+  'Προεπιλέγονται σε κάθε νέα εκκόλαψη και αλλάζουν εκεί όταν χρειάζεται. «Εμείς» = τα πληρώνουμε εμείς, «Πελάτης» = τιμολογούνται απευθείας στον πελάτη.': 'Pre-ticked on every new hatch and changed there when needed. «Us» = we pay, «Customer» = billed directly to the customer.',
+  'Πελάτης': 'Customer', 'Εμείς': 'Us', 'ΚΟΡΥΖΑ': 'CORYZA',
+  'Προμηθευτής ανά εμβόλιο': 'Supplier per vaccine', 'Ο προμηθευτής που προτείνεται σε κάθε νέα γραμμή.': 'The supplier suggested for every new row.', 'Προμηθευτής': 'Supplier',
+  'Γραμμή προγράμματος': 'Programme row', 'Είδος': 'Type', 'ΠΡΩΤΑ ΕΝΕΣΙΜΑ': 'FIRST INJECTIONS', 'ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ': 'SECOND INJECTIONS',
+  'Όνομα εμβολίου…': 'Vaccine name…', '= Νεοσσοί × συντελεστή': '= chicks placed × factor', 'Σταθερή ποσότητα': 'Fixed quantity',
+  'Συντελεστής': 'Factor', 'Στρογγυλοποίηση προς τα πάνω σε': 'Round up to', 'Μονάδα': 'Unit', 'Μπουκαλάκια': 'Bottles',
+  'Διαγραφή': 'Delete', 'Αποθήκευση': 'Save',
+  'Φόρτωση…': 'Loading…', 'Συνδέθηκε ✓': 'Connected ✓', 'Σφάλμα σύνδεσης': 'Connection error', 'Σφάλμα: {msg}': 'Error: {msg}',
+  'Αποθηκεύτηκε ✓': 'Saved ✓', 'Διαγράφηκε.': 'Deleted.', 'Δεν υπάρχουν γραμμές.': 'No rows.',
+  'ενέσιμα πελατών': "customers' injections", '= Νεοσσοί': '= chicks placed', '= Νεοσσοί × {f}, στρογγ. {step}': '= chicks placed × {f}, rounded up to {step}',
+  'Η ημέρα πρέπει να είναι ακέραιος από 1 και πάνω.': 'The day must be a whole number from 1 up.',
+  'Εισάγετε όνομα εμβολίου.': 'Enter a vaccine name.',
+  'Ο συντελεστής και η στρογγυλοποίηση πρέπει να είναι θετικοί αριθμοί.': 'The factor and the rounding must be positive numbers.',
+  'Η σταθερή ποσότητα πρέπει να είναι θετικός αριθμός.': 'The fixed quantity must be a positive number.',
+  'Η εγγραφή δεν υπάρχει πια — ανανεώστε τη σελίδα.': 'The record no longer exists — reload the page.',
+  'Διαγραφή της γραμμής «{name}» (ημέρα {day});': 'Delete the row «{name}» (day {day})?',
+  'Αφαίρεση': 'Remove', 'Κανένα': 'None', '— προσθήκη —': '— add —',
+  'Αφαίρεση του «{name}» από τον γύρο {n};': 'Remove «{name}» from round {n}?',
+  'Δεν υπάρχουν πελάτες στον Προγραμματισμό.': 'No customers in the scheduler.',
+});
+
+// ── TABLES ──
+const PROG = 'vaccine_programme', INJ = 'injectables', CUST = 'customer_injectables', HIST = 'settings_history';
+const KIND_LABEL = { injectables_1: 'ΠΡΩΤΑ ΕΝΕΣΙΜΑ', injectables_2: 'ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ' };   // shown through t()
+const CORYZA = 'ΚΟΡΥΖΑ';   // a grid column, not a product: BIONEW BI + COR or CORIPRAVAC is picked per hatch
+// grid cell: '' = not ticked, 'us' = ticked and we pay, 'customer' = ticked and billed to the customer
+const PAYER_LABEL = { '': '—', us: 'Εμείς', customer: 'Πελάτης' };
+
+// ── STATE ──
+let programme = [], injectables = [], customerInj = [], customers = [], suppliers = [];
+let currentUser = '', editId = null;
+
+// ── RULES ── (step 2's wizard uses the same customerName rule)
+// customer = text before " - " in placements.customers ("Συντιχάκης - από Δεκ 2026" → "Συντιχάκης")
+const customerName = s => String(s || '').split(' - ')[0].trim();
+// every customer booked in the scheduler plus those already in the usual lists — unique, sorted
+function customerList(placements, usual) {
+  const names = placements.flatMap(p => (p.customers || []).map(c => customerName(c.name))).concat(usual.map(u => u.customer));
+  return [...new Set(names.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'el'));
+}
+const nf = n => Number(n).toLocaleString('el-GR');
+// how a programme row's quantity is worked out, in words
+function ruleText(r) {
+  if (r.kind !== 'general') return t('ενέσιμα πελατών');
+  if (r.rule === 'fixed') return `${nf(r.fixed_qty)} ${t(r.unit)}`;
+  const factor = Number(r.factor), step = Number(r.round_to);
+  return factor === 1 && step <= 1000 ? t('= Νεοσσοί')
+    : t('= Νεοσσοί × {f}, στρογγ. {step}', { f: String(factor).replace('.', ','), step: nf(step) });
+}
+
+// ── SYNC BADGE + TOAST ──
+function setSync(state, text) {
+  document.getElementById('sync-badge').className = 'sync-badge ' + state;
+  document.getElementById('sync-text').textContent = text;
+}
+let toastTimer;
+function toast(msg, err = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'toast show' + (err ? ' err' : '');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.className = 'toast'; }, 3500);
+}
+
+// ── HISTORY ── every settings change is logged: changes_json = { field: { from, to } }
+function logChange(table, rowKey, action, before, after) {
+  const changes = {};
+  for (const k of new Set([...Object.keys(before || {}), ...Object.keys(after || {})])) {
+    if (k === 'id' || k === 'created_at') continue;
+    const from = (before || {})[k] ?? null, to = (after || {})[k] ?? null;
+    if (String(from ?? '') !== String(to ?? '')) changes[k] = { from, to };
+  }
+  return sbFetch(HIST, { method: 'POST', body: JSON.stringify({ table_name: table, row_key: String(rowKey), action,
+    user_name: currentUser, ts: new Date().toISOString(), changes_json: JSON.stringify(changes) }) });
+}
+
+// ── LOAD ──
+async function loadAll() {
+  setSync('loading', t('Φόρτωση…'));
+  try {
+    let placements;
+    [programme, injectables, customerInj, placements, suppliers] = await Promise.all([
+      sbFetch(`${PROG}?order=day.asc,id.asc`),
+      sbFetch(`${INJ}?order=round.asc,sort.asc`),
+      sbFetch(`${CUST}?select=customer,round,vaccine,payer`),
+      sbFetch('placements?select=customers'),
+      sbFetch('vaccines?select=name,supplier&order=name.asc'),
+    ]);
+    VACCINE_OPTIONS = suppliers.map(v => v.name);   // the vaccine list resolveVaccineName checks against
+    fillVaccineList();
+    customers = customerList(placements, customerInj);
+    setSync('ok', t('Συνδέθηκε ✓'));
+    renderProgramme(); renderInjectables(); renderCustomers(); renderSuppliers();
+  } catch (e) {
+    setSync('err', t('Σφάλμα σύνδεσης'));
+    toast(t('Σφάλμα: {msg}', { msg: e.message }), true);
+  }
+}
+
+// ── PROGRAMME ──
+function renderProgramme() {
+  document.getElementById('prog-body').innerHTML = programme.length ? programme.map(r =>
+    `<tr ondblclick="openProg(${r.id})"><td>${r.day}</td>` +
+    `<td>${r.kind === 'general' ? escapeHtml(r.vaccine) : `<b>${t(KIND_LABEL[r.kind])}</b>`}</td>` +
+    `<td class="muted">${escapeHtml(ruleText(r))}</td>` +
+    `<td><button class="btn-secondary btn-sm" onclick="openProg(${r.id})">${t('Επεξ.')}</button></td></tr>`).join('')
+    : `<tr><td colspan="4" class="empty-state">${t('Δεν υπάρχουν γραμμές.')}</td></tr>`;
+}
+// show only the fields that apply to the chosen type and quantity rule
+function syncModal() {
+  const general = document.getElementById('m-kind').value === 'general';
+  const placed = document.getElementById('m-rule').value === 'placed';
+  document.getElementById('m-general').style.display = general ? '' : 'none';
+  document.getElementById('m-placed').style.display = placed ? '' : 'none';
+  document.getElementById('m-fixed-wrap').style.display = placed ? 'none' : '';
+}
+// id null = new row
+function openProg(id) {
+  editId = id;
+  const r = programme.find(x => x.id === id) || { day: '', kind: 'general', vaccine: '', rule: 'placed', factor: 1, round_to: 1000, fixed_qty: '', unit: 'Δόσεις' };
+  const set = (el, v) => { document.getElementById(el).value = v ?? ''; };
+  set('m-day', r.day); set('m-kind', r.kind); set('m-vaccine', r.vaccine); set('m-rule', r.rule);
+  set('m-factor', String(r.factor).replace('.', ',')); set('m-round', nf(r.round_to));
+  set('m-fixed', r.fixed_qty == null || r.fixed_qty === '' ? '' : String(r.fixed_qty).replace('.', ',')); set('m-unit', r.unit);
+  document.getElementById('m-delete').style.display = id ? '' : 'none';
+  syncModal();
+  document.getElementById('prog-bg').style.display = 'flex';
+}
+function closeProg() { document.getElementById('prog-bg').style.display = 'none'; editId = null; }
+const parseNum = s => Number(String(s).trim().replace(/\./g, '').replace(',', '.'));   // "10.000" → 10000, "0,65" → 0.65
+async function saveProg() {
+  const id = editId;   // remembered now: Esc closes the window (editId = null) while a save is still running
+  const g = el => document.getElementById(el).value.trim();
+  const row = { day: Number(g('m-day')), kind: g('m-kind'), vaccine: null, rule: 'placed', factor: 1, round_to: 1000, fixed_qty: null, unit: 'Δόσεις' };
+  if (!Number.isInteger(row.day) || row.day < 1) { toast(t('Η ημέρα πρέπει να είναι ακέραιος από 1 και πάνω.'), true); return; }
+  if (row.kind === 'general') {
+    if (!g('m-vaccine')) { toast(t('Εισάγετε όνομα εμβολίου.'), true); return; }
+    row.rule = g('m-rule'); row.unit = g('m-unit');
+    if (row.rule === 'placed') {
+      row.factor = Number(g('m-factor').replace(',', '.')); row.round_to = parseNum(g('m-round'));
+      if (!(row.factor > 0) || !Number.isInteger(row.round_to) || row.round_to < 1) { toast(t('Ο συντελεστής και η στρογγυλοποίηση πρέπει να είναι θετικοί αριθμοί.'), true); return; }
+    } else {
+      row.fixed_qty = Number(g('m-fixed').replace(',', '.'));
+      if (!(row.fixed_qty > 0)) { toast(t('Η σταθερή ποσότητα πρέπει να είναι θετικός αριθμός.'), true); return; }
+    }
+    row.vaccine = await resolveVaccineName(g('m-vaccine'));
+    if (row.vaccine === null) return;
+  }
+  try {
+    const before = id ? programme.find(r => r.id === id) : null;
+    const [saved] = (id
+      ? await sbFetch(`${PROG}?id=eq.${id}`, { method: 'PATCH', prefer: 'return=representation', body: JSON.stringify(row) })
+      : await sbFetch(PROG, { method: 'POST', prefer: 'return=representation', body: JSON.stringify(row) })) || [];
+    if (!saved) throw new Error(t('Η εγγραφή δεν υπάρχει πια — ανανεώστε τη σελίδα.'));
+    await logChange(PROG, saved.id, id ? 'edited' : 'created', before, saved);
+    programme = (id ? programme.map(r => r.id === id ? saved : r) : [...programme, saved]).sort((a, b) => a.day - b.day || a.id - b.id);
+    closeProg(); renderProgramme(); toast(t('Αποθηκεύτηκε ✓'));
+  } catch (e) { toast(t('Σφάλμα: {msg}', { msg: e.message }), true); }
+}
+async function deleteProg() {
+  const r = programme.find(x => x.id === editId);
+  if (!r || !confirm(t('Διαγραφή της γραμμής «{name}» (ημέρα {day});', { name: r.vaccine || t(KIND_LABEL[r.kind]), day: r.day }))) return;
+  try {
+    await sbFetch(`${PROG}?id=eq.${r.id}`, { method: 'DELETE' });
+    await logChange(PROG, r.id, 'deleted', r, null);
+    programme = programme.filter(x => x.id !== r.id);
+    closeProg(); renderProgramme(); toast(t('Διαγράφηκε.'));
+  } catch (e) { toast(t('Σφάλμα: {msg}', { msg: e.message }), true); }
+}
+
+// ── INJECTABLES PER ROUND ── (the columns of the customers' grid)
+const injLabel = v => v === CORYZA ? t(CORYZA) : escapeHtml(v);
+function renderInjectables() {
+  [1, 2].forEach(round => {
+    const list = injectables.filter(i => i.round === round);
+    document.getElementById(`inj-${round}`).innerHTML = list.map(i =>
+      `<span class="chip">${injLabel(i.vaccine)}<button title="${t('Αφαίρεση')}" onclick="removeInjectable(${i.id})">×</button></span>`).join('')
+      || `<span class="muted">${t('Κανένα')}</span>`;
+    document.getElementById(`inj-add-${round}`).innerHTML = `<option value="">${t('— προσθήκη —')}</option>` +
+      [CORYZA, ...VACCINE_OPTIONS].filter(v => !list.some(i => i.vaccine === v)).map(v => `<option value="${escapeHtml(v)}">${injLabel(v)}</option>`).join('');
+  });
+}
+async function addInjectable(round, vaccine) {
+  if (!vaccine) return;
+  const sort = Math.max(0, ...injectables.filter(i => i.round === round).map(i => i.sort)) + 1;
+  try {
+    const [saved] = await sbFetch(INJ, { method: 'POST', prefer: 'return=representation', body: JSON.stringify({ round, vaccine, sort }) });
+    await logChange(INJ, saved.id, 'created', null, saved);
+    injectables.push(saved);
+    renderInjectables(); renderCustomers(); toast(t('Αποθηκεύτηκε ✓'));
+  } catch (e) { toast(t('Σφάλμα: {msg}', { msg: e.message }), true); renderInjectables(); }
+}
+// the customers' ticks for a removed column are kept: adding the column back brings them back
+async function removeInjectable(id) {
+  const inj = injectables.find(i => i.id === id);
+  if (!confirm(t('Αφαίρεση του «{name}» από τον γύρο {n};', { name: inj.vaccine === CORYZA ? t(CORYZA) : inj.vaccine, n: inj.round }))) return;
+  try {
+    await sbFetch(`${INJ}?id=eq.${id}`, { method: 'DELETE' });
+    await logChange(INJ, id, 'deleted', inj, null);
+    injectables = injectables.filter(i => i.id !== id);
+    renderInjectables(); renderCustomers(); toast(t('Διαγράφηκε.'));
+  } catch (e) { toast(t('Σφάλμα: {msg}', { msg: e.message }), true); }
+}
+
+// ── CUSTOMERS' USUAL INJECTABLES ── one select per customer × injectable: — / Εμείς / Πελάτης
+function renderCustomers() {
+  [1, 2].forEach(round => {
+    const cols = injectables.filter(i => i.round === round);
+    const usual = (c, v) => (customerInj.find(u => u.customer === c && u.round === round && u.vaccine === v) || {}).payer || '';
+    const cell = (c, v) => { const now = usual(c, v);
+      return `<td><select class="cell${now ? ' on' : ''}" data-customer="${escapeHtml(c)}" data-round="${round}" data-vaccine="${escapeHtml(v)}" onchange="setUsual(this)">` +
+        Object.entries(PAYER_LABEL).map(([k, label]) => `<option value="${k}"${k === now ? ' selected' : ''}>${k ? t(label) : label}</option>`).join('') + '</select></td>'; };
+    document.getElementById(`cust-${round}`).innerHTML = !customers.length
+      ? `<p class="empty-state">${t('Δεν υπάρχουν πελάτες στον Προγραμματισμό.')}</p>`
+      : `<table><thead><tr><th>${t('Πελάτης')}</th>${cols.map(c => `<th>${injLabel(c.vaccine)}</th>`).join('')}</tr></thead><tbody>` +
+        customers.map(c => `<tr><td>${escapeHtml(c)}</td>${cols.map(col => cell(c, col.vaccine)).join('')}</tr>`).join('') + '</tbody></table>';
+  });
+}
+// saves one cell at once: ticked → upsert, '—' → delete
+async function setUsual(sel) {
+  const { customer, vaccine } = sel.dataset, round = Number(sel.dataset.round), payer = sel.value;
+  const before = customerInj.find(u => u.customer === customer && u.round === round && u.vaccine === vaccine) || null;
+  const after = payer ? { customer, round, vaccine, payer } : null;
+  try {
+    if (after) await sbFetch(`${CUST}?on_conflict=customer,round,vaccine`, { method: 'POST', prefer: 'resolution=merge-duplicates', body: JSON.stringify(after) });
+    else await sbFetch(`${CUST}?customer=eq.${encodeURIComponent(customer)}&round=eq.${round}&vaccine=eq.${encodeURIComponent(vaccine)}`, { method: 'DELETE' });
+    await logChange(CUST, `${customer}|${round}|${vaccine}`, !before ? 'created' : after ? 'edited' : 'deleted', before, after);
+    customerInj = customerInj.filter(u => u !== before).concat(after ? [after] : []);
+    sel.classList.toggle('on', !!after);
+    setSync('ok', t('Αποθηκεύτηκε ✓'));
+  } catch (e) {
+    sel.value = before ? before.payer : '';
+    toast(t('Σφάλμα: {msg}', { msg: e.message }), true);
+  }
+}
+
+// ── SUPPLIER PER VACCINE ──
+function fillSupplierList() {
+  document.getElementById('supplier-list').innerHTML = [...new Set(suppliers.map(s => s.supplier).filter(Boolean))].sort()
+    .map(s => `<option value="${escapeHtml(s)}">`).join('');
+}
+function renderSuppliers() {
+  fillSupplierList();
+  document.getElementById('sup-body').innerHTML = suppliers.map(s =>
+    `<tr><td>${escapeHtml(s.name)}</td><td><input type="text" list="supplier-list" value="${escapeHtml(s.supplier || '')}" data-name="${escapeHtml(s.name)}" onchange="setSupplier(this)"></td></tr>`).join('');
+}
+// suppliers are stored in capitals, like the tracker's Προμηθευτής column (FAENTINA, ΚΟΜΠΟΥΛΗΣ)
+async function setSupplier(input) {
+  const v = suppliers.find(s => s.name === input.dataset.name);
+  const supplier = input.value.trim().toUpperCase() || null;
+  try {
+    const [saved] = await sbFetch(`vaccines?name=eq.${encodeURIComponent(v.name)}`, { method: 'PATCH', prefer: 'return=representation', body: JSON.stringify({ supplier }) }) || [];
+    if (!saved) throw new Error(t('Η εγγραφή δεν υπάρχει πια — ανανεώστε τη σελίδα.'));
+    await logChange('vaccines', v.name, 'edited', { supplier: v.supplier }, { supplier });
+    v.supplier = supplier; input.value = supplier || '';
+    fillSupplierList(); setSync('ok', t('Αποθηκεύτηκε ✓'));
+  } catch (e) { input.value = v.supplier || ''; toast(t('Σφάλμα: {msg}', { msg: e.message }), true); }
+}
+
+// ── INIT ──
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeProg(); });
+// shared sign-in, load-once guard and home/ΕΛ-EN/Έξοδος buttons: common.js
+startPage({ onSignedIn: name => { currentUser = name; loadAll(); }, translated: true,
+  hasUnsavedWork: () => document.getElementById('prog-bg').style.display !== 'none' });
+</script>
+</body>
+</html>
