@@ -222,7 +222,7 @@ async function loadDashboard() {
   try {
     [placements, vacc, feed] = await Promise.all([
       sbFetch('placements?select=id,house,doc_date,breed,status,ptino&order=doc_date.asc'),
-      sbFetch(`emvolia?select=anath,hm_ekk,hm_emv,emvolio,paragelia,psygeio&hm_emv=gte.${todayIso}&order=hm_emv.asc`),
+      sbFetch(`emvolia?select=anath,hm_ekk,hm_emv,emvolio,paragelia,psygeio&hm_emv=gte.${todayIso}&draft=is.false&order=hm_emv.asc`),
       sbFetch('feed_hatches?select=house,breed,hatch'),
     ]);
   } catch (e) {

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title data-t>ΕΜΒΟΛΙΑ — Πρόγραμμα</title>
+<title data-t>ΕΜΒΟΛΙΑ — Βασικό εμβολιακό</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
 <script src="common.js?v=14"></script>
@@ -125,7 +125,7 @@ select.cell.on{border-color:rgba(79,209,139,0.5);color:var(--gh-success-fg);back
 <header>
   <div class="header-left">
     <a data-t href="vaccine_tracker.html" class="btn-back" data-t-title title="Πίσω στις παραγγελίες">← Παραγγελίες</a>
-    <span data-t class="logo-title">Πρόγραμμα εμβολίων</span>
+    <span data-t class="logo-title">Βασικό εμβολιακό</span>
   </div>
   <div class="header-right">
     <div id="sync-badge" class="sync-badge loading"><div class="sync-dot"></div><span id="sync-text">…</span></div>
@@ -139,7 +139,7 @@ select.cell.on{border-color:rgba(79,209,139,0.5);color:var(--gh-success-fg);back
 
   <section>
     <div class="row-between">
-      <div><h2 data-t>Πρόγραμμα</h2>
+      <div><h2 data-t>Εμβόλια</h2>
         <p data-t class="hint">Κάθε νέα εκκόλαψη αντιγράφει αυτές τις γραμμές. Η ημέρα μετράει από την εκκόλαψη (ημέρα 0).</p></div>
       <button data-t class="btn-primary" onclick="openProg(null)">+ Γραμμή</button>
     </div>
@@ -182,8 +182,8 @@ select.cell.on{border-color:rgba(79,209,139,0.5);color:var(--gh-success-fg);back
 <script>
 // ── TRANSLATIONS ── this page's English (Greek text → English); shared words are in common.js
 addTranslations({
-  'ΕΜΒΟΛΙΑ — Πρόγραμμα': 'VACCINES — Programme', '← Παραγγελίες': '← Orders', 'Πίσω στις παραγγελίες': 'Back to orders',
-  'Πρόγραμμα εμβολίων': 'Vaccine programme', 'Πρόγραμμα': 'Programme', '+ Γραμμή': '+ Row',
+  'ΕΜΒΟΛΙΑ — Βασικό εμβολιακό': 'VACCINES — Base plan', '← Παραγγελίες': '← Orders', 'Πίσω στις παραγγελίες': 'Back to orders',
+  'Βασικό εμβολιακό': 'Base vaccination plan', 'Εμβόλια': 'Vaccines', '+ Γραμμή': '+ Row',
   'Κάθε νέα εκκόλαψη αντιγράφει αυτές τις γραμμές. Η ημέρα μετράει από την εκκόλαψη (ημέρα 0).': 'Every new hatch copies these rows. The day counts from the hatch (day 0).',
   'Ημέρες': 'Days', 'π.χ. 27, 75': 'e.g. 27, 75', 'Εμβόλιο': 'Vaccine', 'Ποσότητα': 'Quantity', 'Ενέργειες': 'Actions', 'Επεξ.': 'Edit',
   'Ενέσιμα ανά γύρο': 'Injections per round',

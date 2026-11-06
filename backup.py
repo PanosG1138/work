@@ -24,13 +24,13 @@ SB_HEADERS = {
 # ── COLUMN DEFINITIONS ────────────────────────────────────────────
 DATA_COLUMNS = [
     "id", "emvolio", "hm_ekk", "hm_emv", "hm_par", "hm_paragelia",
-    "anath", "pelatis", "payer", "posotita", "sxolia_panos", "sxolia_eleni",
+    "anath", "pelatis", "payer", "draft", "posotita", "sxolia_panos", "sxolia_eleni",
     "promitheutis", "paragelia", "psygeio", "emvoliasmos",
     "created_by", "created_at", "updated_by", "updated_at",
 ]
 DATA_HEADERS = [
     "ID", "ΕΜΒΟΛΙΟ", "ΗΜ. ΕΚΚΟΛΑΨΗΣ", "ΗΜ. ΕΜΒΟΛΙΑΣΜΟΥ", "ΗΜ. ΚΑΤΑΧΩΡΗΣΗΣ",
-    "ΗΜ. ΠΑΡΑΓΓΕΛΙΑΣ", "ΑΝΑΘΡΕΠΤΗΡΙΟ", "ΠΕΛΑΤΗΣ", "ΠΛΗΡΩΝΕΙ", "ΠΟΣΟΤΗΤΑ",
+    "ΗΜ. ΠΑΡΑΓΓΕΛΙΑΣ", "ΑΝΑΘΡΕΠΤΗΡΙΟ", "ΠΕΛΑΤΗΣ", "ΠΛΗΡΩΝΕΙ", "ΠΡΟΧΕΙΡΟ", "ΠΟΣΟΤΗΤΑ",
     "ΣΧΟΛΙΑ ΠΑΝΟΣ", "ΣΧΟΛΙΑ ΕΛΕΝΗ", "ΠΡΟΜΗΘΕΥΤΗΣ", "ΠΑΡΑΓΓΕΛΙΑ", "ΨΥΓΕΙΟ", "ΕΜΒΟΛΙΑΣΜΟΣ",
     "ΔΗΜΙΟΥΡΓΗΘΗΚΕ ΑΠΟ", "ΔΗΜΙΟΥΡΓΗΘΗΚΕ", "ΕΠΕΞΕΡΓΑΣΤΗΚΕ ΑΠΟ", "ΕΠΕΞΕΡΓΑΣΤΗΚΕ",
 ]
@@ -125,7 +125,8 @@ def run_backup():
         ("Λίστα Εμβολίων",         fetch("vaccines",            "name.asc")),
         ("Φόρτωση Καμπόσος",       fetch("truck_load",          "id.asc")),
         ("Φόρτωση Δουκάκης",       fetch("truck_load_doukakis", "id.asc")),
-        ("Πρόγραμμα Εμβολίων",     fetch("vaccine_programme",    "days.asc")),
+        ("Βασικό Εμβολιακό",       fetch("vaccine_programme",    "days.asc")),
+        ("Εμβολιακά Εκκολάψεων",   fetch("hatch_plans",          "placement_id.asc")),
         ("Ενέσιμα ανά Γύρο",       fetch("injectables",          "round.asc")),
         ("Ενέσιμα Πελατών",        fetch("customer_injectables", "customer.asc")),
         ("Ιστορικό Ρυθμίσεων",     fetch("settings_history",     "ts.desc")),

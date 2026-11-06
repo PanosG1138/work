@@ -645,7 +645,7 @@ body.printing-card .printcard-doc{display:block}
   <div class="header-right">
     <div id="sync-badge" class="sync-badge loading"><div class="sync-dot"></div><span id="sync-text">Σύνδεση…</span></div>
     <a data-t href="inventory.html" class="btn-tool" data-t-title title="Απόθεμα εμβολίων">📦 Απόθεμα</a>
-    <a data-t href="vaccine_programme.html" class="btn-tool" data-t-title title="Πρόγραμμα εμβολίων και συνήθη ενέσιμα πελατών">🗓 Πρόγραμμα</a>
+    <a data-t href="vaccine_programme.html" class="btn-tool" data-t-title title="Βασικό εμβολιακό και συνήθη ενέσιμα πελατών">🗓 Βασικό εμβολιακό</a>
     <a data-t href="vaccine_tracker_beta.html" class="btn-tool" data-t-title title="Δοκιμαστική έκδοση με τις νέες λειτουργίες">🧪 Beta</a>
     <div class="zoom-ctrl">
       <button class="zoom-btn" onclick="changeZoom(-0.05)" data-t-title title="Σμίκρυνση">−</button>
@@ -1088,7 +1088,7 @@ body.printing-card .printcard-doc{display:block}
 // ── TRANSLATIONS ── this page's English (Greek text → English); shared words are in common.js
 addTranslations({
   '🧪 Beta': '🧪 Beta', 'Δοκιμαστική έκδοση με τις νέες λειτουργίες': 'Test version with the new features',
-  '🗓 Πρόγραμμα': '🗓 Programme', 'Πρόγραμμα εμβολίων και συνήθη ενέσιμα πελατών': "Vaccine programme and customers' usual injections",
+  '🗓 Βασικό εμβολιακό': '🗓 Base plan', 'Βασικό εμβολιακό και συνήθη ενέσιμα πελατών': "Base vaccination plan and customers' usual injections",
   // header, status, connection
   'ΕΜΒΟΛΙΑ': 'VACCINES', '📦 Απόθεμα': '📦 Stock', 'Απόθεμα εμβολίων': 'Vaccine stock',
   'Σύνολο': 'Total', 'Παραγγέλθηκαν': 'Ordered', 'Εκκρεμείς': 'Pending',
@@ -1195,7 +1195,7 @@ function initApp(name) {
 // ── SUPABASE ──────────────────────────────────────────────────────
 // sbFetch (every read/write to Supabase) lives in common.js
 
-const sbSelect  = ()        => sbFetch(`${TABLE}?order=hm_emv.asc`);
+const sbSelect  = ()        => sbFetch(`${TABLE}?draft=is.false&order=hm_emv.asc`);   // draft lines live only in the beta until activated
 const sbInsert  = row       => sbFetch(TABLE, { method:'POST', prefer:'return=representation', body: JSON.stringify(row) });
 // PATCH returns [] when the row is gone (deleted meanwhile, e.g. in another tab) — fail with a clear message
 const ROW_GONE = t('Η εγγραφή δεν υπάρχει πια (ίσως διαγράφηκε) — πατήστε Ανανέωση.');
@@ -2927,7 +2927,8 @@ async function showChangelog(user, open) {
     t('Αλλαγές από άλλους χρήστες από {d}', { d: sinceDisplay });
 
   try {
-    const hist = await sbChangelog(since, user);
+    // lines this page doesn't show (draft lines, which live in the beta until activated) are left out, except real deletions
+    const hist = ((await sbChangelog(since, user)) || []).filter(h => h.action === 'deleted' || data.some(r => r.id === h.row_id));
     try { localStorage.setItem(changelogKey(user), seenAt); } catch(e) {}
 
     if (!hist || !hist.length) {
