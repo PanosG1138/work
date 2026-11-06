@@ -125,7 +125,7 @@ def run_backup():
         ("Λίστα Εμβολίων",         fetch("vaccines",            "name.asc")),
         ("Φόρτωση Καμπόσος",       fetch("truck_load",          "id.asc")),
         ("Φόρτωση Δουκάκης",       fetch("truck_load_doukakis", "id.asc")),
-        ("Πρόγραμμα Εμβολίων",     fetch("vaccine_programme",    "day.asc")),
+        ("Πρόγραμμα Εμβολίων",     fetch("vaccine_programme",    "days.asc")),
         ("Ενέσιμα ανά Γύρο",       fetch("injectables",          "round.asc")),
         ("Ενέσιμα Πελατών",        fetch("customer_injectables", "customer.asc")),
         ("Ιστορικό Ρυθμίσεων",     fetch("settings_history",     "ts.desc")),

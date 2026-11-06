@@ -78,7 +78,7 @@ select.cell.on{border-color:rgba(79,209,139,0.5);color:var(--gh-success-fg);back
 <div id="prog-bg" class="modal-bg" style="display:none" onclick="if(event.target===this)closeProg()">
   <div class="modal">
     <h3 data-t>Γραμμή προγράμματος</h3>
-    <div class="fgroup"><label data-t>Ημέρα</label><input type="number" id="m-day" min="1" step="1"></div>
+    <div class="fgroup"><label data-t>Ημέρες</label><input type="text" id="m-days" data-t-placeholder placeholder="π.χ. 27, 75"></div>
     <div class="fgroup"><label data-t>Είδος</label>
       <select id="m-kind" onchange="syncModal()">
         <option value="general" data-t>Εμβόλιο</option>
@@ -144,7 +144,7 @@ select.cell.on{border-color:rgba(79,209,139,0.5);color:var(--gh-success-fg);back
       <button data-t class="btn-primary" onclick="openProg(null)">+ Γραμμή</button>
     </div>
     <div class="tbl"><table>
-      <thead><tr><th data-t>Ημέρα</th><th data-t>Εμβόλιο</th><th data-t>Ποσότητα</th><th data-t>Ενέργειες</th></tr></thead>
+      <thead><tr><th data-t>Ημέρες</th><th data-t>Εμβόλιο</th><th data-t>Ποσότητα</th><th data-t>Ενέργειες</th></tr></thead>
       <tbody id="prog-body"></tbody>
     </table></div>
   </section>
@@ -185,7 +185,7 @@ addTranslations({
   'ΕΜΒΟΛΙΑ — Πρόγραμμα': 'VACCINES — Programme', '← Παραγγελίες': '← Orders', 'Πίσω στις παραγγελίες': 'Back to orders',
   'Πρόγραμμα εμβολίων': 'Vaccine programme', 'Πρόγραμμα': 'Programme', '+ Γραμμή': '+ Row',
   'Κάθε νέα εκκόλαψη αντιγράφει αυτές τις γραμμές. Η ημέρα μετράει από την εκκόλαψη (ημέρα 0).': 'Every new hatch copies these rows. The day counts from the hatch (day 0).',
-  'Ημέρα': 'Day', 'Εμβόλιο': 'Vaccine', 'Ποσότητα': 'Quantity', 'Ενέργειες': 'Actions', 'Επεξ.': 'Edit',
+  'Ημέρες': 'Days', 'π.χ. 27, 75': 'e.g. 27, 75', 'Εμβόλιο': 'Vaccine', 'Ποσότητα': 'Quantity', 'Ενέργειες': 'Actions', 'Επεξ.': 'Edit',
   'Ενέσιμα ανά γύρο': 'Injections per round',
   'Οι στήλες του πίνακα πελατών. Η ΚΟΡΥΖΑ είναι στήλη: το προϊόν (BIONEW BI + COR ή CORIPRAVAC) επιλέγεται σε κάθε εκκόλαψη.': "The columns of the customers' table. CORYZA is a column: the product (BIONEW BI + COR or CORIPRAVAC) is picked for each hatch.",
   '1ος γύρος (ΠΡΩΤΑ ΕΝΕΣΙΜΑ)': '1st round (FIRST INJECTIONS)', '2ος γύρος (ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ)': '2nd round (SECOND INJECTIONS)',
@@ -200,12 +200,13 @@ addTranslations({
   'Φόρτωση…': 'Loading…', 'Συνδέθηκε ✓': 'Connected ✓', 'Σφάλμα σύνδεσης': 'Connection error', 'Σφάλμα: {msg}': 'Error: {msg}',
   'Αποθηκεύτηκε ✓': 'Saved ✓', 'Διαγράφηκε.': 'Deleted.', 'Δεν υπάρχουν γραμμές.': 'No rows.',
   'ενέσιμα πελατών': "customers' injections", '= Νεοσσοί': '= chicks placed', 'στρογγ. {step}': 'rounded up to {step}', 'Π.χ. {n} νεοσσοί → {exact} → {qty}': 'E.g. {n} chicks → {exact} → {qty}',
-  'Η ημέρα πρέπει να είναι ακέραιος από 1 και πάνω.': 'The day must be a whole number from 1 up.',
+  'Οι ημέρες πρέπει να είναι ακέραιοι από 1 και πάνω, χωρισμένοι με κόμμα.': 'The days must be whole numbers from 1 up, separated by commas.',
+  'Τα ενέσιμα έχουν μία μόνο ημέρα.': 'Injections have one day only.',
   'Εισάγετε όνομα εμβολίου.': 'Enter a vaccine name.',
   'Το % πρέπει να είναι 0 ή θετικό και η διαίρεση ακέραιος από 1 και πάνω.': 'The % must be 0 or more and the divisor a whole number from 1 up.',
   'Η σταθερή ποσότητα πρέπει να είναι θετικός αριθμός.': 'The fixed quantity must be a positive number.',
   'Η εγγραφή δεν υπάρχει πια — ανανεώστε τη σελίδα.': 'The record no longer exists — reload the page.',
-  'Διαγραφή της γραμμής «{name}» (ημέρα {day});': 'Delete the row «{name}» (day {day})?',
+  'Διαγραφή της γραμμής «{name}» (ημέρες {day});': 'Delete the row «{name}» (days {day})?',
   'Αφαίρεση': 'Remove', 'Κανένα': 'None', '— προσθήκη —': '— add —',
   'Αφαίρεση του «{name}» από τον γύρο {n};': 'Remove «{name}» from round {n}?',
   'Δεν υπάρχουν πελάτες στον Προγραμματισμό.': 'No customers in the scheduler.',
@@ -228,6 +229,12 @@ function customerList(placements, usual) {
   return [...new Set(names.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'el'));
 }
 const nf = n => Number(n).toLocaleString('el-GR');
+// "27, 75" → [27, 75]: sorted, no repeats; null if empty or any part isn't a whole number from 1 up
+function parseDays(text) {
+  const days = String(text).split(/[\s,]+/).filter(Boolean).map(Number);
+  if (!days.length || days.some(d => !Number.isInteger(d) || d < 1)) return null;
+  return [...new Set(days)].sort((a, b) => a - b);
+}
 // how a programme row's quantity is worked out, in words
 function ruleText(r) {
   if (r.kind !== 'general') return t('ενέσιμα πελατών');
@@ -276,7 +283,7 @@ async function loadAll() {
   try {
     let placements;
     [programme, injectables, customerInj, placements, suppliers] = await Promise.all([
-      sbFetch(`${PROG}?order=day.asc,id.asc`),
+      sbFetch(`${PROG}?order=days.asc,id.asc`),
       sbFetch(`${INJ}?order=round.asc,sort.asc`),
       sbFetch(`${CUST}?select=customer,round,vaccine,payer`),
       sbFetch('placements?select=customers'),
@@ -296,7 +303,7 @@ async function loadAll() {
 // ── PROGRAMME ──
 function renderProgramme() {
   document.getElementById('prog-body').innerHTML = programme.length ? programme.map(r =>
-    `<tr ondblclick="openProg(${r.id})"><td>${r.day}</td>` +
+    `<tr ondblclick="openProg(${r.id})"><td>${r.days.join(' · ')}</td>` +
     `<td>${r.kind === 'general' ? escapeHtml(r.vaccine) : `<b>${t(KIND_LABEL[r.kind])}</b>`}</td>` +
     `<td class="muted">${escapeHtml(ruleText(r))}</td>` +
     `<td><button class="btn-secondary btn-sm" onclick="openProg(${r.id})">${t('Επεξ.')}</button></td></tr>`).join('')
@@ -313,9 +320,9 @@ function syncModal() {
 // id null = new row
 function openProg(id) {
   editId = id;
-  const r = programme.find(x => x.id === id) || { day: '', kind: 'general', vaccine: '', rule: 'placed', extra_pct: 0, divide_by: 1, round_to: 1000, fixed_qty: '', unit: 'Δόσεις' };
+  const r = programme.find(x => x.id === id) || { days: [], kind: 'general', vaccine: '', rule: 'placed', extra_pct: 0, divide_by: 1, round_to: 1000, fixed_qty: '', unit: 'Δόσεις' };
   const set = (el, v) => { document.getElementById(el).value = v ?? ''; };
-  set('m-day', r.day); set('m-kind', r.kind); set('m-vaccine', r.vaccine); set('m-rule', r.rule);
+  set('m-days', r.days.join(', ')); set('m-kind', r.kind); set('m-vaccine', r.vaccine); set('m-rule', r.rule);
   set('m-pct', String(r.extra_pct).replace('.', ',')); set('m-div', r.divide_by); set('m-round', String(r.round_to));
   set('m-fixed', r.fixed_qty == null || r.fixed_qty === '' ? '' : String(r.fixed_qty).replace('.', ',')); set('m-unit', r.unit);
   document.getElementById('m-delete').style.display = id ? '' : 'none';
@@ -326,8 +333,9 @@ function closeProg() { document.getElementById('prog-bg').style.display = 'none'
 async function saveProg() {
   const id = editId;   // remembered now: Esc closes the window (editId = null) while a save is still running
   const g = el => document.getElementById(el).value.trim();
-  const row = { day: Number(g('m-day')), kind: g('m-kind'), vaccine: null, rule: 'placed', extra_pct: 0, divide_by: 1, round_to: 1000, fixed_qty: null, unit: 'Δόσεις' };
-  if (!Number.isInteger(row.day) || row.day < 1) { toast(t('Η ημέρα πρέπει να είναι ακέραιος από 1 και πάνω.'), true); return; }
+  const row = { days: parseDays(g('m-days')), kind: g('m-kind'), vaccine: null, rule: 'placed', extra_pct: 0, divide_by: 1, round_to: 1000, fixed_qty: null, unit: 'Δόσεις' };
+  if (!row.days) { toast(t('Οι ημέρες πρέπει να είναι ακέραιοι από 1 και πάνω, χωρισμένοι με κόμμα.'), true); return; }
+  if (row.kind !== 'general' && row.days.length > 1) { toast(t('Τα ενέσιμα έχουν μία μόνο ημέρα.'), true); return; }
   if (row.kind === 'general') {
     if (!g('m-vaccine')) { toast(t('Εισάγετε όνομα εμβολίου.'), true); return; }
     row.rule = g('m-rule'); row.unit = g('m-unit');
@@ -348,13 +356,13 @@ async function saveProg() {
       : await sbFetch(PROG, { method: 'POST', prefer: 'return=representation', body: JSON.stringify(row) })) || [];
     if (!saved) throw new Error(t('Η εγγραφή δεν υπάρχει πια — ανανεώστε τη σελίδα.'));
     await logChange(PROG, saved.id, id ? 'edited' : 'created', before, saved);
-    programme = (id ? programme.map(r => r.id === id ? saved : r) : [...programme, saved]).sort((a, b) => a.day - b.day || a.id - b.id);
+    programme = (id ? programme.map(r => r.id === id ? saved : r) : [...programme, saved]).sort((a, b) => a.days[0] - b.days[0] || a.id - b.id);
     closeProg(); renderProgramme(); toast(t('Αποθηκεύτηκε ✓'));
   } catch (e) { toast(t('Σφάλμα: {msg}', { msg: e.message }), true); }
 }
 async function deleteProg() {
   const r = programme.find(x => x.id === editId);
-  if (!r || !confirm(t('Διαγραφή της γραμμής «{name}» (ημέρα {day});', { name: r.vaccine || t(KIND_LABEL[r.kind]), day: r.day }))) return;
+  if (!r || !confirm(t('Διαγραφή της γραμμής «{name}» (ημέρες {day});', { name: r.vaccine || t(KIND_LABEL[r.kind]), day: r.days.join(', ') }))) return;
   try {
     await sbFetch(`${PROG}?id=eq.${r.id}`, { method: 'DELETE' });
     await logChange(PROG, r.id, 'deleted', r, null);

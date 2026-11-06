@@ -525,11 +525,6 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
   .hstat-val{font-size:13px}
   .hstat-label{font-size:10px}
   #btn-changelog{display:none!important}
-  /* hide Απόθεμα text, keep emoji */
-  a.btn-tool[href="inventory.html"]{font-size:0}
-  a.btn-tool[href="inventory.html"]::before{content:"📦";font-size:16px}
-  a.btn-tool[href="vaccine_programme.html"]{font-size:0}
-  a.btn-tool[href="vaccine_programme.html"]::before{content:"🗓";font-size:16px}
 
   /* ── Toolbar: search full width, filters below ── */
   .toolbar{
@@ -3253,7 +3248,7 @@ async function openPlan() {
   if (!guardConnected()) return;
   try {
     const [programme, injectables, usual, vaccines, placements] = await Promise.all([
-      sbFetch('vaccine_programme?order=day.asc,id.asc'),
+      sbFetch('vaccine_programme?order=days.asc,id.asc'),
       sbFetch('injectables?order=round.asc,sort.asc'),
       sbFetch('customer_injectables?select=customer,round,vaccine,payer'),
       sbFetch('vaccines?select=name,supplier'),
@@ -3272,14 +3267,16 @@ function closePlan() { document.getElementById('plan-bg').style.display = 'none'
 function pickPlan(id) {
   const p = planData.placements.find(x => x.id === id);
   const customers = hatchCustomers(p);
-  const general = planData.programme.filter(r => r.kind === 'general').map(r => ({ include: true, vaccine: r.vaccine,
-    date: subDays(p.doc_date, -r.day), posotita: posotitaText(planQty(r, p.chicks), r.unit), supplier: planData.supplier[r.vaccine] || '',
-    prog: r, round_to: r.round_to }));   // prog + round_to: the round-up switch (placed rows only)
+  // one line per day of age; a row with days 27 · 75 gives two lines, sorted by date with the rest
+  const general = planData.programme.filter(r => r.kind === 'general').flatMap(r => r.days.map(day => ({ include: true, vaccine: r.vaccine,
+    date: subDays(p.doc_date, -day), posotita: posotitaText(planQty(r, p.chicks), r.unit), supplier: planData.supplier[r.vaccine] || '',
+    prog: r, round_to: r.round_to })))   // prog + round_to: the round-up switch (placed rows only)
+    .sort((a, b) => a.date.localeCompare(b.date));
   const usualPayer = (c, round, v) => (planData.usual.find(u => u.customer === c && u.round === round && u.vaccine === v) || {}).payer || '';
   const rounds = [1, 2].map(round => {
     const placeholder = planData.programme.find(r => r.kind === `injectables_${round}`);
     const cols = planData.injectables.filter(i => i.round === round).map(i => i.vaccine);
-    return placeholder && { round, date: subDays(p.doc_date, -placeholder.day), coryza: '', cols,
+    return placeholder && { round, date: subDays(p.doc_date, -placeholder.days[0]), coryza: '', cols,
       cells: Object.fromEntries(customers.map(c => [c.name, Object.fromEntries(cols.map(v => [v, c.leftover ? '' : usualPayer(c.name, round, v)]))])) };
   }).filter(Boolean);   // a round whose ΕΝΕΣΙΜΑ row isn't in the programme is skipped
   plan = { placement: p, customers, general, rounds };
