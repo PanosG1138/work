@@ -7,8 +7,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
-<script src="common.js?v=15"></script>
-<link rel="stylesheet" href="theme.css?v=15">
+<script src="common.js?v=16"></script>
+<link rel="stylesheet" href="theme.css?v=16">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{min-height:100%}
@@ -111,6 +111,7 @@ footer{
 <main>
   <!-- DASHBOARD — needs sign-in (same account as the tools) -->
   <section class="dash" id="dash" style="display:none">
+    <div id="vax-remind"></div>
     <div class="sec" data-t>Θάλαμοι</div>
     <div class="pills" id="pills"></div>
     <div class="tiles" id="tiles"><div class="dash-msg" data-t>Φόρτωση…</div></div>
@@ -215,6 +216,20 @@ function line(icon, href, date, what, today, cls = '') {
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────────
+// the "start the εμβολιακό" banner above the houses (common.js VAX REMINDER); opens the hatch's sheet in the beta tracker
+async function loadVaxReminder(placements, todayIso) {
+  try {
+    const since = isoOf(addDays(new Date(todayIso), -VAX_BIN_DAYS));
+    const [plans, rows, programme] = await Promise.all([
+      sbFetch('hatch_plans?select=placement_id,activated_at'),
+      sbFetch(`emvolia?select=anath,hm_ekk,hm_paragelia,draft&hm_ekk=gte.${since}`),
+      sbFetch('vaccine_programme?select=days'),
+    ]);
+    document.getElementById('vax-remind').innerHTML = vaxReminderHtml(vaxReminders({ placements, plans, rows, programme, today: todayIso }),
+      p => `vaccine_tracker_beta.html#vax=${p.id}`);
+  } catch (e) { /* the banner is a reminder only: the dashboard stays as it is */ }
+}
+
 async function loadDashboard() {
   const today = new Date(); today.setHours(0,0,0,0);
   const todayIso = isoOf(today);
@@ -229,6 +244,8 @@ async function loadDashboard() {
     document.getElementById('tiles').innerHTML = `<div class="dash-msg err">${t('Σφάλμα φόρτωσης: {msg}', { msg: x(e.message) })}</div>`;
     return;
   }
+
+  loadVaxReminder(placements, todayIso);   // separately: a failure there never hides the dashboard
 
   // a vaccination = house + hatch + date + vaccine (customer lines of the same one count once)
   const vkey = v => [v.anath, v.hm_ekk, v.hm_emv, v.emvolio].join('|');

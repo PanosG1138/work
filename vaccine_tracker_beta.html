@@ -9,8 +9,8 @@
 <title data-t>ΕΜΒΟΛΙΑ — Beta</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
-<script src="common.js?v=15"></script>
-<link rel="stylesheet" href="theme.css?v=15">
+<script src="common.js?v=16"></script>
+<link rel="stylesheet" href="theme.css?v=16">
 <style>
 /* theme toggle button */
 
@@ -787,6 +787,7 @@ body.printing-card .printcard-doc{display:block}
 
 <!-- MAIN -->
 <main class="main">
+  <div id="vax-remind"></div>
   <nav class="tabs">
     <button data-t class="tab on" data-tab="vaccines" onclick="showTab('vaccines')">Εμβόλια</button>
     <button data-t class="tab" data-tab="vax" onclick="showTab('vax')">Εμβολιακά</button>
@@ -1432,7 +1433,7 @@ function setSyncStatus(state, text) {
 async function loadData() {
   setSyncStatus('loading', t('Φόρτωση…'));
   try {
-    [data] = await Promise.all([sbSelect(), loadVaccineNames(), loadPlanHatches()]);
+    [data] = await Promise.all([sbSelect(), loadVaccineNames(), loadPlanHatches(), loadReminders()]);
     await autoMarkVaccinated();
     selectedIds.clear();
     showDone = false; updateShowDoneBtn();
@@ -2385,6 +2386,7 @@ function render() {
   document.getElementById('btn-print-card').style.display =
     rows.some(r => r.hm_ekk) ? '' : 'none';
   renderVax();   // the Εμβολιακά cards and open sheet follow every change in the table
+  renderReminders();
 }
 
 function x(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -3250,6 +3252,26 @@ async function loadPlanHatches() {
   planHatches = new Set(rows.filter(r => r.placement).map(r => r.placement.house + '|' + r.placement.doc_date));
 }
 const inPlan = r => planHatches.has(r.anath + '|' + r.hm_ekk);
+// the "start the εμβολιακό" banner above the tabs (vaxReminders / vaxReminderHtml in common.js); never blocks loading
+let remindData = null;
+async function loadReminders() {
+  const today = todayIso();
+  try {
+    const [placements, plans, programme] = await Promise.all([
+      sbFetch(`placements?select=id,house,doc_date&doc_date=gte.${subDays(today, VAX_BIN_DAYS)}&doc_date=lte.${subDays(today, -VAX_REMIND_DAYS)}`),
+      sbFetch(`${PLANS}?select=placement_id,activated_at`),
+      sbFetch('vaccine_programme?select=days'),
+    ]);
+    remindData = { placements, plans, programme };
+  } catch (e) { remindData = null; }
+}
+function renderReminders() {
+  const box = document.getElementById('vax-remind');
+  if (!remindData) { box.innerHTML = ''; return; }
+  // the Εμβολιακά tab's records are newer once it has been opened (create / activate / delete)
+  const plans = vaxData ? vaxData.plans : remindData.plans;
+  box.innerHTML = vaxReminderHtml(vaxReminders({ ...remindData, plans, rows: data, today: todayIso() }), p => `#vax=${p.id}`);
+}
 const batchMovesPlanLine = updates => ('hm_ekk' in updates || 'anath' in updates)
   && [...selectedIds].some(id => { const r = data.find(x => x.id === id); return r && inPlan(r); });
 const lateOrders = p => hatchRows(p).filter(r => !r.draft && r.paragelia !== 'ΝΑΙ' && r.emvoliasmos !== 'ΝΑΙ' && r.hm_paragelia && r.hm_paragelia < todayIso());
@@ -3697,7 +3719,14 @@ function showTab(name) {
   history.replaceState(null, '', location.pathname + location.search + (name === 'vaccines' ? '' : '#' + name));
   if (name === 'vax' && currentUser) openVaxTab();   // fresh cards every time the tab opens
 }
-showTab(location.hash.slice(1));
+// "#vax=<placement id>" (banner links, also from the homepage) opens that hatch's sheet
+function openFromHash() {
+  const [tab, hatchId] = location.hash.slice(1).split('=');
+  if (hatchId) sheetHatchId = hatchId;
+  showTab(tab);
+}
+openFromHash();
+window.addEventListener('hashchange', openFromHash);
 
 // ── INIT ──────────────────────────────────────────────────────────
 // sidebarOpen already defaults to false — collapse the desktop shell to match

@@ -34,6 +34,10 @@ try { if (LANGS.includes(localStorage.getItem('lang'))) LANG = localStorage.getI
 const EN = {};
 function addTranslations(list) { Object.assign(EN, list); }
 addTranslations({
+  // the "start the εμβολιακό" banner (VAX REMINDER)
+  'Ξεκινήστε το εμβολιακό': 'Start the vaccination plan', 'Εμβολιακό — έχουν ήδη αργήσει παραγγελίες': 'Vaccination plan — orders are already late',
+  'ημέρες': 'days', 'εκκόλαψη': 'hatch', 'ημ. {n}': 'day {n}', 'Πρόχειρο — δεν έχει ενεργοποιηθεί': 'Draft — not activated',
+  'Δεν έχει ξεκινήσει εμβολιακό': 'No vaccination plan yet', 'πρώτη παραγγελία από {d}': 'first order from {d}', 'Άνοιγμα εμβολιακού →': 'Open plan →',
   // shared sign-in box and buttons
   'Σύνδεση': 'Sign in', 'Είσοδος': 'Log in', 'Σύνδεση…': 'Logging in…', 'Κωδικός…': 'Password…',
   'Λάθος email ή κωδικός.': 'Wrong email or password.',
@@ -281,7 +285,7 @@ function resolveVaccineAsk(v) {
   if (vnameResolve) { vnameResolve(v); vnameResolve = null; }
 }
 
-// ── VACCINE PLANNING ── used by vaccine_programme.html and vaccine_tracker_beta.html.
+// ── VACCINE PLANNING ── used by vaccine_programme.html, vaccine_tracker_beta.html and (VAX REMINDER) index.html.
 // Design: docs/superpowers/specs/2026-11-06-vaccine-planning-design.md
 // customer = text before " - " in placements.customers ("Συντιχάκης - από Δεκ 2026" → "Συντιχάκης")
 const customerName = s => String(s || '').split(' - ')[0].trim();
@@ -293,6 +297,37 @@ const planExact = (r, chicks) => chicks * (100 + Number(r.extra_pct)) / 100 / Nu
 // ... and after: rounded up to round_to (the 1e-9 stops 56.700,0000001 rounding past 57.000) — or the fixed amount
 const planQty = (r, chicks) => r.rule === 'fixed' ? Number(r.fixed_qty)
   : Math.ceil(planExact(r, chicks) / r.round_to - 1e-9) * r.round_to;
+
+// ── VAX REMINDER ── homepage + beta tracker: hatches whose εμβολιακό must be started or activated.
+// From VAX_REMIND_DAYS before the hatch until activation; not hatches entered the old way (lines, no record), not binned ones.
+const VAX_REMIND_DAYS = 35, VAX_BIN_DAYS = 126;
+const isoPlus = (iso, n) => { const d = new Date(iso + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+const isoGr = iso => iso.split('-').reverse().join('/');   // 2026-11-24 → 24/11/2026
+// placements {id,house,doc_date}, plans {placement_id,activated_at}, rows {anath,hm_ekk,hm_paragelia,draft}, programme {days}
+function vaxReminders({ placements, plans, rows, programme, today }) {
+  const firstDay = Math.min(...programme.flatMap(r => r.days || []));
+  return placements.filter(p => p.doc_date <= isoPlus(today, VAX_REMIND_DAYS) && p.doc_date >= isoPlus(today, -VAX_BIN_DAYS)).map(p => {
+    const plan = plans.find(x => x.placement_id === p.id);
+    const lines = rows.filter(r => r.anath === p.house && r.hm_ekk === p.doc_date);
+    if ((plan && plan.activated_at) || (!plan && lines.length)) return null;
+    // the first order: the earliest draft line's, or (no εμβολιακό yet) the template's first day − 30
+    const firstOrder = plan ? lines.filter(r => r.draft && r.hm_paragelia).map(r => r.hm_paragelia).sort()[0] || null
+      : isFinite(firstDay) ? isoPlus(p.doc_date, firstDay - 30) : null;
+    return { placement: p, state: plan ? 'draft' : 'none', days: Math.round((Date.parse(p.doc_date) - Date.parse(today)) / 864e5),
+      firstOrder, late: !!firstOrder && firstOrder <= today };
+  }).filter(Boolean).sort((a, b) => a.placement.doc_date.localeCompare(b.placement.doc_date));
+}
+// the banner: late hatches first (red), then the rest (amber); hrefOf(placement) = the link that opens its sheet
+function vaxReminderHtml(list, hrefOf) {
+  const group = (late, items) => !items.length ? '' : `<div class="vax-remind${late ? ' late' : ''}"><div class="vr-title">` +
+    (late ? '⚠ ' + t('Εμβολιακό — έχουν ήδη αργήσει παραγγελίες') : '🗓 ' + t('Ξεκινήστε το εμβολιακό')) + '</div>' +
+    items.map(r => `<div class="vr-row"><div class="vr-days">${r.days >= 0 ? r.days + `<small>${t('ημέρες')}</small>` : t('ημ. {n}', { n: -r.days })}</div>` +
+      `<div class="vr-who"><b>${escapeHtml(r.placement.house)}</b> · ${t('εκκόλαψη')} ${isoGr(r.placement.doc_date)}` +
+      `<span>${t(r.state === 'draft' ? 'Πρόχειρο — δεν έχει ενεργοποιηθεί' : 'Δεν έχει ξεκινήσει εμβολιακό')}` +
+      `${r.late ? ' · ' + t('πρώτη παραγγελία από {d}', { d: isoGr(r.firstOrder) }) : ''}</span></div>` +
+      `<a class="vr-btn" href="${hrefOf(r.placement)}">${t('Άνοιγμα εμβολιακού →')}</a></div>`).join('') + '</div>';
+  return group(true, list.filter(r => r.late)) + group(false, list.filter(r => !r.late));
+}
 
 // ── LOADING RULES ── used by schedule_checker.html and index.html. Source of truth: docs/rearing_scheduler.md.
 // Day 0 = hatch date. Loading doesn't depend on the house: every customer's pullets load from day LOAD_START
