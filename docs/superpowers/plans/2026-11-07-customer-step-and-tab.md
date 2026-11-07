@@ -11,33 +11,58 @@
 - Water vaccines of a customer (E.COLI for ΠΤΗΝΟΤΡΟΦΙΚΗ) **move into customer memory**. The template keeps only what every hatch gets.
 - Customers tab history: **from now on only**, no backfill.
 - Wherever vaccines are chosen for a customer, there is a «+» for a vaccine not in the list.
-- Later (reminder kept): a salmonella step. When a customer with GALLIMUNE SE+ST in memory is in the hatch → only two SALMOVAC.
+- The salmonella logic is built in the same round (see «Salmonella» below).
+- The template page's «Πελάτες με δικά τους ενέσιμα» section moves to the Customers tab (user OK).
 
 ## Database (SQL for the user, after this plan is OK)
+
+Now: new tables + the salmonella column + a COPY of today's memory (nothing deleted). After the switch is
+verified: the template's «μόνο με …» rows are deleted and customer_injectables dropped (asked first).
 
 ```sql
 -- one memory per customer: what they do, when, how, who pays
 create table customer_vaccines (
   id bigint generated always as identity primary key,
-  customer text not null,             -- tracker form (capitals, no accents)
-  vaccine text not null,              -- '' with how = 'none' → "nothing this round"
-  at text not null,                   -- 'inj1' / 'inj2' = the template's injection days; 'day:N' = day N of age
-  how text not null check (how in ('injection', 'water', 'share', 'none')),   -- share = pays own share of a template vaccine
+  customer text not null,                    -- tracker form (capitals, no accents)
+  vaccine text not null default '',          -- '' with how = 'none' → "nothing that round"
+  at text not null check (at in ('inj1', 'inj2', 'all') or at ~ '^day:[0-9]+$'),   -- inj1/inj2 = template injection days; all = every day of a template vaccine (share)
+  how text not null check (how in ('injection', 'water', 'share', 'none')),
   payer text not null default 'us' check (payer in ('us', 'customer')),
-  product text                         -- ΚΟΡΥΖΑ product
+  product text                               -- ΚΟΡΥΖΑ product
 );
--- (RLS: same four authenticated policies as customer_injectables)
-
--- what each customer did per hatch, kept for good (written when an εμβολιακό is activated and whenever it changes after)
+-- what each customer did per hatch, kept for good (written at activation and on later changes)
 create table customer_history (
   id bigint generated always as identity primary key,
   customer text not null, house text not null, hatch date not null,
   vaccine text not null, day int not null, how text not null, payer text not null default 'us',
   saved_at timestamptz not null default now()
 );
--- + copy: customer_injectables (round 1/2 → inj1/inj2, round 0 → share) and the template rows «μόνο με …»
---   (one water row per customer per day) into customer_vaccines; then those template rows are deleted.
---   customer_injectables stays untouched until the switch is verified, then dropped (asked first).
+-- the 3rd salmonella choice of a hatch: {"mode": "customers" | "house", "sest": {"ΒΕΝΙΖΕΛΟΣ": 60000, …}, "salmovac": 4000}
+alter table hatch_plans add column salmonella jsonb;
+
+-- same access rules as the other tables: signed-in users only
+alter table customer_vaccines enable row level security;
+alter table customer_history enable row level security;
+create policy authenticated_select on customer_vaccines for select using ((select auth.role()) = 'authenticated');
+create policy authenticated_insert on customer_vaccines for insert with check ((select auth.role()) = 'authenticated');
+create policy authenticated_update on customer_vaccines for update using ((select auth.role()) = 'authenticated') with check ((select auth.role()) = 'authenticated');
+create policy authenticated_delete on customer_vaccines for delete using ((select auth.role()) = 'authenticated');
+create policy authenticated_select on customer_history for select using ((select auth.role()) = 'authenticated');
+create policy authenticated_insert on customer_history for insert with check ((select auth.role()) = 'authenticated');
+create policy authenticated_update on customer_history for update using ((select auth.role()) = 'authenticated') with check ((select auth.role()) = 'authenticated');
+create policy authenticated_delete on customer_history for delete using ((select auth.role()) = 'authenticated');
+
+-- copy today's memory: injections per round, paid shares, and the template's «μόνο με …» water rules
+insert into customer_vaccines (customer, vaccine, at, how, payer, product)
+select customer, vaccine,
+       case round when 1 then 'inj1' when 2 then 'inj2' else 'all' end,
+       case when vaccine = '' then 'none' when round = 0 then 'share' else 'injection' end,
+       payer, product
+from customer_injectables;
+insert into customer_vaccines (customer, vaccine, at, how)
+select c, p.vaccine, 'day:' || d, 'water'
+from vaccine_programme p, unnest(p.only_customers) c, unnest(p.days) d
+where p.only_customers is not null;
 ```
 
 ## Steps of a new εμβολιακό
@@ -58,7 +83,27 @@ create table customer_history (
    - ΥΠΟΛΟΙΠΑ gets the standard set on the injection days;
    - all «προς έλεγχο».
 4. **Ποσότητες** — as now.
-5. (later) **Σαλμονέλα** — see the decisions above.
+### Salmonella (user, 2026-11-07) — part of step 1, built together with the rest
+
+- Every placement gets **3 salmonella vaccinations**:
+  - either 3 × SALMOVAC (template days 8, 38, 100),
+  - or 2 × SALMOVAC (8, 38) + the 3rd as GALLIMUNE SE+ST (an injection, day 82).
+- Nothing is asked when no customer of the hatch has GALLIMUNE SE+ST in memory: 3 × SALMOVAC as now.
+- When one or more do, step 1's window shows a **«3ος εμβολιασμός σαλμονέλας»** box:
+  - **Μόνο οι πελάτες με SE+ST** (suggested):
+    - each SE+ST customer gets SE+ST for their birds (↑1.000);
+    - SALMOVAC day 100 covers everyone else (chicks − their birds, template rule; ΥΠΟΛΟΙΠΑ included).
+  - **Όλο το αναθρεπτήριο SE+ST**:
+    - SE+ST for all the chicks (↑1.000);
+    - no SALMOVAC on day 100.
+  - Both quantities are always editable: every SE+ST number and the day-100 SALMOVAC number. The suggestions are calculated, and a line shows «SE+ST N + SALMOVAC M = X πουλιά (νεοσσοί Y)» as a check, never blocking.
+  - Who pays SE+ST follows each customer's memory. In «όλο το αναθρεπτήριο», the part outside the SE+ST customers is paid by us.
+- The choice and the edited numbers are kept on the plan (`hatch_plans.salmonella`).
+  - Step 2 leaves out SALMOVAC day 100 in «όλο».
+  - Step 3 makes the SE+ST lines.
+  - Step 4 uses the kept numbers instead of the rule for those lines.
+  - «Αλλαγή» on step 1 can change it later (ordered lines ask first).
+- In the history and the Customers tab, SE+ST shows like any other vaccine.
 
 Plans already done keep their steps (the 4 existing ones stay "all done").
 

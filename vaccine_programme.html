@@ -112,29 +112,12 @@ select.cell.on{border-color:rgba(79,209,139,0.5);color:var(--gh-success-fg);back
       <div id="m-fixed-wrap" class="fgroup"><label data-t>Σταθερή ποσότητα</label><input type="text" id="m-fixed"></div>
       <div class="fgroup"><label data-t>Μονάδα</label>
         <select id="m-unit"><option value="Δόσεις" data-t>Δόσεις</option><option value="Κιλά" data-t>Κιλά</option><option value="Μπουκαλάκια" data-t>Μπουκαλάκια</option></select></div>
-      <div class="fgroup"><label data-t>Μόνο όταν στο αναθρεπτήριο υπάρχει</label>
-        <input type="text" id="m-only" list="cust-names" data-t-placeholder placeholder="κενό = πάντα · π.χ. ΠΤΗΝΟΤΡΟΦΙΚΗ">
-        <p data-t class="muted" style="font-size:12px;margin-top:4px">Ένας ή περισσότεροι πελάτες, με κόμμα. Τότε μπαίνει για όλο το αναθρεπτήριο.</p></div>
     </div>
     <div class="modal-actions">
       <button data-t class="btn-danger" id="m-delete" onclick="deleteProg()">Διαγραφή</button>
       <div style="flex:1"></div>
       <button data-t class="btn-secondary" onclick="closeProg()">Ακύρωση</button>
       <button data-t class="btn-primary" onclick="saveProg()">Αποθήκευση</button>
-    </div>
-  </div>
-</div>
-
-<!-- ONE CUSTOMER'S INJECTIONS — what they get per round, who pays, ΚΟΡΥΖΑ product (custWin) -->
-<div id="cust-bg" class="modal-bg" style="display:none" onclick="if(event.target===this)closeCust()">
-  <div class="modal" style="width:580px">
-    <h3 id="cust-title"></h3>
-    <div id="cust-body"></div>
-    <div class="modal-actions">
-      <button data-t class="btn-danger" id="cust-reset" onclick="resetCust()">Επαναφορά στα βασικά</button>
-      <div style="flex:1"></div>
-      <button data-t class="btn-secondary" onclick="closeCust()">Ακύρωση</button>
-      <button data-t class="btn-primary" onclick="saveCust()">Αποθήκευση</button>
     </div>
   </div>
 </div>
@@ -188,16 +171,9 @@ select.cell.on{border-color:rgba(79,209,139,0.5);color:var(--gh-success-fg);back
   </section>
 
   <section>
-    <div class="row-between">
-      <div><h2 data-t>Πελάτες με δικά τους ενέσιμα</h2>
-        <p data-t class="hint">Κάθε πελάτης θυμάται τι έκανε την τελευταία φορά (από το παράθυρο «Ενέσιμα» της εκκόλαψης). Εδώ φαίνονται όσοι διαφέρουν από τα βασικά (★) ή πληρώνουν κάποια εμβόλια μόνοι τους.</p></div>
-      <div style="display:flex;gap:8px"><button class="btn-secondary" id="cust-all" onclick="toggleAllCust()"></button><button data-t class="btn-primary" onclick="openCust(null)">+ Πελάτης</button></div>
-    </div>
-    <div class="tbl"><table>
-      <thead><tr><th data-t>Πελάτης</th><th data-t>1ος γύρος (ΠΡΩΤΑ ΕΝΕΣΙΜΑ)</th><th data-t>2ος γύρος (ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ)</th><th data-t>Πληρώνει μόνος (όλο το αναθρεπτήριο)</th><th></th></tr></thead>
-      <tbody id="cust-list"></tbody>
-    </table></div>
-    <datalist id="cust-names"></datalist>
+    <h2 data-t>Πελάτες</h2>
+    <p class="hint"><span data-t>Τα εμβόλια κάθε πελάτη (ενέσιμα και στο νερό, ποιος πληρώνει) και το ιστορικό του βρίσκονται στην καρτέλα «Πελάτες» των εμβολίων.</span>
+      <a data-t href="vaccine_tracker_beta.html#customers">Άνοιγμα καρτέλας Πελάτες →</a></p>
   </section>
 
   <section hidden>   <!-- hidden for now (user, 2026-11-07); the code still loads it -->
@@ -221,7 +197,8 @@ addTranslations({
   'Πληρώνει μόνος (όλο το αναθρεπτήριο)': 'Pays own share (whole-house vaccines)', 'και ημ. {n}': 'and day {n}', '1ος γύρος (ΠΡΩΤΑ ΕΝΕΣΙΜΑ)': '1st round (FIRST INJECTIONS)', '2ος γύρος (ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ)': '2nd round (SECOND INJECTIONS)',
   '★ = βασικό: το κάνουν οι πελάτες που δεν έχουν δικά τους. Για την ΚΟΡΥΖΑ το προϊόν (BIONEW BI + COR ή CORIPRAVAC) επιλέγεται ανά πελάτη.': '★ = standard: what customers without their own get. For CORYZA the product (BIONEW BI + COR or CORIPRAVAC) is chosen per customer.',
   'Βασικό: το κάνουν οι πελάτες που δεν έχουν δικά τους': 'Standard: what customers without their own get',
-  'Πελάτες με δικά τους ενέσιμα': 'Customers with their own injections',
+  'Πελάτες με δικά τους ενέσιμα': 'Customers with their own injections', 'Πελάτες': 'Customers', 'Άνοιγμα καρτέλας Πελάτες →': 'Open the Customers tab →',
+  'Τα εμβόλια κάθε πελάτη (ενέσιμα και στο νερό, ποιος πληρώνει) και το ιστορικό του βρίσκονται στην καρτέλα «Πελάτες» των εμβολίων.': "Each customer's vaccines (injections and water, who pays) and their history are in the vaccines page's Customers tab.",
   'Κάθε πελάτης θυμάται τι έκανε την τελευταία φορά (από το παράθυρο «Ενέσιμα» της εκκόλαψης). Εδώ φαίνονται όσοι διαφέρουν από τα βασικά (★) ή πληρώνουν κάποια εμβόλια μόνοι τους.': 'Each customer remembers what they got last time (from the hatch\'s «Injections» window). Shown here: those who differ from the standard (★) or pay for some vaccines themselves.',
   '+ Πελάτης': '+ Customer', 'Μόνο όσοι διαφέρουν': 'Only those who differ', 'Όλοι οι πελάτες ({n})': 'All customers ({n})',
   'τα βασικά': 'the standard', 'κανένα': 'none', 'πληρώνει': 'pays', 'πελάτης': 'customer', 'Αλλαγή: {name}': 'Change: {name}',
@@ -254,20 +231,14 @@ addTranslations({
 });
 
 // ── TABLES ──
-const PROG = 'vaccine_programme', INJ = 'injectables', CUST = 'customer_injectables', HIST = 'settings_history';
+const PROG = 'vaccine_programme', INJ = 'injectables', HIST = 'settings_history';
 const KIND_LABEL = { injectables_1: 'ΠΡΩΤΑ ΕΝΕΣΙΜΑ', injectables_2: 'ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ' };   // shown through t()
 
 // ── STATE ──
-let programme = [], injectables = [], customerInj = [], customers = [], suppliers = [];
+let programme = [], injectables = [], suppliers = [];
 let currentUser = '', editId = null;
 
 // ── RULES ── (customerName and CORYZA: common.js, VACCINE PLANNING)
-// every customer booked in the scheduler, ΠΤΗΝΟΤΡΟΦΙΚΗ and those already remembered — tracker form, unique, sorted
-const PTINO = 'ΠΤΗΝΟΤΡΟΦΙΚΗ';
-function customerList(placements, usual) {
-  const names = placements.flatMap(p => (p.customers || []).map(c => pelatisName(customerName(c.name)))).concat(usual.map(u => u.customer), [PTINO]);
-  return [...new Set(names.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'el'));
-}
 const nf = n => Number(n).toLocaleString('el-GR');
 // "27, 75" → [27, 75]: sorted, no repeats; null if empty or any part isn't a whole number from 1 up
 function parseDays(text) {
@@ -321,20 +292,15 @@ function logChange(table, rowKey, action, before, after) {
 async function loadAll() {
   setSync('loading', t('Φόρτωση…'));
   try {
-    let placements;
-    [programme, injectables, customerInj, placements, suppliers] = await Promise.all([
+    [programme, injectables, suppliers] = await Promise.all([
       sbFetch(`${PROG}?order=days.asc,id.asc`),
       sbFetch(`${INJ}?order=round.asc,sort.asc`),
-      sbFetch(`${CUST}?select=customer,round,vaccine,payer,product`),
-      sbFetch('placements?select=customers'),
       sbFetch('vaccines?select=name,supplier&order=name.asc'),
     ]);
     VACCINE_OPTIONS = suppliers.map(v => v.name);   // the vaccine list resolveVaccineName checks against
     fillVaccineList();
-    customers = customerList(placements, customerInj);
     setSync('ok', t('Συνδέθηκε ✓'));
-    document.getElementById('cust-names').innerHTML = customers.map(c => `<option value="${escapeHtml(c)}">`).join('');
-    renderProgramme(); renderInjectables(); renderUsual(); renderSuppliers();
+    renderProgramme(); renderInjectables(); renderSuppliers();
   } catch (e) {
     setSync('err', t('Σφάλμα σύνδεσης'));
     toast(t('Σφάλμα: {msg}', { msg: e.message }), true);
@@ -344,10 +310,11 @@ async function loadAll() {
 // ── PROGRAMME ──
 function renderProgramme() {
   // one line per day, in day order; a rule with several days (E.COLI 12 + 72) shows on each and edits as one
-  const perDay = programme.flatMap(r => r.days.map(day => ({ r, day }))).sort((a, b) => a.day - b.day || a.r.id - b.r.id);
+  const perDay = programme.filter(r => !(r.only_customers || []).length)   // «μόνο με …» rows: now in customer memory (Πελάτες tab)
+    .flatMap(r => r.days.map(day => ({ r, day }))).sort((a, b) => a.day - b.day || a.r.id - b.r.id);
   document.getElementById('prog-body').innerHTML = perDay.length ? perDay.map(({ r, day }) =>
     `<tr ondblclick="openProg(${r.id})"><td>${day}${r.days.length > 1 ? `<span class="muted"> (${t('και ημ. {n}', { n: r.days.filter(d => d !== day).join(', ') })})</span>` : ''}</td>` +
-    `<td>${r.kind === 'general' ? escapeHtml(r.vaccine) : `<b>${t(KIND_LABEL[r.kind])}</b>`}${(r.only_customers || []).length ? `<span class="only">${escapeHtml(t('μόνο με {names}', { names: r.only_customers.join(', ') }))}</span>` : ''}</td>` +
+    `<td>${r.kind === 'general' ? escapeHtml(r.vaccine) : `<b>${t(KIND_LABEL[r.kind])}</b>`}</td>` +
     `<td class="muted">${escapeHtml(ruleText(r))}</td>` +
     `<td><button class="btn-secondary btn-sm" onclick="openProg(${r.id})">${t('Επεξ.')}</button></td></tr>`).join('')
     : `<tr><td colspan="4" class="empty-state">${t('Δεν υπάρχουν γραμμές.')}</td></tr>`;
@@ -368,7 +335,6 @@ function openProg(id) {
   set('m-days', r.days.join(', ')); set('m-kind', r.kind); set('m-vaccine', r.vaccine); set('m-rule', r.rule);
   set('m-pct', String(r.extra_pct).replace('.', ',')); set('m-div', r.divide_by); set('m-round', String(r.round_to));
   set('m-fixed', r.fixed_qty == null || r.fixed_qty === '' ? '' : String(r.fixed_qty).replace('.', ',')); set('m-unit', r.unit);
-  set('m-only', (r.only_customers || []).join(', '));
   document.getElementById('m-delete').style.display = id ? '' : 'none';
   syncModal(); showExample();
   document.getElementById('prog-bg').style.display = 'flex';
@@ -383,9 +349,6 @@ async function saveProg() {
   if (row.kind === 'general') {
     if (!g('m-vaccine')) { toast(t('Εισάγετε όνομα εμβολίου.'), true); return; }
     row.rule = g('m-rule'); row.unit = g('m-unit');
-    // only when one of these customers is in the house (tracker form: capitals, no accents)
-    const only = [...new Set(g('m-only').split(',').map(s => pelatisName(s.trim())).filter(Boolean))];
-    row.only_customers = only.length ? only : null;
     if (row.rule === 'placed') {
       row.extra_pct = Number((g('m-pct') || '0').replace(',', '.')); row.divide_by = Number(g('m-div')); row.round_to = Number(g('m-round'));
       if (!(row.extra_pct >= 0) || !Number.isInteger(row.divide_by) || row.divide_by < 1) { toast(t('Το % πρέπει να είναι 0 ή θετικό και η διαίρεση ακέραιος από 1 και πάνω.'), true); return; }
@@ -437,7 +400,7 @@ async function addInjectable(round, vaccine) {
     const [saved] = await sbFetch(INJ, { method: 'POST', prefer: 'return=representation', body: JSON.stringify({ round, vaccine, sort }) });
     await logChange(INJ, saved.id, 'created', null, saved);
     injectables.push(saved);
-    renderInjectables(); renderUsual(); toast(t('Αποθηκεύτηκε ✓'));
+    renderInjectables(); toast(t('Αποθηκεύτηκε ✓'));
   } catch (e) { toast(t('Σφάλμα: {msg}', { msg: e.message }), true); renderInjectables(); }
 }
 // customers' remembered rows for a removed vaccine are kept: adding it back brings them back
@@ -448,7 +411,7 @@ async function removeInjectable(id) {
     await sbFetch(`${INJ}?id=eq.${id}`, { method: 'DELETE' });
     await logChange(INJ, id, 'deleted', inj, null);
     injectables = injectables.filter(i => i.id !== id);
-    renderInjectables(); renderUsual(); toast(t('Διαγράφηκε.'));
+    renderInjectables(); toast(t('Διαγράφηκε.'));
   } catch (e) { toast(t('Σφάλμα: {msg}', { msg: e.message }), true); }
 }
 
@@ -459,103 +422,7 @@ async function toggleStandard(id) {
     if (!saved) throw new Error(t('Η εγγραφή δεν υπάρχει πια — ανανεώστε τη σελίδα.'));
     await logChange(INJ, id, 'edited', inj, saved);
     Object.assign(inj, saved);
-    renderInjectables(); renderUsual(); setSync('ok', t('Αποθηκεύτηκε ✓'));
-  } catch (e) { toast(t('Σφάλμα: {msg}', { msg: e.message }), true); }
-}
-
-// ── CUSTOMERS' INJECTIONS ── remembered per customer by the hatch's Ενέσιμα window (customer_injectables, names in
-// tracker form); a row with vaccine '' = "nothing this round"; a customer with no rows gets the round's standard (★) set
-const ROUND_TITLE = { 1: '1ος γύρος (ΠΡΩΤΑ ΕΝΕΣΙΜΑ)', 2: '2ος γύρος (ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ)' };
-let showAllCust = false, custWin = null;
-const standardSet = round => injectables.filter(i => i.round === round && i.standard).map(i => i.vaccine).sort();
-const memOf = (pel, round) => customerInj.filter(u => u.customer === pel && u.round === round);
-// differs from the standard set, or pays something themselves
-function custDiffers(pel) {
-  return memOf(pel, 0).length > 0 || [1, 2].some(round => {
-    const m = memOf(pel, round);
-    if (!m.length) return false;
-    return JSON.stringify(m.filter(u => u.vaccine).map(u => u.vaccine).sort()) !== JSON.stringify(standardSet(round)) || m.some(u => u.payer === 'customer');
-  });
-}
-function roundSummary(pel, round) {
-  const m = memOf(pel, round);
-  if (!m.length) return t('τα βασικά');
-  const on = m.filter(u => u.vaccine);
-  return on.length ? on.map(u => (u.vaccine === CORYZA ? t(CORYZA) + (u.product ? ' ' + u.product : '') : u.vaccine) + (u.payer === 'customer' ? ` (${t('πληρώνει')})` : '')).join(', ') : t('κανένα');
-}
-const memText = rows => rows.map(u => `${u.round}: ${u.vaccine || '—'}${u.product ? ' ' + u.product : ''}${u.payer === 'customer' ? ' (πελάτης)' : ''}`).join(', ');
-function renderUsual() {
-  const names = [...new Set(customerInj.map(u => u.customer))].sort((a, b) => a.localeCompare(b, 'el'));
-  const shown = showAllCust ? names : names.filter(custDiffers);
-  document.getElementById('cust-list').innerHTML = shown.map(pel => `<tr><td><b>${escapeHtml(pel)}</b></td>` +
-    [1, 2].map(round => `<td>${escapeHtml(roundSummary(pel, round))}</td>`).join('') +
-    `<td>${escapeHtml(memOf(pel, 0).map(u => u.vaccine).join(', ') || '—')}</td>` +   // set from the hatch sheet's «Πληρώνει πελάτης…»
-    `<td><button class="btn-secondary btn-sm" data-pel="${escapeHtml(pel)}" onclick="openCust(this.dataset.pel)" aria-label="${escapeHtml(t('Αλλαγή: {name}', { name: pel }))}">✎</button></td></tr>`).join('')
-    || `<tr><td colspan="5" class="empty-state">${t(showAllCust ? 'Κανένας πελάτης δεν έχει αποθηκευτεί ακόμα.' : 'Όλοι οι πελάτες κάνουν τα βασικά, πληρωμένα από εμάς.')}</td></tr>`;
-  document.getElementById('cust-all').textContent = showAllCust ? t('Μόνο όσοι διαφέρουν') : t('Όλοι οι πελάτες ({n})', { n: names.length });
-}
-function toggleAllCust() { showAllCust = !showAllCust; renderUsual(); }
-// one customer's window: per round the round's vaccines as chips; a «πελάτης» box per chip only when they pay something
-function openCust(pel) {
-  custWin = { pel: pel || '', isNew: !pel, rounds: {} };
-  [1, 2].forEach(round => {
-    const m = memOf(pel, round);
-    const on = m.length ? m.filter(u => u.vaccine) : standardSet(round).map(v => ({ vaccine: v, payer: 'us', product: null }));
-    custWin.rounds[round] = { pays: on.some(u => u.payer === 'customer'), items: injectables.filter(i => i.round === round).map(i => {
-      const u = on.find(x => x.vaccine === i.vaccine);
-      return { vaccine: i.vaccine, on: !!u, customer: !!u && u.payer === 'customer', product: (u && u.product) || '' };
-    }) };
-  });
-  renderCustWin();
-  document.getElementById('cust-bg').style.display = 'flex';
-}
-function renderCustWin() {
-  const W = custWin;
-  document.getElementById('cust-title').textContent = W.isNew ? t('Νέος πελάτης') : W.pel;
-  document.getElementById('cust-body').innerHTML =
-    (W.isNew ? `<div class="fgroup"><label>${t('Πελάτης')}</label><input type="text" id="cust-name" list="cust-names" value="${escapeHtml(W.pel)}" onchange="custWin.pel = this.value"></div>` : '') +
-    [1, 2].map(round => {
-      const R = W.rounds[round];
-      return `<div class="fgroup"><label>${t(ROUND_TITLE[round])}</label><div class="chips">` +
-        (R.items.map((it, k) => `<span class="pick${it.on ? ' on' : ''}"><button type="button" aria-pressed="${it.on}" onclick="custPick(${round}, ${k})">${it.on ? '✓ ' : ''}${injLabel(it.vaccine)}</button>` +
-          (it.on && it.vaccine === CORYZA ? `<select aria-label="${t('Προϊόν ΚΟΡΥΖΑ')}" onchange="custWin.rounds[${round}].items[${k}].product = this.value"><option value="">${t('— προϊόν —')}</option>` +
-            CORYZA_PRODUCTS.map(v => `<option${v === it.product ? ' selected' : ''}>${escapeHtml(v)}</option>`).join('') + '</select>' : '') +
-          (it.on && R.pays ? `<label class="pay"><input type="checkbox"${it.customer ? ' checked' : ''} onchange="custWin.rounds[${round}].items[${k}].customer = this.checked"> ${t('πελάτης')}</label>` : '') +
-          '</span>').join('') || `<span class="muted">${t('Κανένα')}</span>`) +
-        `</div><label class="pays"><input type="checkbox"${R.pays ? ' checked' : ''} onchange="custWin.rounds[${round}].pays = this.checked; renderCustWin()"> ${t('Πληρώνει κάποια εμβόλια')}</label></div>`;
-    }).join('');
-  document.getElementById('cust-reset').style.display = W.isNew ? 'none' : '';
-}
-function custPick(round, k) { const it = custWin.rounds[round].items[k]; it.on = !it.on; renderCustWin(); }
-function closeCust() { document.getElementById('cust-bg').style.display = 'none'; custWin = null; }
-// replaces the customer's remembered rows ('' = nothing that round), logged
-async function saveCust() {
-  const W = custWin, pel = pelatisName(String(W.pel).trim());
-  if (!pel) { toast(t('Εισάγετε όνομα πελάτη.'), true); return; }
-  const rows = [1, 2].flatMap(round => {
-    const R = W.rounds[round], on = R.items.filter(i => i.on);
-    return on.length ? on.map(i => ({ customer: pel, round, vaccine: i.vaccine, payer: R.pays && i.customer ? 'customer' : 'us', product: i.vaccine === CORYZA ? i.product || null : null }))
-      : [{ customer: pel, round, vaccine: '', payer: 'us', product: null }];
-  });
-  const before = customerInj.filter(u => u.customer === pel && u.round);
-  try {
-    await sbFetch(`${CUST}?customer=eq.${encodeURIComponent(pel)}&round=in.(1,2)`, { method: 'DELETE' });
-    await sbFetch(CUST, { method: 'POST', body: JSON.stringify(rows) });
-    await logChange(CUST, pel, before.length ? 'edited' : 'created', { injections: memText(before) }, { injections: memText(rows) });
-    customerInj = customerInj.filter(u => u.customer !== pel || !u.round).concat(rows);
-    closeCust(); renderUsual(); toast(t('Αποθηκεύτηκε ✓'));
-  } catch (e) { toast(t('Σφάλμα: {msg}', { msg: e.message }), true); }
-}
-// forget the customer: they get the standard (★) set again
-async function resetCust() {
-  const pel = custWin.pel;
-  if (!confirm(t('Ο πελάτης {name} θα κάνει πάλι τα βασικά ενέσιμα (★). Συνέχεια;', { name: pel }))) return;
-  const before = customerInj.filter(u => u.customer === pel && u.round);
-  try {
-    await sbFetch(`${CUST}?customer=eq.${encodeURIComponent(pel)}&round=in.(1,2)`, { method: 'DELETE' });
-    await logChange(CUST, pel, 'deleted', { injections: memText(before) }, null);
-    customerInj = customerInj.filter(u => u.customer !== pel || !u.round);
-    closeCust(); renderUsual(); toast(t('Διαγράφηκε.'));
+    renderInjectables(); setSync('ok', t('Αποθηκεύτηκε ✓'));
   } catch (e) { toast(t('Σφάλμα: {msg}', { msg: e.message }), true); }
 }
 
