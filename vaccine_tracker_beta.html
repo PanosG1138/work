@@ -258,6 +258,8 @@ tfoot td{padding:7px 12px;font-size:13px;font-weight:600;color:var(--gh-fg-defau
 .tbl-outer{overflow:auto;border:1px solid var(--gh-border-default);border-radius:var(--rs);flex:1;min-height:0}
 .tbl-scaler{transform-origin:top left;transform:scale(var(--zoom));width:calc(100% / var(--zoom))}
 table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap}
+#tbl-scaler table{width:auto}   /* the Εμβόλια table: each column only as wide as it needs */
+#tbl-scaler th{max-width:120px}   /* long headers wrap instead of widening their column */
 thead tr{background:var(--gh-canvas-subtle);border-bottom:1px solid var(--gh-border-default)}
 th{padding:8px 12px;text-align:left;font-size:12px;font-weight:600;color:var(--gh-fg-default);cursor:pointer;user-select:none;letter-spacing:0;white-space:normal;min-width:80px;vertical-align:bottom;line-height:1.3;position:sticky;top:0;background:var(--gh-canvas-subtle);z-index:2}
 th:hover{color:var(--gh-accent-fg)}
@@ -285,7 +287,6 @@ th.sticky-l0,th.sticky-l1{z-index:3;background:var(--gh-canvas-subtle)}
 .b-flock{background:var(--gh-accent-subtle);color:var(--gh-accent-fg);border:1px solid rgba(141,180,255,0.45);font-weight:700;font-size:12px;letter-spacing:0.01em}
 
 /* Row action buttons */
-.row-actions{display:flex;gap:4px;justify-content:flex-end}
 .row-btn{
   height:24px;padding:0 10px;border-radius:var(--rs);
   border:1px solid var(--gh-border-default);
@@ -324,7 +325,8 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
 
 /* ── MODALS ── */
 /* Εμβολιακά tab: house cards + the hatch sheet (HATCH ΕΜΒΟΛΙΑΚΑ) */
-#tab-vax{overflow:auto}
+#tab-vax{overflow:hidden}
+#vax-sheet{flex:1;min-height:0;display:flex}
 .vax-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
 .vax-house{background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:var(--gh-r-md);padding:8px;display:flex;flex-direction:column;gap:4px}
 .vax-house>b{font-size:15px}
@@ -334,11 +336,15 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
 .vax-pill.none{background:var(--gh-danger-subtle);color:var(--gh-danger-fg)}
 .vax-pill.draft{background:var(--gh-attention-subtle);color:var(--gh-attention-fg)}
 .vax-pill.active{background:var(--gh-success-subtle);color:var(--gh-success-fg)}
-.vax-sheet{background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:var(--gh-r-md);padding:12px}
+.vax-sheet{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:var(--gh-r-md);padding:12px}
 /* the plan on the left (its lines scroll), the customers on the right, always in view — built for a PC */
-.vax-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(380px,34%);gap:14px;align-items:start}
-.vax-lines{max-height:calc(100vh - 330px);overflow:auto}
-.vax-right{position:sticky;top:0;background:var(--gh-canvas-default);border:1px solid var(--gh-border-default);border-radius:12px;padding:10px 12px;max-height:calc(100vh - 230px);overflow:auto}
+.vax-grid{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(380px,34%);grid-template-rows:minmax(0,1fr);gap:14px}
+.vax-left{display:flex;flex-direction:column;min-height:0}
+.vax-lines{flex:1;min-height:0;overflow:auto}
+.vax-right{min-height:0;overflow:auto;background:var(--gh-canvas-default);border:1px solid var(--gh-border-default);border-radius:12px;padding:10px 12px}
+/* a clicked customer: their lines in red (click again to clear) */
+.vax-table tr.cust-hl td{background:rgba(255,107,107,0.16)}.vax-table tr.cust-hl td:first-child{box-shadow:inset 3px 0 0 var(--gh-danger-fg)}
+.cust-pick{cursor:pointer}.cust-pick:hover b{text-decoration:underline}.cust-table tr.cust-on td{background:rgba(255,107,107,0.16)}
 .vax-right h4{font-size:13px;margin:0 0 6px}
 .vax-tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
 .cust-mem{font-size:11px;color:#c4a5ff;margin-top:2px}
@@ -863,10 +869,10 @@ body.printing-card .printcard-doc{display:block}
     <button data-t class="tab on" data-tab="vaccines" onclick="showTab('vaccines')">Εμβόλια</button>
     <button data-t class="tab" data-tab="vax" onclick="showTab('vax')">Εμβολιακά</button>
     <button data-t class="tab" data-tab="orders" onclick="showTab('orders')">Παραγγελίες</button>
-    <button data-t class="tab" data-tab="bin" onclick="showTab('bin')">Κάδος</button>
     <span class="tb-spacer"></span>
     <a data-t class="tab" href="inventory.html" data-t-title title="Απόθεμα εμβολίων">📦 Απόθεμα</a>
     <a data-t class="tab" href="vaccine_programme.html" data-t-title title="Πρότυπο εμβολιακού και συνήθη ενέσιμα πελατών">🗓 Πρότυπο εμβολιακού</a>
+    <button data-t class="tab" data-tab="bin" onclick="showTab('bin')">Κάδος</button>
   </nav>
   <div class="tab-panel" id="tab-vaccines">
   <div class="kpi-strip" id="kpi-strip"></div>
@@ -939,13 +945,12 @@ body.printing-card .printcard-doc{display:block}
           <th style="min-width:65px" onclick="sortBy('hm_par')"><span data-t>Ημ. Καταχώρησης Παραγγελίας</span><span class="arr" id="s-hm_par"></span></th>
           <th data-t>Προμηθευτής</th>
           <th data-t>Σχόλια Ελένη</th>
-          <th data-t style="text-align:right">Ενέργειες</th>
         </tr></thead>
         <tbody id="tbody"></tbody>
         <tfoot id="tfoot" style="display:none"><tr>
           <td data-t colspan="5" class="total-label">Σύνολο εκκρεμών ποσοτήτων</td>
           <td class="total-val" id="total-qty">—</td>
-          <td colspan="7"></td>
+          <td colspan="6"></td>
         </tr></tfoot>
       </table>
       <div data-t id="empty-state" class="empty-state" style="display:none">💉 Δεν βρέθηκαν εγγραφές.</div>
@@ -1250,7 +1255,7 @@ addTranslations({
   'Ημέρα': 'Day', 'Ημερομηνία': 'Date', 'Πελάτες': 'Customers', 'Πελάτες (από τον Προγραμματισμό)': 'Customers (from the scheduler)',
   'Δεν υπάρχουν πελάτες στον Προγραμματισμό.': 'No customers in the scheduler.',
   '↻ Από τον Προγραμματισμό': '↻ From the scheduler',
-  'Βασικά εμβόλια': 'Standard vaccines', 'Ποσότητες': 'Quantities', 'Προσθήκη': 'Add', 'Επιλογή': 'Choose', 'Συμπλήρωση': 'Fill in',
+  'Κλικ: οι γραμμές του πελάτη με κόκκινο': "Click: the customer's lines in red", 'Βασικά εμβόλια': 'Standard vaccines', 'Ποσότητες': 'Quantities', 'Προσθήκη': 'Add', 'Επιλογή': 'Choose', 'Συμπλήρωση': 'Fill in',
   'Αλλαγή': 'Change', 'Αναίρεση': 'Undo', 'μετά το βήμα {n}': 'after step {n}', '{n} γραμμή': '{n} line', 'βήμα {n}/{m}': 'step {n}/{m}',
   'Ποσότητες από το πρότυπο ({n} γραμμές):': 'Quantities from the template ({n} lines):',
   'Αναίρεση του βήματος «{step}»: αδειάζουν {n} ποσότητες. Συνέχεια;': 'Undo step “{step}”: {n} quantities are emptied. Continue?',
@@ -2429,8 +2434,7 @@ function render() {
       `<td class="td-steps">${stepPills(r)}</td>`+
       `<td>${fmt(r.hm_par)||'—'}</td>`+
       `<td style="color:var(--gh-fg-muted);font-size:11px">${x(r.promitheutis||'—')}</td>`+
-      `<td class="td-notes" style="color:var(--gh-fg-muted);font-size:11px" title="${x(r.sxolia_eleni||'')}">${x(r.sxolia_eleni||'—')}</td>`+
-      `<td><div class="row-actions"><button class="row-btn" onclick="editEntry(${r.id})">${t('Επεξ.')}</button></div></td>`;
+      `<td class="td-notes" style="color:var(--gh-fg-muted);font-size:11px" title="${x(r.sxolia_eleni||'')}">${x(r.sxolia_eleni||'—')}</td>`;
     frag.appendChild(tr);
   });
 
@@ -3513,7 +3517,7 @@ function renderVax() {
   }).join('');
   renderSheet();
 }
-function openSheet(id) { sheetHatchId = id; renderVax(); }
+function openSheet(id) { sheetHatchId = id; hlCustomer = null; renderVax(); }
 // the hatch's printable card (same as ⋯ → 🖨 Καρτέλα), for the open sheet
 function printHatch() {
   const p = vaxData.placements.find(h => h.id === sheetHatchId);
@@ -3535,7 +3539,7 @@ function renderSheet() {
   const short = iso => fmt(iso).slice(0, 5);   // dd/mm
   const orderCell = r => r.paragelia === 'ΝΑΙ' ? `<span class="ord-yes">✓${r.hm_par ? ' ' + short(r.hm_par) : ''}</span>`
     : r.hm_paragelia ? `<span class="${r.hm_paragelia < today ? 'ord-late' : 'ord-due'}">${t('έως {d}', { d: short(r.hm_paragelia) })}</span>` : '—';
-  const line = r => `<tr class="${r.draft ? 'row-draft' : ''}${r.to_check ? ' row-check' : ''}" onclick="editEntry(${r.id})" title="${t('Κλικ για επεξεργασία')}">` +
+  const line = r => `<tr class="${r.draft ? 'row-draft' : ''}${r.to_check ? ' row-check' : ''}${custLine(r) ? ' cust-hl' : ''}" onclick="editEntry(${r.id})" title="${t('Κλικ για επεξεργασία')}">` +
     `<td>${ageOf(r) ?? '—'}</td><td>${fmt(r.hm_emv)}</td><td>${x(vaccineLabel(r.emvolio))}${checkTag(r)}</td><td>${fmtPosotita(r.posotita)}${stepSel(r)}</td>` +
     `<td>${x(r.pelatis || '—')}${payerTag(r)}</td><td>${orderCell(r)}</td><td>${r.psygeio === 'ΝΑΙ' ? '✓' : '—'}</td></tr>`;
   const group = (round, label) => {
@@ -3576,13 +3580,21 @@ async function markChecked(id) {
 // ── CUSTOMERS OF THE HATCH ── the scheduler's list as it is (read only): Κ / Λ / C birds and each note in full.
 // Customers with 0 birds are listed too (their note may matter); they get no lines.
 const custBirds = c => (c.k || 0) + (c.l || 0) + (c.c || 0);
+let hlCustomer = null;   // the customer whose lines the sheet shows in red
+function pickCustomer(pel) {
+  hlCustomer = hlCustomer === pel ? null : pel;
+  renderSheet();
+  const first = document.querySelector('#vax-sheet tr.cust-hl'); if (first) first.scrollIntoView({ block: 'nearest' });
+}
+const custLine = r => hlCustomer && (r.pelatis === hlCustomer || ((tplFor(r) || {}).only_customers || []).includes(hlCustomer));
 function customerTableHtml(p) {
   const list = p.customers || [];
   if (!list.length) return `<p class="muted">${t('Δεν υπάρχουν πελάτες στον Προγραμματισμό.')}</p>`;
   const n = v => v ? nfmt(v) : '–', sum = k => list.reduce((s, c) => s + (c[k] || 0), 0);
   return `<table class="cust-table"><tr><th>${t('Πελάτης')}</th><th>Κ</th><th>Λ</th><th>C</th><th>${t('Σύνολο')}</th></tr>` +
     list.map(c => { const note = customerNote(c);
-      return `<tr><td><b>${x(customerName(c.name))}</b>${note ? `<div class="cust-note">${x(note)}</div>` : ''}${custBirds(c) ? memoryHtml(c) : ''}</td>` +
+      const pel = pelatisName(customerName(c.name));
+      return `<tr class="cust-pick${pel === hlCustomer ? ' cust-on' : ''}" data-pel="${x(pel)}" onclick="pickCustomer(this.dataset.pel)" title="${t('Κλικ: οι γραμμές του πελάτη με κόκκινο')}"><td><b>${x(customerName(c.name))}</b>${note ? `<div class="cust-note">${x(note)}</div>` : ''}${custBirds(c) ? memoryHtml(c) : ''}</td>` +
         `<td>${n(c.k)}</td><td>${n(c.l)}</td><td>${n(c.c)}</td><td>${n(custBirds(c))}</td></tr>`; }).join('') +
     `<tr class="tot"><td>${t('Σύνολο')}</td><td>${n(sum('k'))}</td><td>${n(sum('l'))}</td><td>${n(sum('c'))}</td><td>${n(list.reduce((s, c) => s + custBirds(c), 0))}</td></tr></table>`;
 }

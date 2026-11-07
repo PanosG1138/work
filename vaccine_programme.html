@@ -200,7 +200,7 @@ select.cell.on{border-color:rgba(79,209,139,0.5);color:var(--gh-success-fg);back
     <datalist id="cust-names"></datalist>
   </section>
 
-  <section>
+  <section hidden>   <!-- hidden for now (user, 2026-11-07); the code still loads it -->
     <h2 data-t>Προμηθευτής ανά εμβόλιο</h2>
     <p data-t class="hint">Ο προμηθευτής που προτείνεται σε κάθε νέα γραμμή.</p>
     <div class="tbl"><table>
@@ -218,7 +218,7 @@ addTranslations({
   'Κάθε νέα εκκόλαψη αντιγράφει αυτές τις γραμμές. Η ημέρα μετράει από την εκκόλαψη (ημέρα 0).': 'Every new hatch copies these rows. The day counts from the hatch (day 0).',
   'Ημέρες': 'Days', 'π.χ. 27, 75': 'e.g. 27, 75', 'Εμβόλιο': 'Vaccine', 'Ποσότητα': 'Quantity', 'Ενέργειες': 'Actions', 'Επεξ.': 'Edit',
   'Ενέσιμα ανά γύρο': 'Injections per round',
-  'Πληρώνει μόνος (όλο το αναθρεπτήριο)': 'Pays own share (whole-house vaccines)', '1ος γύρος (ΠΡΩΤΑ ΕΝΕΣΙΜΑ)': '1st round (FIRST INJECTIONS)', '2ος γύρος (ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ)': '2nd round (SECOND INJECTIONS)',
+  'Πληρώνει μόνος (όλο το αναθρεπτήριο)': 'Pays own share (whole-house vaccines)', 'και ημ. {n}': 'and day {n}', '1ος γύρος (ΠΡΩΤΑ ΕΝΕΣΙΜΑ)': '1st round (FIRST INJECTIONS)', '2ος γύρος (ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ)': '2nd round (SECOND INJECTIONS)',
   '★ = βασικό: το κάνουν οι πελάτες που δεν έχουν δικά τους. Για την ΚΟΡΥΖΑ το προϊόν (BIONEW BI + COR ή CORIPRAVAC) επιλέγεται ανά πελάτη.': '★ = standard: what customers without their own get. For CORYZA the product (BIONEW BI + COR or CORIPRAVAC) is chosen per customer.',
   'Βασικό: το κάνουν οι πελάτες που δεν έχουν δικά τους': 'Standard: what customers without their own get',
   'Πελάτες με δικά τους ενέσιμα': 'Customers with their own injections',
@@ -343,8 +343,10 @@ async function loadAll() {
 
 // ── PROGRAMME ──
 function renderProgramme() {
-  document.getElementById('prog-body').innerHTML = programme.length ? programme.map(r =>
-    `<tr ondblclick="openProg(${r.id})"><td>${r.days.join(' · ')}</td>` +
+  // one line per day, in day order; a rule with several days (E.COLI 12 + 72) shows on each and edits as one
+  const perDay = programme.flatMap(r => r.days.map(day => ({ r, day }))).sort((a, b) => a.day - b.day || a.r.id - b.r.id);
+  document.getElementById('prog-body').innerHTML = perDay.length ? perDay.map(({ r, day }) =>
+    `<tr ondblclick="openProg(${r.id})"><td>${day}${r.days.length > 1 ? `<span class="muted"> (${t('και ημ. {n}', { n: r.days.filter(d => d !== day).join(', ') })})</span>` : ''}</td>` +
     `<td>${r.kind === 'general' ? escapeHtml(r.vaccine) : `<b>${t(KIND_LABEL[r.kind])}</b>`}${(r.only_customers || []).length ? `<span class="only">${escapeHtml(t('μόνο με {names}', { names: r.only_customers.join(', ') }))}</span>` : ''}</td>` +
     `<td class="muted">${escapeHtml(ruleText(r))}</td>` +
     `<td><button class="btn-secondary btn-sm" onclick="openProg(${r.id})">${t('Επεξ.')}</button></td></tr>`).join('')
