@@ -9,8 +9,8 @@
 <title data-t>ΕΜΒΟΛΙΑ — Beta</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
-<script src="common.js?v=18"></script>
-<link rel="stylesheet" href="theme.css?v=18">
+<script src="common.js?v=19"></script>
+<link rel="stylesheet" href="theme.css?v=19">
 <style>
 /* theme toggle button */
 
@@ -1188,6 +1188,8 @@ addTranslations({
   'Αυτή η γραμμή έχει ήδη παραγγελθεί με ποσότητα {old}. Αλλαγή σε {new};': 'This line is already ordered with quantity {old}. Change to {new}?',
   'Προσοχή: έχει ήδη παραγγελθεί.': 'Warning: already ordered.',
   'Ενέσιμα ημ. {n}': 'Injections day {n}', 'Πληρώνει κάποια εμβόλια': 'Pays some vaccines', 'πελάτης': 'customer', '+ εμβόλιο': '+ vaccine', 'OK — {n} γραμμές': 'OK — {n} lines', 'Επιλέξτε προϊόν ΚΟΡΥΖΑ για κάθε πελάτη.': 'Choose the CORYZA product for every customer.', 'OK': 'OK',
+  'Στο αναθρεπτήριο υπάρχει {who}: προσθήκη {vaccine} (ημ. {days}) για όλο το αναθρεπτήριο;': 'The house has {who}: add {vaccine} (day {days}) for the whole house?',
+  'Δεν υπάρχει πια {who} στο αναθρεπτήριο: αφαίρεση {vaccine} ({n} γραμμές);': '{who} is no longer in the house: remove {vaccine} ({n} lines)?',
   'Εμβολιακά': 'Vaccination plans', '🗓 Βασικό εμβολιακό': '🗓 Base plan', 'Βασικό εμβολιακό και συνήθη ενέσιμα πελατών': "Base vaccination plan and customers' usual injections",
   'χωρίς εμβολιακό': 'no plan', 'πρόχειρο': 'draft', 'ενεργό': 'active', 'Καμία εκκόλαψη': 'No hatch',
   'σε {n} ημ.': 'in {n} d', 'ημ. {n}': 'day {n}', '{n} χωρίς παραγγελία': '{n} not ordered', 'έως {d}': 'by {d}',
@@ -3236,8 +3238,6 @@ let vaxNew = null;        // what the "Δημιουργία εμβολιακού
 const UNIT_TEXT = { Κιλά: 'ΚΙΛΑ', Μπουκαλάκια: 'ΜΠΟΥΚΑΛΑΚΙΑ' };   // how Ποσότητα writes non-dose units
 // Ποσότητα as the tracker stores it: "55000" for doses, "5 ΚΙΛΑ" otherwise
 const posotitaText = (qty, unit) => UNIT_TEXT[unit] ? `${String(qty).replace('.', ',')} ${UNIT_TEXT[unit]}` : String(qty);
-// Πελάτης as the tracker writes it: capitals without accents ("Βενιζέλος" → "ΒΕΝΙΖΕΛΟΣ")
-const pelatisName = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
 const dayDate = (p, day) => subDays(p.doc_date, -day);   // day of age → date
 const ageOf = r => r.hm_ekk && r.hm_emv ? Math.round((Date.parse(r.hm_emv) - Date.parse(r.hm_ekk)) / 864e5) : null;
 const parseBirds = s => Number(String(s).trim().replace(/\./g, ''));   // "16.400" → 16400
@@ -3297,21 +3297,34 @@ function rowCustomers(p) {
     return s || { name, qty: parseBirds(rows.find(r => r.pelatis === name).posotita) || 0 };
   });
 }
-// a new εμβολιακό's draft lines: every Βασικό εμβολιακό vaccine (one line per day) + each customer's usual injections
+// ── CUSTOMER MEMORY ── each customer's last injections per round (customer_injectables, saved by the Ενέσιμα window,
+// names in tracker form); a row with vaccine '' = "nothing this round"; never seen → the round's standard (★) set
+function usualItems(name, round) {
+  const pel = pelatisName(name), list = vaxData.injectables.filter(i => i.round === round);
+  const mem = vaxData.usual.filter(u => u.customer === pel && u.round === round);
+  if (mem.length) return mem.filter(u => u.vaccine && list.some(i => i.vaccine === u.vaccine))
+    .map(u => ({ vaccine: u.vaccine, product: u.product || '', on: true, customer: u.payer === 'customer' }));
+  return list.filter(i => i.standard).map(i => ({ vaccine: i.vaccine, product: '', on: true, customer: false }));
+}
+// is one of these customers (tracker form) in the hatch? ΠΤΗΝΟΤΡΟΦΙΚΗ also from the scheduler's Πτηνοτροφική field
+const PTINO = 'ΠΤΗΝΟΤΡΟΦΙΚΗ';
+const hatchHasCustomer = (p, customers, names) => names.some(n => customers.some(c => pelatisName(c.name) === n) || (n === PTINO && !!p.ptino));
+// a new εμβολιακό's draft lines: every Βασικό εμβολιακό vaccine (one line per day; a row «μόνο όταν υπάρχει …» only
+// when such a customer is in the house) + each customer's remembered injections
 function newVaxRows(p, chicks, customers, coryza) {
   const base = { hm_ekk: p.doc_date, anath: p.house, hm_par: null, paragelia: null, psygeio: null, emvoliasmos: null, sxolia_eleni: null, draft: true };
   const line = (date, fields) => ({ ...base, hm_emv: date, hm_paragelia: subDays(date, 30), ...fields });
-  const rows = vaxData.programme.filter(r => r.kind === 'general').flatMap(r => r.days.map(day => line(dayDate(p, day), {
+  const rows = vaxData.programme.filter(r => r.kind === 'general' && (!(r.only_customers || []).length || hatchHasCustomer(p, customers, r.only_customers)))
+    .flatMap(r => r.days.map(day => line(dayDate(p, day), {
     emvolio: r.vaccine, posotita: posotitaText(planQty(r, chicks), r.unit), pelatis: null, payer: null,
     promitheutis: vaxData.supplier[r.vaccine] || null, sxolia_panos: null })));
   [1, 2].forEach(round => {
     const placeholder = vaxData.programme.find(r => r.kind === `injectables_${round}`);
     if (!placeholder) return;   // a round whose ΕΝΕΣΙΜΑ row isn't in the template is skipped
-    const cols = vaxData.injectables.filter(i => i.round === round).map(i => i.vaccine);
-    customers.forEach(c => vaxData.usual.filter(u => u.customer === c.name && u.round === round && cols.includes(u.vaccine)).forEach(u => {
-      const emvolio = u.vaccine === CORYZA ? coryza[round] : u.vaccine;
+    customers.forEach(c => usualItems(c.name, round).forEach(it => {
+      const pel = pelatisName(c.name), emvolio = it.vaccine === CORYZA ? (it.product || coryza[pel + '|' + round]) : it.vaccine;
       rows.push(line(dayDate(p, placeholder.days[0]), { emvolio, posotita: String(Math.ceil(c.qty / 1000) * 1000),   // birds rounded up to 1.000
-        pelatis: pelatisName(c.name), payer: u.payer === 'customer' ? pelatisName(c.name) : null,
+        pelatis: pel, payer: it.customer ? pel : null,
         promitheutis: vaxData.supplier[emvolio] || null, sxolia_panos: `${round === 1 ? 'ΠΡΩΤΑ' : 'ΔΕΥΤΕΡΑ'} ΕΝΕΣΙΜΑ ${p.house}` }));
     }));
   });
@@ -3334,10 +3347,10 @@ async function openVaxTab() {
     const [programme, injectables, usual, vaccines, placements, plans] = await Promise.all([
       sbFetch('vaccine_programme?order=days.asc,id.asc'),
       sbFetch('injectables?order=round.asc,sort.asc'),
-      sbFetch('customer_injectables?select=customer,round,vaccine,payer'),
+      sbFetch('customer_injectables?select=customer,round,vaccine,payer,product'),
       sbFetch('vaccines?select=name,supplier'),
       // hatches not yet binned (≤ 126 days old) up to 60 days ahead
-      sbFetch(`placements?select=id,house,doc_date,breed,chicks,customers&doc_date=gte.${subDays(todayIso(), 126)}&doc_date=lte.${subDays(todayIso(), -60)}&order=doc_date.asc`),
+      sbFetch(`placements?select=id,house,doc_date,breed,chicks,customers,ptino&doc_date=gte.${subDays(todayIso(), 126)}&doc_date=lte.${subDays(todayIso(), -60)}&order=doc_date.asc`),
       sbFetch(`${PLANS}?select=*`),
     ]);
     vaxData = { programme, injectables, usual, placements, plans, supplier: Object.fromEntries(vaccines.map(v => [v.name, v.supplier || ''])) };
@@ -3409,27 +3422,29 @@ function openCreateVax() {
   const p = vaxData.placements.find(h => h.id === sheetHatchId);
   const old = hatchRows(p).length > 0;   // entered the old way: only the record is created, no line is added or changed
   const customers = old ? rowCustomers(p) : placementCustomers(p);
-  const coryzaRounds = old ? [] : [1, 2].filter(round => vaxData.programme.some(r => r.kind === `injectables_${round}`)
-    && customers.some(c => vaxData.usual.some(u => u.customer === c.name && u.round === round && u.vaccine === CORYZA)));
+  // the ΚΟΡΥΖΑ product is asked only for customers with none remembered (per customer and round)
+  const coryzaAsk = old ? [] : [1, 2].filter(round => vaxData.programme.some(r => r.kind === `injectables_${round}`))
+    .flatMap(round => customers.filter(c => usualItems(c.name, round).some(it => it.vaccine === CORYZA && !it.product)).map(c => ({ round, name: c.name })));
   document.getElementById('vaxnew-title').textContent = `${p.house} · ${t('Εκκόλαψη')} ${fmt(p.doc_date)}`;
   document.getElementById('vaxnew-body').innerHTML =
     (old ? `<p class="muted">${t('Η εκκόλαψη έχει ήδη γραμμές: δημιουργείται μόνο το εμβολιακό της, ενεργό, χωρίς να αλλάξει καμία γραμμή.')}</p>` : '') +
     `<div class="fgroup"><label>${t('Νεοσσοί')}</label><input type="text" id="vaxnew-chicks" value="${nfmt(p.chicks || customers.reduce((s, c) => s + c.qty, 0))}"></div>` +
     `<div class="fgroup"><label>${t('Πελάτες')}</label><div>${customers.map(c => `${x(c.name)} · ${nfmt(c.qty)}`).join('<br>') || '—'}</div></div>` +
-    coryzaRounds.map(round => `<div class="fgroup"><label>${t('ΚΟΡΥΖΑ')} · ${t(round === 1 ? 'ΠΡΩΤΑ ΕΝΕΣΙΜΑ' : 'ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ')}</label>` +
-      `<select id="vaxnew-coryza-${round}"><option value="">${t('— επιλογή —')}</option>${CORYZA_PRODUCTS.map(v => `<option>${x(v)}</option>`).join('')}</select></div>`).join('');
-  vaxNew = { p, old, customers, coryzaRounds };
+    coryzaAsk.map((a, k) => `<div class="fgroup"><label>${t('ΚΟΡΥΖΑ')} · ${x(a.name)} · ${t(a.round === 1 ? 'ΠΡΩΤΑ ΕΝΕΣΙΜΑ' : 'ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ')}</label>` +
+      `<select id="vaxnew-coryza-${k}"><option value="">${t('— επιλογή —')}</option>${CORYZA_PRODUCTS.map(v => `<option>${x(v)}</option>`).join('')}</select></div>`).join('');
+  vaxNew = { p, old, customers, coryzaAsk };
   document.getElementById('vaxnew-bg').style.display = 'flex';
 }
 function closeCreateVax() { document.getElementById('vaxnew-bg').style.display = 'none'; vaxNew = null; }
 async function createVax() {
   if (!guardConnected()) return;
-  const { p, old, customers, coryzaRounds } = vaxNew;
+  const { p, old, customers, coryzaAsk } = vaxNew;
   const chicks = parseBirds(document.getElementById('vaxnew-chicks').value);
   if (!Number.isInteger(chicks) || chicks < 1) { toast(t('Οι νεοσσοί πρέπει να είναι θετικός ακέραιος.'), true); return; }
-  const coryza = Object.fromEntries(coryzaRounds.map(round => [round, document.getElementById(`vaxnew-coryza-${round}`).value]));
-  const missing = coryzaRounds.find(round => !coryza[round]);
-  if (missing) { toast(t('Επιλέξτε προϊόν για την ΚΟΡΥΖΑ ({n}ος γύρος).', { n: missing }), true); return; }
+  const coryza = {};
+  coryzaAsk.forEach((a, k) => { coryza[pelatisName(a.name) + '|' + a.round] = document.getElementById(`vaxnew-coryza-${k}`).value; });
+  const missing = coryzaAsk.find(a => !coryza[pelatisName(a.name) + '|' + a.round]);
+  if (missing) { toast(t('Επιλέξτε προϊόν για την ΚΟΡΥΖΑ ({n}ος γύρος).', { n: missing.round }), true); return; }
   const btn = document.getElementById('vaxnew-ok'), now = new Date().toISOString();
   btn.disabled = true;
   try {
@@ -3628,8 +3643,7 @@ function openInjWin(round) {
   injWin = { round, day: roundDay(p, round), removed: [], customers: gridCustomers(p).map(c => {
     const pel = c.leftover ? LEFTOVER : pelatisName(c.name);
     const items = lines.filter(r => r.pelatis === pel).map(r => ({ vaccine: colOf(r.emvolio), product: CORYZA_PRODUCTS.includes(r.emvolio) ? r.emvolio : '', on: true, customer: !!r.payer }));
-    if (fresh && !c.leftover) vaxData.usual.filter(u => u.customer === c.name && u.round === round)
-      .forEach(u => items.push({ vaccine: u.vaccine, product: '', on: true, customer: u.payer === 'customer' }));
+    if (fresh && !c.leftover) items.push(...usualItems(c.name, round));   // remembered, else the standard (★) set
     return { orig: c.leftover ? null : c.name, name: c.name, qty: c.qty, leftover: c.leftover, pays: items.some(i => i.customer), items };
   }) };
   renderInjWin();
@@ -3710,8 +3724,35 @@ const applyInjWin = () => sheetAction(async p => {
     promitheutis: vaxData.supplier[w.emvolio] || null, sxolia_panos: `${ROUND_LABEL[W.round]} ${p.house}` })));
   const customers = W.customers.filter(c => !c.leftover).map(c => ({ name: c.name, qty: c.qty }));
   if (JSON.stringify(customers) !== JSON.stringify(pl.customers)) await savePlanRecord(p, { customers });
+  await saveMemory(W);
+  await syncConditional(p);
   closeInjWin();
 });
+// the window's choices become each customer's remembered injections for this round ('' = nothing)
+async function saveMemory(W) {
+  for (const c of W.customers.filter(c => !c.leftover)) {
+    const pel = pelatisName(c.name), on = c.items.filter(i => i.on);
+    const rows = on.length ? on.map(i => ({ customer: pel, round: W.round, vaccine: i.vaccine, payer: c.pays && i.customer ? 'customer' : 'us', product: i.vaccine === CORYZA ? i.product || null : null }))
+      : [{ customer: pel, round: W.round, vaccine: '', payer: 'us', product: null }];
+    await sbFetch(`customer_injectables?customer=eq.${encodeURIComponent(pel)}&round=eq.${W.round}`, { method: 'DELETE' });
+    await sbFetch('customer_injectables', { method: 'POST', body: JSON.stringify(rows) });
+    vaxData.usual = vaxData.usual.filter(u => !(u.customer === pel && u.round === W.round)).concat(rows);
+  }
+}
+// customer-triggered house vaccines (Βασικό εμβολιακό rows «μόνο όταν υπάρχει …») follow the εμβολιακό's customers:
+// one of them came in → offer to add the whole-house lines; none left → offer to remove them (ordered ones warn)
+async function syncConditional(p) {
+  const pl = planOf(p);
+  for (const r of vaxData.programme.filter(r => r.kind === 'general' && (r.only_customers || []).length)) {
+    const needed = hatchHasCustomer(p, pl.customers, r.only_customers), who = r.only_customers.join(' / ');
+    const lines = hatchRows(p).filter(l => !roundOf(l) && !l.pelatis && l.emvolio === r.vaccine && r.days.includes(ageOf(l)));
+    const missingDays = r.days.filter(day => !lines.some(l => ageOf(l) === day));
+    if (needed && missingDays.length && confirm(t('Στο αναθρεπτήριο υπάρχει {who}: προσθήκη {vaccine} (ημ. {days}) για όλο το αναθρεπτήριο;', { who, vaccine: r.vaccine, days: missingDays.join(', ') })))
+      await addLines(p, missingDays.map(day => ({ hm_emv: dayDate(p, day), emvolio: r.vaccine, posotita: posotitaText(planQty(r, pl.chicks), r.unit), promitheutis: vaxData.supplier[r.vaccine] || null })));
+    if (!needed && lines.length && confirm(t('Δεν υπάρχει πια {who} στο αναθρεπτήριο: αφαίρεση {vaccine} ({n} γραμμές);', { who, vaccine: r.vaccine, n: lines.length })) && confirmOrdered(lines))
+      await removeLines(lines);
+  }
+}
 
 // ── BIN ── (Κάδος tab, view only) lines of hatches older than VAX_BIN_DAYS, moved here every night by the database
 // (bin_old_hatches) and deleted 30 days later; history kept. No restore.
