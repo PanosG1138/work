@@ -291,6 +291,9 @@ function resolveVaccineAsk(v) {
 // Design: docs/superpowers/specs/2026-11-06-vaccine-planning-design.md
 // customer = text before " - " in placements.customers ("Συντιχάκης - από Δεκ 2026" → "Συντιχάκης")
 const customerName = s => String(s || '').split(' - ')[0].trim();
+// a customer's note: the note field (2027+ tabs) or the text after " - " in the name (older tabs); parts joined with " · "
+const customerNote = c => (c.note != null ? (c.note ? String(c.note).split(' - ') : []) : String(c.name || '').split(' - ').slice(1))
+  .map(s => s.trim()).filter(Boolean).join(' · ');
 // ΚΟΡΥΖΑ is a column of the injectables grid, not a product: one of these is picked for each hatch
 const CORYZA = 'ΚΟΡΥΖΑ';
 const CORYZA_PRODUCTS = ['BIONEW BI + COR', 'CORIPRAVAC'];
