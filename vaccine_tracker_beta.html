@@ -1284,6 +1284,7 @@ addTranslations({
   'Μόνο οι πελάτες με SE+ST, SALMOVAC για τα υπόλοιπα πουλιά': 'Only the SE+ST customers, SALMOVAC for the other birds', 'Όλο το αναθρεπτήριο SE+ST': 'The whole house SE+ST',
   'υπόλοιπα πουλιά': 'other birds', '{a} + {b} = {sum} πουλιά · νεοσσοί {chicks}': '{a} + {b} = {sum} birds · chicks {chicks}',
   'Θυμάται: {vaccine} ημ. {day} όταν υπάρχει {who}': 'Remembered: {vaccine} day {day} when {who} is in',
+  'Οι αριθμοί σαλμονέλας ενημερώθηκαν με τα νέα πουλιά.': 'The salmonella numbers were updated for the new birds.',
   'Το εμβολιακό ξεκινά άδειο· συμπληρώνεται βήμα βήμα, πρώτα οι πελάτες.': 'The plan starts empty and is filled step by step, customers first.',
   'Αναζήτηση πελάτη…': 'Search customer…', 'Δεν βρέθηκε πελάτης.': 'No customer found.', 'Διαλέξτε πελάτη.': 'Choose a customer.', 'Μνήμη': 'Memory', 'Επεξεργασία': 'Edit',
   'Ιστορικό ανά εκκόλαψη': 'History per hatch', 'Δεν υπάρχει ιστορικό ακόμα (γράφεται όταν ενεργοποιείται ένα εμβολιακό).': 'No history yet (it is written when a plan is activated).', 'Ποσότητες': 'Quantities', 'Προσθήκη': 'Add', 'Επιλογή': 'Choose', 'Συμπλήρωση': 'Fill in',
@@ -1829,7 +1830,7 @@ async function addEntry() {
   setSyncStatus('loading', t('Αποθήκευση…'));
   try {
     await insertRows(toInsert, now);
-    resetForm(); render();
+    resetForm(); render(); refreshHistory(toInsert);
     // on mobile, close the drawer so the user sees the new row in the table
     if (isMobile() && sidebarOpen) toggleSidebar();
     setSyncStatus('ok', t('Αποθηκεύτηκε ✓'));
@@ -2028,7 +2029,7 @@ async function wizardSaveAll() {
   setSyncStatus('loading', t('Αποθήκευση…'));
   try {
     await insertRows(rows, now);
-    render();
+    render(); refreshHistory(rows);
     document.getElementById('wizard-bg').style.display = 'none';
     setSyncStatus('ok', t('Αποθηκεύτηκε ✓'));
     toast(t('{n} προστέθηκαν!', { n: rows.length }));
@@ -2299,7 +2300,7 @@ async function saveEdit() {
       });
     }
     if (idx >= 0) data[idx] = updated;
-    closeModal(); render();
+    closeModal(); render(); refreshHistory([before, updated]);
     setSyncStatus('ok', t('Αποθηκεύτηκε ✓'));
     toast(t('Η εγγραφή ενημερώθηκε'));
   } catch (e) {
@@ -2336,7 +2337,7 @@ async function confirmDelete() {
     await sbDelete(row.id);
     await logDeleted([row]);
     data = data.filter(x => x.id !== row.id);
-    closeConfirm(); render();
+    closeConfirm(); render(); refreshHistory([row]);
     setSyncStatus('ok', t('Διαγράφηκε ✓'));
     toast(t('Η εγγραφή διαγράφηκε'));
   } catch(e) {
@@ -2553,7 +2554,7 @@ async function toggleStepQuick(id, field) {
     await sbHInsert({ row_id: id, action: 'edited', user_name: currentUser, ts: now, changes_json: JSON.stringify(buildChanges(before, row)) });
     const i = data.findIndex(r => r.id === id);
     if (i >= 0) data[i] = updated;
-    render();
+    render(); if (row.emvolio) refreshHistory([updated]);
     setSyncStatus('ok', t('Αποθηκεύτηκε ✓'));
   } catch (e) {
     setSyncStatus('err', t('Σφάλμα'));
@@ -2922,7 +2923,7 @@ async function saveBatchEdit() {
       if (idx >= 0) data[idx] = updated;
     });
 
-    closeBatchModal(); clearSelection(); render();
+    closeBatchModal(); clearSelection(); render(); refreshHistory(updatedRows);
     setSyncStatus('ok', t('Αποθηκεύτηκε ✓'));
     toast(t('Ενημερώθηκαν {n} εγγραφές', { n: updatedRows.length }) + (goneIds.length ? ' · ' + t('{n} δεν υπάρχουν πια', { n: goneIds.length }) : ''));
   } catch(e) {
@@ -2952,9 +2953,10 @@ async function confirmBatchDelete() {
 
   try {
     await Promise.all(ids.map(id => sbDelete(id)));
-    await logDeleted(data.filter(r => ids.includes(r.id)));
+    const gone = data.filter(r => ids.includes(r.id));
+    await logDeleted(gone);
     data = data.filter(r => !ids.includes(r.id));
-    closeBatchDel(); clearSelection(); render();
+    closeBatchDel(); clearSelection(); render(); refreshHistory(gone);
     setSyncStatus('ok', t('Διαγράφηκαν ✓'));
     toast(t('Διαγράφηκαν {n} εγγραφές', { n: ids.length }));
   } catch(e) {
@@ -3861,7 +3863,6 @@ async function deleteVax() {
 // ── HATCH ΕΜΒΟΛΙΑΚΑ: editing in the sheet (3b) ── every change writes emvolia + history like a hand edit;
 // ordered lines (Παραγγελία = ΝΑΙ) never change without a warning, recalculations skip them
 const sheetHatch = () => vaxData.placements.find(h => h.id === sheetHatchId);
-const ROUND_LABEL = { 1: 'ΠΡΩΤΑ ΕΝΕΣΙΜΑ', 2: 'ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ' };
 const LEFTOVER = 'ΥΠΟΛΟΙΠΑ';   // chicks no customer has booked
 const injQty = birds => String(Math.ceil(birds / 1000) * 1000);   // injections: birds rounded up to 1.000
 // the Βασικό εμβολιακό row a general line came from (same vaccine, its day in the row's days)
@@ -3927,24 +3928,43 @@ async function sheetAction(fn) {
   return result;
 }
 
-// unordered template lines + ΥΠΟΛΟΙΠΑ injection lines whose quantity changes with new chicks (hand-typed quantities stay)
-function chicksRecalc(p, chicks) {
-  const pl = planOf(p), booked = pl.customers.reduce((s, c) => s + c.qty, 0);
+// ── CALCULATED QUANTITIES ── the quantity the tracker itself gives each line (by id): a line still at it was
+// calculated, any other was typed by hand — recalculations only ever change calculated ones
+function autoQtys(p) {
+  const lines = hatchRows(p), cust = custVaxLines(p), auto = new Map();
+  lines.forEach(r => {
+    const q = isCustVax(r) ? (cust.find(w => lineKey(w) === lineKey(r)) || {}).posotita : tplFor(r) || isWater(p, r) ? qtyFor(p, r, lines) : null;
+    if (q != null) auto.set(r.id, String(q));
+  });
+  return auto;
+}
+const isAuto = (r, auto) => !!r.posotita && auto.get(r.id) === String(r.posotita);
+// fn run with the plan's fields swapped for a moment (what the lines would be with them), then put back
+function withPlan(pl, fields, fn) {
+  const keep = Object.fromEntries(Object.keys(fields).map(k => [k, pl[k]]));
+  Object.assign(pl, fields);
+  try { return fn(); } finally { Object.assign(pl, keep); }
+}
+// unordered lines whose quantity changes with new chicks (+ the salmonella numbers that follow them): calculated ones,
+// and template lines on a rounding picked by hand; typed quantities stay
+function chicksRecalc(p, chicks, salmonella) {
+  const pl = planOf(p), was = autoQtys(p), now = withPlan(pl, { chicks, salmonella }, () => autoQtys(p));
   return hatchRows(p).filter(r => !ordered(r)).map(r => {
-    if (r.pelatis === LEFTOVER) return { row: r, to: injQty(Math.max(chicks - booked, 0)) };
-    const tpl = templateOf(r);
-    const step = tpl && tpl.rule === 'placed' ? stepOf(r, pl.chicks) : null;
-    if (!step) return null;
-    return { row: r, to: posotitaText(planQty({ ...tpl, round_to: step }, chicks), tpl.unit) };
-  }).filter(c => c && c.to !== String(c.row.posotita));
+    if (isAuto(r, was)) return { row: r, to: now.get(r.id) };
+    const tpl = templateOf(r), step = tpl && tpl.rule === 'placed' ? stepOf(r, pl.chicks) : null;
+    return step ? { row: r, to: posotitaText(planQty({ ...tpl, round_to: step }, chicks), tpl.unit) } : null;
+  }).filter(c => c && c.to != null && c.to !== String(c.row.posotita));
 }
 
 // ── actions (called from the sheet) ──
 const setVaxChicks = s => sheetAction(async p => {
   const n = parseBirds(s);
   if (!Number.isInteger(n) || n < 1) { toast(t('Οι νεοσσοί πρέπει να είναι θετικός ακέραιος.'), true); return false; }
-  const changes = chicksRecalc(p, n);
-  await savePlanRecord(p, { chicks: n });
+  const pl = planOf(p), S = pl.salmonella;
+  // the salmonella numbers still at their suggestion follow the new chicks
+  const salm = S ? salmFollow(S, salmDefaults(S.mode, sestOf(pl), pl.chicks), salmDefaults(S.mode, sestOf(pl), n)) : null;
+  const changes = chicksRecalc(p, n, salm);
+  await savePlanRecord(p, JSON.stringify(salm) === JSON.stringify(S) ? { chicks: n } : { chicks: n, salmonella: salm });
   if (changes.length && confirmChanges(t('Νέοι νεοσσοί {n}: ενημέρωση ποσοτήτων που δεν έχουν παραγγελθεί;', { n: nfmt(n) }), changes))
     for (const c of changes) await patchLines([c.row], { posotita: c.to });
 });
@@ -4071,16 +4091,36 @@ const pwLeftover = () => { const W = planWin; return Math.max(planOf(W.p).chicks
 const pwBirds = c => c.leftover ? pwLeftover() : c.qty;
 // SE+ST customers of the window → the 3rd salmonella box (suggested: only them; SALMOVAC for the rest)
 const sestCustomers = () => planWin.customers.filter(c => !c.leftover && c.items.some(i => i.vaccine === SEST && i.how === 'injection'));
-function salmDefaults(mode) {
-  const W = planWin, pl = planOf(W.p), sest = {}, tpl = tplRows().find(r => r.vaccine === SALMOVAC && r.days.includes(thirdSalmovac()));
-  sestCustomers().forEach(c => { sest[pelatisName(c.name)] = Number(injQty(c.qty)); });
-  const restBirds = Math.max(pl.chicks - sestCustomers().reduce((s, c) => s + c.qty, 0), 0);
+// suggested numbers: each SE+ST customer's birds ↑1.000; the rest of the chicks get SALMOVAC (template rule) or SE+ST
+function salmDefaults(mode, list, chicks) {
+  const sest = {}, tpl = tplRows().find(r => r.vaccine === SALMOVAC && r.days.includes(thirdSalmovac()));
+  list.forEach(c => { sest[pelatisName(c.name)] = Number(injQty(c.qty)); });
+  const restBirds = Math.max(chicks - list.reduce((s, c) => s + c.qty, 0), 0);
   return { mode, sest, rest: mode === 'house' ? Number(injQty(restBirds)) : (tpl ? planQty(tpl, restBirds) : Number(injQty(restBirds))) };
+}
+const pwSalmDefaults = mode => salmDefaults(mode, sestCustomers(), planOf(planWin.p).chicks);
+const sestOf = pl => pl.customers.filter(c => pelatisName(c.name) in pl.salmonella.sest);   // the plan's SE+ST customers
+// new numbers for changed birds: a number still at its old suggestion takes the new one, a typed number stays
+function salmFollow(S, was, now) {
+  const out = { ...S, sest: { ...S.sest } };
+  Object.keys(now.sest).forEach(pel => { if (S.sest[pel] === was.sest[pel]) out.sest[pel] = now.sest[pel]; });
+  if (S.rest === was.rest) out.rest = now.rest;
+  return out;
+}
+// a customer's birds typed in the window; the salmonella numbers follow (a short message says so)
+function pwSetQty(k, value) {
+  const S = planWin.salm, qty = parseBirds(value), was = S && pwSalmDefaults(S.mode);
+  planWin.customers[k].qty = qty;
+  if (S && Number.isInteger(qty)) {
+    planWin.salm = salmFollow(S, was, pwSalmDefaults(S.mode));
+    if (JSON.stringify(planWin.salm) !== JSON.stringify(S)) toast(t('Οι αριθμοί σαλμονέλας ενημερώθηκαν με τα νέα πουλιά.'));
+  }
+  renderPlanWin();
 }
 function salmBoxHtml() {
   const W = planWin, list = sestCustomers();
   if (W.solo || !list.length) return '';
-  if (!W.salm) W.salm = salmDefaults('customers');
+  if (!W.salm) W.salm = pwSalmDefaults('customers');
   const S = W.salm, pl = planOf(W.p), sestSum = list.reduce((s, c) => s + (S.sest[pelatisName(c.name)] ?? 0), 0);
   const radio = (mode, label) => `<label><input type="radio" name="pw-salm"${S.mode === mode ? ' checked' : ''} onchange="pwSalmMode('${mode}')"> ${t(label)}</label>`;
   return `<div class="pw-salm"><b>${t('3ος εμβολιασμός σαλμονέλας')}</b>` +
@@ -4093,7 +4133,7 @@ function salmBoxHtml() {
     `<p class="pw-check">${t('{a} + {b} = {sum} πουλιά · νεοσσοί {chicks}', { a: `${SEST} ${nfmt(sestSum)}`, b: `${S.mode === 'house' ? SEST : SALMOVAC} ${nfmt(S.rest)}`,
       sum: nfmt(sestSum + S.rest), chicks: nfmt(pl.chicks) })}</p></div>`;
 }
-function pwSalmMode(mode) { planWin.salm = salmDefaults(mode); renderPlanWin(); }
+function pwSalmMode(mode) { planWin.salm = pwSalmDefaults(mode); renderPlanWin(); }
 function pwSalmSet(pel, value) {
   const n = parseBirds(value);
   if (!Number.isInteger(n) || n < 0) { toast(t('Τα πουλιά πρέπει να είναι ακέραιος αριθμός.'), true); renderPlanWin(); return; }
@@ -4113,7 +4153,7 @@ function renderPlanWin() {
     const note = p && !c.leftover ? schedNote(p, c.name) : '';
     return `<div class="inj-cust" data-cust="${k}"><div class="inj-head"><b>${x(c.leftover ? t(LEFTOVER) : c.name)}</b>` +
       (W.solo ? '' : c.leftover ? `<span class="muted">${t('Πουλιά')} ${nfmt(pwLeftover())}</span>`
-        : `<span class="muted">${t('Πουλιά')}</span><input type="text" class="inj-qty" value="${nfmt(c.qty)}" onchange="planWin.customers[${k}].qty = parseBirds(this.value); renderPlanWin()">` +
+        : `<span class="muted">${t('Πουλιά')}</span><input type="text" class="inj-qty" value="${nfmt(c.qty)}" onchange="pwSetQty(${k}, this.value)">` +
           `<span class="tb-spacer"></span><button class="btn-secondary" title="${t('Αφαίρεση')}" onclick="pwRemoveCustomer(${k})">✕</button>`) + '</div>' +
       (note ? `<div class="cust-note">${x(note)}</div>` : '') +
       `<div class="inj-chips">${c.items.map((i, n) => chip(k, n, i)).join('') || `<span class="muted">${t('κανένα')}</span>`}</div>` +
@@ -4127,7 +4167,7 @@ function renderPlanWin() {
       `<button class="btn-secondary" onclick="pwAddCustomer()">${t('+ Πελάτης')}</button></div>`);
 }
 function pwSet(k, n, key, value) { planWin.customers[k].items[n][key] = value; renderPlanWin(); }
-function pwRemove(k, n) { planWin.customers[k].items.splice(n, 1); if (!sestCustomers().length) planWin.salm = null; renderPlanWin(); }
+function pwRemove(k, n) { planWin.customers[k].items.splice(n, 1); renderPlanWin(); }
 function pwRemoveCustomer(k) { const c = planWin.customers[k]; if (c.orig) planWin.removed.push(c.orig); planWin.customers.splice(k, 1); renderPlanWin(); }
 async function pwAdd(k) {
   const v = document.getElementById(`pw-v-${k}`).value.trim(), day = Number(document.getElementById(`pw-d-${k}`).value), how = document.getElementById(`pw-h-${k}`).value;
@@ -4157,44 +4197,59 @@ function memRows(c) {
 }
 async function saveCustomerMemory(c) {
   const { pel, rows } = memRows(c), before = memOf(pel).filter(u => u.how !== 'share');
-  await sbFetch(`customer_vaccines?customer=eq.${encodeURIComponent(pel)}&how=in.(injection,water,none)`, { method: 'DELETE' });
-  await sbFetch('customer_vaccines', { method: 'POST', body: JSON.stringify(rows) });
+  // the new rows first, the old ones removed only once they are in: a failure never leaves the customer with no memory
+  const added = await sbFetch('customer_vaccines', { method: 'POST', prefer: 'return=representation', body: JSON.stringify(rows) });
+  await sbFetch(`customer_vaccines?customer=eq.${encodeURIComponent(pel)}&how=in.(injection,water,none)${notIds(added)}`, { method: 'DELETE' });
   vaxData.usual = vaxData.usual.filter(u => !(u.customer === pel && u.how !== 'share')).concat(rows);
   await logMemory(pel, before.length ? 'edited' : 'created', before, rows);
 }
+const notIds = rows => rows && rows.length ? `&id=not.in.(${rows.map(r => r.id).join(',')})` : '';   // «all but the rows just written»
 const memText = rows => (rows || []).map(u => `${u.at} ${u.how} ${u.vaccine || '—'}${u.product ? ' ' + u.product : ''}${u.payer === 'customer' ? ' (πελάτης)' : ''}`).join(', ');
 const logMemory = (pel, action, before, after) => sbFetch('settings_history', { method: 'POST', body: JSON.stringify({ table_name: 'customer_vaccines', row_key: pel, action,
   user_name: currentUser, ts: new Date().toISOString(), changes_json: JSON.stringify({ memory: { from: Array.isArray(before) ? memText(before) : before, to: Array.isArray(after) ? memText(after) : after } }) }) });
-// existing lines → wanted lines, matched on date + vaccine (ΚΟΡΥΖΑ products as one) + customer: { removals, changes, adds }
-function diffLines(existing, wanted, qtyToo) {
-  const key = l => `${l.hm_emv}|${colOf(l.emvolio)}|${l.pelatis || ''}`, used = new Set(), changes = [], matched = new Set();
+// existing lines → wanted lines, matched on date + vaccine (ΚΟΡΥΖΑ products as one) + customer: { removals, changes, adds };
+// with auto (autoQtys before the change) a quantity changes too, but only an empty or calculated one
+const lineKey = l => `${l.hm_emv}|${colOf(l.emvolio)}|${l.pelatis || ''}`;
+function diffLines(existing, wanted, auto) {
+  const used = new Set(), changes = [], matched = new Set();
   existing.forEach(r => {
-    const w = wanted.find(w => !used.has(w) && key(w) === key(r));
+    const w = wanted.find(w => !used.has(w) && lineKey(w) === lineKey(r));
     if (!w) return;
     used.add(w); matched.add(r);
     const f = {};
     if ((r.emvolio || '') !== (w.emvolio || '')) f.emvolio = w.emvolio;
     if ((r.payer || null) !== (w.payer || null)) f.payer = w.payer || null;
-    if (qtyToo && w.posotita != null && !ordered(r) && String(r.posotita) !== String(w.posotita)) f.posotita = w.posotita;
+    if (auto && w.posotita != null && !ordered(r) && String(r.posotita) !== String(w.posotita) && (!r.posotita || isAuto(r, auto))) f.posotita = w.posotita;
     if (Object.keys(f).length) changes.push({ row: r, fields: f });
   });
   return { removals: existing.filter(r => !matched.has(r)), changes, adds: wanted.filter(w => !used.has(w)) };
 }
-// what step 1's OK does to the lines already made (steps 2 / 3 / 4 done), worked out on the window's decisions
-function planDiffs(p) {
+// what step 1's OK does to the lines already made (steps 2 / 3 / 4 done), worked out on the window's decisions.
+// Only the window's customers (and those removed in it) are touched: lines of anyone else stay as they are.
+function planDiffs(p, was) {
   const pl = planOf(p), done = doneSet(pl), W = planWin, diffs = [], qty = done.has('qty');
-  if (done.has('cvax')) diffs.push(diffLines(hatchRows(p).filter(isCustVax), custVaxLines(p), true));
+  const mine = new Set([LEFTOVER, ...W.customers.filter(c => !c.leftover).map(c => pelatisName(c.name)), ...W.removed.map(pelatisName)]);
+  if (done.has('cvax')) diffs.push(diffLines(hatchRows(p).filter(r => isCustVax(r) && (!r.pelatis || mine.has(r.pelatis))), custVaxLines(p), was));
   if (done.has('base')) {
     const wantedW = waterWanted(pl.customers);
     const waterNow = hatchRows(p).filter(r => !r.pelatis && !roundOf(r) && !tplFor(r) && [...W.waterBefore, ...wantedW].some(w => w.vaccine === r.emvolio && w.day === ageOf(r)));
     diffs.push(diffLines(waterNow, wantedW.map(w => ({ hm_emv: dayDate(p, w.day), emvolio: w.vaccine, posotita: qty ? posotitaText(planQty(WATER_RULE, pl.chicks), 'Δόσεις') : null,
-      promitheutis: vaxData.supplier[w.vaccine] || null, to_check: true })), false));
+      promitheutis: vaxData.supplier[w.vaccine] || null, to_check: true })), null));
+    // paid shares: a removed customer's go, a new paying customer's come
+    const shares = baseLines(p).filter(l => l.payer && mine.has(l.pelatis)).map(l => ({ ...l, posotita: qty ? qtyFor(p, { ...l, hm_ekk: p.doc_date }, []) : null }));
+    diffs.push(diffLines(hatchRows(p).filter(r => isShare(r) && mine.has(r.pelatis)), shares, was));
     // the 3rd SALMOVAC follows the salmonella choice
     const salm = pl.salmonella, third = thirdSalmovac(), tpl3 = tplRows().find(r => r.vaccine === SALMOVAC && r.days.includes(third));
     const line3 = hatchRows(p).filter(r => !r.pelatis && r.emvolio === SALMOVAC && ageOf(r) === third);
     const want3 = tpl3 && (!salm || salm.mode === 'customers') ? [{ hm_emv: dayDate(p, third), emvolio: SALMOVAC, posotita: qty ? qtyFor(p, { emvolio: SALMOVAC, hm_emv: dayDate(p, third), hm_ekk: p.doc_date }, []) : null,
       promitheutis: vaxData.supplier[SALMOVAC] || null, to_check: false }] : [];
-    diffs.push(diffLines(line3, want3, qty));
+    diffs.push(diffLines(line3, want3, null));
+    // the house lines that stay cover the birds no paying customer covers (calculated quantities only)
+    if (qty) {
+      const gone = new Set(diffs.flatMap(d => d.removals)), after = [...hatchRows(p).filter(r => !gone.has(r)), ...diffs.flatMap(d => d.adds)];
+      diffs.push({ removals: [], adds: [], changes: after.filter(r => r.id && !r.pelatis && tplFor(r) && !ordered(r) && isAuto(r, was))
+        .map(r => ({ row: r, fields: { posotita: qtyFor(p, r, after) } })).filter(c => c.fields.posotita !== String(c.row.posotita)) });
+    }
   }
   return diffs;
 }
@@ -4210,16 +4265,16 @@ const applyPlanWin = async () => {
   if (W.customers.some(c => !c.leftover && !(Number.isInteger(c.qty) && c.qty > 0))) { toast(t('Τα πουλιά πρέπει να είναι ακέραιος αριθμός.'), true); return false; }
   return sheetAction(async p => {
     const pl = planOf(p);
-    if (sestCustomers().length && !W.salm) W.salm = salmDefaults('customers');
+    W.salm = sestCustomers().length ? W.salm || pwSalmDefaults('customers') : null;   // no SE+ST customer left: no salmonella choice
     const customers = W.customers.filter(c => !c.leftover).map(c => ({ name: c.name, qty: c.qty })), fields = {};
     if (JSON.stringify(customers) !== JSON.stringify(pl.customers)) fields.customers = customers;
     if (JSON.stringify(W.salm || null) !== JSON.stringify(pl.salmonella || null)) fields.salmonella = W.salm || null;
     // work out the line changes on the decisions (in memory only), ask about ordered lines, and only then write anything
-    const before = { usual: vaxData.usual, plan: { customers: pl.customers, salmonella: pl.salmonella } };
+    const was = autoQtys(p), before = { usual: vaxData.usual, plan: { customers: pl.customers, salmonella: pl.salmonella } };
     const mem = W.customers.map(memRows);
     vaxData.usual = vaxData.usual.filter(u => !(mem.some(m => m.pel === u.customer) && u.how !== 'share')).concat(mem.flatMap(m => m.rows));
     Object.assign(pl, fields);
-    const diffs = planDiffs(p);
+    const diffs = planDiffs(p, was);
     vaxData.usual = before.usual; Object.assign(pl, before.plan);
     if (!confirmOrdered([...new Set(diffs.flatMap(d => [...d.removals, ...d.changes.filter(c => 'emvolio' in c.fields || 'payer' in c.fields).map(c => c.row)]))])) return false;
     for (const c of W.customers) await saveCustomerMemory(c);
@@ -4244,8 +4299,20 @@ async function saveHistory(p) {
     memItems(c.name).filter(i => i.how === 'water' && lines.some(r => !r.pelatis && r.emvolio === i.vaccine && ageOf(r) === atDay(i.at)))
       .forEach(i => rows.push({ customer: pel, house: p.house, hatch: p.doc_date, vaccine: i.vaccine, day: atDay(i.at), how: 'water', payer: 'us' }));
   });
-  await sbFetch(`customer_history?house=eq.${encodeURIComponent(p.house)}&hatch=eq.${p.doc_date}`, { method: 'DELETE' });
-  if (rows.length) await sbFetch('customer_history', { method: 'POST', body: JSON.stringify(rows) });
+  const added = rows.length ? await sbFetch('customer_history', { method: 'POST', prefer: 'return=representation', body: JSON.stringify(rows) }) : [];
+  await sbFetch(`customer_history?house=eq.${encodeURIComponent(p.house)}&hatch=eq.${p.doc_date}${notIds(added)}`, { method: 'DELETE' });
+}
+
+// lines changed from the table (edit window, pills, batch edit, delete, new line): each active εμβολιακό they belong to
+// gets its history rewritten (runs after the change is saved; an error only shows a message)
+async function refreshHistory(rows) {
+  rows = rows.filter(r => r && inPlan(r));
+  if (!rows.length) return;
+  try {
+    if (!vaxData && !await loadVaxData()) return;
+    const keys = new Set(rows.map(r => r.anath + '|' + r.hm_ekk));
+    for (const p of vaxData.placements.filter(p => keys.has(p.house + '|' + p.doc_date) && vaxState(p) === 'active')) await saveHistory(p);
+  } catch (e) { toast(t('Σφάλμα: {msg}', { msg: e.message }), true); }
 }
 
 // ── CUSTOMERS TAB ── search a customer: their memory (editable in the plan window) and what they did in each hatch
