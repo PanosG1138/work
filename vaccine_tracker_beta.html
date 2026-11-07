@@ -300,10 +300,6 @@ th.sticky-l0,th.sticky-l1{z-index:3;background:var(--gh-canvas-subtle)}
 .empty-state{padding:48px 20px;text-align:center;color:var(--gh-fg-muted);font-size:14px}
 
 /* ── HOUSE VIEW ── */
-.hv-dot{display:inline-block;width:5px;height:5px;border-radius:50%;flex-shrink:0}
-.hv-dot.yes{background:var(--gh-success-fg)}
-.hv-dot.no{background:var(--gh-fg-subtle)}
-.hv-dot.yes.faentina{background:#e879f9} /* Παρ. = ΝΑΙ with Προμηθευτής FAENTINA: magenta instead of green */
 
 /* Checkbox */
 td.cb-cell,th.cb-cell{width:36px;padding:6px 8px;text-align:center}
@@ -494,7 +490,49 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
 .changelog-actions{margin-top:16px;padding-top:14px;border-top:1px solid var(--gh-border-muted);display:flex;justify-content:flex-end}
 
 /* ── MOBILE (≤768px) ── */
+/* ── GEMINI LOOK ── segmented tabs, rounded panels, summary strip, house pills, step pills, late rows, drawer */
+.tabs{border:1px solid var(--gh-border-default);border-radius:12px;padding:4px;gap:4px;background:var(--gh-canvas-subtle)}
+.tabs .tab{border-bottom:none;border-radius:8px;padding:6px 12px}
+.tabs .tab:hover{background:var(--gh-hover-bg)}
+.tabs .tab.on{background:var(--gh-accent-emphasis);color:#fff}
+.tbl-outer{border-radius:12px}
+.btn-primary{border-radius:8px;font-weight:600}
+.btn-new{height:32px;padding:0 14px;border:none;border-radius:8px;background:var(--gh-accent-emphasis);color:#fff;font:600 13px 'Inter',system-ui,sans-serif;cursor:pointer;white-space:nowrap}
+.btn-new:hover{filter:brightness(1.1)}
+.kpi-strip{display:flex;gap:8px;flex-wrap:wrap}
+.kpi{flex:1 1 160px;display:flex;align-items:baseline;gap:8px;padding:8px 14px;background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:12px;color:var(--gh-fg-muted);font:500 12px 'Inter',system-ui,sans-serif;text-align:left;cursor:pointer}
+.kpi b{font-size:18px;font-weight:700;color:var(--gh-fg-default)}
+.kpi:hover{border-color:var(--gh-fg-subtle)}
+.kpi.on{border-color:var(--gh-accent-emphasis);background:var(--gh-accent-subtle)}
+.kpi.alarm{border-color:var(--gh-danger-fg)}
+.kpi.alarm b{color:var(--gh-danger-fg)}
+.kpi.static{cursor:default}
+.kpi.static:hover{border-color:var(--gh-border-default)}
+.house-pills{display:flex;flex-wrap:wrap;gap:6px}
+.house-pills .house-chip small{font-weight:400;color:var(--gh-fg-subtle);margin-left:5px}
+.house-chip.late{border-color:var(--gh-danger-fg);color:var(--gh-danger-fg)}
+.house-chip.due{border-color:var(--gh-attention-fg);color:var(--gh-attention-fg)}
+td.td-steps{max-width:none}
+.steps{display:inline-flex;gap:4px}
+.step{height:22px;padding:0 8px;border:1px solid var(--gh-border-default);border-radius:99px;background:transparent;color:var(--gh-fg-subtle);font:500 11px 'Inter',system-ui,sans-serif;line-height:20px;white-space:nowrap}
+button.step{cursor:pointer}
+button.step:hover:not(:disabled){border-color:var(--gh-fg-subtle);color:var(--gh-fg-default)}
+button.step:disabled{opacity:.6}
+.step.yes{background:rgba(79,209,139,0.15);border-color:rgba(79,209,139,0.5);color:var(--gh-success-fg)}
+.step.yes.faentina{background:rgba(232,121,249,0.15);border-color:rgba(232,121,249,0.5);color:#e879f9} /* ordered from FAENTINA: magenta */
+tbody tr.row-late{border-left:3px solid var(--gh-danger-fg)}
+.late-flag{color:var(--gh-danger-fg);font-weight:600;margin-left:4px}
+button.vr-btn{font-family:inherit;cursor:pointer}
+@keyframes drawerIn{from{transform:translateX(40px);opacity:0}}
+@media (min-width: 769px) {
+  /* the edit window as a full-height drawer on the right */
+  #modal-bg{justify-content:flex-end;align-items:stretch}
+  #modal-bg .modal{height:100vh;max-height:100vh;border-radius:12px 0 0 12px;border-right:none;animation:drawerIn .2s ease}
+}
+@media (prefers-reduced-motion: reduce) { #modal-bg .modal{animation:none} }
+
 @media (max-width: 768px) {
+  .btn-new{display:none}   /* the phone has the round + button */
   /* ── Shell: single column ── */
   .shell{grid-template-columns:1fr;grid-template-rows:48px 1fr}
 
@@ -681,6 +719,7 @@ body.printing-card .printcard-doc{display:block}
     </div>
   </div>
   <div class="header-right">
+    <button data-t class="btn-new" onclick="openNewEntry()">+ Νέα καταχώρηση</button>
     <div id="sync-badge" class="sync-badge loading"><div class="sync-dot"></div><span id="sync-text">Σύνδεση…</span></div>
     <div class="zoom-ctrl">
       <button class="zoom-btn" onclick="changeZoom(-0.05)" data-t-title title="Σμίκρυνση">−</button>
@@ -804,6 +843,8 @@ body.printing-card .printcard-doc{display:block}
     <a data-t class="tab" href="vaccine_programme.html" data-t-title title="Βασικό εμβολιακό και συνήθη ενέσιμα πελατών">🗓 Βασικό εμβολιακό</a>
   </nav>
   <div class="tab-panel" id="tab-vaccines">
+  <div class="kpi-strip" id="kpi-strip"></div>
+  <div class="house-pills" id="house-filter-row"></div>
   <div class="toolbar">
     <div class="search-wrap">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -815,17 +856,6 @@ body.printing-card .printcard-doc{display:block}
         <span data-t>Φίλτρα</span> <span class="tb-badge" id="filters-badge" style="display:none">0</span> ▾
       </button>
       <div class="tb-menu" id="filters-menu" style="display:none" onclick="event.stopPropagation()">
-        <div>
-          <label data-t class="filter-house-label">Αναθρεπτήριο</label>
-          <div class="house-chip-row" id="house-filter-row">
-            <button type="button" class="house-chip" onclick="toggleHouseFilter('Θ1')">Θ1</button>
-            <button type="button" class="house-chip" onclick="toggleHouseFilter('Θ2')">Θ2</button>
-            <button type="button" class="house-chip" onclick="toggleHouseFilter('Θ3')">Θ3</button>
-            <button type="button" class="house-chip" onclick="toggleHouseFilter('Θ4')">Θ4</button>
-            <button type="button" class="house-chip" onclick="toggleHouseFilter('Θ5')">Θ5</button>
-            <button type="button" class="house-chip" onclick="toggleHouseFilter('Α1')">Α1</button>
-          </div>
-        </div>
         <div id="hatch-filter-wrap" style="display:none">
           <label data-t class="filter-house-label">Ημ. εκκόλαψης</label>
           <div class="house-chip-row" id="hatch-filter-row"></div>
@@ -879,11 +909,9 @@ body.printing-card .printcard-doc{display:block}
           <th onclick="sortBy('posotita')"><span data-t>Ποσότητα</span><span class="arr" id="s-posotita"></span></th>
           <th onclick="sortBy('pelatis')"><span data-t>Πελάτης</span><span class="arr" id="s-pelatis"></span></th>
           <th data-t>Σχόλια Πάνος</th>
-          <th style="min-width:50px;text-align:center" onclick="sortBy('paragelia')" data-t-title title="Παραγγελία"><span data-t>Παρ.</span><span class="arr" id="s-paragelia"></span></th>
+          <th style="min-width:230px" onclick="sortBy('step')" data-t-title title="Παραγγελία → Ψυγείο → Εμβολιασμός"><span data-t>Πορεία</span><span class="arr" id="s-step"></span></th>
           <th style="min-width:65px" onclick="sortBy('hm_par')"><span data-t>Ημ. Καταχώρησης Παραγγελίας</span><span class="arr" id="s-hm_par"></span></th>
           <th data-t>Προμηθευτής</th>
-          <th data-t style="min-width:50px;text-align:center" data-t-title title="Ψυγείο">Ψυγ.</th>
-          <th style="min-width:50px;text-align:center" onclick="sortBy('emvoliasmos')" data-t-title title="Εμβολιασμός"><span data-t>Εμβ.</span><span class="arr" id="s-emvoliasmos"></span></th>
           <th data-t>Σχόλια Ελένη</th>
           <th data-t style="text-align:right">Ενέργειες</th>
         </tr></thead>
@@ -891,7 +919,7 @@ body.printing-card .printcard-doc{display:block}
         <tfoot id="tfoot" style="display:none"><tr>
           <td data-t colspan="5" class="total-label">Σύνολο εκκρεμών ποσοτήτων</td>
           <td class="total-val" id="total-qty">—</td>
-          <td colspan="9"></td>
+          <td colspan="7"></td>
         </tr></tfoot>
       </table>
       <div data-t id="empty-state" class="empty-state" style="display:none">💉 Δεν βρέθηκαν εγγραφές.</div>
@@ -1253,7 +1281,14 @@ addTranslations({
   '0 επιλεγμένα': '0 selected', '{n} επιλεγμένη': '{n} selected', '{n} επιλεγμένες': '{n} selected',
   '✎ Μαζική Επεξεργασία': '✎ Bulk edit', '✕ Μαζική Διαγραφή': '✕ Bulk delete', 'Αποεπιλογή': 'Deselect', 'Επιλογή όλων': 'Select all',
   'Εκκόλαψη — Αναθρεπτήριο': 'Hatch — House', 'Εκκόλαψη': 'Hatch',
-  'Παρ.': 'Ord.', 'Ψυγ.': 'Fr.', 'Εμβ.': 'Vacc.', 'Ενέργειες': 'Actions', 'Επεξ.': 'Edit',
+  'Ενέργειες': 'Actions', 'Επεξ.': 'Edit',
+  '+ Νέα καταχώρηση': '+ New entry', 'Πορεία': 'Progress', 'Παραγγελία → Ψυγείο → Εμβολιασμός': 'Order → Fridge → Vaccination',
+  'σημειώνεται αυτόματα': 'set automatically', 'Αφαίρεση «{what}» από {line};': 'Remove “{what}” from {line}?',
+  'αργεί': 'late', '{n} παραγγελίες αργούν': '{n} orders are late', 'Προβολή': 'View',
+  'Παραγγελίες που αργούν': 'Late orders', 'Πατήστε για να δείτε μόνο αυτές τις γραμμές': 'Click to see only these lines',
+  'Επόμενες 7 ημέρες': 'Next 7 days', 'Εμβολιασμοί τις επόμενες 7 ημέρες': 'Vaccinations in the next 7 days',
+  'Στο ψυγείο, δεν έχουν εμβολιαστεί ακόμα': 'In the fridge, not vaccinated yet', 'Σύνολο πουλάδων': 'Total pullets',
+  'Νεοσσοί των εκκολάψεων που είναι τώρα στα αναθρεπτήρια': 'Chicks of the hatches now in the rearing houses',
   'Σύνολο εκκρεμών ποσοτήτων': 'Total pending quantities',
   'Διπλό κλικ για επεξεργασία': 'Double-click to edit', 'Κλικ για επεξεργασία': 'Click to edit',
   'CSV εξαχθέν': 'CSV exported', 'ή': 'or',
@@ -1338,10 +1373,7 @@ let filterHatchDates = new Set();
 
 function toggleHouseFilter(house) {
   if (filterHouses.has(house)) filterHouses.delete(house); else filterHouses.add(house);
-  document.querySelectorAll('#house-filter-row .house-chip').forEach(btn => {
-    btn.classList.toggle('active', filterHouses.has(btn.textContent.trim()));
-  });
-  render();
+  render();   // renderHousePills marks the active ones
 }
 
 function toggleHatchDateFilter(iso) {
@@ -2300,12 +2332,14 @@ function render() {
   populateCustomerList();
   refreshHatchDateFilterRow();
   updateFiltersBadge();
-  const SC = ['emvolio','hm_ekk','hm_emv','hm_paragelia','hm_par','pelatis','posotita','paragelia','emvoliasmos'];
+  const SC = ['emvolio','hm_ekk','hm_emv','hm_paragelia','hm_par','pelatis','posotita','step'];
   SC.forEach(c => { const e=document.getElementById('s-'+c); if(e) e.textContent=sortCol===c?(sortDir===1?'↑':'↓'):''; });
 
   // Ποσότητα sorts by its leading number ('7 ΚΙΛΑ' sorts as 7, empty as 0); every other column as text
+  // Πορεία sorts by how many steps are done
   const sortVal = r => sortCol === 'posotita'
     ? (parseInt(String(r.posotita || '').replace(/\./g, ''), 10) || 0)
+    : sortCol === 'step' ? ['paragelia', 'psygeio', 'emvoliasmos'].filter(f => r[f] === 'ΝΑΙ').length
     : (r[sortCol] || '').toString().toLowerCase();
   const rows = getFiltered().sort((a,b) => {
     const av = sortVal(a), bv = sortVal(b);
@@ -2324,8 +2358,9 @@ function render() {
   rows.forEach(r => {
     const tr = document.createElement('tr');
     if (r._new) { tr.classList.add('new-row'); delete r._new; }
-    const fri = r.psygeio==='ΝΑΙ', emv = r.emvoliasmos==='ΝΑΙ';
+    const fri = r.psygeio==='ΝΑΙ', late = isLate(r);
     if (fri) tr.classList.add('row-arrived');
+    if (late) tr.classList.add('row-late');
     if (selectedIds.has(r.id)) tr.classList.add('selected');
     if (r.draft) tr.classList.add('row-draft');
     const fl = flockLabel(r);
@@ -2341,16 +2376,14 @@ function render() {
       `<td class="cb-cell sticky-l0"><input type="checkbox" class="row-cb" data-id="${r.id}"${selectedIds.has(r.id) ? ' checked' : ''} onchange="onRowCheck(${r.id},this.checked)"></td>`+
       `<td class="sticky-l1"><span class="badge b-flock" title="${x(fl)}">${x(fl)}</span>${r.draft ? ` <span class="draft-tag">${t('πρόχειρο')}</span>` : ''}</td>`+
       `<td>${fmt(r.hm_emv)}${ageOf(r) != null ? `<span class="age">${t('ημ. {n}', { n: ageOf(r) })}</span>` : ''}</td>`+
-      `<td style="color:${r.hm_paragelia?'var(--gh-attention-fg)':'var(--gh-fg-subtle)'}">${fmt(r.hm_paragelia)||'—'}</td>`+
+      `<td style="color:${late?'var(--gh-danger-fg)':r.hm_paragelia?'var(--gh-attention-fg)':'var(--gh-fg-subtle)'}">${fmt(r.hm_paragelia)||'—'}${late ? `<span class="late-flag">⚠ ${t('αργεί')}</span>` : ''}</td>`+
       `<td class="vacc" title="${x(vaccineLabel(r.emvolio))}">${x(vaccineLabel(r.emvolio))}</td>`+
       `<td>${fmtPosotita(r.posotita)}</td>`+
       `<td style="color:var(--gh-fg-muted)">${x(r.pelatis||'—')}</td>`+
       `<td class="td-notes" style="color:var(--gh-fg-muted);font-size:11px" title="${x(r.sxolia_panos||'')}">${x(r.sxolia_panos||'—')}</td>`+
-      `<td style="text-align:center">${orderDot(r)}</td>`+
+      `<td class="td-steps">${stepPills(r)}</td>`+
       `<td>${fmt(r.hm_par)||'—'}</td>`+
       `<td style="color:var(--gh-fg-muted);font-size:11px">${x(r.promitheutis||'—')}</td>`+
-      `<td style="text-align:center"><span class="hv-dot ${fri?'yes':'no'}" title="${t('Ψυγείο')}: ${t(fri?'ΝΑΙ':'ΟΧΙ')}"></span></td>`+
-      `<td style="text-align:center"><span class="hv-dot ${emv?'yes':'no'}" title="${t('Εμβολιασμός')}: ${t(emv?'ΝΑΙ':'ΟΧΙ')}"></span></td>`+
       `<td class="td-notes" style="color:var(--gh-fg-muted);font-size:11px" title="${x(r.sxolia_eleni||'')}">${x(r.sxolia_eleni||'—')}</td>`+
       `<td><div class="row-actions"><button class="row-btn" onclick="editEntry(${r.id})">${t('Επεξ.')}</button></div></td>`;
     frag.appendChild(tr);
@@ -2365,7 +2398,7 @@ function render() {
                      filterHouses.size ||
                      document.getElementById('filt-ordered').value ||
                      document.getElementById('filt-fridge').value ||
-                     showDone;
+                     urgencyFilter || showDone;
   const showTotal = isFiltered || selectedIds.size > 1;
   const tfoot = document.getElementById('tfoot');
   tfoot.style.display = showTotal ? '' : 'none';
@@ -2394,18 +2427,65 @@ function render() {
   // one row with a hatch date (otherwise there's nothing to print a card for)
   document.getElementById('btn-print-card').style.display =
     rows.some(r => r.hm_ekk) ? '' : 'none';
+  renderKpis(); renderHousePills();
   renderVax();   // the Εμβολιακά cards and open sheet follow every change in the table
   renderReminders();
 }
 
 function x(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-// Παρ. dot, shared by the table and the house cards: green when ordered, magenta when ordered
-// from FAENTINA (any upper/lower case), grey when not ordered
-function orderDot(r) {
-  const ord = r.paragelia === 'ΝΑΙ';
+// ── STEP PILLS ── Παραγγελία and Ψυγείο are one click (toggleStepQuick); Εμβολιασμός is only shown:
+// it is set automatically 6 days after the date (autoMarkVaccinated), by hand only in the edit window
+function stepPills(r) {
+  const ord = r.paragelia === 'ΝΑΙ', fri = r.psygeio === 'ΝΑΙ', emv = r.emvoliasmos === 'ΝΑΙ';
   const faentina = ord && (r.promitheutis || '').trim().toUpperCase() === 'FAENTINA';
-  return `<span class="hv-dot ${ord ? 'yes' : 'no'}${faentina ? ' faentina' : ''}" title="${t('Παραγγελία')}: ${t(ord ? 'ΝΑΙ' : 'ΟΧΙ')}${faentina ? ' · FAENTINA' : ''}"></span>`;
+  const pill = (field, on, label, extra) => `<button type="button" class="step${on ? ' yes' : ''}${extra}"${r.draft ? ' disabled' : ''} ` +
+    `onclick="toggleStepQuick(${r.id},'${field}')" title="${t(label)}: ${t(on ? 'ΝΑΙ' : 'ΟΧΙ')}">${t(label)}</button>`;
+  return `<span class="steps">${pill('paragelia', ord, 'Παραγγελία', faentina ? ' faentina' : '')}${pill('psygeio', fri, 'Ψυγείο', '')}` +
+    `<span class="step${emv ? ' yes' : ''}" title="${t('Εμβολιασμός')}: ${t(emv ? 'ΝΑΙ' : 'ΟΧΙ')} · ${t('σημειώνεται αυτόματα')}">${t('Εμβολιασμός')}</span></span>`;
+}
+
+// one click on a Παραγγελία / Ψυγείο pill, with the edit window's rules: newer-version check,
+// which alternative arrived when the fridge is set, history. Only that field changes (no cascades).
+async function toggleStepQuick(id, field) {
+  if (!guardConnected()) return;
+  const before = data.find(r => r.id === id);
+  if (!before || before.draft) return;
+  const on = before[field] !== 'ΝΑΙ';
+  if (!on && !confirm(t('Αφαίρεση «{what}» από {line};', { what: t(field === 'paragelia' ? 'Παραγγελία' : 'Ψυγείο'), line: `${before.anath} · ${vaccineLabel(before.emvolio)}` }))) return;
+  const now = new Date().toISOString();
+  const row = { [field]: on ? 'ΝΑΙ' : null, updated_by: currentUser, updated_at: now };
+  if (field === 'psygeio' && on && vaccineAlts(before.emvolio).length > 1) {
+    const arrived = await askArrived(before.emvolio, `${before.anath} · ${fmt(before.hm_emv)}`);
+    if (!arrived) return;
+    row.emvolio = arrived;
+  }
+  setSyncStatus('loading', t('Αποθήκευση…'));
+  try {
+    const [fresh] = await sbFetch(`${TABLE}?id=eq.${id}&select=updated_at,updated_by`);
+    if (fresh && fresh.updated_at !== before.updated_at) {
+      const who = fresh.updated_by ? t('από {name}', { name: tValue(fresh.updated_by) }) : t('από άλλον χρήστη');
+      if (!confirm(t('Η εγγραφή τροποποιήθηκε {who} ενώ την επεξεργαζόσουν.', { who }) + '\n\n' +
+        t('Πάτα OK για να αποθηκεύσεις τις αλλαγές σου (αντικαθιστά τις αλλαγές τους)') + '\n' +
+        t('ή Ακύρωση για να ανανεώσεις και να δεις τις νεότερες τιμές.'))) { await loadData(); return; }
+    }
+    const [updated] = await sbUpdate(id, row);
+    await sbHInsert({ row_id: id, action: 'edited', user_name: currentUser, ts: now, changes_json: JSON.stringify(buildChanges(before, row)) });
+    const i = data.findIndex(r => r.id === id);
+    if (i >= 0) data[i] = updated;
+    render();
+    setSyncStatus('ok', t('Αποθηκεύτηκε ✓'));
+  } catch (e) {
+    setSyncStatus('err', t('Σφάλμα'));
+    toast(t('Σφάλμα: {msg}', { msg: e.message }), true);
+  }
+}
+
+// header «+ Νέα καταχώρηση»: the Εμβόλια tab with the side form open
+function openNewEntry() {
+  showTab('vaccines');
+  if (!sidebarOpen) toggleSidebar();
+  document.getElementById('f-hatch').focus();
 }
 
 // ── ZOOM ──────────────────────────────────────────────────────────
@@ -3156,6 +3236,7 @@ function getFiltered() {
     if (fr==='ΝΑΙ' && r.psygeio!=='ΝΑΙ') return false;
     if (fr==='-'   && r.psygeio==='ΝΑΙ') return false;
     if (!showDone  && r.emvoliasmos==='ΝΑΙ') return false;
+    if (urgencyFilter && !URGENCY[urgencyFilter](r)) return false;
     return true;
   });
 }
@@ -3190,7 +3271,7 @@ document.addEventListener('click', closeAllTbMenus);
 function updateFiltersBadge() {
   const count = ['filt-ordered', 'filt-fridge']
     .filter(id => document.getElementById(id).value)
-    .length + (filterHouses.size ? 1 : 0) + (filterHatchDates.size ? 1 : 0) + (showDone ? 1 : 0);
+    .length + (filterHatchDates.size ? 1 : 0) + (showDone ? 1 : 0);
   const badge = document.getElementById('filters-badge');
   badge.style.display = count ? '' : 'none';
   badge.textContent = count;
@@ -3254,9 +3335,12 @@ const ageText = (hatchIso, vaccIso) => hatchIso && vaccIso ? t('ημ. {n}', { n:
 // hatches that have an εμβολιακό ("house|date"): their lines can't change hatch date or house in the edit window or
 // the batch edit — the whole hatch is moved in the scheduler, and its lines follow (placements_shift_hatch_rows)
 let planHatches = new Set();
+let planChicks = new Map();   // 'house|hatch date' → chicks placed, for «Σύνολο πουλάδων»
+// ponytail: read once per load; a hatch created in this visit counts after the next refresh
 async function loadPlanHatches() {
-  const rows = await sbFetch(`${PLANS}?select=placement:placements(house,doc_date)`);
-  planHatches = new Set(rows.filter(r => r.placement).map(r => r.placement.house + '|' + r.placement.doc_date));
+  const rows = (await sbFetch(`${PLANS}?select=placement:placements(house,doc_date),chicks`)).filter(r => r.placement);
+  planHatches = new Set(rows.map(r => r.placement.house + '|' + r.placement.doc_date));
+  planChicks = new Map(rows.map(r => [r.placement.house + '|' + r.placement.doc_date, Number(r.chicks) || 0]));
 }
 const inPlan = r => planHatches.has(r.anath + '|' + r.hm_ekk);
 // the "start the εμβολιακό" banner above the tabs (vaxReminders / vaxReminderHtml in common.js); never blocks loading
@@ -3274,10 +3358,61 @@ async function loadReminders() {
 }
 function renderReminders() {
   const box = document.getElementById('vax-remind');
-  if (!remindData) { box.innerHTML = ''; return; }
   // the Εμβολιακά tab's records are newer once it has been opened (create / activate / delete)
-  const plans = vaxData ? vaxData.plans : remindData.plans;
-  box.innerHTML = vaxReminderHtml(vaxReminders({ ...remindData, plans, rows: data, today: todayIso() }), p => `#vax=${p.id}`);
+  const plans = vaxData ? vaxData.plans : remindData && remindData.plans;
+  box.innerHTML = lateStripHtml(data.filter(isLate)) +
+    (remindData ? vaxReminderHtml(vaxReminders({ ...remindData, plans, rows: data, today: todayIso() }), p => `#vax=${p.id}`) : '');
+}
+// one red strip for order dates already passed; «Προβολή» shows just those lines
+function lateStripHtml(rows) {
+  if (!rows.length) return '';
+  const what = rows.slice(0, 4).map(r => `${r.anath} ${vaccineLabel(r.emvolio)}`).join(', ') + (rows.length > 4 ? ' …' : '');
+  return `<div class="vax-remind late" id="late-strip"><div class="vr-row" style="border-top:none;padding:0">` +
+    `<div class="vr-who"><b>⚠ ${t('{n} παραγγελίες αργούν', { n: rows.length })}</b><span>${x(what)}</span></div>` +
+    `<button type="button" class="vr-btn" onclick="showLate()">${t('Προβολή')}</button></div></div>`;
+}
+
+// ── AT A GLANCE ── summary strip + house pills; counts skip draft and vaccinated lines
+let urgencyFilter = null;   // 'late' | 'week' | 'fridge' | null — set by a click on the strip
+const openLine = r => !r.draft && r.emvoliasmos !== 'ΝΑΙ';
+const orderDueBy = (r, from, to) => openLine(r) && r.paragelia !== 'ΝΑΙ' && !!r.hm_paragelia && r.hm_paragelia >= from && r.hm_paragelia <= to;
+const isLate = r => orderDueBy(r, '', subDays(todayIso(), 1));                       // order date already passed
+const isDueSoon = r => orderDueBy(r, todayIso(), subDays(todayIso(), -7));           // order due within 7 days
+const URGENCY = {
+  late:   isLate,
+  week:   r => openLine(r) && !!r.hm_emv && r.hm_emv >= todayIso() && r.hm_emv <= subDays(todayIso(), -7),
+  fridge: r => openLine(r) && r.psygeio === 'ΝΑΙ',
+};
+function setUrgency(kind) { urgencyFilter = urgencyFilter === kind ? null : kind; render(); }
+function showLate() { showTab('vaccines'); urgencyFilter = 'late'; render(); }
+
+function renderKpis() {
+  const today = todayIso(), from = subDays(today, VAX_BIN_DAYS);
+  // pullets in the rearing houses now: chicks of the hatches from the last 18 weeks
+  const birds = [...planChicks].filter(([k]) => { const d = k.split('|')[1]; return d >= from && d <= today; })
+    .reduce((sum, [, n]) => sum + n, 0);
+  const card = (kind, label, tip, alarm) => { const n = data.filter(URGENCY[kind]).length;
+    return `<button type="button" class="kpi${urgencyFilter === kind ? ' on' : ''}${alarm && n ? ' alarm' : ''}" data-kpi="${kind}" ` +
+      `onclick="setUrgency('${kind}')" title="${t(tip)}"><b>${n}</b>${t(label)}</button>`; };
+  document.getElementById('kpi-strip').innerHTML =
+    card('late', 'Παραγγελίες που αργούν', 'Πατήστε για να δείτε μόνο αυτές τις γραμμές', true) +
+    card('week', 'Επόμενες 7 ημέρες', 'Εμβολιασμοί τις επόμενες 7 ημέρες', false) +
+    card('fridge', 'Στο ψυγείο', 'Στο ψυγείο, δεν έχουν εμβολιαστεί ακόμα', false) +
+    `<div class="kpi static" data-kpi="birds" title="${t('Νεοσσοί των εκκολάψεων που είναι τώρα στα αναθρεπτήρια')}"><b>${birds ? nfmt(birds) : '—'}</b>${t('Σύνολο πουλάδων')}</div>`;
+}
+
+// house filter pills: age of the house's current hatch; red = an order is late there, amber = one is due within 7 days
+const HOUSES = ['Θ1', 'Θ2', 'Θ3', 'Θ4', 'Θ5', 'Α1'];
+function renderHousePills() {
+  const today = todayIso(), from = subDays(today, VAX_BIN_DAYS);
+  document.getElementById('house-filter-row').innerHTML = HOUSES.map(h => {
+    const rows = data.filter(r => r.anath === h);
+    const hatch = rows.map(r => r.hm_ekk).filter(d => d && d >= from && d <= today).sort().pop();
+    const age = hatch ? Math.round((Date.parse(today) - Date.parse(hatch)) / 864e5) : null;
+    const state = rows.some(isLate) ? ' late' : rows.some(isDueSoon) ? ' due' : '';
+    return `<button type="button" class="house-chip${filterHouses.has(h) ? ' active' : ''}${state}" data-house="${h}" onclick="toggleHouseFilter('${h}')">` +
+      `${h}${age != null ? `<small>${t('ημ. {n}', { n: age })}</small>` : ''}</button>`;
+  }).join('');
 }
 const batchMovesPlanLine = updates => ('hm_ekk' in updates || 'anath' in updates)
   && [...selectedIds].some(id => { const r = data.find(x => x.id === id); return r && inPlan(r); });
