@@ -6,8 +6,8 @@
 <title data-t>Ζωοτροφές — Σιτηρέσια και πρόσθετα ανά κοπάδι</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
-<script src="common.js?v=17"></script>
-<link rel="stylesheet" href="theme.css?v=17">
+<script src="common.js?v=18"></script>
+<link rel="stylesheet" href="theme.css?v=18">
 <style>
 :root{--zoom:unset}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -30,7 +30,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--gh-canvas-default
 .sync-badge.err .sync-dot{background:var(--gh-danger-fg);}
 .sync-badge.err{color:var(--gh-danger-fg);border-color:rgba(255,107,107,0.3);}
 .sync-badge.loading .sync-dot{background:var(--gh-accent-fg);animation:pulse 1s infinite;}
-.sync-badge.loading{color:var(--gh-accent-fg);border-color:rgba(110,143,255,0.3);}
+.sync-badge.loading{color:var(--gh-accent-fg);border-color:rgba(141,180,255,0.3);}
 .sync-badge.saving .sync-dot{background:var(--gh-attention-fg);animation:pulse 1s infinite;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
 
@@ -70,7 +70,7 @@ tbody td:last-child{border-right:none}
 /* INPUTS */
 .cell-input{background:transparent;border:1px solid transparent;border-radius:4px;color:var(--gh-fg-default);font-family:'Inter',system-ui,sans-serif;font-size:13px;padding:3px 6px;width:100%;transition:border-color 0.15s,background 0.15s;outline:none;}
 .cell-input:hover{border-color:var(--gh-border-default);background:var(--gh-canvas-default)}
-.cell-input:focus{border-color:var(--gh-accent-emphasis);background:var(--gh-canvas-default);box-shadow:0 0 0 3px rgba(61,99,224,0.3)}
+.cell-input:focus{border-color:var(--gh-accent-emphasis);background:var(--gh-canvas-default);box-shadow:0 0 0 3px rgba(77,141,255,0.3)}
 .cell-input:disabled{opacity:0.45;cursor:not-allowed;}
 select.cell-input{cursor:pointer;padding-right:4px}
 select.cell-input option{background:var(--gh-canvas-subtle);color:var(--gh-fg-default)}
@@ -79,7 +79,7 @@ select.cell-input option:disabled{color:var(--gh-fg-subtle);}
 /* DATE TEXT INPUT */
 .date-text-input{background:transparent;border:1px solid transparent;border-radius:4px;color:var(--gh-fg-default);font-family:'Inter',system-ui,sans-serif;font-size:13px;padding:3px 6px;width:115px;transition:border-color 0.15s,background 0.15s;outline:none;}
 .date-text-input:hover{border-color:var(--gh-border-default);background:var(--gh-canvas-default)}
-.date-text-input:focus{border-color:var(--gh-accent-emphasis);background:var(--gh-canvas-default);box-shadow:0 0 0 3px rgba(61,99,224,0.3)}
+.date-text-input:focus{border-color:var(--gh-accent-emphasis);background:var(--gh-canvas-default);box-shadow:0 0 0 3px rgba(77,141,255,0.3)}
 .date-text-input:disabled{opacity:0.45;cursor:not-allowed;}
 .date-text-input::placeholder{color:var(--gh-fg-subtle);}
 .date-text-input.invalid{border-color:var(--gh-danger-fg) !important;box-shadow:0 0 0 3px var(--gh-danger-subtle) !important;}

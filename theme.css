@@ -1,21 +1,21 @@
-/* ── SLATE INDIGO COLOUR SYSTEM ── */
+/* ── GRAPHITE COLOUR SYSTEM ── (2026-11-07; was slate indigo #10131a / #6e8fff) */
 :root{
   /* Canvas */
-  --gh-canvas-default:    #10131a;
-  --gh-canvas-subtle:     #171b24;
-  --gh-canvas-elev2:      #1c2129;
-  --gh-canvas-inset:      #0a0c11;
+  --gh-canvas-default:    #121315;
+  --gh-canvas-subtle:     #1A1C20;
+  --gh-canvas-elev2:      #1F2126;
+  --gh-canvas-inset:      #0E0F11;
   /* Borders */
-  --gh-border-default:    #262b36;
-  --gh-border-muted:      #1e222b;
+  --gh-border-default:    #2B2E34;
+  --gh-border-muted:      #24272C;
   /* Foreground */
-  --gh-fg-default:        #e4e6eb;
-  --gh-fg-muted:          #9096a3;
-  --gh-fg-subtle:         #656b78;
-  /* Accent indigo */
-  --gh-accent-fg:         #6e8fff;
-  --gh-accent-emphasis:   #3d63e0;
-  --gh-accent-subtle:     rgba(110,143,255,0.1);
+  --gh-fg-default:        #EDEEF0;
+  --gh-fg-muted:          #A3A7AF;
+  --gh-fg-subtle:         #7C818A;
+  /* Accent blue */
+  --gh-accent-fg:         #8DB4FF;
+  --gh-accent-emphasis:   #4D8DFF;
+  --gh-accent-subtle:     rgba(141,180,255,0.1);
   /* Success green */
   --gh-success-fg:        #4fd18b;
   --gh-success-subtle:    rgba(79,209,139,0.1);
@@ -27,7 +27,7 @@
   --gh-danger-fg:         #ff6b6b;
   --gh-danger-subtle:     rgba(255,107,107,0.1);
   /* Hover */
-  --gh-hover-bg:          #232832;
+  --gh-hover-bg:          #24272C;
   /* Shadow */
   --gh-shadow:            0 8px 24px rgba(0,0,0,0.45);
   /* Radius */

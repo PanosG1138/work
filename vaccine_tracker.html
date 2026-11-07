@@ -9,8 +9,8 @@
 <title data-t>ΕΜΒΟΛΙΑ</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
-<script src="common.js?v=17"></script>
-<link rel="stylesheet" href="theme.css?v=17">
+<script src="common.js?v=18"></script>
+<link rel="stylesheet" href="theme.css?v=18">
 <style>
 /* theme toggle button */
 
@@ -100,7 +100,7 @@ header{
 .form-heading{font-weight:600;font-size:12px;color:var(--gh-fg-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:14px}
 .form-heading span{color:var(--gh-fg-default)}
 .btn-wizard-entry{width:100%;height:34px;background:var(--gh-accent-subtle);border:1px solid var(--gh-accent-emphasis);border-radius:var(--rs);color:var(--gh-accent-fg);font-family:'Inter',system-ui,sans-serif;font-weight:600;font-size:13px;cursor:pointer;transition:background 0.15s}
-.btn-wizard-entry:hover{background:rgba(110,143,255,0.2)}
+.btn-wizard-entry:hover{background:rgba(141,180,255,0.2)}
 .wizard-entry-sub{text-align:center;font-size:11px;color:var(--gh-fg-subtle);margin-top:6px}
 
 /* Steps */
@@ -134,7 +134,7 @@ input[type=date],input[type=text],input[type=email],input[type=password],select,
 input::placeholder,textarea::placeholder{color:var(--gh-fg-subtle)}
 input:focus,select:focus,textarea:focus{
   border-color:var(--gh-accent-emphasis);
-  box-shadow:0 0 0 3px rgba(61,99,224,0.3);
+  box-shadow:0 0 0 3px rgba(77,141,255,0.3);
 }
 select{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%238b949e' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
@@ -231,7 +231,7 @@ tfoot td{padding:7px 12px;font-size:13px;font-weight:600;color:var(--gh-fg-defau
 .btn-tool:disabled{opacity:0.4;cursor:not-allowed;pointer-events:none}
 
 /* ── BATCH BAR ── */
-.batch-bar{display:none;align-items:center;gap:10px;padding:8px 12px;background:var(--gh-accent-subtle);border:1px solid rgba(110,143,255,0.4);border-radius:var(--rs);flex-wrap:wrap}
+.batch-bar{display:none;align-items:center;gap:10px;padding:8px 12px;background:var(--gh-accent-subtle);border:1px solid rgba(141,180,255,0.4);border-radius:var(--rs);flex-wrap:wrap}
 .batch-bar.visible{display:flex}
 .batch-count{font-weight:600;font-size:13px;color:var(--gh-accent-fg);white-space:nowrap}
 .batch-sep{width:1px;height:16px;background:var(--gh-border-default)}
@@ -258,7 +258,7 @@ tbody tr.row-arrived{background:rgba(79,209,139,0.13);border-left:3px solid rgba
 tbody tr.row-arrived:hover{background:rgba(79,209,139,0.2)}
 tbody tr.row-arrived.selected{background:var(--gh-accent-subtle)!important}
 tbody tr.new-row{animation:rowIn 0.4s ease}
-@keyframes rowIn{from{background:rgba(110,143,255,0.15)}to{background:transparent}}
+@keyframes rowIn{from{background:rgba(141,180,255,0.15)}to{background:transparent}}
 td{padding:7px 12px;color:var(--gh-fg-default);max-width:160px;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;font-size:13px}
 td.vacc{font-weight:600;color:var(--gh-fg-default)}
 td.td-notes{max-width:220px}
@@ -270,7 +270,7 @@ th.sticky-l0,th.sticky-l1{z-index:3;background:var(--gh-canvas-subtle)}
 
 /* Badges */
 .badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500;line-height:18px}
-.b-flock{background:var(--gh-accent-subtle);color:var(--gh-accent-fg);border:1px solid rgba(110,143,255,0.45);font-weight:700;font-size:12px;letter-spacing:0.01em}
+.b-flock{background:var(--gh-accent-subtle);color:var(--gh-accent-fg);border:1px solid rgba(141,180,255,0.45);font-weight:700;font-size:12px;letter-spacing:0.01em}
 
 /* Row action buttons */
 .row-actions{display:flex;gap:4px;justify-content:flex-end}
@@ -304,7 +304,7 @@ th.sticky-l0,th.sticky-l1{z-index:3;background:var(--gh-canvas-subtle)}
 .hv-chip.past{background:var(--gh-canvas-default);color:var(--gh-fg-subtle);border:1px solid var(--gh-border-muted)}
 .hv-chip.today{background:var(--gh-success-subtle);color:var(--gh-success-fg);border:1px solid rgba(79,209,139,0.3)}
 .hv-chip.soon{background:var(--gh-attention-subtle);color:var(--gh-attention-fg);border:1px solid rgba(240,180,41,0.3)}
-.hv-chip.future{background:var(--gh-accent-subtle);color:var(--gh-accent-fg);border:1px solid rgba(110,143,255,0.3)}
+.hv-chip.future{background:var(--gh-accent-subtle);color:var(--gh-accent-fg);border:1px solid rgba(141,180,255,0.3)}
 .hv-dot{display:inline-block;width:5px;height:5px;border-radius:50%;flex-shrink:0}
 .hv-dot.yes{background:var(--gh-success-fg)}
 .hv-dot.no{background:var(--gh-fg-subtle)}
@@ -344,7 +344,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
 .mgrid .full{grid-column:1/-1}
 .modal .fgroup label{font-size:12px;font-weight:500;color:var(--gh-fg-muted);margin-bottom:5px}
 .modal .fgroup input,.modal .fgroup select,.modal .fgroup textarea{font-size:14px;padding:6px 10px;color:var(--gh-fg-default);background:var(--gh-canvas-default);border-color:var(--gh-border-default)}
-.modal .fgroup input:focus,.modal .fgroup select:focus,.modal .fgroup textarea:focus{border-color:var(--gh-accent-emphasis);box-shadow:0 0 0 3px rgba(61,99,224,0.3)}
+.modal .fgroup input:focus,.modal .fgroup select:focus,.modal .fgroup textarea:focus{border-color:var(--gh-accent-emphasis);box-shadow:0 0 0 3px rgba(77,141,255,0.3)}
 .vname-typed{display:block;margin-top:8px;color:var(--gh-fg-default);font-weight:600}
 .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;padding-top:16px;border-top:1px solid var(--gh-border-muted)}
 .btn-primary{
