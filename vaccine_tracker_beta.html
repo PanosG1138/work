@@ -506,10 +506,8 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
 .kpi.on{border-color:var(--gh-accent-emphasis);background:var(--gh-accent-subtle)}
 .kpi.alarm{border-color:var(--gh-danger-fg)}
 .kpi.alarm b{color:var(--gh-danger-fg)}
-.kpi.static{cursor:default}
-.kpi.static:hover{border-color:var(--gh-border-default)}
 .house-pills{display:flex;flex-wrap:wrap;gap:6px}
-.house-pills .house-chip small{font-weight:400;color:var(--gh-fg-subtle);margin-left:5px}
+.house-pills .house-chip{color:var(--gh-fg-default)}   /* house, hatch date and age all at full strength */
 .house-chip.late{border-color:var(--gh-danger-fg);color:var(--gh-danger-fg)}
 .house-chip.due{border-color:var(--gh-attention-fg);color:var(--gh-attention-fg)}
 td.td-steps{max-width:none}
@@ -522,7 +520,6 @@ button.step:disabled{opacity:.6}
 .step.yes.faentina{background:rgba(232,121,249,0.15);border-color:rgba(232,121,249,0.5);color:#e879f9} /* ordered from FAENTINA: magenta */
 tbody tr.row-late{border-left:3px solid var(--gh-danger-fg)}
 .late-flag{color:var(--gh-danger-fg);font-weight:600;margin-left:4px}
-button.vr-btn{font-family:inherit;cursor:pointer}
 @keyframes drawerIn{from{transform:translateX(40px);opacity:0}}
 @media (min-width: 769px) {
   /* the edit window as a full-height drawer on the right */
@@ -768,7 +765,7 @@ body.printing-card .printcard-doc{display:block}
       <label data-t>Αναθρεπτήριο</label>
       <select id="f-flock" onchange="onFieldChange()">
         <option data-t value="">— επιλογή —</option>
-        <option>Θ1</option><option>Θ2</option><option>Θ3</option><option>Θ4</option><option>Θ5</option><option>Α1</option>
+        <option>Θ1</option><option>Θ2</option><option>Θ3</option><option>Θ4</option><option>Θ5</option>
       </select>
     </div>
     <div class="fgroup" id="f-newhatch-gate" style="display:none">
@@ -953,7 +950,7 @@ body.printing-card .printcard-doc{display:block}
           <div class="fgroup"><label><span data-t>Ημ. Παραγγελίας</span> <span data-t class="calc-badge">ΑΥΤΟ</span></label><input type="text" id="m-orderdate" class="calc-field" readonly></div>
           <div class="fgroup"><label data-t>Ημ. Καταχώρησης Παραγγελίας</label><input type="text" id="m-deliv" data-t-placeholder placeholder="ηη/μμ ή ηη/μμ/εε" onblur="onSmartDateBlur(this)" autocomplete="off"></div>
           <div class="fgroup"><label data-t>Αναθρεπτήριο</label>
-            <select id="m-flock"><option value="">—</option><option>Θ1</option><option>Θ2</option><option>Θ3</option><option>Θ4</option><option>Θ5</option><option>Α1</option></select></div>
+            <select id="m-flock"><option value="">—</option><option>Θ1</option><option>Θ2</option><option>Θ3</option><option>Θ4</option><option>Θ5</option></select></div>
           <div class="fgroup"><label data-t>Πελάτης</label><input type="text" id="m-customer"></div>
           <div class="fgroup"><label data-t>Ποσότητα</label><input type="text" id="m-qty" onblur="fmtQty(this)" onfocus="stripQty(this)"></div>
           <div class="fgroup"><label data-t>Παραγγελία</label>
@@ -1036,7 +1033,7 @@ body.printing-card .printcard-doc{display:block}
         <label data-t>Αναθρεπτήριο</label>
         <select id="wz-flock" onchange="refreshNewHatchGate('wz-hatch','wz-flock','wz-newhatch-gate')">
           <option data-t value="">— επιλογή —</option>
-          <option>Θ1</option><option>Θ2</option><option>Θ3</option><option>Θ4</option><option>Θ5</option><option>Α1</option>
+          <option>Θ1</option><option>Θ2</option><option>Θ3</option><option>Θ4</option><option>Θ5</option>
         </select>
       </div>
       <div class="fgroup" id="wz-newhatch-gate" style="display:none">
@@ -1284,11 +1281,10 @@ addTranslations({
   'Ενέργειες': 'Actions', 'Επεξ.': 'Edit',
   '+ Νέα καταχώρηση': '+ New entry', 'Πορεία': 'Progress', 'Παραγγελία → Ψυγείο → Εμβολιασμός': 'Order → Fridge → Vaccination',
   'σημειώνεται αυτόματα': 'set automatically', 'Αφαίρεση «{what}» από {line};': 'Remove “{what}” from {line}?',
-  'αργεί': 'late', '{n} παραγγελίες αργούν': '{n} orders are late', 'Προβολή': 'View',
+  'αργεί': 'late',
   'Παραγγελίες που αργούν': 'Late orders', 'Πατήστε για να δείτε μόνο αυτές τις γραμμές': 'Click to see only these lines',
   'Επόμενες 7 ημέρες': 'Next 7 days', 'Εμβολιασμοί τις επόμενες 7 ημέρες': 'Vaccinations in the next 7 days',
-  'Στο ψυγείο, δεν έχουν εμβολιαστεί ακόμα': 'In the fridge, not vaccinated yet', 'Σύνολο πουλάδων': 'Total pullets',
-  'Νεοσσοί των εκκολάψεων που είναι τώρα στα αναθρεπτήρια': 'Chicks of the hatches now in the rearing houses',
+  'Στο ψυγείο, δεν έχουν εμβολιαστεί ακόμα': 'In the fridge, not vaccinated yet',
   'Σύνολο εκκρεμών ποσοτήτων': 'Total pending quantities',
   'Διπλό κλικ για επεξεργασία': 'Double-click to edit', 'Κλικ για επεξεργασία': 'Click to edit',
   'CSV εξαχθέν': 'CSV exported', 'ή': 'or',
@@ -2699,7 +2695,7 @@ const BATCH_FIELDS = [
   { key:'hm_emv',       label:'Ημ. Εμβολιασμού',  type:'date'   },
   { key:'hm_paragelia', label:'Ημ. Παραγγελίας',  type:'date'   },
   { key:'hm_par',       label:'Ημ. Καταχώρησης Παραγγελίας', type:'date'   },
-  { key:'anath',        label:'Αναθρεπτήριο',      type:'select', options:['','Θ1','Θ2','Θ3','Θ4','Θ5','Α1'] },
+  { key:'anath',        label:'Αναθρεπτήριο',      type:'select', options:['','Θ1','Θ2','Θ3','Θ4','Θ5'] },
   { key:'posotita',     label:'Ποσότητα',          type:'qty'    },
   { key:'pelatis',      label:'Πελάτης',           type:'text'   },
   { key:'paragelia',    label:'Παραγγελία',        type:'select', options:['','ΝΑΙ'] },
@@ -3311,7 +3307,6 @@ function resetForm() {
 // hatch (anath + hm_ekk); before Ενεργοποίηση they are draft rows (draft = true). Everything is by DAY OF AGE.
 // Template: vaccine_programme.html (Βασικό εμβολιακό). Spec: docs/superpowers/specs/2026-11-06-hatch-programmes-and-bin-design.md
 const PLANS = 'hatch_plans';
-const VAX_HOUSES = ['Θ1', 'Θ2', 'Θ3', 'Θ4', 'Θ5', 'Α1'];   // Α1 shows only when it has a hatch
 let vaxData = null;       // template, injectables, usual lists, suppliers, hatches, εμβολιακό records — read when the tab opens
 let sheetHatchId = null;  // the hatch whose sheet is open (placement id)
 let vaxNew = null;        // what the "Δημιουργία εμβολιακού" box was opened with
@@ -3335,12 +3330,9 @@ const ageText = (hatchIso, vaccIso) => hatchIso && vaccIso ? t('ημ. {n}', { n:
 // hatches that have an εμβολιακό ("house|date"): their lines can't change hatch date or house in the edit window or
 // the batch edit — the whole hatch is moved in the scheduler, and its lines follow (placements_shift_hatch_rows)
 let planHatches = new Set();
-let planChicks = new Map();   // 'house|hatch date' → chicks placed, for «Σύνολο πουλάδων»
-// ponytail: read once per load; a hatch created in this visit counts after the next refresh
 async function loadPlanHatches() {
-  const rows = (await sbFetch(`${PLANS}?select=placement:placements(house,doc_date),chicks`)).filter(r => r.placement);
-  planHatches = new Set(rows.map(r => r.placement.house + '|' + r.placement.doc_date));
-  planChicks = new Map(rows.map(r => [r.placement.house + '|' + r.placement.doc_date, Number(r.chicks) || 0]));
+  const rows = await sbFetch(`${PLANS}?select=placement:placements(house,doc_date)`);
+  planHatches = new Set(rows.filter(r => r.placement).map(r => r.placement.house + '|' + r.placement.doc_date));
 }
 const inPlan = r => planHatches.has(r.anath + '|' + r.hm_ekk);
 // the "start the εμβολιακό" banner above the tabs (vaxReminders / vaxReminderHtml in common.js); never blocks loading
@@ -3358,20 +3350,11 @@ async function loadReminders() {
 }
 function renderReminders() {
   const box = document.getElementById('vax-remind');
+  if (!remindData) { box.innerHTML = ''; return; }
   // the Εμβολιακά tab's records are newer once it has been opened (create / activate / delete)
-  const plans = vaxData ? vaxData.plans : remindData && remindData.plans;
-  box.innerHTML = lateStripHtml(data.filter(isLate)) +
-    (remindData ? vaxReminderHtml(vaxReminders({ ...remindData, plans, rows: data, today: todayIso() }), p => `#vax=${p.id}`) : '');
+  const plans = vaxData ? vaxData.plans : remindData.plans;
+  box.innerHTML = vaxReminderHtml(vaxReminders({ ...remindData, plans, rows: data, today: todayIso() }), p => `#vax=${p.id}`);
 }
-// one red strip for order dates already passed; «Προβολή» shows just those lines
-function lateStripHtml(rows) {
-  if (!rows.length) return '';
-  const what = rows.slice(0, 4).map(r => `${r.anath} ${vaccineLabel(r.emvolio)}`).join(', ') + (rows.length > 4 ? ' …' : '');
-  return `<div class="vax-remind late" id="late-strip"><div class="vr-row" style="border-top:none;padding:0">` +
-    `<div class="vr-who"><b>⚠ ${t('{n} παραγγελίες αργούν', { n: rows.length })}</b><span>${x(what)}</span></div>` +
-    `<button type="button" class="vr-btn" onclick="showLate()">${t('Προβολή')}</button></div></div>`;
-}
-
 // ── AT A GLANCE ── summary strip + house pills; counts skip draft and vaccinated lines
 let urgencyFilter = null;   // 'late' | 'week' | 'fridge' | null — set by a click on the strip
 const openLine = r => !r.draft && r.emvoliasmos !== 'ΝΑΙ';
@@ -3384,25 +3367,19 @@ const URGENCY = {
   fridge: r => openLine(r) && r.psygeio === 'ΝΑΙ',
 };
 function setUrgency(kind) { urgencyFilter = urgencyFilter === kind ? null : kind; render(); }
-function showLate() { showTab('vaccines'); urgencyFilter = 'late'; render(); }
 
 function renderKpis() {
-  const today = todayIso(), from = subDays(today, VAX_BIN_DAYS);
-  // pullets in the rearing houses now: chicks of the hatches from the last 18 weeks
-  const birds = [...planChicks].filter(([k]) => { const d = k.split('|')[1]; return d >= from && d <= today; })
-    .reduce((sum, [, n]) => sum + n, 0);
   const card = (kind, label, tip, alarm) => { const n = data.filter(URGENCY[kind]).length;
     return `<button type="button" class="kpi${urgencyFilter === kind ? ' on' : ''}${alarm && n ? ' alarm' : ''}" data-kpi="${kind}" ` +
       `onclick="setUrgency('${kind}')" title="${t(tip)}"><b>${n}</b>${t(label)}</button>`; };
   document.getElementById('kpi-strip').innerHTML =
     card('late', 'Παραγγελίες που αργούν', 'Πατήστε για να δείτε μόνο αυτές τις γραμμές', true) +
     card('week', 'Επόμενες 7 ημέρες', 'Εμβολιασμοί τις επόμενες 7 ημέρες', false) +
-    card('fridge', 'Στο ψυγείο', 'Στο ψυγείο, δεν έχουν εμβολιαστεί ακόμα', false) +
-    `<div class="kpi static" data-kpi="birds" title="${t('Νεοσσοί των εκκολάψεων που είναι τώρα στα αναθρεπτήρια')}"><b>${birds ? nfmt(birds) : '—'}</b>${t('Σύνολο πουλάδων')}</div>`;
+    card('fridge', 'Στο ψυγείο', 'Στο ψυγείο, δεν έχουν εμβολιαστεί ακόμα', false);
 }
 
-// house filter pills: age of the house's current hatch; red = an order is late there, amber = one is due within 7 days
-const HOUSES = ['Θ1', 'Θ2', 'Θ3', 'Θ4', 'Θ5', 'Α1'];
+// house filter pills: house – current hatch date – its age; red = an order is late there, amber = one is due within 7 days
+const HOUSES = ['Θ1', 'Θ2', 'Θ3', 'Θ4', 'Θ5'];   // Α1 no longer used (2026-11), hidden everywhere
 function renderHousePills() {
   const today = todayIso(), from = subDays(today, VAX_BIN_DAYS);
   document.getElementById('house-filter-row').innerHTML = HOUSES.map(h => {
@@ -3411,7 +3388,7 @@ function renderHousePills() {
     const age = hatch ? Math.round((Date.parse(today) - Date.parse(hatch)) / 864e5) : null;
     const state = rows.some(isLate) ? ' late' : rows.some(isDueSoon) ? ' due' : '';
     return `<button type="button" class="house-chip${filterHouses.has(h) ? ' active' : ''}${state}" data-house="${h}" onclick="toggleHouseFilter('${h}')">` +
-      `${h}${age != null ? `<small>${t('ημ. {n}', { n: age })}</small>` : ''}</button>`;
+      `${h}${hatch ? ` – ${fmt(hatch)} – ${t('ημ. {n}', { n: age })}` : ''}</button>`;
   }).join('');
 }
 const batchMovesPlanLine = updates => ('hm_ekk' in updates || 'anath' in updates)
@@ -3497,10 +3474,8 @@ function renderVax() {
   const today = todayIso();
   const when = p => { const n = Math.round((Date.parse(p.doc_date) - Date.parse(today)) / 864e5);
     return n > 0 ? t('σε {n} ημ.', { n }) : t('ημ. {n}', { n: -n }); };
-  const houses = [...new Set([...VAX_HOUSES, ...vaxData.placements.map(p => p.house)])];
-  document.getElementById('vax-cards').innerHTML = houses.map(h => {
+  document.getElementById('vax-cards').innerHTML = HOUSES.map(h => {
     const hatches = vaxData.placements.filter(p => p.house === h);
-    if (!hatches.length && h === 'Α1') return '';
     return `<div class="vax-house"><b>${x(h)}</b>` + (hatches.map(p => {
       const st = vaxState(p), late = st === 'active' ? lateOrders(p).length : 0;
       return `<button class="vax-hatch${p.id === sheetHatchId ? ' on' : ''}" onclick="openSheet('${p.id}')">${fmt(p.doc_date)} · ${when(p)}` +
