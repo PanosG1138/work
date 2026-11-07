@@ -7,8 +7,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
-<script src="common.js?v=16"></script>
-<link rel="stylesheet" href="theme.css?v=16">
+<script src="common.js?v=17"></script>
+<link rel="stylesheet" href="theme.css?v=17">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{min-height:100%}
@@ -222,7 +222,7 @@ async function loadVaxReminder(placements, todayIso) {
     const since = isoOf(addDays(new Date(todayIso), -VAX_BIN_DAYS));
     const [plans, rows, programme] = await Promise.all([
       sbFetch('hatch_plans?select=placement_id,activated_at'),
-      sbFetch(`emvolia?select=anath,hm_ekk,hm_paragelia,draft&hm_ekk=gte.${since}`),
+      sbFetch(`emvolia?select=anath,hm_ekk,hm_paragelia,draft&hm_ekk=gte.${since}&binned_at=is.null`),
       sbFetch('vaccine_programme?select=days'),
     ]);
     document.getElementById('vax-remind').innerHTML = vaxReminderHtml(vaxReminders({ placements, plans, rows, programme, today: todayIso }),
@@ -237,7 +237,7 @@ async function loadDashboard() {
   try {
     [placements, vacc, feed] = await Promise.all([
       sbFetch('placements?select=id,house,doc_date,breed,status,ptino&order=doc_date.asc'),
-      sbFetch(`emvolia?select=anath,hm_ekk,hm_emv,emvolio,paragelia,psygeio&hm_emv=gte.${todayIso}&draft=is.false&order=hm_emv.asc`),
+      sbFetch(`emvolia?select=anath,hm_ekk,hm_emv,emvolio,paragelia,psygeio&hm_emv=gte.${todayIso}&draft=is.false&binned_at=is.null&order=hm_emv.asc`),
       sbFetch('feed_hatches?select=house,breed,hatch'),
     ]);
   } catch (e) {

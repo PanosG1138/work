@@ -35,6 +35,8 @@ const EN = {};
 function addTranslations(list) { Object.assign(EN, list); }
 addTranslations({
   // the "start the εμβολιακό" banner (VAX REMINDER)
+  '{n} γραμμή': '{n} line', '{n} γραμμές': '{n} lines', 'διαγραφή σε {n} ημέρα': 'deleted in {n} day', 'διαγραφή σε {n} ημέρες': 'deleted in {n} days', 'Ο κάδος είναι άδειος.': 'The bin is empty.',
+  'Εκκολάψεις άνω των 18 εβδομάδων. Διαγράφονται οριστικά 30 ημέρες μετά — μένει μόνο το ιστορικό.': 'Hatches older than 18 weeks. Deleted for good 30 days later — only the history stays.',
   'Ξεκινήστε το εμβολιακό': 'Start the vaccination plan', 'Εμβολιακό — έχουν ήδη αργήσει παραγγελίες': 'Vaccination plan — orders are already late',
   'ημέρες': 'days', 'εκκόλαψη': 'hatch', 'ημ. {n}': 'day {n}', 'Πρόχειρο — δεν έχει ενεργοποιηθεί': 'Draft — not activated',
   'Δεν έχει ξεκινήσει εμβολιακό': 'No vaccination plan yet', 'πρώτη παραγγελία από {d}': 'first order from {d}', 'Άνοιγμα εμβολιακού →': 'Open plan →',
@@ -301,6 +303,7 @@ const planQty = (r, chicks) => r.rule === 'fixed' ? Number(r.fixed_qty)
 // ── VAX REMINDER ── homepage + beta tracker: hatches whose εμβολιακό must be started or activated.
 // From VAX_REMIND_DAYS before the hatch until activation; not hatches entered the old way (lines, no record), not binned ones.
 const VAX_REMIND_DAYS = 35, VAX_BIN_DAYS = 126;
+const BIN_USER = 'Αυτόματα (κάδος)';   // the nightly bin job's name in the history (bin_old_hatches); changes popups skip it
 const isoPlus = (iso, n) => { const d = new Date(iso + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
 const isoGr = iso => iso.split('-').reverse().join('/');   // 2026-11-24 → 24/11/2026
 // placements {id,house,doc_date}, plans {placement_id,activated_at}, rows {anath,hm_ekk,hm_paragelia,draft}, programme {days}

@@ -9,8 +9,8 @@
 <title data-t>ΕΜΒΟΛΙΑ — Beta</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
-<script src="common.js?v=16"></script>
-<link rel="stylesheet" href="theme.css?v=16">
+<script src="common.js?v=17"></script>
+<link rel="stylesheet" href="theme.css?v=17">
 <style>
 /* theme toggle button */
 
@@ -349,6 +349,12 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
 .row-draft td{opacity:.55}
 .draft-tag{font-size:10px;color:var(--gh-attention-fg);border:1px solid rgba(240,180,41,0.5);border-radius:99px;padding:0 6px}
 .age{color:var(--gh-fg-subtle);font-size:11px;margin-left:4px}
+/* Κάδος tab (BIN) */
+#tab-bin{overflow:auto}
+.bin-note{font-size:12px;margin:0 0 10px}
+.bin-hatch{background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:var(--gh-r-md);padding:8px 12px;margin-bottom:8px;max-width:820px}
+.bin-hatch summary{cursor:pointer;font-size:13px}
+.bin-left{color:var(--gh-attention-fg)}
 .vax-chicks{color:inherit;text-decoration:underline dotted}
 .inj-modal{width:760px;max-width:96vw;max-height:90vh;overflow:auto}
 .inj-day input{width:70px;display:inline-block}
@@ -899,7 +905,7 @@ body.printing-card .printcard-doc{display:block}
     <div id="vax-sheet"></div>
   </div>
   <div class="tab-panel" id="tab-orders" hidden><p data-t class="tab-soon">Σύντομα εδώ.</p></div>
-  <div class="tab-panel" id="tab-bin" hidden><p data-t class="tab-soon">Σύντομα εδώ.</p></div>
+  <div class="tab-panel" id="tab-bin" hidden><div id="bin-list"></div></div>
 </main>
 <!-- FAB: mobile-only floating add button -->
 <button class="mobile-fab" style="display:none" onclick="openSidebarMobile()" data-t-title title="Νέα παραγγελία" data-t-aria-label aria-label="Νέα παραγγελία">+</button>
@@ -1297,6 +1303,7 @@ const HTABLE = 'emvolia_history';
 function initApp(name) {
   currentUser = name;
   if (!document.getElementById('tab-vax').hidden) openVaxTab();   // page opened on #vax
+  if (!document.getElementById('tab-bin').hidden) openBin();      // page opened on #bin
   const fromLink = location.search.length > 1;   // read before focusFromLink clears it
   loadData().then(() => showChangelog(name, !fromLink));
 }
@@ -1304,7 +1311,7 @@ function initApp(name) {
 // ── SUPABASE ──────────────────────────────────────────────────────
 // sbFetch (every read/write to Supabase) lives in common.js
 
-const sbSelect  = ()        => sbFetch(`${TABLE}?order=hm_emv.asc`);
+const sbSelect  = ()        => sbFetch(`${TABLE}?binned_at=is.null&order=hm_emv.asc`);   // lines in the bin (Κάδος tab) are not loaded
 const sbInsert  = row       => sbFetch(TABLE, { method:'POST', prefer:'return=representation', body: JSON.stringify(row) });
 // PATCH returns [] when the row is gone (deleted meanwhile, e.g. in another tab) — fail with a clear message
 const ROW_GONE = t('Η εγγραφή δεν υπάρχει πια (ίσως διαγράφηκε) — πατήστε Ανανέωση.');
@@ -2989,7 +2996,7 @@ async function showChangelog(user, open) {
 
   try {
     // lines this page doesn't show (draft lines, which live in the beta until activated) are left out, except real deletions
-    const hist = ((await sbChangelog(since, user)) || []).filter(h => h.action === 'deleted' || data.some(r => r.id === h.row_id));
+    const hist = ((await sbChangelog(since, user)) || []).filter(h => h.user_name !== BIN_USER && (h.action === 'deleted' || data.some(r => r.id === h.row_id)));
     try { localStorage.setItem(changelogKey(user), seenAt); } catch(e) {}
 
     if (!hist || !hist.length) {
@@ -3706,6 +3713,25 @@ const applyInjWin = () => sheetAction(async p => {
   closeInjWin();
 });
 
+// ── BIN ── (Κάδος tab, view only) lines of hatches older than VAX_BIN_DAYS, moved here every night by the database
+// (bin_old_hatches) and deleted 30 days later; history kept. No restore.
+const BIN_KEEP_DAYS = 30;
+async function openBin() {
+  const box = document.getElementById('bin-list');
+  let rows;
+  try { rows = await sbFetch(`${TABLE}?binned_at=not.is.null&select=id,anath,hm_ekk,hm_emv,emvolio,posotita,pelatis,binned_at&order=hm_ekk.asc,hm_emv.asc`); }
+  catch (e) { box.innerHTML = `<p class="tab-soon">${x(t('Σφάλμα φόρτωσης: {msg}', { msg: e.message }))}</p>`; return; }
+  const hatches = new Map();
+  rows.forEach(r => { const k = r.anath + '|' + r.hm_ekk; if (!hatches.has(k)) hatches.set(k, []); hatches.get(k).push(r); });
+  box.innerHTML = `<p class="muted bin-note">${t('Εκκολάψεις άνω των 18 εβδομάδων. Διαγράφονται οριστικά 30 ημέρες μετά — μένει μόνο το ιστορικό.')}</p>` +
+    ([...hatches.values()].map(lines => {
+      const left = Math.max(0, BIN_KEEP_DAYS - Math.floor((Date.now() - Date.parse(lines[0].binned_at)) / 864e5));
+      return `<div class="bin-hatch"><details><summary><b>${x(lines[0].anath)}</b> · ${t('Εκκόλαψη')} ${fmt(lines[0].hm_ekk)} · ` +
+        `${t(lines.length === 1 ? '{n} γραμμή' : '{n} γραμμές', { n: lines.length })} · <span class="bin-left">${t(left === 1 ? 'διαγραφή σε {n} ημέρα' : 'διαγραφή σε {n} ημέρες', { n: left })}</span></summary>` +
+        `<table class="vax-table"><tbody>${lines.map(r => `<tr><td>${fmt(r.hm_emv)}</td><td>${x(vaccineLabel(r.emvolio))}</td><td>${fmtPosotita(r.posotita)}</td><td>${x(r.pelatis || '—')}</td></tr>`).join('')}</tbody></table></details></div>`;
+    }).join('') || `<p class="tab-soon">${t('Ο κάδος είναι άδειος.')}</p>`);
+}
+
 // Esc closes the "Δημιουργία εμβολιακού" box
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('vaxnew-bg').style.display === 'flex') closeCreateVax(); });
 
@@ -3718,6 +3744,7 @@ function showTab(name) {
   document.querySelector('.shell').classList.toggle('tab-other', name !== 'vaccines');
   history.replaceState(null, '', location.pathname + location.search + (name === 'vaccines' ? '' : '#' + name));
   if (name === 'vax' && currentUser) openVaxTab();   // fresh cards every time the tab opens
+  if (name === 'bin' && currentUser) openBin();
 }
 // "#vax=<placement id>" (banner links, also from the homepage) opens that hatch's sheet
 function openFromHash() {

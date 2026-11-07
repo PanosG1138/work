@@ -9,8 +9,8 @@
 <title data-t>ΕΜΒΟΛΙΑ</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
-<script src="common.js?v=16"></script>
-<link rel="stylesheet" href="theme.css?v=16">
+<script src="common.js?v=17"></script>
+<link rel="stylesheet" href="theme.css?v=17">
 <style>
 /* theme toggle button */
 
@@ -1195,7 +1195,7 @@ function initApp(name) {
 // ── SUPABASE ──────────────────────────────────────────────────────
 // sbFetch (every read/write to Supabase) lives in common.js
 
-const sbSelect  = ()        => sbFetch(`${TABLE}?draft=is.false&order=hm_emv.asc`);   // draft lines live only in the beta until activated
+const sbSelect  = ()        => sbFetch(`${TABLE}?draft=is.false&binned_at=is.null&order=hm_emv.asc`);   // draft lines live only in the beta until activated
 const sbInsert  = row       => sbFetch(TABLE, { method:'POST', prefer:'return=representation', body: JSON.stringify(row) });
 // PATCH returns [] when the row is gone (deleted meanwhile, e.g. in another tab) — fail with a clear message
 const ROW_GONE = t('Η εγγραφή δεν υπάρχει πια (ίσως διαγράφηκε) — πατήστε Ανανέωση.');
@@ -2928,7 +2928,7 @@ async function showChangelog(user, open) {
 
   try {
     // lines this page doesn't show (draft lines, which live in the beta until activated) are left out, except real deletions
-    const hist = ((await sbChangelog(since, user)) || []).filter(h => h.action === 'deleted' || data.some(r => r.id === h.row_id));
+    const hist = ((await sbChangelog(since, user)) || []).filter(h => h.user_name !== BIN_USER && (h.action === 'deleted' || data.some(r => r.id === h.row_id)));
     try { localStorage.setItem(changelogKey(user), seenAt); } catch(e) {}
 
     if (!hist || !hist.length) {
