@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title data-t>ΕΜΒΟΛΙΑ — Beta</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
 <script src="common.js?v=17"></script>
 <link rel="stylesheet" href="theme.css?v=17">
@@ -347,6 +347,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
 .vax-table tr.vax-grp td{background:var(--gh-canvas-inset);color:var(--gh-fg-muted);font-weight:600;font-size:11px;cursor:default}
 .ord-yes{color:var(--gh-success-fg)}.ord-due{color:var(--gh-attention-fg)}.ord-late{color:var(--gh-danger-fg);font-weight:600}
 .row-draft td{opacity:.55}
+.row-draft td.pin{opacity:1}.row-draft td.pin .row-actions{opacity:.55}
 .draft-tag{font-size:10px;color:var(--gh-attention-fg);border:1px solid rgba(240,180,41,0.5);border-radius:99px;padding:0 6px}
 .age{color:var(--gh-fg-subtle);font-size:11px;margin-left:4px}
 /* Κάδος tab (BIN) */
@@ -662,6 +663,83 @@ body.printing-card .printcard-doc{display:block}
 .printcard-doc th,.printcard-doc td{border:1px solid var(--gh-border-default);padding:7px 10px;text-align:left;color:var(--gh-fg-default)}
 .printcard-doc thead{background:var(--gh-canvas-subtle)}
 .printcard-doc .pc-empty{padding:20px;text-align:center;color:var(--gh-fg-muted);font-size:13px}
+
+/* ══ DENSE GRID RESTYLE (direction B, 2026-11-07) ══ backup of the previous look: git tag beta-ui-classic.
+   The page's colour tokens are re-pointed here, so every beta part (tabs, windows, sheet, bin) follows. */
+:root{--gh-canvas-default:#121315;--gh-canvas-subtle:#1A1C20;--gh-canvas-elev2:#1F2126;--gh-canvas-inset:#0E0F11;
+  --gh-border-default:#2B2E34;--gh-border-muted:#24272C;--gh-fg-default:#EDEEF0;--gh-fg-muted:#A3A7AF;--gh-fg-subtle:#7C818A;
+  --gh-accent-fg:#8DB4FF;--gh-accent-emphasis:#4D8DFF;--gh-accent-subtle:rgba(77,141,255,0.12);--gh-hover-bg:#1F2126}
+body,button,input,select,textarea{font-family:'Fira Sans',system-ui,sans-serif}
+body{font-variant-numeric:tabular-nums}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* tabs as a segmented control */
+.tabs{border-bottom:none;gap:4px;background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:8px;padding:3px;align-self:flex-start;max-width:100%}
+.tabs .tab{border:none;border-radius:6px;padding:5px 12px}
+.tabs .tab.on{background:#2B2E34;border:none;color:var(--gh-fg-default)}
+/* filter bar */
+.fbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:8px;padding:8px}
+.fbar .search-wrap{width:220px}
+.msel{position:relative}
+.msel-btn,.frange{background:var(--gh-canvas-default);border:1px solid #34373E;border-radius:6px;color:var(--gh-fg-default);font:inherit;font-size:13px;height:32px;padding:0 10px;cursor:pointer;white-space:nowrap}
+.msel-btn.set{border-color:var(--gh-accent-emphasis)}
+.msel-list{position:absolute;top:36px;left:0;z-index:30;background:var(--gh-canvas-elev2);border:1px solid #34373E;border-radius:8px;padding:6px;min-width:190px;max-height:320px;overflow:auto;box-shadow:0 10px 24px rgba(0,0,0,.5)}
+.msel-list label{display:flex;gap:8px;align-items:center;padding:5px 6px;border-radius:5px;cursor:pointer;font-size:13px;white-space:nowrap}
+.msel-list label:hover{background:#2B2E34}
+.frange{display:inline-flex;align-items:center;gap:6px;cursor:default;margin:0}
+.frange span{color:var(--gh-fg-muted)}
+.frange input{background:none;border:none;color:var(--gh-fg-default);font:inherit;font-size:13px;width:82px;padding:0;height:28px}
+.frange input.qty{width:62px}
+.f-count{color:var(--gh-fg-muted);font-size:12px}
+.linkbtn{background:none;border:none;color:var(--gh-accent-fg);font:inherit;font-size:13px;cursor:pointer;padding:0 4px}
+.btn-primary-w{background:#EDEEF0;color:#121315;border:none;border-radius:6px;height:32px;padding:0 14px;font:inherit;font-weight:600;cursor:pointer}
+.btn-primary-w:hover{background:#FFFFFF}
+.cols-menu label{display:flex;gap:8px;align-items:center;padding:5px 6px;font-size:13px;cursor:pointer;white-space:nowrap}
+/* the grid */
+.grid{border-collapse:separate;border-spacing:0;font-size:13px}
+.grid th{background:#1F2126;color:var(--gh-fg-muted);font-weight:500;font-size:12px;padding:8px 10px;border-bottom:1px solid #34373E;border-right:1px solid var(--gh-border-default);vertical-align:middle;min-width:0;white-space:nowrap}
+.grid td{height:38px;padding:0 10px;border-bottom:1px solid var(--gh-border-default);border-right:1px solid var(--gh-border-default);max-width:220px;background:var(--gh-canvas-default)}
+.grid tbody tr{border-bottom:none}
+.grid tbody tr:hover td{background:#191B1F}
+.grid tbody tr.selected td{background:#1C2433}
+.grid td:focus{outline:2px solid var(--gh-accent-fg);outline-offset:-2px}
+.grid .num{text-align:right}
+.grid .c-sw{text-align:center;width:52px;padding:0 6px}
+.grid .pin{position:sticky;right:0;z-index:1;background:#17191C;box-shadow:-8px 0 12px -8px rgba(0,0,0,.6);border-right:none;width:72px}
+.grid th.pin{background:#1F2126;z-index:3}
+.grid .c-ordd,.grid .c-reg,.grid .c-sup,.grid .c-np,.grid .c-ne{display:none}
+.grid.show-ordd .c-ordd,.grid.show-reg .c-reg,.grid.show-sup .c-sup,.grid.show-np .c-np,.grid.show-ne .c-ne{display:table-cell}
+.grid .vacc{font-weight:600}
+.grid td.ed{cursor:text}
+.grid td.editing{padding:0;outline:2px solid var(--gh-accent-emphasis);outline-offset:-2px}
+.cell-in{width:100%;height:36px;background:var(--gh-canvas-default)!important;border:none!important;border-radius:0!important;color:var(--gh-fg-default);padding:0 10px!important;font:inherit;outline:none}
+.cs{font-size:11px;margin-right:6px}
+.cs-saving{color:#E8A23B}.cs-saved{color:#7FD1AE}
+.cs-error{color:#FF8A80;background:none;border:none;font:inherit;font-size:11px;cursor:pointer;padding:0;text-decoration:underline}
+td.st-saving{box-shadow:inset 0 0 0 2px #E8A23B}td.st-error{box-shadow:inset 0 0 0 2px #E5675F}
+.hb{display:inline-block;min-width:26px;text-align:center;border-radius:4px;padding:1px 5px;font-weight:600;font-size:12px;color:#121315;margin-right:7px}
+.hb-h1{background:#C9B6FF}.hb-h2{background:#FFB3C7}.hb-h3{background:#A6E3A1}.hb-h4{background:#F2C38B}.hb-h5{background:#9FC2FF}.hb-ha{background:#E0E3E8}
+.st{display:inline-block;border:1px solid;border-radius:4px;padding:1px 7px;font-size:11.5px;font-weight:500;white-space:nowrap}
+.st-pending{color:#F2C38B;border-color:#6E5530}.st-late{color:#FF8A80;border-color:#8C3A35}
+.st-ordered{color:#9FC2FF;border-color:#3B5C99}.st-fridge{color:#7FD8D0;border-color:#2A6E6A}
+.st-done{color:#7FD1AE;border-color:#2F7A63}.st-draft{color:#A3A7AF;border-color:#34373E}
+.sw{display:inline-flex;align-items:center;width:30px;height:16px;border-radius:99px;background:#34373E;padding:2px;border:none;cursor:pointer;vertical-align:middle}
+.sw i{width:12px;height:12px;border-radius:50%;background:#A3A7AF;display:block;transition:transform .12s}
+.sw[aria-checked="true"]{background:#2F7A63}
+.sw[aria-checked="true"] i{background:#E8FFF6;transform:translateX(14px)}
+.sw.faentina[aria-checked="true"]{background:#9B3FA8}
+.sw:disabled{opacity:.5;cursor:default}
+.ib{background:none;border:1px solid transparent;border-radius:5px;color:var(--gh-fg-muted);width:28px;height:28px;font:inherit;cursor:pointer}
+.ib:hover{border-color:#34373E;color:var(--gh-fg-default)}
+.ib.del:hover{color:#FF8A80;border-color:#8C3A35}
+.sk{display:block;height:10px;border-radius:3px;background:#24272C}
+.empty-state .es-title{font-size:15px;font-weight:600;color:var(--gh-fg-default);margin-bottom:6px}
+.empty-state .es-actions{display:flex;gap:8px;justify-content:center;margin-top:12px}
+@media (max-width: 768px){
+  /* phone (read-only use): search gets its own row; only the actions stay pinned, so the vaccine and dates get the room */
+  .fbar .search-wrap{flex:1 1 100%;width:100%}
+  .grid .sticky-l0,.grid .sticky-l1{position:static}
+  .grid .pin{width:auto}
+}
 </style>
 </head>
 <body>
@@ -804,58 +882,39 @@ body.printing-card .printcard-doc{display:block}
     <a data-t class="tab" href="vaccine_programme.html" data-t-title title="Βασικό εμβολιακό και συνήθη ενέσιμα πελατών">🗓 Βασικό εμβολιακό</a>
   </nav>
   <div class="tab-panel" id="tab-vaccines">
-  <div class="toolbar">
+  <div class="fbar" role="search" aria-label="Φίλτρα" data-t-aria-label>
     <div class="search-wrap">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <label for="search" class="sr-only" data-t>Αναζήτηση</label>
       <input type="text" id="search" data-t-placeholder placeholder="Αναζήτηση…" oninput="render()">
     </div>
-
-    <div class="tb-menu-wrap">
-      <button class="btn-tool" id="btn-filters" onclick="toggleTbMenu('filters-menu',event)">
-        <span data-t>Φίλτρα</span> <span class="tb-badge" id="filters-badge" style="display:none">0</span> ▾
-      </button>
-      <div class="tb-menu" id="filters-menu" style="display:none" onclick="event.stopPropagation()">
-        <div>
-          <label data-t class="filter-house-label">Αναθρεπτήριο</label>
-          <div class="house-chip-row" id="house-filter-row">
-            <button type="button" class="house-chip" onclick="toggleHouseFilter('Θ1')">Θ1</button>
-            <button type="button" class="house-chip" onclick="toggleHouseFilter('Θ2')">Θ2</button>
-            <button type="button" class="house-chip" onclick="toggleHouseFilter('Θ3')">Θ3</button>
-            <button type="button" class="house-chip" onclick="toggleHouseFilter('Θ4')">Θ4</button>
-            <button type="button" class="house-chip" onclick="toggleHouseFilter('Θ5')">Θ5</button>
-            <button type="button" class="house-chip" onclick="toggleHouseFilter('Α1')">Α1</button>
-          </div>
-        </div>
-        <div id="hatch-filter-wrap" style="display:none">
-          <label data-t class="filter-house-label">Ημ. εκκόλαψης</label>
-          <div class="house-chip-row" id="hatch-filter-row"></div>
-        </div>
-        <select class="filter-sel" id="filt-ordered" onchange="render()" style="width:100%">
-          <option data-t value="">Όλες οι καταστάσεις</option>
-          <option data-t value="ΝΑΙ">Παραγγελθέντα</option>
-          <option data-t value="-">Εκκρεμείς</option>
-        </select>
-        <select class="filter-sel" id="filt-fridge" onchange="render()" style="width:100%">
-          <option data-t value="">Όλα τα ψυγεία</option>
-          <option data-t value="ΝΑΙ">Στο ψυγείο</option>
-          <option data-t value="-">Όχι στο ψυγείο</option>
-        </select>
-        <div class="tb-menu-divider"></div>
-        <button data-t class="btn-tool" id="btn-show-done" onclick="toggleShowDone()" style="width:100%">Εμφάνιση εμβολιασμένων</button>
-      </div>
-    </div>
-
-    <button data-t class="btn-tool" onclick="loadData()">↺ Ανανέωση</button>
-
+    <div class="msel" id="msel-house"></div>
+    <div class="msel" id="msel-hatch"></div>
+    <div class="msel" id="msel-state"></div>
+    <fieldset class="frange"><legend class="sr-only" data-t>Ημ. εμβολιασμού</legend><span data-t>Ημ. εμβολιασμού</span>
+      <input type="text" id="f-from" aria-label="Από" data-t-aria-label data-t-placeholder placeholder="από" autocomplete="off" onblur="onSmartDateBlur(this); setRange()">
+      <span>–</span>
+      <input type="text" id="f-to" aria-label="Έως" data-t-aria-label data-t-placeholder placeholder="έως" autocomplete="off" onblur="onSmartDateBlur(this); setRange()"></fieldset>
+    <fieldset class="frange"><legend class="sr-only" data-t>Ποσότητα</legend><span data-t>Ποσότητα</span>
+      <input type="text" id="f-min" class="qty" aria-label="Ελάχιστη" data-t-aria-label data-t-placeholder placeholder="από" autocomplete="off" onchange="setRange()">
+      <span>–</span>
+      <input type="text" id="f-max" class="qty" aria-label="Μέγιστη" data-t-aria-label data-t-placeholder placeholder="έως" autocomplete="off" onchange="setRange()"></fieldset>
+    <span class="f-count" id="f-count" aria-live="polite"></span>
+    <button type="button" class="linkbtn" id="btn-clear-filters" onclick="clearFilters()" data-t>Καθαρισμός</button>
     <div class="tb-spacer"></div>
-
     <div class="tb-menu-wrap">
-      <button class="btn-tool" onclick="toggleTbMenu('actions-menu',event)" data-t-title title="Περισσότερες ενέργειες">⋯</button>
+      <button type="button" class="btn-tool" onclick="toggleTbMenu('cols-menu',event)" aria-haspopup="true"><span data-t>Στήλες</span> ▾</button>
+      <div class="tb-menu cols-menu" id="cols-menu" style="display:none;right:0;left:auto" onclick="event.stopPropagation()"></div>
+    </div>
+    <div class="tb-menu-wrap">
+      <button class="btn-tool" onclick="toggleTbMenu('actions-menu',event)" data-t-title title="Περισσότερες ενέργειες" aria-label="Περισσότερες ενέργειες" data-t-aria-label>⋯</button>
       <div class="tb-menu" id="actions-menu" style="display:none;right:0;left:auto" onclick="event.stopPropagation()">
+        <button data-t class="btn-tool" onclick="loadData()" style="width:100%">↺ Ανανέωση</button>
         <button class="btn-tool" onclick="exportCSV()" style="width:100%">↓ CSV</button>
         <button data-t class="btn-tool" id="btn-print-card" onclick="openPrintCard()" style="display:none;width:100%" data-t-title title="Εκτύπωση καρτέλας αναθρεπτηρίου">🖨 Καρτέλα</button>
       </div>
     </div>
+    <button type="button" class="btn-primary-w" onclick="openEntryPanel()" data-t>Νέα γραμμή</button>
   </div>
 
   <!-- BATCH ACTION BAR -->
@@ -869,32 +928,34 @@ body.printing-card .printcard-doc{display:block}
 
   <div class="tbl-outer" id="tbl-outer">
     <div class="tbl-scaler" id="tbl-scaler">
-      <table>
+      <table class="grid" id="grid" role="grid" aria-label="Γραμμές εμβολίων" data-t-aria-label>
         <thead><tr>
-          <th class="cb-cell sticky-l0"><input type="checkbox" id="cb-all" onchange="toggleSelectAll(this.checked)" data-t-title title="Επιλογή όλων"></th>
-          <th class="sticky-l1" onclick="sortBy('hm_ekk')"><span data-t>Εκκόλαψη — Αναθρεπτήριο</span><span class="arr" id="s-hm_ekk"></span></th>
-          <th style="min-width:65px" onclick="sortBy('hm_emv')"><span data-t>Ημ. Εμβολιασμού</span><span class="arr" id="s-hm_emv"></span></th>
-          <th style="min-width:65px" onclick="sortBy('hm_paragelia')"><span data-t>Ημ. Παραγγελίας</span><span class="arr" id="s-hm_paragelia"></span></th>
-          <th onclick="sortBy('emvolio')"><span data-t>Εμβόλιο</span><span class="arr" id="s-emvolio"></span></th>
-          <th onclick="sortBy('posotita')"><span data-t>Ποσότητα</span><span class="arr" id="s-posotita"></span></th>
-          <th onclick="sortBy('pelatis')"><span data-t>Πελάτης</span><span class="arr" id="s-pelatis"></span></th>
-          <th data-t>Σχόλια Πάνος</th>
-          <th style="min-width:50px;text-align:center" onclick="sortBy('paragelia')" data-t-title title="Παραγγελία"><span data-t>Παρ.</span><span class="arr" id="s-paragelia"></span></th>
-          <th style="min-width:65px" onclick="sortBy('hm_par')"><span data-t>Ημ. Καταχώρησης Παραγγελίας</span><span class="arr" id="s-hm_par"></span></th>
-          <th data-t>Προμηθευτής</th>
-          <th data-t style="min-width:50px;text-align:center" data-t-title title="Ψυγείο">Ψυγ.</th>
-          <th style="min-width:50px;text-align:center" onclick="sortBy('emvoliasmos')" data-t-title title="Εμβολιασμός"><span data-t>Εμβ.</span><span class="arr" id="s-emvoliasmos"></span></th>
-          <th data-t>Σχόλια Ελένη</th>
-          <th data-t style="text-align:right">Ενέργειες</th>
+          <th scope="col" class="cb-cell sticky-l0"><input type="checkbox" id="cb-all" onchange="toggleSelectAll(this.checked)" data-t-title title="Επιλογή όλων" aria-label="Επιλογή όλων" data-t-aria-label></th>
+          <th scope="col" class="sticky-l1" data-sort="hm_ekk" onclick="sortBy('hm_ekk')"><span data-t>Εκκόλαψη</span><span class="arr" id="s-hm_ekk"></span></th>
+          <th scope="col" class="num" data-t-title title="Ημέρα ηλικίας"><span data-t>Ημ.</span></th>
+          <th scope="col" data-sort="hm_emv" onclick="sortBy('hm_emv')"><span data-t>Ημ. εμβολιασμού</span><span class="arr" id="s-hm_emv"></span></th>
+          <th scope="col" data-sort="emvolio" onclick="sortBy('emvolio')"><span data-t>Εμβόλιο</span><span class="arr" id="s-emvolio"></span></th>
+          <th scope="col" class="num" data-sort="posotita" onclick="sortBy('posotita')"><span data-t>Ποσότητα</span><span class="arr" id="s-posotita"></span></th>
+          <th scope="col" data-sort="pelatis" onclick="sortBy('pelatis')"><span data-t>Πελάτης</span><span class="arr" id="s-pelatis"></span></th>
+          <th scope="col" data-sort="state" onclick="sortBy('state')"><span data-t>Κατάσταση</span><span class="arr" id="s-state"></span></th>
+          <th scope="col" class="c-sw" data-t-title title="Παραγγελία"><span data-t>Παρ.</span></th>
+          <th scope="col" class="c-sw" data-t-title title="Ψυγείο"><span data-t>Ψυγ.</span></th>
+          <th scope="col" class="c-sw" data-t-title title="Εμβολιασμός"><span data-t>Εμβ.</span></th>
+          <th scope="col" class="c-ordd" data-sort="hm_paragelia" onclick="sortBy('hm_paragelia')"><span data-t>Ημ. παραγγελίας</span><span class="arr" id="s-hm_paragelia"></span></th>
+          <th scope="col" class="c-reg" data-sort="hm_par" onclick="sortBy('hm_par')"><span data-t>Ημ. καταχώρησης</span><span class="arr" id="s-hm_par"></span></th>
+          <th scope="col" class="c-sup"><span data-t>Προμηθευτής</span></th>
+          <th scope="col" class="c-np"><span data-t>Σχόλια Πάνος</span></th>
+          <th scope="col" class="c-ne"><span data-t>Σχόλια Ελένη</span></th>
+          <th scope="col" class="pin"><span data-t>Ενέργειες</span></th>
         </tr></thead>
         <tbody id="tbody"></tbody>
         <tfoot id="tfoot" style="display:none"><tr>
           <td data-t colspan="5" class="total-label">Σύνολο εκκρεμών ποσοτήτων</td>
-          <td class="total-val" id="total-qty">—</td>
-          <td colspan="9"></td>
+          <td class="total-val num" id="total-qty">—</td>
+          <td colspan="11"></td>
         </tr></tfoot>
       </table>
-      <div data-t id="empty-state" class="empty-state" style="display:none">💉 Δεν βρέθηκαν εγγραφές.</div>
+      <div id="empty-state" class="empty-state" style="display:none"></div>
     </div>
   </div>
 
@@ -1172,6 +1233,19 @@ body.printing-card .printcard-doc{display:block}
 <script>
 // ── TRANSLATIONS ── this page's English (Greek text → English); shared words are in common.js
 addTranslations({
+  // dense grid restyle
+  'Αναζήτηση': 'Search', 'Φίλτρα': 'Filters', 'Αναθρεπτήριο': 'House', 'Εκκόλαψη': 'Hatch', 'Κατάσταση': 'State', 'Ημ. εμβολιασμού': 'Vaccination date',
+  'Ποσότητα': 'Quantity', 'από': 'from', 'έως': 'to', 'Από': 'From', 'Έως': 'To', 'Ελάχιστη': 'Minimum', 'Μέγιστη': 'Maximum', 'Καθαρισμός': 'Clear',
+  'Στήλες': 'Columns', 'Νέα γραμμή': 'New line', 'όλα': 'all', 'όλες εκτός εμβολιασμένων': 'all but vaccinated', '{n} επιλογές': '{n} chosen',
+  'Καμία επιλογή': 'Nothing to choose', '{n} από {m}': '{n} of {m}', 'Ημ.': 'Day', 'Ημέρα ηλικίας': 'Day of age',
+  'Παρ.': 'Ord.', 'Ψυγ.': 'Fr.', 'Εμβ.': 'Vac.', 'Ημ. παραγγελίας': 'Order by', 'Ημ. καταχώρησης': 'Ordered on', 'Ενέργειες': 'Actions',
+  'Χωρίς παραγγελία': 'Not ordered', 'Αργεί η παραγγελία': 'Order late', 'Παραγγέλθηκε': 'Ordered', 'Στο ψυγείο': 'In the fridge', 'Εμβολιάστηκε': 'Vaccinated',
+  'Πρόχειρο': 'Draft', 'Παραγγελία': 'Order', 'Ψυγείο': 'Fridge', 'Εμβολιασμός': 'Vaccination', 'Επιλογή γραμμής': 'Select line', 'Γραμμές εμβολίων': 'Vaccine lines',
+  'Επεξεργασία και ιστορικό': 'Edit and history', 'Enter ή διπλό κλικ: επεξεργασία': 'Enter or double-click: edit',
+  'αποθήκευση…': 'saving…', '✓ αποθηκεύτηκε': '✓ saved', 'σφάλμα · ξανά': 'error · retry', 'Περισσότερες ενέργειες': 'More actions',
+  'Η γραμμή άλλαξε {who} — φορτώθηκαν οι νεότερες τιμές, ξαναδοκιμάστε.': 'The line was changed {who} — the newest values were loaded, try again.',
+  'Δεν υπάρχουν γραμμές ακόμα': 'No lines yet', 'Προσθέστε μια γραμμή ή δημιουργήστε το εμβολιακό μιας εκκόλαψης.': 'Add a line or create a hatch\'s vaccination plan.',
+  'Κανένα αποτέλεσμα': 'No results', 'Καμία γραμμή δεν ταιριάζει στα φίλτρα.': 'No line matches the filters.', 'Καθαρισμός φίλτρων': 'Clear filters',
   'Εμβόλια': 'Vaccines', 'Παραγγελίες': 'Orders', 'Κάδος': 'Bin', 'Σύντομα εδώ.': 'Coming soon.', 'Διαγράφηκε.': 'Deleted.', '💉 Δεν βρέθηκαν εγγραφές.': '💉 No records found.',
   'ΕΜΒΟΛΙΑ — Beta': 'VACCINES — Beta', 'Δοκιμαστική έκδοση — πατήστε για την κανονική': 'Test version — click for the normal one',
   'Νεοσσοί': 'Chicks placed', 'ΚΟΡΥΖΑ': 'CORYZA', 'Επιλέξτε προϊόν για την ΚΟΡΥΖΑ ({n}ος γύρος).': 'Choose the product for CORYZA (round {n}).',
@@ -1330,42 +1404,85 @@ const sbChangelog = (since, user) =>
 // ── STATE ─────────────────────────────────────────────────────────
 let data = [], sortCol = 'hm_emv', sortDir = 1;
 let editId = null, editLoadedAt = null, deleteId = null, emvoliasmosVal = '';
-let showDone = false;
+// ── FILTERS ── (filter bar) house / hatch / state multi-selects, vaccination-date and quantity ranges
 let filterHouses = new Set();
 let filterHatchDates = new Set();
-
-function toggleHouseFilter(house) {
-  if (filterHouses.has(house)) filterHouses.delete(house); else filterHouses.add(house);
-  document.querySelectorAll('#house-filter-row .house-chip').forEach(btn => {
-    btn.classList.toggle('active', filterHouses.has(btn.textContent.trim()));
+const STATES = ['pending', 'late', 'ordered', 'fridge', 'done', 'draft'];
+const STATE_LABEL = { pending: 'Χωρίς παραγγελία', late: 'Αργεί η παραγγελία', ordered: 'Παραγγέλθηκε', fridge: 'Στο ψυγείο', done: 'Εμβολιάστηκε', draft: 'Πρόχειρο' };
+const DEFAULT_STATES = STATES.filter(st => st !== 'done');   // vaccinated lines hidden by default, as before
+let filterStates = new Set(DEFAULT_STATES);
+let filterRange = { from: '', to: '', min: null, max: null };
+// a line's state, from its three steps; an unordered line whose order date has passed is late
+function lineState(r) {
+  if (r.draft) return 'draft';
+  if (r.emvoliasmos === 'ΝΑΙ') return 'done';
+  if (r.psygeio === 'ΝΑΙ') return 'fridge';
+  if (r.paragelia === 'ΝΑΙ') return 'ordered';
+  return r.hm_paragelia && r.hm_paragelia < todayIso() ? 'late' : 'pending';
+}
+const qtyNum = r => parseInt(String(r.posotita || '').replace(/\./g, ''), 10);
+const filtersActive = () => !!(document.getElementById('search').value.trim() || filterHouses.size || filterHatchDates.size ||
+  filterStates.size !== DEFAULT_STATES.length || DEFAULT_STATES.some(st => !filterStates.has(st)) ||
+  filterRange.from || filterRange.to || filterRange.min != null || filterRange.max != null);
+function setRange() {
+  const n = id => { const v = document.getElementById(id).value.trim(); return v === '' ? null : parseInt(v.replace(/\./g, ''), 10); };
+  filterRange = { from: document.getElementById('f-from').dataset.iso || '', to: document.getElementById('f-to').dataset.iso || '', min: n('f-min'), max: n('f-max') };
+  render();
+}
+function clearFilters() {
+  document.getElementById('search').value = '';
+  filterHouses.clear(); filterHatchDates.clear(); filterStates = new Set(DEFAULT_STATES);
+  ['f-from', 'f-to', 'f-min', 'f-max'].forEach(id => { const el = document.getElementById(id); el.value = ''; el.dataset.iso = ''; el.style.borderColor = ''; });
+  filterRange = { from: '', to: '', min: null, max: null };
+  render();
+}
+// the three multi-select dropdowns: a button showing the choice, a list of checkboxes
+let mselOpen = null;
+function mselOptions(kind) {
+  if (kind === 'house') return [...new Set(['Θ1', 'Θ2', 'Θ3', 'Θ4', 'Θ5', ...data.map(r => r.anath).filter(Boolean)])].map(h => ({ v: h, label: h }));
+  if (kind === 'hatch') return [...new Map(data.filter(r => r.hm_ekk && (!filterHouses.size || filterHouses.has(r.anath)))
+    .sort((a, b) => b.hm_ekk.localeCompare(a.hm_ekk)).map(r => [r.hm_ekk + '|' + r.anath, r])).values()]
+    .map(r => ({ v: r.hm_ekk, label: `${r.anath} ${fmt(r.hm_ekk)}` }));
+  return STATES.map(st => ({ v: st, label: t(STATE_LABEL[st]) }));
+}
+const MSEL = { house: { label: 'Αναθρεπτήριο', set: () => filterHouses }, hatch: { label: 'Εκκόλαψη', set: () => filterHatchDates }, state: { label: 'Κατάσταση', set: () => filterStates } };
+function renderMsels() {
+  Object.keys(MSEL).forEach(kind => {
+    const set = MSEL[kind].set(), opts = mselOptions(kind);
+    const chosen = opts.filter(o => set.has(o.v)).map(o => o.label);
+    const summary = kind === 'state' && !filtersStateChanged() ? t('όλες εκτός εμβολιασμένων')
+      : !chosen.length ? t('όλα') : chosen.length <= 2 ? chosen.join(', ') : t('{n} επιλογές', { n: chosen.length });
+    const set_ = kind === 'state' ? filtersStateChanged() : chosen.length > 0;
+    document.getElementById('msel-' + kind).innerHTML =
+      `<button type="button" class="msel-btn${set_ ? ' set' : ''}" aria-haspopup="listbox" aria-expanded="${mselOpen === kind}" onclick="toggleMsel('${kind}', event)">${t(MSEL[kind].label)}: ${x(summary)} ▾</button>` +
+      (mselOpen === kind ? `<div class="msel-list" role="listbox" aria-multiselectable="true" aria-label="${x(t(MSEL[kind].label))}" onclick="event.stopPropagation()">` +
+        (opts.map(o => `<label role="option" aria-selected="${set.has(o.v)}"><input type="checkbox"${set.has(o.v) ? ' checked' : ''} onchange="mselPick('${kind}', '${x(o.v)}')"> ${x(o.label)}</label>`).join('')
+          || `<span class="muted" style="padding:6px">${t('Καμία επιλογή')}</span>`) + '</div>' : '');
   });
+}
+const filtersStateChanged = () => filterStates.size !== DEFAULT_STATES.length || DEFAULT_STATES.some(st => !filterStates.has(st));
+function toggleMsel(kind, e) { e.stopPropagation(); mselOpen = mselOpen === kind ? null : kind; renderMsels(); }
+function mselPick(kind, v) {
+  const set = MSEL[kind].set();
+  if (set.has(v)) set.delete(v); else set.add(v);
+  if (kind === 'house') [...filterHatchDates].forEach(h => { if (!data.some(r => r.hm_ekk === h && filterHouses.has(r.anath))) filterHatchDates.delete(h); });
   render();
 }
-
-function toggleHatchDateFilter(iso) {
-  if (filterHatchDates.has(iso)) filterHatchDates.delete(iso); else filterHatchDates.add(iso);
-  render();
+document.addEventListener('click', e => { if (mselOpen && !e.target.closest('.msel')) { mselOpen = null; renderMsels(); } });
+// ── COLUMNS ── optional columns, hidden by default, remembered per browser
+const OPT_COLS = [{ k: 'ordd', label: 'Ημ. παραγγελίας' }, { k: 'reg', label: 'Ημ. καταχώρησης' }, { k: 'sup', label: 'Προμηθευτής' }, { k: 'np', label: 'Σχόλια Πάνος' }, { k: 'ne', label: 'Σχόλια Ελένη' }];
+let shownCols = new Set();
+try { shownCols = new Set(JSON.parse(localStorage.getItem('vt-beta-cols') || '[]')); } catch (e) { shownCols = new Set(); }
+function applyCols() {
+  const grid = document.getElementById('grid');
+  OPT_COLS.forEach(c => grid.classList.toggle('show-' + c.k, shownCols.has(c.k)));
+  document.getElementById('cols-menu').innerHTML = OPT_COLS.map(c =>
+    `<label><input type="checkbox"${shownCols.has(c.k) ? ' checked' : ''} onchange="toggleCol('${c.k}')"> ${t(c.label)}</label>`).join('');
 }
-
-// rebuilds the dependent hatch-date chip row: only dates that occur within
-// the currently-selected houses, and only shown once a house is picked
-function refreshHatchDateFilterRow() {
-  const wrap = document.getElementById('hatch-filter-wrap');
-  const row = document.getElementById('hatch-filter-row');
-  if (!filterHouses.size) {
-    wrap.style.display = 'none';
-    filterHatchDates.clear();
-    row.innerHTML = '';
-    return;
-  }
-  const isos = [...new Set(
-    data.filter(r => filterHouses.has(r.anath) && r.hm_ekk).map(r => r.hm_ekk)
-  )].sort();
-  [...filterHatchDates].forEach(iso => { if (!isos.includes(iso)) filterHatchDates.delete(iso); });
-  wrap.style.display = isos.length ? '' : 'none';
-  row.innerHTML = isos.map(iso =>
-    `<button type="button" class="house-chip${filterHatchDates.has(iso) ? ' active' : ''}" onclick="toggleHatchDateFilter('${iso}')">${fmt(iso)}</button>`
-  ).join('');
+function toggleCol(k) {
+  if (shownCols.has(k)) shownCols.delete(k); else shownCols.add(k);
+  try { localStorage.setItem('vt-beta-cols', JSON.stringify([...shownCols])); } catch (e) { /* the choice just isn't remembered */ }
+  applyCols();
 }
 let currentUser = '';
 
@@ -1439,11 +1556,11 @@ function setSyncStatus(state, text) {
 // ── LOAD ──────────────────────────────────────────────────────────
 async function loadData() {
   setSyncStatus('loading', t('Φόρτωση…'));
+  if (!data.length) renderSkeleton();
   try {
     [data] = await Promise.all([sbSelect(), loadVaccineNames(), loadPlanHatches(), loadReminders()]);
     await autoMarkVaccinated();
     selectedIds.clear();
-    showDone = false; updateShowDoneBtn();
     setSyncStatus('ok', t('Συνδέθηκε ✓'));
     render();
     focusFromLink(q => {
@@ -2294,16 +2411,20 @@ function populateCustomerList() {
 }
 
 function render() {
+  // a redraw while a cell editor is open (without it losing focus first) closes it unsaved — never left half-open
+  if (cellEdit) { cellEdit.done = true; cellEdit = null; }
   populateHatchList();
   populateCustomerList();
-  refreshHatchDateFilterRow();
-  updateFiltersBadge();
-  const SC = ['emvolio','hm_ekk','hm_emv','hm_paragelia','hm_par','pelatis','posotita','paragelia','emvoliasmos'];
-  SC.forEach(c => { const e=document.getElementById('s-'+c); if(e) e.textContent=sortCol===c?(sortDir===1?'↑':'↓'):''; });
+  renderMsels();
+  document.querySelectorAll('#grid th[data-sort]').forEach(th => {
+    const on = th.dataset.sort === sortCol;
+    th.setAttribute('aria-sort', on ? (sortDir === 1 ? 'ascending' : 'descending') : 'none');
+    th.querySelector('.arr').textContent = on ? (sortDir === 1 ? '↑' : '↓') : '';
+  });
 
   // Ποσότητα sorts by its leading number ('7 ΚΙΛΑ' sorts as 7, empty as 0); every other column as text
-  const sortVal = r => sortCol === 'posotita'
-    ? (parseInt(String(r.posotita || '').replace(/\./g, ''), 10) || 0)
+  const sortVal = r => sortCol === 'posotita' ? (qtyNum(r) || 0)
+    : sortCol === 'state' ? STATES.indexOf(lineState(r))
     : (r[sortCol] || '').toString().toLowerCase();
   const rows = getFiltered().sort((a,b) => {
     const av = sortVal(a), bv = sortVal(b);
@@ -2316,54 +2437,38 @@ function render() {
   updateBatchBar();
   document.getElementById('cb-all').checked = rows.length > 0 && rows.every(r => selectedIds.has(r.id));
 
-  document.getElementById('empty-state').style.display = rows.length ? 'none' : 'block';
+  renderEmpty(rows.length);
+  document.getElementById('f-count').textContent = t('{n} από {m}', { n: rows.length, m: data.length });
+  document.getElementById('btn-clear-filters').style.display = filtersActive() ? '' : 'none';
+  document.getElementById('grid').setAttribute('aria-rowcount', rows.length + 1);
+  document.getElementById('grid').removeAttribute('aria-busy');
   const frag = document.createDocumentFragment();
 
   rows.forEach(r => {
     const tr = document.createElement('tr');
     if (r._new) { tr.classList.add('new-row'); delete r._new; }
-    const fri = r.psygeio==='ΝΑΙ', emv = r.emvoliasmos==='ΝΑΙ';
-    if (fri) tr.classList.add('row-arrived');
     if (selectedIds.has(r.id)) tr.classList.add('selected');
     if (r.draft) tr.classList.add('row-draft');
     const fl = flockLabel(r);
 
     tr.setAttribute('data-id', r.id);
-    tr.setAttribute('title', t('Διπλό κλικ για επεξεργασία'));
-    tr.style.cursor = 'default';
+    tr.setAttribute('aria-selected', selectedIds.has(r.id));
     tr.addEventListener('dblclick', e => {
-      if (e.target.closest('button, input[type=checkbox]')) return;
-      editEntry(r.id);
+      if (e.target.closest('button, input')) return;
+      const ed = e.target.closest('td.ed');
+      if (ed) startCellEdit(ed); else editEntry(r.id);
     });
-    tr.innerHTML =
-      `<td class="cb-cell sticky-l0"><input type="checkbox" class="row-cb" data-id="${r.id}"${selectedIds.has(r.id) ? ' checked' : ''} onchange="onRowCheck(${r.id},this.checked)"></td>`+
-      `<td class="sticky-l1"><span class="badge b-flock" title="${x(fl)}">${x(fl)}</span>${r.draft ? ` <span class="draft-tag">${t('πρόχειρο')}</span>` : ''}</td>`+
-      `<td>${fmt(r.hm_emv)}${ageOf(r) != null ? `<span class="age">${t('ημ. {n}', { n: ageOf(r) })}</span>` : ''}</td>`+
-      `<td style="color:${r.hm_paragelia?'var(--gh-attention-fg)':'var(--gh-fg-subtle)'}">${fmt(r.hm_paragelia)||'—'}</td>`+
-      `<td class="vacc" title="${x(vaccineLabel(r.emvolio))}">${x(vaccineLabel(r.emvolio))}</td>`+
-      `<td>${fmtPosotita(r.posotita)}</td>`+
-      `<td style="color:var(--gh-fg-muted)">${x(r.pelatis||'—')}</td>`+
-      `<td class="td-notes" style="color:var(--gh-fg-muted);font-size:11px" title="${x(r.sxolia_panos||'')}">${x(r.sxolia_panos||'—')}</td>`+
-      `<td style="text-align:center">${orderDot(r)}</td>`+
-      `<td>${fmt(r.hm_par)||'—'}</td>`+
-      `<td style="color:var(--gh-fg-muted);font-size:11px">${x(r.promitheutis||'—')}</td>`+
-      `<td style="text-align:center"><span class="hv-dot ${fri?'yes':'no'}" title="${t('Ψυγείο')}: ${t(fri?'ΝΑΙ':'ΟΧΙ')}"></span></td>`+
-      `<td style="text-align:center"><span class="hv-dot ${emv?'yes':'no'}" title="${t('Εμβολιασμός')}: ${t(emv?'ΝΑΙ':'ΟΧΙ')}"></span></td>`+
-      `<td class="td-notes" style="color:var(--gh-fg-muted);font-size:11px" title="${x(r.sxolia_eleni||'')}">${x(r.sxolia_eleni||'—')}</td>`+
-      `<td><div class="row-actions"><button class="row-btn" onclick="editEntry(${r.id})">${t('Επεξ.')}</button></div></td>`;
+    tr.innerHTML = rowCells(r);
     frag.appendChild(tr);
   });
 
   const tbody = document.getElementById('tbody');
   tbody.innerHTML='';
   tbody.appendChild(frag);
+  restoreCellFocus();
 
   // totals footer — show when filtered or multiple rows selected
-  const isFiltered = document.getElementById('search').value.trim() ||
-                     filterHouses.size ||
-                     document.getElementById('filt-ordered').value ||
-                     document.getElementById('filt-fridge').value ||
-                     showDone;
+  const isFiltered = filtersActive();
   const showTotal = isFiltered || selectedIds.size > 1;
   const tfoot = document.getElementById('tfoot');
   tfoot.style.display = showTotal ? '' : 'none';
@@ -2382,7 +2487,7 @@ function render() {
     document.getElementById('total-qty').textContent = total > 0 ? total.toLocaleString('el-GR') : '—';
   }
 
-  const active = (showDone ? data : data.filter(r => r.emvoliasmos !== 'ΝΑΙ')).filter(r => !r.draft);   // draft lines don't count
+  const active = data.filter(r => r.emvoliasmos !== 'ΝΑΙ' && !r.draft);   // vaccinated and draft lines don't count
   const total=active.length, confirmed=active.filter(r=>r.paragelia==='ΝΑΙ').length;
   document.getElementById('stat-total').textContent   = total;
   document.getElementById('stat-ordered').textContent = confirmed;
@@ -2406,6 +2511,202 @@ function orderDot(r) {
   return `<span class="hv-dot ${ord ? 'yes' : 'no'}${faentina ? ' faentina' : ''}" title="${t('Παραγγελία')}: ${t(ord ? 'ΝΑΙ' : 'ΟΧΙ')}${faentina ? ' · FAENTINA' : ''}"></span>`;
 }
 
+// ── GRID ROWS ── one row per line: the three steps as switches, a state badge, quick edits in the cell
+const HOUSE_CLASS = { 'Θ1': 'h1', 'Θ2': 'h2', 'Θ3': 'h3', 'Θ4': 'h4', 'Θ5': 'h5', 'Α1': 'ha' };
+const INLINE_FIELDS = { hm_emv: 'Ημ. εμβολιασμού', emvolio: 'Εμβόλιο', posotita: 'Ποσότητα', pelatis: 'Πελάτης', promitheutis: 'Προμηθευτής' };
+const STEP_LABEL = { paragelia: 'Παραγγελία', psygeio: 'Ψυγείο', emvoliasmos: 'Εμβολιασμός' };
+const cellStatus = {};   // "id|field" → { s: 'saving' | 'saved' | 'error', retry }
+function cellMark(id, field) {
+  const c = cellStatus[id + '|' + field];
+  if (!c) return '';
+  if (c.s === 'saving') return `<span class="cs cs-saving">${t('αποθήκευση…')}</span>`;
+  if (c.s === 'saved') return `<span class="cs cs-saved">${t('✓ αποθηκεύτηκε')}</span>`;
+  return `<button type="button" class="cs cs-error" onclick="retryCell(${id}, '${field}')">${t('σφάλμα · ξανά')}</button>`;
+}
+const cellClass = (id, field) => { const c = cellStatus[id + '|' + field]; return c && c.s !== 'saved' ? ' st-' + c.s : ''; };
+function stateBadge(r) {
+  const st = lineState(r);
+  return `<span class="st st-${st}">${t(STATE_LABEL[st])}${st === 'pending' && r.hm_paragelia ? ' · ' + t('έως {d}', { d: fmt(r.hm_paragelia).slice(0, 5) }) : ''}</span>`;
+}
+function stepSwitch(r, field) {
+  const on = r[field] === 'ΝΑΙ';
+  const faentina = field === 'paragelia' && on && (r.promitheutis || '').trim().toUpperCase() === 'FAENTINA';
+  return `<td class="c-sw${cellClass(r.id, field)}" data-col="${field}" tabindex="-1">${cellMark(r.id, field)}<button type="button" role="switch" tabindex="-1" aria-checked="${on}" aria-label="${t(STEP_LABEL[field])}" class="sw${faentina ? ' faentina' : ''}"${faentina ? ` title="FAENTINA"` : ''} onclick="toggleStep(${r.id}, '${field}')"><i></i></button></td>`;
+}
+function rowCells(r) {
+  const fl = r.anath || '—', ed = (field, inner, cls = '') =>
+    `<td class="ed${cls}${cellClass(r.id, field)}" data-col="${field}" data-field="${field}" tabindex="-1" title="${t('Enter ή διπλό κλικ: επεξεργασία')}">${cellMark(r.id, field)}${inner}</td>`;
+  return `<td class="cb-cell sticky-l0" data-col="cb" tabindex="-1"><input type="checkbox" class="row-cb" tabindex="-1" aria-label="${t('Επιλογή γραμμής')}" data-id="${r.id}"${selectedIds.has(r.id) ? ' checked' : ''} onchange="onRowCheck(${r.id},this.checked)"></td>` +
+    `<td class="sticky-l1" data-col="hatch" tabindex="-1"><span class="hb hb-${HOUSE_CLASS[fl] || 'ha'}">${x(fl)}</span>${fmt(r.hm_ekk) || '—'}${r.draft ? ` <span class="draft-tag">${t('πρόχειρο')}</span>` : ''}</td>` +
+    `<td class="num" data-col="age" tabindex="-1">${ageOf(r) ?? '—'}</td>` +
+    ed('hm_emv', fmt(r.hm_emv) || '—') +
+    ed('emvolio', x(vaccineLabel(r.emvolio)) || '—', ' vacc') +
+    ed('posotita', fmtPosotita(r.posotita), ' num') +
+    ed('pelatis', x(r.pelatis || '—')) +
+    `<td data-col="state" tabindex="-1">${stateBadge(r)}</td>` +
+    stepSwitch(r, 'paragelia') + stepSwitch(r, 'psygeio') + stepSwitch(r, 'emvoliasmos') +
+    `<td class="c-ordd" data-col="ordd" tabindex="-1">${fmt(r.hm_paragelia) || '—'}</td>` +
+    `<td class="c-reg" data-col="reg" tabindex="-1">${fmt(r.hm_par) || '—'}</td>` +
+    ed('promitheutis', x(r.promitheutis || '—'), ' c-sup') +
+    `<td class="c-np" data-col="np" tabindex="-1" title="${x(r.sxolia_panos || '')}">${x(r.sxolia_panos || '—')}</td>` +
+    `<td class="c-ne" data-col="ne" tabindex="-1" title="${x(r.sxolia_eleni || '')}">${x(r.sxolia_eleni || '—')}</td>` +
+    `<td class="pin" data-col="act" tabindex="-1"><div class="row-actions">` +
+      `<button type="button" class="ib" tabindex="-1" aria-label="${t('Επεξεργασία και ιστορικό')}" title="${t('Επεξεργασία και ιστορικό')}" onclick="editEntry(${r.id})">✎</button>` +
+      `<button type="button" class="ib del" tabindex="-1" aria-label="${t('Διαγραφή')}" title="${t('Διαγραφή')}" onclick="promptDelete(${r.id})">✕</button></div></td>`;
+}
+
+// ── SAVING ── one path for switches and cell edits, with every rule of the edit window:
+// newer version check (nothing is overwritten), vaccine name check, which alternative arrived (fridge),
+// ordered-quantity question, vaccination date → order date − 30 and never before the hatch, history
+async function saveFields(id, fields, field = null) {
+  if (!guardConnected()) return false;
+  const before = data.find(x => x.id === id);
+  if (!before) return false;
+  fields = { ...fields };
+  if ('emvolio' in fields && fields.emvolio !== before.emvolio) {
+    if (!fields.emvolio) { toast(t('Εισάγετε όνομα εμβολίου'), true); return false; }
+    const v = await resolveVaccineAlts(fields.emvolio);
+    if (v === null) return false;
+    fields.emvolio = v;
+  }
+  if ('hm_emv' in fields) {
+    if (fields.hm_emv && dateOrderInvalid(before.hm_ekk, fields.hm_emv)) { toast(t('Η ημ. εμβολιασμού δεν μπορεί να είναι πριν την εκκόλαψη'), true); return false; }
+    fields.hm_paragelia = fields.hm_emv ? subDays(fields.hm_emv, 30) : null;
+  }
+  if (fields.psygeio === 'ΝΑΙ' && before.psygeio !== 'ΝΑΙ' && vaccineAlts(before.emvolio).length > 1) {
+    const arrived = await askArrived(before.emvolio, `${before.anath} · ${fmt(before.hm_emv)}`);
+    if (!arrived) return false;
+    fields.emvolio = arrived;
+  }
+  if ('posotita' in fields && before.paragelia === 'ΝΑΙ' && String(fields.posotita ?? '') !== String(before.posotita ?? '') &&
+      !confirm(t('Αυτή η γραμμή έχει ήδη παραγγελθεί με ποσότητα {old}. Αλλαγή σε {new};', { old: fmtPosotita(before.posotita), new: fmtPosotita(fields.posotita) }))) return false;
+  const key = field && id + '|' + field;
+  if (key) { cellStatus[key] = { s: 'saving' }; render(); }
+  try {
+    const [fresh] = await sbFetch(`${TABLE}?id=eq.${id}&select=updated_at,updated_by`);
+    if (!fresh) throw new Error(ROW_GONE);
+    if (fresh.updated_at !== before.updated_at) {
+      if (key) delete cellStatus[key];
+      toast(t('Η γραμμή άλλαξε {who} — φορτώθηκαν οι νεότερες τιμές, ξαναδοκιμάστε.', { who: fresh.updated_by ? t('από {name}', { name: tValue(fresh.updated_by) }) : t('από άλλον χρήστη') }), true);
+      await loadData();
+      return false;
+    }
+    const now = new Date().toISOString();
+    const [updated] = await sbUpdate(id, { ...fields, updated_by: currentUser, updated_at: now });
+    const changes = buildChanges(before, fields);
+    if (Object.keys(changes).length) await sbHInsert({ row_id: id, action: 'edited', user_name: currentUser, ts: now, changes_json: JSON.stringify(changes) });
+    const i = data.findIndex(x => x.id === id);
+    if (i >= 0) data[i] = updated;
+    if (key) {
+      cellStatus[key] = { s: 'saved' };
+      setTimeout(() => { if (cellStatus[key] && cellStatus[key].s === 'saved') { delete cellStatus[key]; if (!cellEdit) render(); } }, 2500);
+    }
+    render();
+    return true;
+  } catch (e) {
+    if (key) cellStatus[key] = { s: 'error', retry: () => saveFields(id, fields, field) };
+    toast(t('Σφάλμα: {msg}', { msg: e.message }), true);
+    render();
+    return false;
+  }
+}
+function retryCell(id, field) { const c = cellStatus[id + '|' + field]; if (c && c.retry) { delete cellStatus[id + '|' + field]; c.retry(); } }
+function toggleStep(id, field) {
+  const r = data.find(x => x.id === id);
+  if (r) { activeCell = { id, col: field }; saveFields(id, { [field]: r[field] === 'ΝΑΙ' ? null : 'ΝΑΙ' }, field); }
+}
+
+// ── INLINE EDITING ── Enter or double-click opens the cell; Enter / leaving it saves; Esc cancels
+let cellEdit = null;   // { id, field, done }
+function startCellEdit(td) {
+  if (cellEdit || !guardConnected()) return;
+  const id = Number(td.parentElement.dataset.id), field = td.dataset.field, r = data.find(x => x.id === id);
+  if (!r) return;
+  const value = field === 'hm_emv' ? fmt(r.hm_emv) : (r[field] || '');
+  const list = { emvolio: 'vaccine-list', pelatis: 'customer-list', promitheutis: 'supplier-list' }[field];
+  activeCell = { id, col: field };
+  cellEdit = { id, field, done: false };
+  td.classList.add('editing');
+  td.innerHTML = `<input class="cell-in" type="text" autocomplete="off"${list ? ` list="${list}"` : ''} value="${x(value)}" aria-label="${x(t(INLINE_FIELDS[field]))}">`;
+  const input = td.firstChild;
+  input.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    else if (e.key === 'Escape') { e.preventDefault(); cancelCellEdit(); }
+  });
+  input.addEventListener('blur', () => finishCellEdit(input.value));
+  input.focus(); input.select();
+}
+function cancelCellEdit() { if (!cellEdit) return; cellEdit.done = true; cellEdit = null; render(); }
+async function finishCellEdit(text) {
+  const c = cellEdit;
+  if (!c || c.done) return;
+  c.done = true; cellEdit = null;
+  const r = data.find(x => x.id === c.id), v = text.trim();
+  let value;
+  if (c.field === 'hm_emv') {
+    value = v ? parseSmartDate(v) : null;
+    if (v && !value) { toast(t('Μη έγκυρη ημερομηνία — διορθώστε το κόκκινο πεδίο'), true); render(); return; }
+  } else if (c.field === 'posotita') value = rawQty(v);
+  else if (c.field === 'promitheutis') value = v.toUpperCase() || null;
+  else value = v || null;
+  if (!r || String(value ?? '') === String(r[c.field] ?? '')) { render(); return; }
+  await saveFields(c.id, { [c.field]: value }, c.field);
+}
+
+// ── KEYBOARD GRID ── one focusable cell at a time; arrows move, Home/End to the row ends, Enter edits, Space toggles a step
+let activeCell = { id: null, col: 'hm_emv' };
+const visibleCells = tr => [...tr.children].filter(td => td.offsetParent !== null || getComputedStyle(td).display !== 'none');
+function focusTd(td, focus = true) {
+  document.querySelectorAll('#tbody td[tabindex="0"]').forEach(c => { c.tabIndex = -1; });
+  td.tabIndex = 0;
+  activeCell = { id: Number(td.parentElement.dataset.id), col: td.dataset.col };
+  if (focus) td.focus();
+}
+function restoreCellFocus() {
+  const tbody = document.getElementById('tbody'), had = tbody.contains(document.activeElement) || document.activeElement === document.body;
+  const td = tbody.querySelector(`tr[data-id="${activeCell.id}"] td[data-col="${activeCell.col}"]`) || tbody.querySelector('tr td[data-col="hm_emv"]');
+  if (td) focusTd(td, had && activeCell.id != null && !cellEdit && document.activeElement !== document.getElementById('search'));
+}
+document.getElementById('tbody').addEventListener('keydown', e => {
+  const td = e.target.closest('td');
+  if (!td || cellEdit || e.target.closest('input')) return;
+  const tr = td.parentElement, cells = visibleCells(tr), i = cells.indexOf(td);
+  let to = null;
+  if (e.key === 'ArrowRight') to = cells[i + 1];
+  else if (e.key === 'ArrowLeft') to = cells[i - 1];
+  else if (e.key === 'Home') to = cells[0];
+  else if (e.key === 'End') to = cells[cells.length - 1];
+  else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    const row = e.key === 'ArrowDown' ? tr.nextElementSibling : tr.previousElementSibling;
+    if (row) to = visibleCells(row)[i];
+  } else if (e.key === 'Enter' && td.classList.contains('ed')) { e.preventDefault(); startCellEdit(td); return; }
+  else if (e.key === ' ' && td.querySelector('[role="switch"], input[type="checkbox"]')) { e.preventDefault(); td.querySelector('[role="switch"], input[type="checkbox"]').click(); return; }
+  if (to) { e.preventDefault(); focusTd(to); }
+});
+document.getElementById('tbody').addEventListener('click', e => { const td = e.target.closest('td'); if (td && !cellEdit) focusTd(td, !e.target.closest('button, input')); });
+
+// ── LOADING + EMPTY ── skeleton rows until the lines arrive; empty states that say what to do
+function renderSkeleton() {
+  const grid = document.getElementById('grid');
+  grid.setAttribute('aria-busy', 'true');
+  const w = [14, 110, 20, 80, 120, 60, 80, 100, 30, 30, 30, 70, 70, 80, 90, 90, 56];
+  document.getElementById('tbody').innerHTML = Array.from({ length: 6 }, () =>
+    `<tr class="sk-row">${w.map((px, i) => `<td class="${['', '', '', '', '', '', '', '', '', '', '', 'c-ordd', 'c-reg', 'c-sup', 'c-np', 'c-ne', 'pin'][i]}"><span class="sk" style="width:${px}px"></span></td>`).join('')}</tr>`).join('');
+}
+function renderEmpty(count) {
+  const box = document.getElementById('empty-state');
+  box.style.display = count ? 'none' : 'block';
+  if (count) return;
+  box.innerHTML = !data.length
+    ? `<div class="es-title">${t('Δεν υπάρχουν γραμμές ακόμα')}</div><div>${t('Προσθέστε μια γραμμή ή δημιουργήστε το εμβολιακό μιας εκκόλαψης.')}</div>` +
+      `<div class="es-actions"><button type="button" class="btn-primary-w" onclick="openEntryPanel()">${t('Νέα γραμμή')}</button><button type="button" class="btn-tool" onclick="showTab('vax')">${t('Εμβολιακά')}</button></div>`
+    : `<div class="es-title">${t('Κανένα αποτέλεσμα')}</div><div>${t('Καμία γραμμή δεν ταιριάζει στα φίλτρα.')}</div>` +
+      `<div class="es-actions"><button type="button" class="btn-tool" onclick="clearFilters()">${t('Καθαρισμός φίλτρων')}</button></div>`;
+}
+// the entry panel (Νέα γραμμή): the side form on a computer, the drawer on a phone
+function openEntryPanel() { if (isMobile()) openSidebarMobile(); else if (!sidebarOpen) toggleSidebar(); }
+
 // ── ZOOM ──────────────────────────────────────────────────────────
 function setZoom(v) {
   v = parseFloat(v);
@@ -2425,10 +2726,8 @@ function changeZoom(delta) {
 function exportCSV() {
   const H = ['emvolio','hm_ekk','hm_emv','hm_par','anath','pelatis','posotita','sxolia_panos','promitheutis','paragelia','hm_paragelia','psygeio','emvoliasmos','sxolia_eleni','created_by','created_at','updated_by','updated_at'];
   const L = ['ΕΜΒΟΛΙΑ','ΗΜ.ΕΚΚ','ΗΜ.ΕΜΒ','ΗΜ.ΠΑΡ','ΑΝΑΘ.','ΠΕΛΑΤΗΣ','ΠΟΣΟΤΗΤΑ','ΣΧΟΛΙΑ ΠΑΝΟΣ','ΠΡΟΜΗΘΕΥΤΗΣ','ΠΑΡΑΓΓΕΛΙΑ','ΗΜ.ΠΑΡΑΓΓ.','ΨΥΓΕΙΟ','ΕΜΒΟΛΙΑΣΜΟΣ','ΣΧΟΛΙΑ ΕΛΕΝΗ','ΔΗΜΙΟΥΡΓΗΘΗΚΕ_ΑΠΟ','ΔΗΜΙΟΥΡΓΗΘΗΚΕ','ΕΠΕΞΕΡΓΑΣΤΗΚΕ_ΑΠΟ','ΕΠΕΞΕΡΓΑΣΤΗΚΕ'];
-  // always export vaccinated rows regardless of showDone — auto-hide is a view preference, not a data filter
-  const prev = showDone; showDone = true;
-  const rows = getFiltered().map(r => H.map(h => '"'+(r[h]||'').toString().replace(/"/g,'""')+'"').join(','));
-  showDone = prev;
+  // every state is exported (hiding vaccinated lines is a view preference, not a data filter)
+  const rows = getFiltered(true).map(r => H.map(h => '"'+(r[h]||'').toString().replace(/"/g,'""')+'"').join(','));
   const a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent([L.join(','),...rows].join('\n'));
   a.download = 'emvolia_export.csv'; a.click();
@@ -3122,13 +3421,11 @@ function parseTerm(raw) {
   return { type: 'all', value: resolveMonth(raw) || normalize(raw) };
 }
 
-function getFiltered() {
+function getFiltered(allStates = false) {   // allStates: CSV export takes every state
   const raw = (document.getElementById('search').value || '').trim();
   const terms = raw
     ? raw.split(/,\s*/).map(t => parseTerm(t.trim())).filter(t => t.value)
     : [];
-  const fo = document.getElementById('filt-ordered').value;
-  const fr = document.getElementById('filt-fridge').value;
   return data.filter(r => {
     if (terms.length) {
       for (const t of terms) {
@@ -3149,29 +3446,18 @@ function getFiltered() {
     }
     if (filterHouses.size && !filterHouses.has(r.anath)) return false;
     if (filterHatchDates.size && !filterHatchDates.has(r.hm_ekk)) return false;
-    if (fo==='ΝΑΙ' && r.paragelia!=='ΝΑΙ') return false;
-    if (fo==='-'   && r.paragelia==='ΝΑΙ') return false;
-    if (fr==='ΝΑΙ' && r.psygeio!=='ΝΑΙ') return false;
-    if (fr==='-'   && r.psygeio==='ΝΑΙ') return false;
-    if (!showDone  && r.emvoliasmos==='ΝΑΙ') return false;
+    if (!allStates && !filterStates.has(lineState(r))) return false;
+    if (filterRange.from && (r.hm_emv || '') < filterRange.from) return false;
+    if (filterRange.to && (r.hm_emv || '9999') > filterRange.to) return false;
+    if (filterRange.min != null && !(qtyNum(r) >= filterRange.min)) return false;
+    if (filterRange.max != null && !(qtyNum(r) <= filterRange.max)) return false;
     return true;
   });
 }
 
-function toggleShowDone() {
-  showDone = !showDone;
-  updateShowDoneBtn();
-  render();
-}
-
-function updateShowDoneBtn() {
-  const btn = document.getElementById('btn-show-done');
-  if (!btn) return;
-  btn.textContent = t(showDone ? 'Απόκρυψη εμβολιασμένων' : 'Εμφάνιση εμβολιασμένων');
-}
 
 // ── TOOLBAR MENUS (Φίλτρα / ⋯) ──────────────────────────────────────
-const TB_MENU_IDS = ['filters-menu', 'actions-menu'];
+const TB_MENU_IDS = ['cols-menu', 'actions-menu'];
 function closeAllTbMenus() {
   TB_MENU_IDS.forEach(id => { document.getElementById(id).style.display = 'none'; });
 }
@@ -3185,15 +3471,6 @@ function toggleTbMenu(id, e) {
 document.addEventListener('click', closeAllTbMenus);
 
 // how many filters (incl. "show vaccinated") are currently narrowing the view
-function updateFiltersBadge() {
-  const count = ['filt-ordered', 'filt-fridge']
-    .filter(id => document.getElementById(id).value)
-    .length + (filterHouses.size ? 1 : 0) + (filterHatchDates.size ? 1 : 0) + (showDone ? 1 : 0);
-  const badge = document.getElementById('filters-badge');
-  badge.style.display = count ? '' : 'none';
-  badge.textContent = count;
-  document.getElementById('btn-filters').classList.toggle('active', count > 0);
-}
 
 // ΠΡΩΤΑ / ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ: one or the other. resetForm leaves them as they are, like the dates and house,
 // so they stay ticked for the next entries until unticked by hand
@@ -3747,6 +4024,7 @@ function showTab(name) {
   if (name === 'bin' && currentUser) openBin();
 }
 // "#vax=<placement id>" (banner links, also from the homepage) opens that hatch's sheet
+applyCols();
 function openFromHash() {
   const [tab, hatchId] = location.hash.slice(1).split('=');
   if (hatchId) sheetHatchId = hatchId;
