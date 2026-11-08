@@ -416,6 +416,14 @@ tr.row-draft.row-check td{opacity:1}   /* lines to check stand out among the fad
 #cust-detail h3{font-size:16px;margin-bottom:10px}
 .cust-block{background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:13px;display:flex;flex-direction:column;gap:6px}
 .cust-block-head{display:flex;justify-content:space-between;align-items:center}
+/* Παραγγελίες tab + the status chip next to the step pills (ORDERS TAB in the script) */
+.ord-tab{overflow:auto;display:flex;flex-direction:column;gap:6px;max-width:1100px;padding-bottom:20px}
+.ord-tab h3{font-size:15px;margin:10px 0 0}.ord-tab h4{font-size:13px;margin:8px 0 0;color:var(--gh-fg-muted)}
+.ord-tab .cust-table{width:100%}.ord-tab .cust-table td{vertical-align:middle}
+.ord-entries{font-size:12px;color:var(--gh-fg-muted);margin-top:2px}.ord-acts{white-space:nowrap}.ord-acts button{margin-left:4px}
+.cov{display:inline-block;font-size:10px;font-weight:600;border:1px solid currentColor;border-radius:99px;padding:0 6px;margin-left:4px;white-space:nowrap}
+.cov-arrived{color:var(--gh-success-fg)}.cov-ordered{color:var(--gh-accent-fg)}.cov-missing,.cov-noqty{color:var(--gh-attention-fg)}
+.cov.late{color:var(--gh-danger-fg);background:var(--gh-danger-subtle)}
 .cust-hist{display:flex;flex-direction:column;gap:2px;border-top:1px solid var(--gh-border-muted);padding-top:6px}.cust-hist span{color:var(--gh-fg-muted)}
 .vax-step{margin-left:6px;padding:1px 4px;font-size:11px;width:auto}
 .confirm-ordered{display:block;margin-top:8px;color:var(--gh-attention-fg);font-weight:600;font-size:12px}
@@ -980,7 +988,7 @@ body.printing-card .printcard-doc{display:block}
     <div class="vax-cards" id="vax-cards"><p data-t class="tab-soon">Φόρτωση…</p></div>
     <div id="vax-sheet"></div>
   </div>
-  <div class="tab-panel" id="tab-orders" hidden><p data-t class="tab-soon">Σύντομα εδώ.</p></div>
+  <div class="tab-panel" id="tab-orders" hidden><div class="ord-tab" id="orders-box"><p data-t class="tab-soon">Φόρτωση…</p></div></div>
   <div class="tab-panel" id="tab-customers" hidden>
     <div class="cust-tab">
       <div class="cust-side"><input type="text" id="cust-search" data-t-placeholder placeholder="Αναζήτηση πελάτη…" oninput="renderCustTab()"><div id="cust-names"></div></div>
@@ -1254,6 +1262,38 @@ body.printing-card .printcard-doc{display:block}
 <script>
 // ── TRANSLATIONS ── this page's English (Greek text → English); shared words are in common.js
 addTranslations({
+  'Ήρθε': 'Arrived',
+  'Παραγγέλθηκε': 'Ordered',
+  'Λείπει {n}': 'Missing {n}',
+  'χωρίς ποσότητα': 'no quantity',
+  'Μπουκαλάκια': 'bottles',
+  'πληρώνει {who}': '{who} pays',
+  'εμείς': 'us',
+  'Η ποσότητα δεν διαβάζεται.': 'The quantity cannot be read.',
+  'Ήρθαν {a} · σε παραγγελία {o} · λείπουν {m}': 'Arrived {a} · on order {o} · missing {m}',
+  'Παραγγελία ΝΑΙ στο παλιό tracker': 'Ordered ΝΑΙ in the old tracker',
+  'Να παραγγελθούν': 'To order',
+  'χωρίς προμηθευτή': 'no supplier',
+  'ως {d}': 'by {d}',
+  'Τίποτα για παραγγελία.': 'Nothing to order.',
+  'παραγγελία {d}': 'ordered {d}',
+  'ήρθαν {q} στις {d}': '{q} arrived on {d}',
+  'Διαγραφή παραλαβής': 'Delete delivery',
+  'κλειστή': 'closed',
+  'Παραλαβή': 'Delivery',
+  'Σε αναμονή': 'Waiting',
+  'Καμία ανοιχτή παραγγελία.': 'No open orders.',
+  'Περίσσευμα': 'Surplus',
+  'Δεν περισσεύει τίποτα.': 'Nothing left over.',
+  'Όλες οι παραγγελίες': 'All orders',
+  'Πληρώνει': 'Who pays',
+  'Ημερομηνία παραγγελίας': 'Order date',
+  'Ημερομηνία παραλαβής': 'Delivery date',
+  'Συμπληρώστε ποσότητα και ημερομηνία.': 'Fill in a quantity and a date.',
+  'Κλειστή: τα υπόλοιπα δεν θα έρθουν': 'Closed: the rest will not come',
+  'Διαγραφή της παραγγελίας {v} ({q}) μαζί με τις παραλαβές της;': 'Delete the order {v} ({q}) with its deliveries?',
+  'Ήρθαν {q} από {left}. Θα έρθουν τα υπόλοιπα;\n\nOK = ναι, μένει ανοιχτή · Ακύρωση = όχι, κλείνει': '{q} of {left} arrived. Will the rest come?\n\nOK = yes, it stays open · Cancel = no, it closes',
+  'Διαγραφή της παραλαβής {q} ({d});': 'Delete the delivery {q} ({d})?',
   'Εμβόλια': 'Vaccines', 'Παραγγελίες': 'Orders', 'Κάδος': 'Bin', 'Σύντομα εδώ.': 'Coming soon.', 'Διαγράφηκε.': 'Deleted.', '💉 Δεν βρέθηκαν εγγραφές.': '💉 No records found.',
   'ΕΜΒΟΛΙΑ — Beta': 'VACCINES — Beta', 'Δοκιμαστική έκδοση — πατήστε για την κανονική': 'Test version — click for the normal one',
   'Νεοσσοί': 'Chicks placed', 'ΚΟΡΥΖΑ': 'CORYZA', 'Επιλέξτε προϊόν για την ΚΟΡΥΖΑ ({n}ος γύρος).': 'Choose the product for CORYZA (round {n}).',
@@ -1422,6 +1462,7 @@ function initApp(name) {
   currentUser = name;
   if (!document.getElementById('tab-vax').hidden) openVaxTab();   // page opened on #vax
   if (!document.getElementById('tab-bin').hidden) openBin();      // page opened on #bin
+  if (!document.getElementById('tab-orders').hidden) openOrdersTab();
   const fromLink = location.search.length > 1;   // read before focusFromLink clears it
   loadData().then(() => showChangelog(name, !fromLink));
 }
@@ -1555,7 +1596,7 @@ function setSyncStatus(state, text) {
 async function loadData() {
   setSyncStatus('loading', t('Φόρτωση…'));
   try {
-    [data] = await Promise.all([sbSelect(), loadVaccineNames(), loadPlanHatches(), loadReminders()]);
+    [data] = await Promise.all([sbSelect(), loadVaccineNames(), loadPlanHatches(), loadReminders(), loadCoverage()]);
     await autoMarkVaccinated();
     selectedIds.clear();
     showDone = false; updateShowDoneBtn();
@@ -1830,7 +1871,7 @@ async function addEntry() {
   setSyncStatus('loading', t('Αποθήκευση…'));
   try {
     await insertRows(toInsert, now);
-    resetForm(); render(); refreshHistory(toInsert);
+    resetForm(); render(); linesChanged(toInsert);
     // on mobile, close the drawer so the user sees the new row in the table
     if (isMobile() && sidebarOpen) toggleSidebar();
     setSyncStatus('ok', t('Αποθηκεύτηκε ✓'));
@@ -2029,7 +2070,7 @@ async function wizardSaveAll() {
   setSyncStatus('loading', t('Αποθήκευση…'));
   try {
     await insertRows(rows, now);
-    render(); refreshHistory(rows);
+    render(); linesChanged(rows);
     document.getElementById('wizard-bg').style.display = 'none';
     setSyncStatus('ok', t('Αποθηκεύτηκε ✓'));
     toast(t('{n} προστέθηκαν!', { n: rows.length }));
@@ -2300,7 +2341,7 @@ async function saveEdit() {
       });
     }
     if (idx >= 0) data[idx] = updated;
-    closeModal(); render(); refreshHistory([before, updated]);
+    closeModal(); render(); linesChanged([before, updated]);
     setSyncStatus('ok', t('Αποθηκεύτηκε ✓'));
     toast(t('Η εγγραφή ενημερώθηκε'));
   } catch (e) {
@@ -2337,7 +2378,7 @@ async function confirmDelete() {
     await sbDelete(row.id);
     await logDeleted([row]);
     data = data.filter(x => x.id !== row.id);
-    closeConfirm(); render(); refreshHistory([row]);
+    closeConfirm(); render(); linesChanged([row]);
     setSyncStatus('ok', t('Διαγράφηκε ✓'));
     toast(t('Η εγγραφή διαγράφηκε'));
   } catch(e) {
@@ -2523,7 +2564,7 @@ function stepPills(r) {
   const pill = (field, on, label, extra) => `<button type="button" class="step${on ? ' yes' : ''}${extra}"${r.draft ? ' disabled' : ''} ` +
     `onclick="toggleStepQuick(${r.id},'${field}')" title="${t(label)}: ${t(on ? 'ΝΑΙ' : 'ΟΧΙ')}">${t(label)}</button>`;
   return `<span class="steps">${pill('paragelia', ord, 'Παραγγελία', faentina ? ' faentina' : '')}${pill('psygeio', fri, 'Ψυγείο', '')}` +
-    `<span class="step${emv ? ' yes' : ''}" title="${t('Εμβολιασμός')}: ${t(emv ? 'ΝΑΙ' : 'ΟΧΙ')} · ${t('σημειώνεται αυτόματα')}">${t('Εμβολιασμός')}</span></span>`;
+    `<span class="step${emv ? ' yes' : ''}" title="${t('Εμβολιασμός')}: ${t(emv ? 'ΝΑΙ' : 'ΟΧΙ')} · ${t('σημειώνεται αυτόματα')}">${t('Εμβολιασμός')}</span>${covChip(r)}</span>`;
 }
 
 // one click on a Παραγγελία / Ψυγείο pill, with the edit window's rules: newer-version check,
@@ -2554,7 +2595,7 @@ async function toggleStepQuick(id, field) {
     await sbHInsert({ row_id: id, action: 'edited', user_name: currentUser, ts: now, changes_json: JSON.stringify(buildChanges(before, row)) });
     const i = data.findIndex(r => r.id === id);
     if (i >= 0) data[i] = updated;
-    render(); if (row.emvolio) refreshHistory([updated]);
+    render(); if (row.emvolio) linesChanged([updated]);
     setSyncStatus('ok', t('Αποθηκεύτηκε ✓'));
   } catch (e) {
     setSyncStatus('err', t('Σφάλμα'));
@@ -2923,7 +2964,7 @@ async function saveBatchEdit() {
       if (idx >= 0) data[idx] = updated;
     });
 
-    closeBatchModal(); clearSelection(); render(); refreshHistory(updatedRows);
+    closeBatchModal(); clearSelection(); render(); linesChanged(updatedRows);
     setSyncStatus('ok', t('Αποθηκεύτηκε ✓'));
     toast(t('Ενημερώθηκαν {n} εγγραφές', { n: updatedRows.length }) + (goneIds.length ? ' · ' + t('{n} δεν υπάρχουν πια', { n: goneIds.length }) : ''));
   } catch(e) {
@@ -2956,7 +2997,7 @@ async function confirmBatchDelete() {
     const gone = data.filter(r => ids.includes(r.id));
     await logDeleted(gone);
     data = data.filter(r => !ids.includes(r.id));
-    closeBatchDel(); clearSelection(); render(); refreshHistory(gone);
+    closeBatchDel(); clearSelection(); render(); linesChanged(gone);
     setSyncStatus('ok', t('Διαγράφηκαν ✓'));
     toast(t('Διαγράφηκαν {n} εγγραφές', { n: ids.length }));
   } catch(e) {
@@ -4344,6 +4385,151 @@ function renderCustTab() {
       || `<p class="muted">${t('Δεν υπάρχει ιστορικό ακόμα (γράφεται όταν ενεργοποιείται ένα εμβολιακό).')}</p>`) + '</div>';
 }
 
+// ── ORDERS TAB ── orders and deliveries kept as quantities. The database view vaccine_coverage works out, for each
+// line from the go-live date, what has arrived, what is ordered and what is missing (pool = vaccine + unit + who pays)
+const COV_LABEL = { arrived: 'Ήρθε', ordered: 'Παραγγέλθηκε', missing: 'Λείπει {n}', noqty: 'χωρίς ποσότητα' };
+let coverage = [], vOrders = [], vArrivals = [], toOrder = [];
+const covById = new Map();
+async function loadCoverage() {
+  try { coverage = await sbFetch('vaccine_coverage?order=hm_emv.asc,id.asc') || []; } catch { coverage = []; }   // no view yet: no statuses
+  covById.clear(); coverage.forEach(c => covById.set(c.id, c));
+}
+// lines changed from the table: customer history + statuses
+function linesChanged(rows) { refreshHistory(rows); loadCoverage().then(render); }
+const unitQty = (n, unit) => nfmt(Number(n)) + (unit && unit !== 'Δόσεις' ? ' ' + t(unit) : '');
+const payerText = payer => payer ? t('πληρώνει {who}', { who: payer }) : t('εμείς');
+const poolKey = c => [c.vaccine, c.unit, c.payer || ''].join('|');
+const arrivalsOf = o => vArrivals.filter(a => a.order_id === o.id);
+const arrivedOf = o => arrivalsOf(o).reduce((s, a) => s + Number(a.qty), 0);
+// "60.000" → 60000, "2,5" → 2.5
+const readQty = id => Number(String(document.getElementById(id).value).trim().replace(/\./g, '').replace(',', '.'));
+const logOrder = (order_id, action, changes) => sbFetch('vaccine_orders_history', { method: 'POST',
+  body: JSON.stringify({ order_id, action, user_name: currentUser, ts: new Date().toISOString(), changes_json: JSON.stringify(changes) }) });
+
+// the status of a line in the main table (lines from the go-live date only)
+function covChip(r) {
+  const c = covById.get(r.id); if (!c) return '';
+  const tip = c.status === 'noqty' ? t('Η ποσότητα δεν διαβάζεται.')
+    : t('Ήρθαν {a} · σε παραγγελία {o} · λείπουν {m}', { a: unitQty(c.covered_arrived, c.unit), o: unitQty(c.covered_ordered, c.unit), m: unitQty(c.missing, c.unit) });
+  return `<span class="cov cov-${c.status}${c.late ? ' late' : ''}" title="${x(tip)}">${x(t(COV_LABEL[c.status], { n: unitQty(c.missing, c.unit) }))}</span>`;
+}
+
+async function openOrdersTab() {
+  const box = document.getElementById('orders-box');
+  try {
+    [vOrders, vArrivals] = await Promise.all([sbFetch('vaccine_orders?order=ordered_on.desc,id.desc'), sbFetch('vaccine_arrivals?order=arrived_on.asc,id.asc')]);
+    await loadCoverage();
+  } catch (e) { box.innerHTML = `<p class="tab-soon">${x(t('Σφάλμα φόρτωσης: {msg}', { msg: e.message }))}</p>`; return; }
+  renderOrdersTab(); render();   // the main table's statuses too
+}
+function renderOrdersTab() {
+  const today = todayIso(), groups = new Map();
+  // 1. Να παραγγελθούν: missing doses of lines still to come, per supplier → who pays → vaccine
+  coverage.filter(c => c.status === 'missing' && c.hm_emv >= today).forEach(c => {
+    const k = (c.supplier || '') + '|' + poolKey(c);
+    if (!groups.has(k)) groups.set(k, { supplier: c.supplier || '', vaccine: c.vaccine, unit: c.unit, payer: c.payer || '', missing: 0, orderBy: c.order_by, entries: [] });
+    const g = groups.get(k); g.missing += Number(c.missing); g.entries.push(c); if (c.order_by < g.orderBy) g.orderBy = c.order_by;
+  });
+  toOrder = [...groups.values()].sort((a, b) => a.supplier.localeCompare(b.supplier, 'el') || a.payer.localeCompare(b.payer, 'el') || a.orderBy.localeCompare(b.orderBy));
+  const oldTick = c => c.paragelia === 'ΝΑΙ' ? ` <span title="${t('Παραγγελία ΝΑΙ στο παλιό tracker')}">✓</span>` : '';
+  let html = `<h3>${t('Να παραγγελθούν')}</h3>`, head = '';
+  toOrder.forEach((g, i) => {
+    const h = `${g.supplier || t('χωρίς προμηθευτή')} · ${payerText(g.payer)}`;
+    if (h !== head) { html += (head ? '</tbody></table>' : '') + `<h4>${x(h)}</h4><table class="cust-table"><tbody>`; head = h; }
+    html += `<tr><td><b>${x(g.vaccine)}</b><div class="ord-entries">${g.entries.map(c => `${x(c.anath)} ${fmt(c.hm_emv)} (${unitQty(c.missing, c.unit)})${oldTick(c)}`).join(' · ')}</div></td>` +
+      `<td>${unitQty(g.missing, g.unit)}</td><td class="${g.orderBy < today ? 'ord-late' : ''}">${t('ως {d}', { d: fmt(g.orderBy) })}</td>` +
+      `<td class="ord-acts"><button class="btn-primary" onclick="openOrderForm(${i})">${t('Παραγγελία')}</button></td></tr>`;
+  });
+  html += head ? '</tbody></table>' : `<p class="muted">${t('Τίποτα για παραγγελία.')}</p>`;
+
+  // 2. Σε αναμονή: open orders not fully here; the rest (complete or closed) under «Όλες οι παραγγελίες»
+  const orderRow = o => `<tr><td><b>${x(o.vaccine)}</b><div class="ord-entries">${x(o.supplier || '—')} · ${x(payerText(o.payer))} · ${t('παραγγελία {d}', { d: fmt(o.ordered_on) })}` +
+      arrivalsOf(o).map(a => ` · ${t('ήρθαν {q} στις {d}', { q: unitQty(a.qty, o.unit), d: fmt(a.arrived_on) })} <button class="row-btn del" title="${t('Διαγραφή παραλαβής')}" onclick="deleteArrival(${a.id})">✕</button>`).join('') +
+      `</div></td><td>${unitQty(arrivedOf(o), o.unit)} / ${unitQty(o.qty, o.unit)}${o.closed ? ' · ' + t('κλειστή') : ''}</td><td class="ord-acts">` +
+      (!o.closed && arrivedOf(o) < o.qty ? `<button class="btn-primary" onclick="openArrival(${o.id})">${t('Παραλαβή')}</button>` : '') +
+      `<button class="btn-secondary" onclick="openEditOrder(${o.id})">${t('Επεξεργασία')}</button><button class="btn-secondary" onclick="deleteOrder(${o.id})">${t('Διαγραφή')}</button></td></tr>`;
+  const waiting = vOrders.filter(o => !o.closed && arrivedOf(o) < o.qty), rest = vOrders.filter(o => !waiting.includes(o));
+  html += `<h3>${t('Σε αναμονή')}</h3>` + (waiting.length ? `<table class="cust-table"><tbody>${waiting.map(orderRow).join('')}</tbody></table>` : `<p class="muted">${t('Καμία ανοιχτή παραγγελία.')}</p>`);
+
+  // 3. Περίσσευμα: arrived doses no line uses (they cover the next lines of the same vaccine by themselves)
+  const pools = new Map();
+  vOrders.forEach(o => { const k = poolKey(o); if (!pools.has(k)) pools.set(k, { o, got: 0, used: 0 }); pools.get(k).got += arrivedOf(o); });
+  coverage.forEach(c => { const p = pools.get(poolKey(c)); if (p) p.used += Number(c.covered_arrived || 0); });
+  const extra = [...pools.values()].filter(p => p.got > p.used);
+  html += `<h3>${t('Περίσσευμα')}</h3>` + (extra.length ? `<table class="cust-table"><tbody>${extra.map(p =>
+    `<tr><td><b>${x(p.o.vaccine)}</b><div class="ord-entries">${x(payerText(p.o.payer))}</div></td><td>${unitQty(p.got - p.used, p.o.unit)}</td></tr>`).join('')}</tbody></table>`
+    : `<p class="muted">${t('Δεν περισσεύει τίποτα.')}</p>`);
+  if (rest.length) html += `<details><summary>${t('Όλες οι παραγγελίες')} (${rest.length})</summary><table class="cust-table"><tbody>${rest.map(orderRow).join('')}</tbody></table></details>`;
+  document.getElementById('orders-box').innerHTML = html;
+}
+
+// order / edit / delivery windows (the small window openMini); a save reloads the tab, an error only shows a message
+const orderSave = fn => async () => {
+  try { if (await fn() === false) return false; await openOrdersTab(); }
+  catch (e) { toast(t('Σφάλμα: {msg}', { msg: e.message }), true); return false; }
+};
+function orderFields(o) {
+  const payers = [...new Set(['', ...coverage.map(c => c.payer || ''), o.payer || ''])];
+  return field(t('Ποσότητα') + (o.unit !== 'Δόσεις' ? ` (${t(o.unit)})` : ''), `<input type="text" id="ord-qty" value="${nfmt(Number(o.qty))}">`) +
+    field(t('Προμηθευτής'), `<input type="text" id="ord-supplier" value="${x(o.supplier || '')}">`) +
+    field(t('Πληρώνει'), `<select id="ord-payer">${payers.map(p => `<option value="${x(p)}"${p === (o.payer || '') ? ' selected' : ''}>${x(p || t('εμείς'))}</option>`).join('')}</select>`) +
+    field(t('Ημερομηνία παραγγελίας'), `<input type="date" id="ord-date" value="${o.ordered_on}">`);
+}
+function readOrder() {
+  const qty = readQty('ord-qty'), ordered_on = document.getElementById('ord-date').value;
+  if (!(qty > 0) || !ordered_on) { toast(t('Συμπληρώστε ποσότητα και ημερομηνία.'), true); return null; }
+  return { qty, ordered_on, supplier: document.getElementById('ord-supplier').value.trim() || null, payer: document.getElementById('ord-payer').value || null };
+}
+function openOrderForm(i) {
+  const g = toOrder[i];
+  openMini(`${t('Παραγγελία')}: ${g.vaccine}`, orderFields({ qty: g.missing, unit: g.unit, supplier: g.supplier, payer: g.payer, ordered_on: todayIso() }), orderSave(async () => {
+    const f = readOrder(); if (!f) return false;
+    const [o] = await sbFetch('vaccine_orders', { method: 'POST', prefer: 'return=representation', body: JSON.stringify({ vaccine: g.vaccine, unit: g.unit, ...f, created_by: currentUser }) });
+    await logOrder(o.id, 'created', o);
+  }));
+}
+function openEditOrder(id) {
+  const o = vOrders.find(o => o.id === id);
+  openMini(`${t('Επεξεργασία')}: ${o.vaccine}`, orderFields(o) +
+    `<label class="fgroup"><input type="checkbox" id="ord-closed"${o.closed ? ' checked' : ''}> ${t('Κλειστή: τα υπόλοιπα δεν θα έρθουν')}</label>`, orderSave(async () => {
+    const f = readOrder(); if (!f) return false;
+    f.closed = document.getElementById('ord-closed').checked;
+    const changes = Object.fromEntries(Object.keys(f).filter(k => String(f[k] ?? '') !== String(o[k] ?? '')).map(k => [k, { from: o[k], to: f[k] }]));
+    if (!Object.keys(changes).length) return;
+    await sbFetch(`vaccine_orders?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify(f) });
+    await logOrder(id, 'edited', changes);
+  }));
+}
+async function deleteOrder(id) {
+  const o = vOrders.find(o => o.id === id);
+  if (!confirm(t('Διαγραφή της παραγγελίας {v} ({q}) μαζί με τις παραλαβές της;', { v: o.vaccine, q: unitQty(o.qty, o.unit) }))) return;
+  await orderSave(async () => {
+    await sbFetch(`vaccine_orders?id=eq.${id}`, { method: 'DELETE' });   // its deliveries go with it
+    await logOrder(id, 'deleted', { ...o, arrivals: arrivalsOf(o) });
+  })();
+}
+function openArrival(id) {
+  const o = vOrders.find(o => o.id === id), left = Number(o.qty) - arrivedOf(o);
+  openMini(`${t('Παραλαβή')}: ${o.vaccine}`, field(t('Ποσότητα') + (o.unit !== 'Δόσεις' ? ` (${t(o.unit)})` : ''), `<input type="text" id="arr-qty" value="${nfmt(left)}">`) +
+    field(t('Ημερομηνία παραλαβής'), `<input type="date" id="arr-date" value="${todayIso()}">`), orderSave(async () => {
+    const qty = readQty('arr-qty'), arrived_on = document.getElementById('arr-date').value;
+    if (!(qty > 0) || !arrived_on) { toast(t('Συμπληρώστε ποσότητα και ημερομηνία.'), true); return false; }
+    // less than what was still to come: OK = the rest will come (order stays open), Cancel = it won't (order closed)
+    const close = qty < left && !confirm(t('Ήρθαν {q} από {left}. Θα έρθουν τα υπόλοιπα;\n\nOK = ναι, μένει ανοιχτή · Ακύρωση = όχι, κλείνει', { q: unitQty(qty, o.unit), left: unitQty(left, o.unit) }));
+    const [a] = await sbFetch('vaccine_arrivals', { method: 'POST', prefer: 'return=representation', body: JSON.stringify({ order_id: id, qty, arrived_on, created_by: currentUser }) });
+    if (close) await sbFetch(`vaccine_orders?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify({ closed: true }) });
+    await logOrder(id, 'arrival', close ? { arrival: a, closed: true } : { arrival: a });
+  }));
+}
+async function deleteArrival(id) {
+  const a = vArrivals.find(a => a.id === id), o = vOrders.find(o => o.id === a.order_id);
+  if (!confirm(t('Διαγραφή της παραλαβής {q} ({d});', { q: unitQty(a.qty, o.unit), d: fmt(a.arrived_on) }))) return;
+  await orderSave(async () => {
+    await sbFetch(`vaccine_arrivals?id=eq.${id}`, { method: 'DELETE' });
+    await logOrder(a.order_id, 'arrival_deleted', a);
+  })();
+}
+
 // ── BIN ── (Κάδος tab, view only) lines of hatches older than VAX_BIN_DAYS, moved here every night by the database
 // (bin_old_hatches) and deleted 30 days later; history kept. No restore.
 const BIN_KEEP_DAYS = 30;
@@ -4377,6 +4563,8 @@ function showTab(name) {
   if (name === 'vax' && currentUser) openVaxTab();   // fresh cards every time the tab opens
   if (name === 'bin' && currentUser) openBin();
   if (name === 'customers' && currentUser) openCustTab();
+  if (name === 'orders' && currentUser) openOrdersTab();
+  if (name === 'vaccines' && currentUser) loadCoverage().then(render);   // statuses may have changed in another tab
 }
 // "#vax=<placement id>" (banner links, also from the homepage) opens that hatch's sheet
 function openFromHash() {
