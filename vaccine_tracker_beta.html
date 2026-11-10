@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title data-t>ΕΜΒΟΛΙΑ — Beta</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
 <script src="common.js?v=21"></script>
 <link rel="stylesheet" href="theme.css?v=19">
@@ -21,10 +21,13 @@ body{
   height:100%;overflow:hidden;
   background:var(--gh-canvas-default);
   color:var(--gh-fg-default);
-  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  font-family:'Roboto',system-ui,-apple-system,sans-serif;
   font-size:14px;
   line-height:1.5;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
 }
+/* the shared header buttons (theme.css) name Inter: this page uses Roboto throughout */
+.common-nav-btn,.common-signin-box{font-family:'Roboto',system-ui,sans-serif}
 
 /* ── LAYOUT ── */
 .shell{
@@ -111,7 +114,7 @@ header{
 /* Form */
 .form-heading{font-weight:600;font-size:12px;color:var(--gh-fg-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:14px}
 .form-heading span{color:var(--gh-fg-default)}
-.btn-wizard-entry{width:100%;height:34px;background:var(--gh-accent-subtle);border:1px solid var(--gh-accent-emphasis);border-radius:var(--rs);color:var(--gh-accent-fg);font-family:'Inter',system-ui,sans-serif;font-weight:600;font-size:13px;cursor:pointer;transition:background 0.15s}
+.btn-wizard-entry{width:100%;height:34px;background:var(--gh-accent-subtle);border:1px solid var(--gh-accent-emphasis);border-radius:var(--rs);color:var(--gh-accent-fg);font-family:'Roboto',system-ui,sans-serif;font-weight:600;font-size:13px;cursor:pointer;transition:background 0.15s}
 .btn-wizard-entry:hover{background:rgba(141,180,255,0.2)}
 .wizard-entry-sub{text-align:center;font-size:11px;color:var(--gh-fg-subtle);margin-top:6px}
 
@@ -136,7 +139,7 @@ input[type=number],input[type=date],input[type=text],input[type=email],input[typ
   border:1px solid var(--gh-border-default);
   border-radius:var(--rs);
   color:var(--gh-fg-default);
-  font-family:'Inter',system-ui,sans-serif;
+  font-family:'Roboto',system-ui,sans-serif;
   font-size:14px;
   padding:6px 10px;
   outline:none;
@@ -161,7 +164,7 @@ textarea{resize:vertical;min-height:44px;font-size:13px}
 .cust-line input{padding:6px 8px}
 .cust-line.bad input{border-color:var(--gh-danger-fg)}
 .cust-line .row-btn{height:30px;padding:0}
-.btn-add-line{width:100%;padding:5px;background:none;border:1px dashed var(--gh-border-default);border-radius:var(--rs);color:var(--gh-fg-muted);font-family:'Inter',system-ui,sans-serif;font-size:12px;cursor:pointer}
+.btn-add-line{width:100%;padding:5px;background:none;border:1px dashed var(--gh-border-default);border-radius:var(--rs);color:var(--gh-fg-muted);font-family:'Roboto',system-ui,sans-serif;font-size:12px;cursor:pointer}
 .btn-add-line:hover{color:var(--gh-fg-default);border-color:var(--gh-fg-subtle)}
 .cust-summary{font-size:11px;color:var(--gh-fg-muted);margin-top:6px}
 .cust-summary.err{color:var(--gh-danger-fg)}
@@ -171,7 +174,7 @@ textarea{resize:vertical;min-height:44px;font-size:13px}
   width:100%;padding:8px 16px;
   background:var(--gh-accent-emphasis);color:#fff;
   border:1px solid rgba(240,246,252,0.1);border-radius:var(--rs);
-  font-family:'Inter',system-ui,sans-serif;font-weight:500;font-size:14px;
+  font-family:'Roboto',system-ui,sans-serif;font-weight:500;font-size:14px;
   cursor:pointer;margin-top:8px;transition:background 0.15s,opacity 0.15s;
 }
 .btn-submit:hover{filter:brightness(1.1)}
@@ -180,7 +183,7 @@ textarea{resize:vertical;min-height:44px;font-size:13px}
   width:100%;padding:6px 16px;
   background:transparent;color:var(--gh-fg-muted);
   border:1px solid var(--gh-border-default);border-radius:var(--rs);
-  font-family:'Inter',system-ui,sans-serif;font-size:13px;cursor:pointer;margin-top:6px;
+  font-family:'Roboto',system-ui,sans-serif;font-size:13px;cursor:pointer;margin-top:6px;
   transition:background 0.15s,color 0.15s,border-color 0.15s;
 }
 .btn-cancel:hover{background:var(--gh-canvas-default);color:var(--gh-fg-default);border-color:var(--gh-border-default)}
@@ -219,7 +222,7 @@ tfoot td{padding:7px 12px;font-size:13px;font-weight:600;color:var(--gh-fg-defau
   border:1px solid var(--gh-border-default);
   color:var(--gh-fg-muted);
   border-radius:99px;
-  font-family:'Inter',system-ui,sans-serif;
+  font-family:'Roboto',system-ui,sans-serif;
   font-size:12px;font-weight:600;
   cursor:pointer;
   transition:background 0.15s,border-color 0.15s,color 0.15s;
@@ -232,7 +235,7 @@ tfoot td{padding:7px 12px;font-size:13px;font-weight:600;color:var(--gh-fg-defau
   border:1px solid var(--gh-border-default);
   color:var(--gh-fg-default);
   border-radius:var(--rs);
-  font-family:'Inter',system-ui,sans-serif;
+  font-family:'Roboto',system-ui,sans-serif;
   font-size:13px;font-weight:500;
   cursor:pointer;white-space:nowrap;
   display:inline-flex;align-items:center;gap:4px;
@@ -247,7 +250,7 @@ tfoot td{padding:7px 12px;font-size:13px;font-weight:600;color:var(--gh-fg-defau
 .batch-bar.visible{display:flex}
 .batch-count{font-weight:600;font-size:13px;color:var(--gh-accent-fg);white-space:nowrap}
 .batch-sep{width:1px;height:16px;background:var(--gh-border-default)}
-.btn-batch{height:28px;padding:0 12px;border-radius:var(--rs);border:1px solid var(--gh-border-default);background:var(--gh-canvas-subtle);color:var(--gh-fg-default);font-family:'Inter',system-ui,sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:background 0.15s,border-color 0.15s;white-space:nowrap}
+.btn-batch{height:28px;padding:0 12px;border-radius:var(--rs);border:1px solid var(--gh-border-default);background:var(--gh-canvas-subtle);color:var(--gh-fg-default);font-family:'Roboto',system-ui,sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:background 0.15s,border-color 0.15s;white-space:nowrap}
 .btn-batch:hover{background:var(--gh-hover-bg);border-color:var(--gh-fg-subtle)}
 .btn-batch.danger{border-color:rgba(255,107,107,0.4);background:var(--gh-danger-subtle);color:var(--gh-danger-fg)}
 .btn-batch.danger:hover{background:rgba(255,107,107,0.2)}
@@ -292,7 +295,7 @@ th.sticky-l0,th.sticky-l1{z-index:3;background:var(--gh-canvas-subtle)}
   border:1px solid var(--gh-border-default);
   background:var(--gh-canvas-subtle);
   color:var(--gh-fg-default);
-  font-family:'Inter',system-ui,sans-serif;font-size:12px;font-weight:500;
+  font-family:'Roboto',system-ui,sans-serif;font-size:12px;font-weight:500;
   cursor:pointer;transition:background 0.12s,border-color 0.12s,color 0.12s;white-space:nowrap;
 }
 .row-btn:hover{background:var(--gh-hover-bg);border-color:var(--gh-fg-subtle);color:var(--gh-accent-fg)}
@@ -360,7 +363,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
 .vstep-acts button{background:none;border:none;padding:0;color:inherit;font:inherit;text-decoration:underline;cursor:pointer}
 tr.row-check td{background:rgba(163,113,247,0.12)}
 tr.row-draft.row-check td{opacity:1}   /* lines to check stand out among the faded draft lines */
-.check-tag{margin-left:6px;height:18px;padding:0 7px;border:1px solid #a371f7;border-radius:99px;background:rgba(163,113,247,0.15);color:#c4a5ff;font:600 10px 'Inter',system-ui,sans-serif;cursor:pointer;white-space:nowrap;vertical-align:middle}
+.check-tag{margin-left:6px;height:18px;padding:0 7px;border:1px solid #a371f7;border-radius:99px;background:rgba(163,113,247,0.15);color:#c4a5ff;font:600 10px 'Roboto',system-ui,sans-serif;cursor:pointer;white-space:nowrap;vertical-align:middle}
 .check-tag:hover{background:rgba(163,113,247,0.3)}
 .payer-tag{display:block;font-size:10px;font-weight:600;color:var(--gh-attention-fg);white-space:nowrap}
 .chicks-row{display:flex;gap:6px;align-items:center}.chicks-row input{flex:1;min-width:0}
@@ -451,7 +454,7 @@ tr.row-draft.row-check td{opacity:1}   /* lines to check stand out among the fad
   height:32px;padding:0 16px;
   background:var(--gh-accent-emphasis);color:#fff;
   border:1px solid rgba(240,246,252,0.1);border-radius:var(--rs);
-  font-family:'Inter',system-ui,sans-serif;font-weight:500;font-size:14px;
+  font-family:'Roboto',system-ui,sans-serif;font-weight:500;font-size:14px;
   cursor:pointer;transition:background 0.15s,opacity 0.15s;
 }
 .btn-primary:hover{filter:brightness(1.1)}
@@ -460,7 +463,7 @@ tr.row-draft.row-check td{opacity:1}   /* lines to check stand out among the fad
   height:32px;padding:0 16px;
   background:var(--gh-danger-subtle);color:var(--gh-danger-fg);
   border:1px solid rgba(255,107,107,0.4);border-radius:var(--rs);
-  font-family:'Inter',system-ui,sans-serif;font-weight:500;font-size:13px;
+  font-family:'Roboto',system-ui,sans-serif;font-weight:500;font-size:13px;
   cursor:pointer;transition:background 0.15s;
 }
 .btn-danger:hover{background:rgba(255,107,107,0.2)}
@@ -468,7 +471,7 @@ tr.row-draft.row-check td{opacity:1}   /* lines to check stand out among the fad
   height:32px;padding:0 16px;
   background:var(--gh-canvas-subtle);color:var(--gh-fg-default);
   border:1px solid var(--gh-border-default);border-radius:var(--rs);
-  font-family:'Inter',system-ui,sans-serif;font-size:13px;font-weight:500;
+  font-family:'Roboto',system-ui,sans-serif;font-size:13px;font-weight:500;
   cursor:pointer;transition:background 0.15s,border-color 0.15s;
 }
 .btn-secondary:hover{background:var(--gh-hover-bg);border-color:var(--gh-fg-subtle)}
@@ -559,10 +562,10 @@ tr.row-draft.row-check td{opacity:1}   /* lines to check stand out among the fad
 .tabs .tab.on{background:var(--gh-accent-emphasis);color:#fff}
 .tbl-outer{border-radius:12px}
 .btn-primary{border-radius:8px;font-weight:600}
-.btn-new{height:32px;padding:0 14px;border:none;border-radius:8px;background:var(--gh-accent-emphasis);color:#fff;font:600 13px 'Inter',system-ui,sans-serif;cursor:pointer;white-space:nowrap}
+.btn-new{height:32px;padding:0 14px;border:none;border-radius:8px;background:var(--gh-accent-emphasis);color:#fff;font:600 13px 'Roboto',system-ui,sans-serif;cursor:pointer;white-space:nowrap}
 .btn-new:hover{filter:brightness(1.1)}
 .kpi-strip{display:flex;gap:8px;flex-wrap:wrap}
-.kpi{flex:1 1 160px;display:flex;align-items:baseline;gap:8px;padding:8px 14px;background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:12px;color:var(--gh-fg-muted);font:500 12px 'Inter',system-ui,sans-serif;text-align:left;cursor:pointer}
+.kpi{flex:1 1 160px;display:flex;align-items:baseline;gap:8px;padding:8px 14px;background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:12px;color:var(--gh-fg-muted);font:500 12px 'Roboto',system-ui,sans-serif;text-align:left;cursor:pointer}
 .kpi b{font-size:18px;font-weight:700;color:var(--gh-fg-default)}
 .kpi:hover{border-color:var(--gh-fg-subtle)}
 .kpi.on{border-color:var(--gh-accent-emphasis);background:var(--gh-accent-subtle)}
@@ -572,9 +575,17 @@ tr.row-draft.row-check td{opacity:1}   /* lines to check stand out among the fad
 .house-pills .house-chip{color:var(--gh-fg-default)}   /* house, hatch date and age all at full strength */
 .house-chip.late{border-color:var(--gh-danger-fg);color:var(--gh-danger-fg)}
 .house-chip.due{border-color:var(--gh-attention-fg);color:var(--gh-attention-fg)}
+/* selected = filled blue with a tick, whatever its warning colour (the warning stays as a coloured outline) */
+.house-chip.active,.house-pills .house-chip.active{background:var(--gh-accent-emphasis);color:#fff}
+.house-chip.active::before{content:'✓ '}
+.house-chip.active:not(.late):not(.due){border-color:var(--gh-accent-emphasis)}
+.house-chip.late.active{box-shadow:0 0 0 1px var(--gh-danger-fg)}.house-chip.due.active{box-shadow:0 0 0 1px var(--gh-attention-fg)}
+.kpi.on{background:var(--gh-accent-emphasis);border-color:var(--gh-accent-emphasis);color:#fff}.kpi.on b{color:#fff}
+.kpi.on::after{content:'✓';margin-left:auto;font-weight:700}
+.house-chip.clear-filters{color:var(--gh-fg-muted)}.house-chip.clear-filters:disabled{opacity:.4;cursor:default}
 td.td-steps{max-width:none}
 .steps{display:inline-flex;gap:4px}
-.step{height:22px;padding:0 8px;border:1px solid var(--gh-border-default);border-radius:99px;background:transparent;color:var(--gh-fg-subtle);font:500 11px 'Inter',system-ui,sans-serif;line-height:20px;white-space:nowrap}
+.step{height:22px;padding:0 8px;border:1px solid var(--gh-border-default);border-radius:99px;background:transparent;color:var(--gh-fg-subtle);font:500 11px 'Roboto',system-ui,sans-serif;line-height:20px;white-space:nowrap}
 button.step{cursor:pointer}
 button.step:hover:not(:disabled){border-color:var(--gh-fg-subtle);color:var(--gh-fg-default)}
 button.step:disabled{opacity:.6}
@@ -1265,6 +1276,7 @@ body.printing-card .printcard-doc{display:block}
 <script>
 // ── TRANSLATIONS ── this page's English (Greek text → English); shared words are in common.js
 addTranslations({
+  'Χωρίς φίλτρα': 'No filters',
   'Διπλό κλικ: οι γραμμές στα Εμβόλια': 'Double-click: the lines in Vaccines',
   'Κάποιες γραμμές κρύβονται από την αναζήτηση ή τα φίλτρα.': 'Some lines are hidden by the search or the filters.',
   'Από τα ΝΑΙ του παλιού tracker.': 'From the ΝΑΙ ticks of the old tracker.',
@@ -1512,6 +1524,17 @@ function toggleHouseFilter(house) {
   render();   // renderHousePills marks the active ones
 }
 
+// any search or filter narrowing the table (cards, house pills, hatch dates, the Φίλτρα menu)
+const anyFilter = () => !!(document.getElementById('search').value.trim() || filterHouses.size || filterHatchDates.size ||
+  document.getElementById('filt-ordered').value || document.getElementById('filt-fridge').value || urgencyFilter || showDone);
+// «Χωρίς φίλτρα»: everything off, the whole table again
+function clearAllFilters() {
+  document.getElementById('search').value = '';
+  ['filt-ordered', 'filt-fridge'].forEach(id => { document.getElementById(id).value = ''; });
+  filterHouses.clear(); filterHatchDates.clear(); urgencyFilter = null;
+  showDone = false; updateShowDoneBtn();
+  render();
+}
 function toggleHatchDateFilter(iso) {
   if (filterHatchDates.has(iso)) filterHatchDates.delete(iso); else filterHatchDates.add(iso);
   render();
@@ -2512,8 +2535,8 @@ function render() {
     tr.innerHTML =
       `<td class="cb-cell sticky-l0"><input type="checkbox" class="row-cb" data-id="${r.id}"${selectedIds.has(r.id) ? ' checked' : ''} onchange="onRowCheck(${r.id},this.checked)"></td>`+
       `<td class="sticky-l1"><span class="badge b-flock" title="${x(fl)}">${x(fl)}</span>${r.draft ? ` <span class="draft-tag">${t('πρόχειρο')}</span>` : ''}${checkTag(r)}</td>`+
-      `<td>${fmt(r.hm_emv)}${ageOf(r) != null ? `<span class="age">${t('ημ. {n}', { n: ageOf(r) })}</span>` : ''}</td>`+
-      `<td style="color:${late?'var(--gh-danger-fg)':r.hm_paragelia?'var(--gh-attention-fg)':'var(--gh-fg-subtle)'}">${fmt(r.hm_paragelia)||'—'}${late ? `<span class="late-flag">⚠ ${t('αργεί')}</span>` : ''}</td>`+
+      `<td>${fmt(r.hm_emv)}</td>`+
+      `<td style="color:${late?'var(--gh-danger-fg)':r.hm_paragelia?'var(--gh-fg-default)':'var(--gh-fg-subtle)'}">${fmt(r.hm_paragelia)||'—'}${late ? `<span class="late-flag">⚠ ${t('αργεί')}</span>` : ''}</td>`+
       `<td class="vacc" title="${x(vaccineLabel(r.emvolio))}">${x(vaccineLabel(r.emvolio))}</td>`+
       `<td>${fmtPosotita(r.posotita)}</td>`+
       `<td style="color:var(--gh-fg-muted)" title="${x(r.pelatis||'')}">${x(r.pelatis||'—')}${payerTag(r)}</td>`+
@@ -2530,11 +2553,7 @@ function render() {
   tbody.appendChild(frag);
 
   // totals footer — show when filtered or multiple rows selected
-  const isFiltered = document.getElementById('search').value.trim() ||
-                     filterHouses.size ||
-                     document.getElementById('filt-ordered').value ||
-                     document.getElementById('filt-fridge').value ||
-                     urgencyFilter || showDone;
+  const isFiltered = anyFilter();
   const showTotal = isFiltered || selectedIds.size > 1;
   const tfoot = document.getElementById('tfoot');
   tfoot.style.display = showTotal ? '' : 'none';
@@ -3531,7 +3550,7 @@ function renderHousePills() {
     const state = rows.some(isLate) ? ' late' : rows.some(isDueSoon) ? ' due' : '';
     return `<button type="button" class="house-chip${filterHouses.has(h) ? ' active' : ''}${state}" data-house="${h}" onclick="toggleHouseFilter('${h}')">` +
       `${h}${hatch ? ` – ${fmt(hatch)} – ${t('ημ. {n}', { n: age })}` : ''}</button>`;
-  }).join('');
+  }).join('') + `<button type="button" class="house-chip clear-filters" onclick="clearAllFilters()"${anyFilter() ? '' : ' disabled'}>✕ ${t('Χωρίς φίλτρα')}</button>`;
 }
 const batchMovesPlanLine = updates => ('hm_ekk' in updates || 'anath' in updates)
   && [...selectedIds].some(id => { const r = data.find(x => x.id === id); return r && inPlan(r); });
