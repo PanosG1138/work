@@ -400,6 +400,10 @@ function focusFromLink(find) {
   history.replaceState(null, '', location.pathname);
   const els = find(q).filter(Boolean);
   if (!els.length) return;
+  glowElements(els);
+}
+// scroll to the first element and make them all glow (restarts the glow if it is already running)
+function glowElements(els) {
   els[0].scrollIntoView({ block: 'center' });
   els.forEach(e => { e.classList.remove('focus-glow'); void e.offsetWidth; e.classList.add('focus-glow'); });
 }

@@ -9,7 +9,7 @@
 <title data-t>ΕΜΒΟΛΙΑ — Beta</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
-<script src="common.js?v=20"></script>
+<script src="common.js?v=21"></script>
 <link rel="stylesheet" href="theme.css?v=19">
 <style>
 /* theme toggle button */
@@ -422,6 +422,7 @@ tr.row-draft.row-check td{opacity:1}   /* lines to check stand out among the fad
 .ord-tab .cust-table{width:100%}.ord-tab .cust-table td{vertical-align:middle}
 .ord-subs{align-self:flex-start;max-width:100%;margin-bottom:4px}.ord-count{font-size:11px;opacity:.7;margin-left:2px}
 .ord-pick{display:block;font-size:13px;margin:2px 0}
+.ord-line{cursor:pointer}
 .ord-entries{font-size:12px;color:var(--gh-fg-muted);margin-top:2px}.ord-acts{white-space:nowrap}.ord-acts button{margin-left:4px}
 .cov{display:inline-block;font-size:10px;font-weight:600;border:1px solid currentColor;border-radius:99px;padding:0 6px;margin-left:4px;white-space:nowrap}
 .cov-arrived{color:var(--gh-success-fg)}.cov-ordered{color:var(--gh-accent-fg)}.cov-missing,.cov-noqty{color:var(--gh-attention-fg)}
@@ -864,7 +865,7 @@ body.printing-card .printcard-doc{display:block}
     </div>
     <div class="fgroup">
       <label data-t>Προμηθευτής</label>
-      <input type="text" id="f-supplier" list="supplier-list" data-t-placeholder placeholder="Προαιρετικό…">
+      <input type="text" id="f-supplier" list="supplier-list" value="Β. ΚΟΜΠΟΥΛΗΣ" data-t-placeholder placeholder="Προαιρετικό…">
       <datalist id="supplier-list">
         <option value="FAENTINA"><option value="Faentina">
         <option value="ΚΟΜΠΟΥΛΗΣ"><option value="ΤΡΑΙΚΟΥΔΗΣ">
@@ -1264,6 +1265,8 @@ body.printing-card .printcard-doc{display:block}
 <script>
 // ── TRANSLATIONS ── this page's English (Greek text → English); shared words are in common.js
 addTranslations({
+  'Διπλό κλικ: οι γραμμές στα Εμβόλια': 'Double-click: the lines in Vaccines',
+  'Κάποιες γραμμές κρύβονται από την αναζήτηση ή τα φίλτρα.': 'Some lines are hidden by the search or the filters.',
   'Από τα ΝΑΙ του παλιού tracker.': 'From the ΝΑΙ ticks of the old tracker.',
   'Για παραγγελία': 'To order',
   'Αναμένονται': 'Expected',
@@ -1463,6 +1466,9 @@ addTranslations({
 
 // ── CONFIG ────────────────────────────────────────────────────────
 const TABLE  = 'emvolia';
+// supplier of a new line: the vaccine's own (Πρότυπο εμβολιακού page) or else Β. ΚΟΜΠΟΥΛΗΣ
+const DEFAULT_SUPPLIER = 'Β. ΚΟΜΠΟΥΛΗΣ';
+const supplierFor = vaccine => (vaxData && vaxData.supplier[vaccine]) || DEFAULT_SUPPLIER;
 const HTABLE = 'emvolia_history';
 
 
@@ -2068,7 +2074,7 @@ async function wizardSaveAll() {
   const now = new Date().toISOString();
   const rows = wizardQueue.map(q => ({
     hm_ekk: wizardHatchIso, hm_emv: q.vaccDate, hm_par: null, anath: wizardFlock,
-    sxolia_panos: q.inj ? `${q.inj} ${wizardFlock}` : null, promitheutis: null, paragelia: null,
+    sxolia_panos: q.inj ? `${q.inj} ${wizardFlock}` : null, promitheutis: supplierFor(q.vaccine), paragelia: null,
     hm_paragelia: subDays(q.vaccDate, 30), psygeio: null, emvoliasmos: null, sxolia_eleni: null,
     emvolio: q.vaccine, pelatis: q.customer, posotita: q.qty,
     created_by: currentUser, created_at: now, updated_by: currentUser, updated_at: now,
@@ -3429,6 +3435,7 @@ function resetForm() {
       e.value = ''; e.style.borderColor = '';
       if (e.dataset) e.dataset.iso = '';
     });
+  document.getElementById('f-supplier').value = DEFAULT_SUPPLIER;   // a new line starts with the usual supplier
   emvoliasmosVal = '';
   const fe = document.getElementById('f-emvoliasmos'); if (fe) fe.value = '';
   // close any open vaccine dropdown
@@ -3770,10 +3777,10 @@ const isWater = (p, r) => !r.pelatis && !roundOf(r) && !tplFor(r) && waterWanted
 function baseLines(p) {
   const pl = planOf(p), customers = pl.customers, salm = pl.salmonella, third = thirdSalmovac();
   const tpl = tplRows().flatMap(r => { const payers = r.rule === 'placed' ? customers.filter(c => paysFor(c.name, r.vaccine)) : [];
-    const common = { emvolio: r.vaccine, posotita: null, promitheutis: vaxData.supplier[r.vaccine] || null };
+    const common = { emvolio: r.vaccine, posotita: null, promitheutis: supplierFor(r.vaccine) };
     return r.days.filter(day => !(salm && salm.mode === 'house' && r.vaccine === SALMOVAC && day === third)).flatMap(day => [{ ...common, hm_emv: dayDate(p, day), to_check: false },
       ...payers.map(c => { const pel = pelatisName(c.name); return { ...common, hm_emv: dayDate(p, day), pelatis: pel, payer: pel, to_check: true }; })]); });
-  const water = waterWanted(customers).map(w => ({ emvolio: w.vaccine, posotita: null, promitheutis: vaxData.supplier[w.vaccine] || null, hm_emv: dayDate(p, w.day), to_check: true }));
+  const water = waterWanted(customers).map(w => ({ emvolio: w.vaccine, posotita: null, promitheutis: supplierFor(w.vaccine), hm_emv: dayDate(p, w.day), to_check: true }));
   return [...tpl, ...water];
 }
 const stepBase = () => sheetAction(async p => { await addLines(p, baseLines(p)); await markStep(p, 'base', true); });
@@ -3787,12 +3794,12 @@ function custVaxLines(p) {
       const emvolio = i.vaccine === CORYZA ? i.product : i.vaccine;
       const qty = i.vaccine === SEST && salm && salm.sest && salm.sest[pel] != null ? String(salm.sest[pel]) : injQty(c.qty);
       out.push({ hm_emv: dayDate(p, atDay(i.at)), emvolio, posotita: qty, pelatis: pel, payer: i.pays && !c.leftover ? pel : null, to_check: !c.leftover,
-        promitheutis: vaxData.supplier[emvolio] || null, sxolia_panos: injNote(p, i.at) });
+        promitheutis: supplierFor(emvolio), sxolia_panos: injNote(p, i.at) });
     });
   });
   if (salm && salm.mode === 'house' && salm.rest > 0) {
     const day = (out.find(l => l.emvolio === SEST) || {}).hm_emv || dayDate(p, injDay(2));
-    out.push({ hm_emv: day, emvolio: SEST, posotita: String(salm.rest), pelatis: null, payer: null, to_check: true, promitheutis: vaxData.supplier[SEST] || null, sxolia_panos: injNote(p, 'inj2') });
+    out.push({ hm_emv: day, emvolio: SEST, posotita: String(salm.rest), pelatis: null, payer: null, to_check: true, promitheutis: supplierFor(SEST), sxolia_panos: injNote(p, 'inj2') });
   }
   return out;
 }
@@ -4030,7 +4037,7 @@ const addVaxLine = () => sheetAction(async p => {
   const emvolio = await resolveVaccineAlts(g('vx-add-vaccine'));
   if (emvolio === null) return false;
   await addLines(p, [{ hm_emv: dayDate(p, day), emvolio, posotita: rawQty(g('vx-add-qty')) || null,
-    promitheutis: (g('vx-add-supplier') || vaxData.supplier[emvolio] || '').toUpperCase() || null }]);
+    promitheutis: (g('vx-add-supplier') || supplierFor(emvolio)).toUpperCase() }]);
   if (g('vx-add-always')) await rememberHouseVaccine(g('vx-add-always'), emvolio, day);
 });
 // «Πάντα όταν υπάρχει ο πελάτης»: the vaccine joins that customer's memory as a whole-house (water) vaccine on that day
@@ -4283,7 +4290,7 @@ function planDiffs(p, was) {
     const wantedW = waterWanted(pl.customers);
     const waterNow = hatchRows(p).filter(r => !r.pelatis && !roundOf(r) && !tplFor(r) && [...W.waterBefore, ...wantedW].some(w => w.vaccine === r.emvolio && w.day === ageOf(r)));
     diffs.push(diffLines(waterNow, wantedW.map(w => ({ hm_emv: dayDate(p, w.day), emvolio: w.vaccine, posotita: qty ? posotitaText(planQty(WATER_RULE, pl.chicks), 'Δόσεις') : null,
-      promitheutis: vaxData.supplier[w.vaccine] || null, to_check: true })), null));
+      promitheutis: supplierFor(w.vaccine), to_check: true })), null));
     // paid shares: a removed customer's go, a new paying customer's come
     const shares = baseLines(p).filter(l => l.payer && mine.has(l.pelatis)).map(l => ({ ...l, posotita: qty ? qtyFor(p, { ...l, hm_ekk: p.doc_date }, []) : null }));
     diffs.push(diffLines(hatchRows(p).filter(r => isShare(r) && mine.has(r.pelatis)), shares, was));
@@ -4291,7 +4298,7 @@ function planDiffs(p, was) {
     const salm = pl.salmonella, third = thirdSalmovac(), tpl3 = tplRows().find(r => r.vaccine === SALMOVAC && r.days.includes(third));
     const line3 = hatchRows(p).filter(r => !r.pelatis && r.emvolio === SALMOVAC && ageOf(r) === third);
     const want3 = tpl3 && (!salm || salm.mode === 'customers') ? [{ hm_emv: dayDate(p, third), emvolio: SALMOVAC, posotita: qty ? qtyFor(p, { emvolio: SALMOVAC, hm_emv: dayDate(p, third), hm_ekk: p.doc_date }, []) : null,
-      promitheutis: vaxData.supplier[SALMOVAC] || null, to_check: false }] : [];
+      promitheutis: supplierFor(SALMOVAC), to_check: false }] : [];
     diffs.push(diffLines(line3, want3, null));
     // the house lines that stay cover the birds no paying customer covers (calculated quantities only)
     if (qty) {
@@ -4463,7 +4470,7 @@ function renderOrdersTab() {
     list.forEach(g => {
       const h = `${g.supplier || t('χωρίς προμηθευτή')} · ${payerText(g.payer)}`;
       if (h !== head) { html += (head ? '</tbody></table>' : '') + `<h4>${x(h)}</h4><table class="cust-table"><tbody>`; head = h; }
-      html += `<tr><td><b>${x(g.vaccine)}</b><div class="ord-entries">${g.entries.map(c => `${x(c.anath)} ${fmt(c.hm_emv)} (${unitQty(c.missing, c.unit)})`).join(' · ')}</div></td>` +
+      html += `<tr class="ord-line" title="${t('Διπλό κλικ: οι γραμμές στα Εμβόλια')}" ondblclick="if (!event.target.closest('button')) showLines([${g.entries.map(c => c.id)}])"><td><b>${x(g.vaccine)}</b><div class="ord-entries">${g.entries.map(c => `${x(c.anath)} ${fmt(c.hm_emv)} (${unitQty(c.missing, c.unit)})`).join(' · ')}</div></td>` +
         `<td>${unitQty(g.missing, g.unit)}</td><td class="${g.orderBy < today ? 'ord-late' : ''}">${t('ως {d}', { d: fmt(g.orderBy) })}</td>` +
         `<td class="ord-acts"><button class="btn-primary" onclick="openOrderForm(${toOrder.indexOf(g)})">${t('Παραγγελία')}</button></td></tr>`;
     });
@@ -4499,6 +4506,14 @@ function renderOrdersTab() {
   };
   document.getElementById('orders-box').innerHTML = `<div class="tabs ord-subs">${ORD_SUBS.map(([k, label]) =>
     `<button type="button" class="tab${k === ordSub ? ' on' : ''}" data-sub="${k}" onclick="ordSub = this.dataset.sub; renderOrdersTab()">${t(label)} <span class="ord-count">${counts[k]}</span></button>`).join('')}</div>` + body[ordSub];
+}
+
+// the Εμβόλια tab with these lines lit up (the same glow as links from the homepage)
+async function showLines(ids) {
+  await showTab('vaccines');
+  const rows = ids.map(id => document.querySelector(`#tbody tr[data-id="${id}"]`)).filter(Boolean);
+  if (rows.length < ids.length) toast(t('Κάποιες γραμμές κρύβονται από την αναζήτηση ή τα φίλτρα.'));
+  if (rows.length) glowElements(rows);
 }
 
 // order / edit / delivery windows (the small window openMini); a save reloads the tab, an error only shows a message
@@ -4611,7 +4626,7 @@ function showTab(name) {
   if (name === 'bin' && currentUser) openBin();
   if (name === 'customers' && currentUser) openCustTab();
   if (name === 'orders' && currentUser) openOrdersTab();
-  if (name === 'vaccines' && currentUser) loadCoverage().then(render);   // statuses may have changed in another tab
+  if (name === 'vaccines' && currentUser) return loadCoverage().then(render);   // statuses may have changed in another tab
 }
 // "#vax=<placement id>" (banner links, also from the homepage) opens that hatch's sheet
 function openFromHash() {
