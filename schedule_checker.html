@@ -4,16 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-t>Προγραμματισμός</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
 <script src="common.js?v=21"></script>
-<link rel="stylesheet" href="theme.css?v=19">
+<link rel="stylesheet" href="theme.css?v=20">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{
   background:var(--gh-canvas-default);color:var(--gh-fg-default);
-  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  font-family:'Roboto',system-ui,-apple-system,sans-serif;
   font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;
 }
 
@@ -45,7 +45,7 @@ header{
 .toolbar{display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap}
 .btn-primary{
   height:36px;padding:0 16px;background:var(--gh-accent-fg);color:#fff;border:none;
-  border-radius:var(--gh-r-md);font-family:'Inter',sans-serif;font-weight:600;font-size:13px;
+  border-radius:var(--gh-r-md);font-family:'Roboto',sans-serif;font-weight:600;font-size:13px;
   cursor:pointer;transition:filter .15s;display:inline-flex;align-items:center;gap:6px;
 }
 .btn-primary:hover{filter:brightness(1.1)}
@@ -137,7 +137,7 @@ header{
 /* ── Row action buttons ── */
 .row-btn{
   height:27px;padding:0 11px;border-radius:var(--gh-r-sm);border:1px solid var(--gh-border-default);
-  background:var(--gh-canvas-elev2);color:var(--gh-fg-default);font-family:'Inter',sans-serif;
+  background:var(--gh-canvas-elev2);color:var(--gh-fg-default);font-family:'Roboto',sans-serif;
   font-size:12px;font-weight:500;cursor:pointer;transition:background .12s,border-color .12s;
 }
 .row-btn:hover{background:var(--gh-hover-bg);border-color:var(--gh-fg-subtle)}
@@ -154,7 +154,7 @@ header{
 .fgroup label{display:block;font-size:12px;font-weight:600;color:var(--gh-fg-muted);margin-bottom:6px}
 .fgroup select,.fgroup input[type=date]{
   width:100%;background:var(--gh-canvas-inset);border:1px solid var(--gh-border-default);border-radius:var(--gh-r-md);
-  color:var(--gh-fg-default);font-family:'Inter',sans-serif;font-size:14px;padding:8px 10px;outline:none;
+  color:var(--gh-fg-default);font-family:'Roboto',sans-serif;font-size:14px;padding:8px 10px;outline:none;
   transition:border-color .15s,box-shadow .15s;appearance:none;-webkit-appearance:none;
 }
 .fgroup select{
@@ -167,7 +167,7 @@ header{
 .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--gh-border-muted)}
 .btn-secondary{
   height:36px;padding:0 16px;background:var(--gh-canvas-elev2);color:var(--gh-fg-default);border:1px solid var(--gh-border-default);
-  border-radius:var(--gh-r-md);font-family:'Inter',sans-serif;font-size:13px;font-weight:500;
+  border-radius:var(--gh-r-md);font-family:'Roboto',sans-serif;font-size:13px;font-weight:500;
   cursor:pointer;transition:background .15s,border-color .15s;
 }
 .btn-secondary:hover{background:var(--gh-hover-bg);border-color:var(--gh-fg-subtle)}
@@ -178,7 +178,7 @@ header{
 .confirm-actions{display:flex;gap:10px;justify-content:center}
 .btn-danger{
   height:36px;padding:0 16px;background:rgba(255,107,107,0.12);color:var(--gh-danger-fg);border:1px solid rgba(255,107,107,0.4);
-  border-radius:var(--gh-r-md);font-family:'Inter',sans-serif;font-weight:600;font-size:13px;cursor:pointer;transition:background .15s;
+  border-radius:var(--gh-r-md);font-family:'Roboto',sans-serif;font-weight:600;font-size:13px;cursor:pointer;transition:background .15s;
 }
 .btn-danger:hover{background:rgba(255,107,107,0.22)}
 /* card rows: label and value each stay whole ("Εμβ. 1" must not break); a value too long for the row drops to its own line, right-aligned */

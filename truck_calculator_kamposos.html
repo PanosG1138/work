@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ΚΑΜΠΟΣΟΣ — Φόρτωση Καρότσας</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js"></script>
 <script src="common.js?v=21"></script>
-<link rel="stylesheet" href="theme.css?v=19">
+<link rel="stylesheet" href="theme.css?v=20">
 <style>
   /* Crate-visualization palette — kept exact, not themed (cell layout, gap/heat-buffer
      graphics, cab/hitch icons must render identically regardless of chrome restyle). */
@@ -26,13 +26,13 @@
     margin:0;
     background:var(--gh-canvas-default);
     color:var(--gh-fg-default);
-    font-family:'Inter',system-ui,sans-serif;
+    font-family:'Roboto',system-ui,sans-serif;
     padding:28px 20px 60px;
   }
   .wrap{max-width:1180px;margin:0 auto;}
   .top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;}
   h1{
-    font-family:'Inter',system-ui,sans-serif;
+    font-family:'Roboto',system-ui,sans-serif;
     font-weight:600;
     font-size:22px;
     margin:0;
@@ -48,7 +48,7 @@
     border:1px solid var(--gh-border-default);
     color:var(--gh-fg-default);
     border-radius:var(--rs);
-    font-family:'Inter',system-ui,sans-serif;
+    font-family:'Roboto',system-ui,sans-serif;
     font-size:13px;font-weight:500;
     cursor:pointer;white-space:nowrap;
     display:inline-flex;align-items:center;gap:6px;
@@ -89,7 +89,7 @@
   }
   .section-title-row{display:flex;align-items:center;gap:12px;}
   .section-title{
-    font-family:'Inter',system-ui,sans-serif;
+    font-family:'Roboto',system-ui,sans-serif;
     font-weight:600;
     font-size:17px;
     color:var(--gh-fg-default);
@@ -104,7 +104,7 @@
     padding:6px 12px;
     border-radius:20px;
     cursor:pointer;
-    font-family:'Inter',sans-serif;
+    font-family:'Roboto',sans-serif;
   }
   .toggle-btn.on{border-color:var(--gh-accent-emphasis);background:var(--gh-accent-subtle);color:var(--gh-accent-fg);}
   .controls{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end;}
@@ -117,7 +117,7 @@
     color:var(--gh-fg-default);
     border-radius:var(--rs);
     padding:7px 8px;
-    font-family:'Inter',sans-serif;
+    font-family:'Roboto',sans-serif;
     font-size:14px;
     font-weight:500;
   }
@@ -130,7 +130,7 @@
     border-radius:var(--rs);
     font-size:12px;
     cursor:pointer;
-    font-family:'Inter',sans-serif;
+    font-family:'Roboto',sans-serif;
     height:34px;
   }
   .apply-btn:hover{background:var(--gh-hover-bg);color:var(--gh-fg-default);}
@@ -208,7 +208,7 @@
 
   /* ── Per-position edit controls (chrome) ── */
   .type-btn{
-    font-family:'Inter',sans-serif;
+    font-family:'Roboto',sans-serif;
     font-weight:700;
     font-size:13px;
     width:32px;
@@ -230,7 +230,7 @@
     border-radius:var(--rs);
     padding:2px 0;
     text-align:center;
-    font-family:'Inter',sans-serif;
+    font-family:'Roboto',sans-serif;
     font-size:10px;
     -moz-appearance:textfield;
   }
@@ -267,7 +267,7 @@
     cursor:pointer;
     font-size:13px;
     font-weight:500;
-    font-family:'Inter',sans-serif;
+    font-family:'Roboto',sans-serif;
   }
   .add-btn:hover{background:var(--gh-hover-bg);color:var(--gh-fg-default);}
   .add-btn.w4{border-color:var(--crate-4);color:var(--crate-4);}
@@ -287,7 +287,7 @@
     padding:10px 12px;
   }
   .tcard .tlabel{font-size:11px;color:var(--gh-fg-muted);margin-bottom:4px;}
-  .tcard .tval{font-family:'Inter',sans-serif;font-size:19px;font-weight:700;color:var(--gh-fg-default);}
+  .tcard .tval{font-family:'Roboto',sans-serif;font-size:19px;font-weight:700;color:var(--gh-fg-default);}
   .tcard.total{background:var(--gh-accent-subtle);border-color:var(--gh-accent-emphasis);}
   .tcard.total .tlabel{color:var(--gh-accent-fg);opacity:0.8;}
   .tcard.total .tval{color:var(--gh-accent-fg);}
@@ -302,13 +302,13 @@
     justify-content:space-between;
   }
   .grand .glabel{
-    font-family:'Inter',sans-serif;
+    font-family:'Roboto',sans-serif;
     font-weight:600;
     font-size:16px;
     color:var(--gh-fg-default);
   }
   .grand .gval{
-    font-family:'Inter',sans-serif;
+    font-family:'Roboto',sans-serif;
     font-size:32px;
     font-weight:700;
     color:var(--gh-accent-fg);

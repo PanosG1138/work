@@ -39,7 +39,7 @@
 
 /* ── SHARED SIGN-IN + BUTTONS — drawn by common.js on every page ── */
 .common-signin-cover{position:fixed;inset:0;z-index:9999;background:var(--gh-canvas-default);display:flex;align-items:center;justify-content:center}
-.common-signin-box{background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:var(--gh-r-lg);padding:32px;width:360px;max-width:92vw;margin:0 auto;display:flex;flex-direction:column;gap:10px;text-align:center;font-family:'Inter',system-ui,sans-serif;box-sizing:border-box}
+.common-signin-box{background:var(--gh-canvas-subtle);border:1px solid var(--gh-border-default);border-radius:var(--gh-r-lg);padding:32px;width:360px;max-width:92vw;margin:0 auto;display:flex;flex-direction:column;gap:10px;text-align:center;font-family:'Roboto',system-ui,sans-serif;box-sizing:border-box}
 #common-signin{margin-bottom:44px}
 .common-signin-box h2{font-size:20px;font-weight:700;color:var(--gh-fg-default);margin:0}
 .common-signin-box p{font-size:13px;color:var(--gh-fg-muted);margin:0 0 10px}
@@ -49,14 +49,14 @@
 .common-signin-box button:disabled{opacity:0.6;cursor:default}
 .common-signin-error{font-size:12px;color:var(--gh-danger-fg);min-height:18px}
 .common-nav{display:inline-flex;align-items:center;gap:6px}
-.common-nav-btn{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:1px solid var(--gh-border-default);border-radius:var(--rs);background:var(--gh-canvas-subtle);color:var(--gh-fg-muted);font-family:'Inter',system-ui,sans-serif;font-size:12px;font-weight:500;text-decoration:none;cursor:pointer;white-space:nowrap}
+.common-nav-btn{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:1px solid var(--gh-border-default);border-radius:var(--rs);background:var(--gh-canvas-subtle);color:var(--gh-fg-muted);font-family:'Roboto',system-ui,sans-serif;font-size:12px;font-weight:500;text-decoration:none;cursor:pointer;white-space:nowrap}
 .common-nav-btn:hover{background:var(--gh-hover-bg);color:var(--gh-fg-default)}
 /* outlined icons in the shared buttons: sign-out (icon only, tooltip Αποσύνδεση) and home (icon + Αρχική) */
 .common-nav-icon{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 /* ΕΛ/EN switch in the shared buttons (common.js); the current language is highlighted */
 .common-lang{display:inline-flex;height:28px;border:1px solid var(--gh-border-default);border-radius:var(--rs);overflow:hidden}
-.common-lang button{border:none;background:var(--gh-canvas-subtle);color:var(--gh-fg-muted);font-family:'Inter',system-ui,sans-serif;font-size:12px;font-weight:500;padding:0 8px;cursor:pointer}
+.common-lang button{border:none;background:var(--gh-canvas-subtle);color:var(--gh-fg-muted);font-family:'Roboto',system-ui,sans-serif;font-size:12px;font-weight:500;padding:0 8px;cursor:pointer}
 .common-lang button:hover{color:var(--gh-fg-default);background:var(--gh-hover-bg)}
 .common-lang button.on{background:var(--gh-accent-subtle);color:var(--gh-accent-fg);cursor:default}
 
@@ -69,7 +69,7 @@ tr.focus-glow > td{animation:focusRow 1.4s ease-in-out 3}
 @keyframes focusRow{50%{background:rgba(255,107,107,0.16);box-shadow:inset 0 2px 0 var(--gh-danger-fg),inset 0 -2px 0 var(--gh-danger-fg)}}
 
 /* ── VAX REMINDER ── "start the εμβολιακό" banner (vaxReminderHtml in common.js): homepage + beta tracker */
-.vax-remind{border:2px solid var(--gh-attention-fg);background:var(--gh-attention-subtle);border-radius:var(--gh-r-lg);padding:12px 16px;margin-bottom:10px;color:var(--gh-attention-fg);font-family:'Inter',system-ui,sans-serif}
+.vax-remind{border:2px solid var(--gh-attention-fg);background:var(--gh-attention-subtle);border-radius:var(--gh-r-lg);padding:12px 16px;margin-bottom:10px;color:var(--gh-attention-fg);font-family:'Roboto',system-ui,sans-serif}
 .vax-remind.late{border-color:var(--gh-danger-fg);background:var(--gh-danger-subtle);color:var(--gh-danger-fg)}
 .vr-title{font-size:17px;font-weight:700;margin-bottom:6px}
 .vr-row{display:flex;align-items:center;gap:14px;padding:8px 0;border-top:1px solid var(--gh-border-default)}
@@ -79,3 +79,6 @@ tr.focus-glow > td{animation:focusRow 1.4s ease-in-out 3}
 .vr-who span{display:block;font-size:12px;color:var(--gh-fg-muted)}
 .vr-btn{border:1px solid var(--gh-border-default);border-radius:var(--rs);padding:6px 12px;background:var(--gh-canvas-subtle);color:var(--gh-fg-default);font-size:13px;text-decoration:none;white-space:nowrap}
 .vr-btn:hover{background:var(--gh-hover-bg)}
+
+/* crisp text on every page (Roboto, 2026-11-12) */
+body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
