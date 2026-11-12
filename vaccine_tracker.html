@@ -732,7 +732,7 @@ body.printing-card .printcard-doc{display:block}
     </div>
     <div class="fgroup">
       <label data-t>Προμηθευτής</label>
-      <input type="text" id="f-supplier" list="supplier-list" data-t-placeholder placeholder="Προαιρετικό…">
+      <input type="text" id="f-supplier" list="supplier-list" value="Β. ΚΟΜΠΟΥΛΗΣ" data-t-placeholder placeholder="Προαιρετικό…">
       <datalist id="supplier-list">
         <option value="FAENTINA"><option value="Faentina">
         <option value="ΚΟΜΠΟΥΛΗΣ"><option value="ΤΡΑΙΚΟΥΔΗΣ">
@@ -1184,6 +1184,11 @@ addTranslations({
 // ── CONFIG ────────────────────────────────────────────────────────
 const TABLE  = 'emvolia';
 const HTABLE = 'emvolia_history';
+// supplier of a new line: the vaccine's own (Πρότυπο εμβολιακού page) or else Β. ΚΟΜΠΟΥΛΗΣ — same rule as the beta
+const DEFAULT_SUPPLIER = 'Β. ΚΟΜΠΟΥΛΗΣ';
+let vaccineSuppliers = {};
+const supplierFor = vaccine => vaccineSuppliers[vaccine] || DEFAULT_SUPPLIER;
+const loadSuppliers = async () => { vaccineSuppliers = Object.fromEntries((await sbFetch('vaccines?select=name,supplier')).filter(v => v.supplier).map(v => [v.name, v.supplier])); };
 
 
 function initApp(name) {
@@ -1324,7 +1329,7 @@ function setSyncStatus(state, text) {
 async function loadData() {
   setSyncStatus('loading', t('Φόρτωση…'));
   try {
-    [data] = await Promise.all([sbSelect(), loadVaccineNames()]);
+    [data] = await Promise.all([sbSelect(), loadVaccineNames(), loadSuppliers()]);
     await autoMarkVaccinated();
     selectedIds.clear();
     showDone = false; updateShowDoneBtn();
@@ -1787,7 +1792,7 @@ async function wizardSaveAll() {
   const now = new Date().toISOString();
   const rows = wizardQueue.map(q => ({
     hm_ekk: wizardHatchIso, hm_emv: q.vaccDate, hm_par: null, anath: wizardFlock,
-    sxolia_panos: q.inj ? `${q.inj} ${wizardFlock}` : null, promitheutis: null, paragelia: null,
+    sxolia_panos: q.inj ? `${q.inj} ${wizardFlock}` : null, promitheutis: supplierFor(q.vaccine), paragelia: null,
     hm_paragelia: subDays(q.vaccDate, 30), psygeio: null, emvoliasmos: null, sxolia_eleni: null,
     emvolio: q.vaccine, pelatis: q.customer, posotita: q.qty,
     created_by: currentUser, created_at: now, updated_by: currentUser, updated_at: now,
@@ -3147,6 +3152,7 @@ function resetForm() {
       e.value = ''; e.style.borderColor = '';
       if (e.dataset) e.dataset.iso = '';
     });
+  document.getElementById('f-supplier').value = DEFAULT_SUPPLIER;   // a new line starts with the usual supplier
   emvoliasmosVal = '';
   const fe = document.getElementById('f-emvoliasmos'); if (fe) fe.value = '';
   // close any open vaccine dropdown
