@@ -1320,6 +1320,9 @@ body.printing-card .printcard-doc{display:block}
 <script>
 // ── TRANSLATIONS ── this page's English (Greek text → English); shared words are in common.js
 addTranslations({
+  'Τυπώθηκε το εμβολιακό;': 'Was the vaccination plan printed?', 'αποθηκεύτηκε ✓': 'saved ✓',
+  'Το «{v}» δεν είναι στη λίστα εμβολίων. Μήπως είναι λάθος γραμμένο;\n\nOK = συνέχεια όπως είναι · Ακύρωση = διόρθωση':
+    '«{v}» is not in the vaccine list. Is it misspelled?\n\nOK = carry on as it is · Cancel = correct it',
   'Η εκκόλαψη δεν έχει φυλή στον Προγραμματισμό: τα εμβόλια εκκολαπτηρίου είναι κενά.': 'The hatch has no breed in the scheduler: the hatchery vaccines are empty.',
   'Καμία λίστα εκκολαπτηρίου για τη φυλή {b} (σελίδα Πρότυπο εμβολιακού).': 'No hatchery list for the breed {b} (Plan template page).',
   'Ημέρα 0, εκκολαπτήριο: {h}': 'Day 0, hatchery: {h}', 'αλλαγμένο για αυτή την εκκόλαψη': 'changed for this hatch',
@@ -3826,8 +3829,8 @@ function renderVaxPrint() {
       : t('Δεν έχει τυπωθεί ακόμα. Κλικ σε ένα κελί ΤΡΟΠΟΣ για να γράψετε.')}</p>`;
   const hn = hatcheryOf(p), own = !!(pl && pl.hatchery);
   document.getElementById('vaxprint-hatch').innerHTML = `<p class="${hn || own ? 'muted' : 'vp-warn-line'}">` + (!p.breed && !own ? '⚠ ' + t('Η εκκόλαψη δεν έχει φυλή στον Προγραμματισμό: τα εμβόλια εκκολαπτηρίου είναι κενά.')
-      : !hn && !own ? '⚠ ' + t('Καμία λίστα εκκολαπτηρίου για τη φυλή {b} (σελίδα Πρότυπο εμβολιακού).', { b: p.breed })
-      : t('Ημέρα 0, εκκολαπτήριο: {h}', { h: own ? t('αλλαγμένο για αυτή την εκκόλαψη') : `${hn.hatchery} (${p.breed})` })) +
+      : !hn && !own ? '⚠ ' + t('Καμία λίστα εκκολαπτηρίου για τη φυλή {b} (σελίδα Πρότυπο εμβολιακού).', { b: x(p.breed) })
+      : t('Ημέρα 0, εκκολαπτήριο: {h}', { h: own ? t('αλλαγμένο για αυτή την εκκόλαψη') : x(`${hn.hatchery} (${p.breed})`) })) +
     (canEdit ? ` <button class="btn-secondary" onclick="addHatchRow()">${t('+ Γραμμή εκκολαπτηρίου')}</button>` +
       (own ? ` <button class="btn-secondary" onclick="resetHatchList()">${t('Επαναφορά στη λίστα του εκκολαπτηρίου')}</button>` : '') +
       `<span class="vp-tip">${t('Σβήστε και τα 3 κελιά μιας γραμμής για να φύγει.')}</span>` : '') + '</p>';
@@ -3894,8 +3897,8 @@ const saveTyping = async () => { const el = document.activeElement; if (el && el
 async function printVax() {
   await saveTyping();
   const p = sheetHatch();
-  await markPrinted(p);
   document.body.classList.add('printing-vax'); window.print(); document.body.classList.remove('printing-vax');
+  if (confirm(t('Τυπώθηκε το εμβολιακό;'))) await markPrinted(p);   // the browser can't tell a cancelled print
   renderVaxPrint();
 }
 const loadScript = src => new Promise((ok, fail) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => fail(new Error(src)); document.head.append(s); });
@@ -4847,7 +4850,6 @@ function openEditOrder(id) {
     `<label class="fgroup"><input type="checkbox" id="ord-closed"${o.closed ? ' checked' : ''}> ${t('Κλειστή: τα υπόλοιπα δεν θα έρθουν')}</label>`, orderSave(async () => {
     const f = readOrder(); if (!f) return false;
     f.closed = document.getElementById('ord-closed').checked;
-    if (f.closed !== !!o.closed) f.got_qty = f.closed ? receivedOf(o) : null;   // closed: it counts only what had come
     const changes = Object.fromEntries(Object.keys(f).filter(k => String(f[k] ?? '') !== String(o[k] ?? '')).map(k => [k, { from: o[k], to: f[k] }]));
     if (!Object.keys(changes).length) return;
     await sbFetch(`vaccine_orders?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify(f) });
@@ -4930,6 +4932,11 @@ function delPlanAll() {
   delRead();
   const rows = delRows.filter(r => r.vaccine || r.qty);
   if (!delDate || !rows.length || rows.some(r => !r.vaccine || !(parseQty(r.qty) > 0))) { toast(t('Συμπληρώστε εμβόλιο, ποσότητα και ημερομηνία.'), true); return; }
+  // a name no line, order or vaccine list has (a typo?) would only ever sit in Περίσσευμα: asked first
+  const known = [...coverage.map(c => c.vaccine), ...vOrders.map(o => o.vaccine), ...(typeof VACCINE_OPTIONS !== 'undefined' ? VACCINE_OPTIONS : [])];
+  for (const r of rows) {
+    if (!known.some(k => sameVaccine(k, r.vaccine)) && !confirm(t('Το «{v}» δεν είναι στη λίστα εμβολίων. Μήπως είναι λάθος γραμμένο;\n\nOK = συνέχεια όπως είναι · Ακύρωση = διόρθωση', { v: r.vaccine }))) return;
+  }
   delCheck = rows.map(delPlan); renderOrdersTab();
 }
 // a line in «Αυτές είναι;»: how much it gets
@@ -4938,7 +4945,7 @@ const delGiveText = (l, unit) => !l.give ? t('τίποτα') : l.give >= l.need 
 function deliveryCheckBody() {
   return `<h3>${t('Αυτές είναι οι γραμμές;')}</h3>` + delCheck.map((p, i) => {
     const last = p.lines.reduce((m, l, k) => l.give ? k : m, -1);   // lines after the last one that gets doses: only the next 2
-    return `<div class="cust-block"><b>${x(p.vaccine)} · ${unitQty(p.qty, p.unit)}${payerTagOf(p.payer)}</b>` + (p.note ? `<div class="del-note">${x(p.note)}</div>` : '') +
+    return `<div class="cust-block"><b>${x(p.vaccine)} · ${unitQty(p.qty, p.unit)}${payerTagOf(p.payer)}${p.saved ? ' · ' + t('αποθηκεύτηκε ✓') : ''}</b>` + (p.note ? `<div class="del-note">${x(p.note)}</div>` : '') +
       p.lines.map((l, k) => (k <= last + 2 || !l.on) ? `<label class="ord-pick${l.give ? '' : ' muted'}"><input type="checkbox"${l.on ? ' checked' : ''} onchange="delToggle(${i}, ${k}, this.checked)"> ` +
         `${x(l.c.anath)} · ${t('εκκόλαψη')} ${fmt(l.c.hm_ekk)} · ${t('εμβ.')} ${fmt(l.c.hm_emv)}${l.c.pelatis ? ' · ' + x(l.c.pelatis) : ''} — ${delGiveText(l, p.unit)}</label>` : '').join('') +
       (p.left > 0 ? `<div class="ord-entries">${t('Περισσεύουν {q}: μένουν στο Περίσσευμα για τις επόμενες εκκολάψεις.', { q: unitQty(p.left, p.unit) })}</div>` : '') + '</div>';
@@ -4969,7 +4976,21 @@ async function tickFridge(id, on, emvolio) {
   data[data.indexOf(before)] = updated;
   return row.emvolio ? updated : null;
 }
+let delSaving = false;   // one save at a time (a double click must not store the delivery twice)
 async function saveDelivery() {
+  if (delSaving) return;
+  delSaving = true;
+  try { await saveDeliveryPlans(); } finally { delSaving = false; }
+}
+// the delivery's doses to the oldest open orders of its pool placed on or before the delivery date; the rest is surplus
+function orderShares(p, date) {
+  let left = p.qty; const out = [];
+  vOrders.filter(o => poolKey(o) === poolKey(p) && !o.closed && o.ordered_on <= date && openOf(o) > 0)
+    .sort((a, b) => a.ordered_on.localeCompare(b.ordered_on) || a.id - b.id)
+    .forEach(o => { const q = Math.min(left, openOf(o)); if (q > 0) { out.push({ order_id: o.id, qty: q }); left -= q; } });
+  return out;
+}
+async function saveDeliveryPlans() {
   const plans = delCheck, date = delDate || todayIso(), renamed = [];
   // a line written "A / B" that gets filled: which one came (asked before anything is saved)
   for (const p of plans) {
@@ -4979,22 +5000,32 @@ async function saveDelivery() {
   }
   const before = new Map(vOrders.map(o => [o.id, receivedOf(o)]));
   try {
+    // each step is remembered on the plan: after an error, «Ναι, αποθήκευση» again only does what is left
     for (const p of plans) {
-      let sources;
-      if (p.fromStock) sources = stockPools().find(s => poolKey(s) === poolKey(p)).from;   // oldest delivery first
-      else {
+      if (p.saved) continue;
+      if (!p.fromStock && !p.delivery) {
         [p.delivery] = await sbFetch('vaccine_deliveries', { method: 'POST', prefer: 'return=representation',
           body: JSON.stringify({ vaccine: p.vaccine, unit: p.unit, payer: p.payer || null, qty: p.qty, arrived_on: date, created_by: currentUser }) });
-        sources = [{ id: p.delivery.id, left: p.qty }];
       }
-      const rows = [], given = p.lines.filter(l => l.give > 0);
-      for (const l of given) {   // a line's doses can come from more than one delivery (surplus)
-        let q = l.give;
-        for (const s of sources) { const take = Math.min(q, s.left); if (!take) continue; s.left -= take; q -= take; rows.push({ delivery_id: s.id, line_id: l.c.id, qty: take, ticked: l.give >= l.need }); if (!q) break; }
+      if (!p.fromStock && !p.ordersSaved) {
+        const shares = orderShares(p, date).map(s => ({ delivery_id: p.delivery.id, ...s }));
+        if (shares.length) await sbFetch('vaccine_delivery_orders', { method: 'POST', body: JSON.stringify(shares) });
+        p.ordersSaved = true;
       }
-      if (rows.length) await sbFetch('vaccine_delivery_lines', { method: 'POST', body: JSON.stringify(rows) });
+      const given = p.lines.filter(l => l.give > 0);
+      if (!p.linesSaved) {
+        const sources = p.fromStock ? stockPools().find(s => poolKey(s) === poolKey(p)).from : [{ id: p.delivery.id, left: p.qty }];   // oldest delivery first
+        p.rows = [];
+        for (const l of given) {   // a line's doses can come from more than one delivery (surplus)
+          let q = l.give;
+          for (const s of sources) { const take = Math.min(q, s.left); if (!take) continue; s.left -= take; q -= take; p.rows.push({ delivery_id: s.id, line_id: l.c.id, qty: take, ticked: l.give >= l.need }); if (!q) break; }
+        }
+        if (p.rows.length) await sbFetch('vaccine_delivery_lines', { method: 'POST', body: JSON.stringify(p.rows) });
+        p.linesSaved = true;
+      }
       for (const l of given.filter(l => l.give >= l.need)) { const u = await tickFridge(l.c.id, true, vaccineAlts(p.vaccine).length > 1 ? p.actual : null); if (u) renamed.push(u); }
-      await logOrder(null, p.fromStock ? 'stock_shared' : 'delivery', { delivery: p.delivery || null, vaccine: p.vaccine, qty: p.qty, lines: rows });
+      await logOrder(null, p.fromStock ? 'stock_shared' : 'delivery', { delivery: p.delivery || null, vaccine: p.vaccine, qty: p.qty, lines: p.rows });
+      p.saved = true;
     }
   } catch (e) { toast(t('Σφάλμα: {msg}', { msg: e.message }), true); await openOrdersTab(); return; }
   delRows = []; delCheck = null;
@@ -5005,8 +5036,8 @@ async function saveDelivery() {
   for (const o of vOrders.filter(o => !o.closed && openOf(o) > 0 && receivedOf(o) > (before.get(o.id) || 0))) {
     if (confirm(t('Παραγγελία {v} της {d}: ήρθαν {q} από {all}. Θα έρθουν τα υπόλοιπα;\n\nOK = ναι, μένει ανοιχτή · Ακύρωση = όχι, κλείνει',
       { v: o.vaccine, d: fmt(o.ordered_on), q: unitQty(receivedOf(o), o.unit), all: unitQty(o.qty, o.unit) }))) continue;
-    await sbFetch(`vaccine_orders?id=eq.${o.id}`, { method: 'PATCH', body: JSON.stringify({ closed: true, got_qty: receivedOf(o) }) });
-    await logOrder(o.id, 'closed', { got_qty: receivedOf(o) }); closed++;
+    await sbFetch(`vaccine_orders?id=eq.${o.id}`, { method: 'PATCH', body: JSON.stringify({ closed: true }) });
+    await logOrder(o.id, 'closed', { received: receivedOf(o) }); closed++;
   }
   if (closed) await openOrdersTab();
   toast(t('Αποθηκεύτηκε ✓'));
@@ -5014,9 +5045,12 @@ async function saveDelivery() {
 async function deleteDelivery(id) {
   const d = vDeliveries.find(d => d.id === id), lines = vDelLines.filter(l => l.delivery_id === id);
   if (!confirm(t('Διαγραφή της παραλαβής {v} {q} ({d}); Οι γραμμές που γέμισε χάνουν το Ψυγείο.', { v: d.vaccine, q: unitQty(d.qty, d.unit), d: fmt(d.arrived_on) }))) return;
+  // every line it gave doses to that a delivery had ticked is short now: Ψυγείο off, its tick marks cleared
+  const short = [...new Set(lines.map(l => l.line_id))].filter(lid => vDelLines.some(l => l.line_id === lid && l.ticked));
   await orderSave(async () => {
-    for (const l of lines.filter(l => l.ticked)) await tickFridge(l.line_id, false);
-    await sbFetch(`vaccine_deliveries?id=eq.${id}`, { method: 'DELETE' });   // its lines go with it
+    for (const lid of short) await tickFridge(lid, false);
+    if (short.length) await sbFetch(`vaccine_delivery_lines?line_id=in.(${short.join(',')})&ticked=is.true`, { method: 'PATCH', body: JSON.stringify({ ticked: false }) });
+    await sbFetch(`vaccine_deliveries?id=eq.${id}`, { method: 'DELETE' });   // its line and order shares go with it
     await logOrder(null, 'delivery_deleted', { delivery: d, lines });
   })();
 }
