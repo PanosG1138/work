@@ -1320,6 +1320,8 @@ body.printing-card .printcard-doc{display:block}
 <script>
 // ── TRANSLATIONS ── this page's English (Greek text → English); shared words are in common.js
 addTranslations({
+  'Για αυτή την εκκόλαψη υπάρχουν ήδη στο Περίσσευμα: {list}.\n\nΆνοιγμα του Περισσεύματος για «Μοίρασε»;':
+    'For this hatch there is already stock in Surplus: {list}.\n\nOpen Surplus to «Share out»?',
   'Τυπώθηκε το εμβολιακό;': 'Was the vaccination plan printed?', 'αποθηκεύτηκε ✓': 'saved ✓',
   'Το «{v}» δεν είναι στη λίστα εμβολίων. Μήπως είναι λάθος γραμμένο;\n\nOK = συνέχεια όπως είναι · Ακύρωση = διόρθωση':
     '«{v}» is not in the vaccine list. Is it misspelled?\n\nOK = carry on as it is · Cancel = correct it',
@@ -4166,7 +4168,15 @@ async function activateVax() {
       body: JSON.stringify({ activated_at: now, updated_at: now, updated_by: currentUser }) });
     await logPlan(p, 'activated', pl, rec);
     Object.assign(pl, rec); await saveHistory(p); render(); toast(t('Το εμβολιακό ενεργοποιήθηκε ✓'));
-  } catch (e) { toast(t('Σφάλμα: {msg}', { msg: e.message }), true); render(); }
+  } catch (e) { toast(t('Σφάλμα: {msg}', { msg: e.message }), true); render(); return; }
+  await offerStock(p);
+}
+// doses that came while the εμβολιακό was a draft wait in Περίσσευμα: now its lines count, offer to share them out
+async function offerStock(p) {
+  await loadCoverage(); render();
+  const waiting = coverage.filter(c => c.status === 'stock' && c.anath === p.house && c.hm_ekk === p.doc_date);
+  if (waiting.length && confirm(t('Για αυτή την εκκόλαψη υπάρχουν ήδη στο Περίσσευμα: {list}.\n\nΆνοιγμα του Περισσεύματος για «Μοίρασε»;',
+    { list: [...new Set(waiting.map(c => c.vaccine))].join(', ') }))) { ordSub = 'extra'; showTab('orders'); }
 }
 // only a draft εμβολιακό can be deleted, with its draft lines (history kept)
 async function deleteVax() {
