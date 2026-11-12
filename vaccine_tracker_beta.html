@@ -426,7 +426,9 @@ tr.row-draft.row-check td{opacity:1}   /* lines to check stand out among the fad
 .ord-line{cursor:pointer}
 .ord-entries{font-size:12px;color:var(--gh-fg-muted);margin-top:2px}.ord-acts{white-space:nowrap}.ord-acts button{margin-left:4px}
 .cov{display:inline-block;font-size:10px;font-weight:600;border:1px solid currentColor;border-radius:99px;padding:0 6px;margin-left:4px;white-space:nowrap}
-.cov-arrived{color:var(--gh-success-fg)}.cov-ordered{color:var(--gh-accent-fg)}.cov-missing,.cov-noqty{color:var(--gh-attention-fg)}
+.cov-arrived,.cov-stock{color:var(--gh-success-fg)}.cov-ordered{color:var(--gh-accent-fg)}.cov-missing,.cov-noqty{color:var(--gh-attention-fg)}
+.del-form input,.del-form select{width:100%;min-width:90px}.del-acts{display:flex;gap:8px;margin:8px 0}
+.del-note{font-size:12px;color:var(--gh-attention-fg)}.ord-pick.muted{opacity:.6}
 .cov.late{color:var(--gh-danger-fg);background:var(--gh-danger-subtle)}
 .cust-hist{display:flex;flex-direction:column;gap:2px;border-top:1px solid var(--gh-border-muted);padding-top:6px}.cust-hist span{color:var(--gh-fg-muted)}
 .vax-step{margin-left:6px;padding:1px 4px;font-size:11px;width:auto}
@@ -1274,6 +1276,23 @@ body.printing-card .printcard-doc{display:block}
 <script>
 // ── TRANSLATIONS ── this page's English (Greek text → English); shared words are in common.js
 addTranslations({
+  'Παραλαβή σήμερα': 'Delivery today', 'Υπάρχει στο ψυγείο': 'In the fridge', '{a} / {q} ήρθαν': '{a} / {q} arrived',
+  'Ήρθε με παραλαβή που δεν δόθηκε ακόμα σε γραμμή: Περίσσευμα › Μοίρασε.': 'Came in a delivery not yet given to a line: Surplus › Share out.',
+  'Μονάδα': 'Unit', 'Θάλαμος': 'House', '+ Άλλο εμβόλιο': '+ Another vaccine', 'Επόμενο: ποιες γραμμές': 'Next: which lines',
+  'Θάλαμος και εκκόλαψη: αν τα γράφει το κουτί. Κενά = η εφαρμογή ξεκινά από τη νωρίτερη γραμμή. Πάντα ρωτά πριν αποθηκεύσει.':
+    'House and hatch: if the box says. Empty = the app starts from the earliest line. It always asks before saving.',
+  'Συμπληρώστε εμβόλιο, ποσότητα και ημερομηνία.': 'Fill in a vaccine, a quantity and a date.',
+  'Αυτές είναι οι γραμμές;': 'Are these the lines?', 'Δεν βρέθηκε ανοιχτή γραμμή {v} για {where}.': 'No open {v} line for {where}.',
+  'Πήρε την πιο κοντινή: {where}.': 'Took the closest: {where}.', 'Ξεκινά από τη νωρίτερη γραμμή.': 'Starts from the earliest line.',
+  'Καμία ανοιχτή γραμμή: όλη η ποσότητα πάει στο Περίσσευμα.': 'No open line: the whole quantity goes to Surplus.',
+  'τίποτα': 'nothing', '{q} · γεμίζει, Ψυγείο ✓': '{q} · filled, Fridge ✓', '{q} από {need} · λείπουν ακόμα {m}': '{q} of {need} · still missing {m}',
+  'εμβ.': 'vacc.', 'Περισσεύουν {q}: μένουν στο Περίσσευμα για τις επόμενες εκκολάψεις.': '{q} left over: they stay in Surplus for the next hatches.',
+  'Πίσω': 'Back', 'Ναι, αποθήκευση': 'Yes, save', 'Από το Περίσσευμα.': 'From the surplus.', 'Μοίρασε': 'Share out',
+  'μπορεί να καλύψει {l}': 'can cover {l}', 'παραλαβή {d}': 'delivered {d}', 'για {l}': 'for {l}', 'Παραλαβές': 'Deliveries', 'Καμία παραλαβή.': 'No deliveries.',
+  'Διαγραφή της παραγγελίας {v} ({q});': 'Delete the order {v} ({q})?',
+  'Διαγραφή της παραλαβής {v} {q} ({d}); Οι γραμμές που γέμισε χάνουν το Ψυγείο.': 'Delete the delivery {v} {q} ({d})? The lines it filled lose their Fridge tick.',
+  'Παραγγελία {v} της {d}: ήρθαν {q} από {all}. Θα έρθουν τα υπόλοιπα;\n\nOK = ναι, μένει ανοιχτή · Ακύρωση = όχι, κλείνει':
+    'Order {v} of {d}: {q} of {all} arrived. Will the rest come?\n\nOK = yes, it stays open · Cancel = no, it closes',
   'Χωρίς φίλτρα': 'No filters',
   'Διπλό κλικ: οι γραμμές στα Εμβόλια': 'Double-click: the lines in Vaccines',
   'Κάποιες γραμμές κρύβονται από την αναζήτηση ή τα φίλτρα.': 'Some lines are hidden by the search or the filters.',
@@ -1300,8 +1319,6 @@ addTranslations({
   'χωρίς προμηθευτή': 'no supplier',
   'ως {d}': 'by {d}',
   'παραγγελία {d}': 'ordered {d}',
-  'ήρθαν {q} στις {d}': '{q} arrived on {d}',
-  'Διαγραφή παραλαβής': 'Delete delivery',
   'κλειστή': 'closed',
   'Παραλαβή': 'Delivery',
   'Καμία ανοιχτή παραγγελία.': 'No open orders.',
@@ -1312,9 +1329,6 @@ addTranslations({
   'Ημερομηνία παραλαβής': 'Delivery date',
   'Συμπληρώστε ποσότητα και ημερομηνία.': 'Fill in a quantity and a date.',
   'Κλειστή: τα υπόλοιπα δεν θα έρθουν': 'Closed: the rest will not come',
-  'Διαγραφή της παραγγελίας {v} ({q}) μαζί με τις παραλαβές της;': 'Delete the order {v} ({q}) with its deliveries?',
-  'Ήρθαν {q} από {left}. Θα έρθουν τα υπόλοιπα;\n\nOK = ναι, μένει ανοιχτή · Ακύρωση = όχι, κλείνει': '{q} of {left} arrived. Will the rest come?\n\nOK = yes, it stays open · Cancel = no, it closes',
-  'Διαγραφή της παραλαβής {q} ({d});': 'Delete the delivery {q} ({d})?',
   'Εμβόλια': 'Vaccines', 'Παραγγελίες': 'Orders', 'Κάδος': 'Bin', 'Σύντομα εδώ.': 'Coming soon.', 'Διαγράφηκε.': 'Deleted.', '💉 Δεν βρέθηκαν εγγραφές.': '💉 No records found.',
   'ΕΜΒΟΛΙΑ — Beta': 'VACCINES — Beta', 'Δοκιμαστική έκδοση — πατήστε για την κανονική': 'Test version — click for the normal one',
   'Νεοσσοί': 'Chicks placed', 'ΚΟΡΥΖΑ': 'CORYZA', 'Επιλέξτε προϊόν για την ΚΟΡΥΖΑ ({n}ος γύρος).': 'Choose the product for CORYZA (round {n}).',
@@ -4417,11 +4431,12 @@ function renderCustTab() {
       || `<p class="muted">${t('Δεν υπάρχει ιστορικό ακόμα (γράφεται όταν ενεργοποιείται ένα εμβολιακό).')}</p>`) + '</div>';
 }
 
-// ── ORDERS TAB ── orders and deliveries kept as quantities. The database view vaccine_coverage works out, for each
-// line from the go-live date, what has arrived, what is ordered and what is missing (pool = vaccine + unit + who pays)
-const COV_LABEL = { arrived: 'Ήρθε', ordered: 'Παραγγέλθηκε', missing: 'Λείπει {n}', noqty: 'χωρίς ποσότητα' };
-let coverage = [], vOrders = [], vArrivals = [], toOrder = [], ordSub = 'order';
-const covById = new Map();
+// ── ORDERS TAB ── orders and deliveries kept as quantities. The database views work out, for each line from the
+// go-live date, what came for it, what waits in the fridge not given to a line, what is ordered and what is missing
+// (pool = vaccine + unit + who pays; who pays is set per customer in the Πελάτες tab), and per order how much has come.
+const COV_LABEL = { arrived: 'Ήρθε', stock: 'Υπάρχει στο ψυγείο', ordered: 'Παραγγέλθηκε', missing: 'Λείπει {n}', noqty: 'χωρίς ποσότητα' };
+let coverage = [], vOrders = [], vDeliveries = [], vDelLines = [], toOrder = [], ordSub = 'order';
+const covById = new Map(), orderStatus = new Map();
 async function loadCoverage() {
   try { coverage = await sbFetch('vaccine_coverage?order=hm_emv.asc,id.asc') || []; } catch { coverage = []; }   // no view yet: no statuses
   covById.clear(); coverage.forEach(c => covById.set(c.id, c));
@@ -4430,32 +4445,42 @@ async function loadCoverage() {
 function linesChanged(rows) { refreshHistory(rows); loadCoverage().then(render); }
 const unitQty = (n, unit) => nfmt(Number(n)) + (unit && unit !== 'Δόσεις' ? ' ' + t(unit) : '');
 const payerText = payer => payer ? t('πληρώνει {who}', { who: payer }) : t('εμείς');
+const payerTagOf = payer => payer ? `<span class="payer-tag">${x(payerText(payer))}</span>` : '';
 const poolKey = c => [c.vaccine, c.unit, c.payer || ''].join('|');
-const arrivalsOf = o => vArrivals.filter(a => a.order_id === o.id);
-const arrivedOf = o => arrivalsOf(o).reduce((s, a) => s + Number(a.qty), 0);
+// per order (view vaccine_order_status): what has come of it, what is still to come
+const receivedOf = o => Number((orderStatus.get(o.id) || {}).received || 0);
+const openOf = o => Number((orderStatus.get(o.id) || {}).still_open || 0);
 // "60.000" → 60000, "2,5" → 2.5
-const readQty = id => Number(String(document.getElementById(id).value).trim().replace(/\./g, '').replace(',', '.'));
+const parseQty = s => Number(String(s).trim().replace(/\./g, '').replace(',', '.'));
+const readQty = id => parseQty(document.getElementById(id).value);
 const logOrder = (order_id, action, changes) => sbFetch('vaccine_orders_history', { method: 'POST',
   body: JSON.stringify({ order_id, action, user_name: currentUser, ts: new Date().toISOString(), changes_json: JSON.stringify(changes) }) });
 
-// the status of a line in the main table (lines from the go-live date only)
+// the status of a line in the main table (lines from the go-live date only); a part that came is shown before it
 function covChip(r) {
   const c = covById.get(r.id); if (!c) return '';
+  const got = Number(c.covered_arrived || 0);
   const tip = c.status === 'noqty' ? t('Η ποσότητα δεν διαβάζεται.') : c.from_ticks ? t('Από τα ΝΑΙ του παλιού tracker.')
-    : t('Ήρθαν {a} · σε παραγγελία {o} · λείπουν {m}', { a: unitQty(c.covered_arrived, c.unit), o: unitQty(c.covered_ordered, c.unit), m: unitQty(c.missing, c.unit) });
-  return `<span class="cov cov-${c.status}${c.late ? ' late' : ''}" title="${x(tip)}">${x(t(COV_LABEL[c.status], { n: unitQty(c.missing, c.unit) }))}</span>`;
+    : c.status === 'stock' ? t('Ήρθε με παραλαβή που δεν δόθηκε ακόμα σε γραμμή: Περίσσευμα › Μοίρασε.')
+    : t('Ήρθαν {a} · σε παραγγελία {o} · λείπουν {m}', { a: unitQty(got, c.unit), o: unitQty(c.covered_ordered, c.unit), m: unitQty(c.missing, c.unit) });
+  const label = (got > 0 && c.status !== 'arrived' ? t('{a} / {q} ήρθαν', { a: unitQty(got, c.unit), q: unitQty(c.qty, c.unit) }) + ' · ' : '') +
+    t(COV_LABEL[c.status], { n: unitQty(c.missing, c.unit) });
+  return `<span class="cov cov-${c.status}${c.late ? ' late' : ''}" title="${x(tip)}">${x(label)}</span>`;
 }
 
 async function openOrdersTab() {
   const box = document.getElementById('orders-box');
   try {
-    [vOrders, vArrivals] = await Promise.all([sbFetch('vaccine_orders?order=ordered_on.desc,id.desc'), sbFetch('vaccine_arrivals?order=arrived_on.asc,id.asc')]);
+    let status;
+    [vOrders, status, vDeliveries, vDelLines] = await Promise.all([sbFetch('vaccine_orders?order=ordered_on.desc,id.desc'), sbFetch('vaccine_order_status'),
+      sbFetch('vaccine_deliveries?order=arrived_on.desc,id.desc'), sbFetch('vaccine_delivery_lines?order=id.asc')]);
+    orderStatus.clear(); (status || []).forEach(s => orderStatus.set(s.id, s));
     await loadCoverage();
   } catch (e) { box.innerHTML = `<p class="tab-soon">${x(t('Σφάλμα φόρτωσης: {msg}', { msg: e.message }))}</p>`; return; }
   renderOrdersTab(); render();   // the main table's statuses too
 }
 // sub-tabs of the Παραγγελίες tab; «Για παραγγελία» shows what must be ordered within ORDER_AHEAD_DAYS (or is late)
-const ORD_SUBS = [['order', 'Για παραγγελία'], ['waiting', 'Αναμένονται'], ['extra', 'Περίσσευμα'], ['done', 'Ιστορικό']];
+const ORD_SUBS = [['order', 'Για παραγγελία'], ['waiting', 'Αναμένονται'], ['delivery', 'Παραλαβή σήμερα'], ['extra', 'Περίσσευμα'], ['done', 'Ιστορικό']];
 const ORDER_AHEAD_DAYS = 14;
 // what the not-yet-arrived part of each open order covers: per pool, open orders (oldest first) take the lines
 // the view covers with ordered doses, earliest first → order id → { lines: [{ c, q }], spare }
@@ -4464,7 +4489,7 @@ function openCover() {
   const byPool = new Map();
   coverage.filter(c => !c.from_ticks && Number(c.covered_ordered) > 0).forEach(c => { const k = poolKey(c); if (!byPool.has(k)) byPool.set(k, []); byPool.get(k).push({ c, left: Number(c.covered_ordered) }); });
   [...vOrders].filter(o => !o.closed).sort((a, b) => a.ordered_on.localeCompare(b.ordered_on) || a.id - b.id).forEach(o => {
-    let open = Math.max(Number(o.qty) - arrivedOf(o), 0); const lines = [];
+    let open = openOf(o); const lines = [];
     for (const l of byPool.get(poolKey(o)) || []) {
       if (!open) break;
       const q = Math.min(open, l.left); if (!q) continue;
@@ -4474,52 +4499,66 @@ function openCover() {
   });
   return cover;
 }
+// delivered doses not given to a line yet, per pool; from = the deliveries they sit in, oldest first
+function stockPools() {
+  const used = new Map(); vDelLines.forEach(l => used.set(l.delivery_id, (used.get(l.delivery_id) || 0) + Number(l.qty)));
+  const pools = new Map();
+  [...vDeliveries].sort((a, b) => a.arrived_on.localeCompare(b.arrived_on) || a.id - b.id).forEach(d => {
+    const left = Number(d.qty) - (used.get(d.id) || 0); if (left <= 0) return;
+    const k = poolKey(d); if (!pools.has(k)) pools.set(k, { vaccine: d.vaccine, unit: d.unit, payer: d.payer || '', stock: 0, from: [] });
+    const p = pools.get(k); p.stock += left; p.from.push({ id: d.id, left });
+  });
+  return [...pools.values()];
+}
+const lineText = c => `${c.anath} ${fmt(c.hm_emv)}`;
 function renderOrdersTab() {
   const today = todayIso(), soon = subDays(today, -ORDER_AHEAD_DAYS), groups = new Map();
-  // missing doses of lines still to come, per supplier → who pays → vaccine; due soon / later apart
+  // missing doses of lines still to come, per supplier → vaccine (customer-paid ones apart); due soon / later apart
   coverage.filter(c => c.status === 'missing' && c.hm_emv >= today).forEach(c => {
     const later = c.order_by > soon, k = (c.supplier || '') + '|' + poolKey(c) + '|' + later;
     if (!groups.has(k)) groups.set(k, { supplier: c.supplier || '', vaccine: c.vaccine, unit: c.unit, payer: c.payer || '', later, missing: 0, orderBy: c.order_by, entries: [] });
     const g = groups.get(k); g.missing += Number(c.missing); g.entries.push(c); if (c.order_by < g.orderBy) g.orderBy = c.order_by;
   });
-  toOrder = [...groups.values()].sort((a, b) => a.supplier.localeCompare(b.supplier, 'el') || a.payer.localeCompare(b.payer, 'el') || a.orderBy.localeCompare(b.orderBy));
-  const groupTable = list => { let html = '', head = '';
+  toOrder = [...groups.values()].sort((a, b) => a.supplier.localeCompare(b.supplier, 'el') || a.orderBy.localeCompare(b.orderBy));
+  const groupTable = list => { let html = '', head = null;
     list.forEach(g => {
-      const h = `${g.supplier || t('χωρίς προμηθευτή')} · ${payerText(g.payer)}`;
-      if (h !== head) { html += (head ? '</tbody></table>' : '') + `<h4>${x(h)}</h4><table class="cust-table"><tbody>`; head = h; }
-      html += `<tr class="ord-line" title="${t('Διπλό κλικ: οι γραμμές στα Εμβόλια')}" ondblclick="if (!event.target.closest('button')) showLines([${g.entries.map(c => c.id)}])"><td><b>${x(g.vaccine)}</b><div class="ord-entries">${g.entries.map(c => `${x(c.anath)} ${fmt(c.hm_emv)} (${unitQty(c.missing, c.unit)})`).join(' · ')}</div></td>` +
+      const h = g.supplier || t('χωρίς προμηθευτή');
+      if (h !== head) { html += (head !== null ? '</tbody></table>' : '') + `<h4>${x(h)}</h4><table class="cust-table"><tbody>`; head = h; }
+      html += `<tr class="ord-line" title="${t('Διπλό κλικ: οι γραμμές στα Εμβόλια')}" ondblclick="if (!event.target.closest('button')) showLines([${g.entries.map(c => c.id)}])"><td><b>${x(g.vaccine)}</b>${payerTagOf(g.payer)}<div class="ord-entries">${g.entries.map(c => `${x(lineText(c))} (${unitQty(c.missing, c.unit)})`).join(' · ')}</div></td>` +
         `<td>${unitQty(g.missing, g.unit)}</td><td class="${g.orderBy < today ? 'ord-late' : ''}">${t('ως {d}', { d: fmt(g.orderBy) })}</td>` +
         `<td class="ord-acts"><button class="btn-primary" onclick="openOrderForm(${toOrder.indexOf(g)})">${t('Παραγγελία')}</button></td></tr>`;
     });
-    return head ? html + '</tbody></table>' : ''; };
+    return head !== null ? html + '</tbody></table>' : ''; };
   const now = toOrder.filter(g => !g.later), later = toOrder.filter(g => g.later);
 
   const cover = openCover();
   const orderRow = o => { const cv = cover.get(o.id);
-    return `<tr><td><b>${x(o.vaccine)}</b><div class="ord-entries">${x(o.supplier || '—')} · ${x(payerText(o.payer))} · ${t('παραγγελία {d}', { d: fmt(o.ordered_on) })}` +
-      arrivalsOf(o).map(a => ` · ${t('ήρθαν {q} στις {d}', { q: unitQty(a.qty, o.unit), d: fmt(a.arrived_on) })} <button class="row-btn del" title="${t('Διαγραφή παραλαβής')}" onclick="deleteArrival(${a.id})">✕</button>`).join('') +
-      `</div>${cv && (cv.lines.length || cv.spare) ? `<div class="ord-entries">${[cv.lines.length ? t('καλύπτει {l}', { l: cv.lines.map(l => `${l.c.anath} ${fmt(l.c.hm_emv)} (${unitQty(l.q, o.unit)})`).join(', ') }) : '',
-        cv.spare ? t('περισσεύουν {q}', { q: unitQty(cv.spare, o.unit) }) : ''].filter(Boolean).join(' · ')}</div>` : ''}</td>` +
-      `<td>${unitQty(arrivedOf(o), o.unit)} / ${unitQty(o.qty, o.unit)}${o.closed ? ' · ' + t('κλειστή') : ''}</td><td class="ord-acts">` +
-      (!o.closed && arrivedOf(o) < o.qty ? `<button class="btn-primary" onclick="openArrival(${o.id})">${t('Παραλαβή')}</button>` : '') +
+    return `<tr><td><b>${x(o.vaccine)}</b>${payerTagOf(o.payer)}<div class="ord-entries">${x(o.supplier || '—')} · ${t('παραγγελία {d}', { d: fmt(o.ordered_on) })}</div>` +
+      (cv && (cv.lines.length || cv.spare) ? `<div class="ord-entries">${[cv.lines.length ? t('καλύπτει {l}', { l: cv.lines.map(l => `${lineText(l.c)} (${unitQty(l.q, o.unit)})`).join(', ') }) : '',
+        cv.spare ? t('περισσεύουν {q}', { q: unitQty(cv.spare, o.unit) }) : ''].filter(Boolean).join(' · ')}</div>` : '') + '</td>' +
+      `<td>${unitQty(receivedOf(o), o.unit)} / ${unitQty(o.qty, o.unit)}${o.closed ? ' · ' + t('κλειστή') : ''}</td><td class="ord-acts">` +
+      (openOf(o) > 0 ? `<button class="btn-primary" onclick="startDelivery(${o.id})">${t('Παραλαβή')}</button>` : '') +
       `<button class="btn-secondary" onclick="openEditOrder(${o.id})">${t('Επεξεργασία')}</button><button class="btn-secondary" onclick="deleteOrder(${o.id})">${t('Διαγραφή')}</button></td></tr>`; };
-  const waiting = vOrders.filter(o => !o.closed && arrivedOf(o) < o.qty), done = vOrders.filter(o => !waiting.includes(o));
+  const waiting = vOrders.filter(o => openOf(o) > 0), done = vOrders.filter(o => !waiting.includes(o));
+  const deliveryRow = d => { const ls = vDelLines.filter(l => l.delivery_id === d.id);
+    return `<tr><td><b>${x(d.vaccine)}</b>${payerTagOf(d.payer)}<div class="ord-entries">${t('παραλαβή {d}', { d: fmt(d.arrived_on) })}` +
+      (ls.length ? ' · ' + t('για {l}', { l: ls.map(l => `${covById.has(l.line_id) ? x(lineText(covById.get(l.line_id))) : '#' + l.line_id} (${unitQty(l.qty, d.unit)})`).join(', ') }) : '') + '</div></td>' +
+      `<td>${unitQty(d.qty, d.unit)}</td><td class="ord-acts"><button class="btn-secondary" onclick="deleteDelivery(${d.id})">${t('Διαγραφή')}</button></td></tr>`; };
 
-  // arrived doses no line uses (they cover the next lines of the same vaccine by themselves)
-  const pools = new Map();
-  vOrders.forEach(o => { const k = poolKey(o); if (!pools.has(k)) pools.set(k, { o, got: 0, used: 0 }); pools.get(k).got += arrivedOf(o); });
-  coverage.forEach(c => { const p = pools.get(poolKey(c)); if (p && !c.from_ticks) p.used += Number(c.covered_arrived || 0); });
-  const extra = [...pools.values()].filter(p => p.got > p.used);
-
-  const counts = { order: now.length, waiting: waiting.length, extra: extra.length, done: done.length };
+  const extra = stockPools();
+  const counts = { order: now.length, waiting: waiting.length, delivery: vDeliveries.filter(d => d.arrived_on === today).length, extra: extra.length, done: done.length };
   const table = rows => `<table class="cust-table"><tbody>${rows}</tbody></table>`;
   const body = {
     order: (groupTable(now) || `<p class="muted">${t('Τίποτα για παραγγελία τις επόμενες {n} ημέρες.', { n: ORDER_AHEAD_DAYS })}</p>`) +
       (later.length ? `<details><summary>${t('Αργότερα')} (${later.length})</summary>${groupTable(later)}</details>` : ''),
     waiting: waiting.length ? table(waiting.map(orderRow).join('')) : `<p class="muted">${t('Καμία ανοιχτή παραγγελία.')}</p>`,
-    extra: extra.length ? table(extra.map(p => `<tr><td><b>${x(p.o.vaccine)}</b><div class="ord-entries">${x(payerText(p.o.payer))} · ${t('καλύπτει μόνο του τις επόμενες εκκολάψεις')}</div></td><td>${unitQty(p.got - p.used, p.o.unit)}</td></tr>`).join(''))
+    delivery: deliveryBody(),
+    extra: extra.length ? table(extra.map((p, k) => { const can = coverage.filter(c => c.status === 'stock' && poolKey(c) === poolKey(p));
+      return `<tr><td><b>${x(p.vaccine)}</b>${payerTagOf(p.payer)}<div class="ord-entries">${can.length ? t('μπορεί να καλύψει {l}', { l: can.map(c => x(lineText(c))).join(', ') }) : t('καλύπτει μόνο του τις επόμενες εκκολάψεις')}</div></td>` +
+        `<td>${unitQty(p.stock, p.unit)}</td><td class="ord-acts">${can.length ? `<button class="btn-primary" onclick="shareStock(${k})">${t('Μοίρασε')}</button>` : ''}</td></tr>`; }).join(''))
       : `<p class="muted">${t('Δεν περισσεύει τίποτα.')}</p>`,
-    done: done.length ? table(done.map(orderRow).join('')) : `<p class="muted">${t('Καμία ολοκληρωμένη παραγγελία.')}</p>`,
+    done: `<h4>${t('Παραλαβές')}</h4>` + (vDeliveries.length ? table(vDeliveries.map(deliveryRow).join('')) : `<p class="muted">${t('Καμία παραλαβή.')}</p>`) +
+      `<h4>${t('Παραγγελίες')}</h4>` + (done.length ? table(done.map(orderRow).join('')) : `<p class="muted">${t('Καμία ολοκληρωμένη παραγγελία.')}</p>`),
   };
   document.getElementById('orders-box').innerHTML = `<div class="tabs ord-subs">${ORD_SUBS.map(([k, label]) =>
     `<button type="button" class="tab${k === ordSub ? ' on' : ''}" data-sub="${k}" onclick="ordSub = this.dataset.sub; renderOrdersTab()">${t(label)} <span class="ord-count">${counts[k]}</span></button>`).join('')}</div>` + body[ordSub];
@@ -4533,31 +4572,29 @@ async function showLines(ids) {
   if (rows.length) glowElements(rows);
 }
 
-// order / edit / delivery windows (the small window openMini); a save reloads the tab, an error only shows a message
+// order / edit windows (the small window openMini); a save reloads the tab, an error only shows a message
 const orderSave = fn => async () => {
   try { if (await fn() === false) return false; await openOrdersTab(); }
   catch (e) { toast(t('Σφάλμα: {msg}', { msg: e.message }), true); return false; }
 };
 function orderFields(o) {
-  const payers = [...new Set(['', ...coverage.map(c => c.payer || ''), o.payer || ''])];
   return field(t('Ποσότητα') + (o.unit !== 'Δόσεις' ? ` (${t(o.unit)})` : ''), `<input type="text" id="ord-qty" value="${nfmt(Number(o.qty))}">`) +
     field(t('Προμηθευτής'), `<input type="text" id="ord-supplier" value="${x(o.supplier || '')}">`) +
-    field(t('Πληρώνει'), `<select id="ord-payer">${payers.map(p => `<option value="${x(p)}"${p === (o.payer || '') ? ' selected' : ''}>${x(p || t('εμείς'))}</option>`).join('')}</select>`) +
     field(t('Ημερομηνία παραγγελίας'), `<input type="date" id="ord-date" value="${o.ordered_on}">`);
 }
 function readOrder() {
   const qty = readQty('ord-qty'), ordered_on = document.getElementById('ord-date').value;
   if (!(qty > 0) || !ordered_on) { toast(t('Συμπληρώστε ποσότητα και ημερομηνία.'), true); return null; }
-  return { qty, ordered_on, supplier: document.getElementById('ord-supplier').value.trim() || null, payer: document.getElementById('ord-payer').value || null };
+  return { qty, ordered_on, supplier: document.getElementById('ord-supplier').value.trim() || null };
 }
 let ordGroup = null;   // the line group the order window is for
 function openOrderForm(i) {
   const g = ordGroup = toOrder[i];
   const picks = g.entries.map((c, k) => `<label class="ord-pick"><input type="checkbox" checked onchange="ordPick(${k}, this.checked)"> ${x(c.anath)} ${fmt(c.hm_emv)} · ${unitQty(c.missing, c.unit)}</label>`).join('');
-  openMini(`${t('Παραγγελία')}: ${g.vaccine}`, field(t('Για (οι νωρίτερες καλύπτονται πρώτα)'), `<div id="ord-picks">${picks}</div>`) +
-    orderFields({ qty: g.missing, unit: g.unit, supplier: g.supplier, payer: g.payer, ordered_on: todayIso() }), orderSave(async () => {
+  openMini(`${t('Παραγγελία')}: ${g.vaccine}`, (g.payer ? `<p>${payerTagOf(g.payer)}</p>` : '') + field(t('Για (οι νωρίτερες καλύπτονται πρώτα)'), `<div id="ord-picks">${picks}</div>`) +
+    orderFields({ qty: g.missing, unit: g.unit, supplier: g.supplier, ordered_on: todayIso() }), orderSave(async () => {
     const f = readOrder(); if (!f) return false;
-    const [o] = await sbFetch('vaccine_orders', { method: 'POST', prefer: 'return=representation', body: JSON.stringify({ vaccine: g.vaccine, unit: g.unit, ...f, created_by: currentUser }) });
+    const [o] = await sbFetch('vaccine_orders', { method: 'POST', prefer: 'return=representation', body: JSON.stringify({ vaccine: g.vaccine, unit: g.unit, payer: g.payer || null, ...f, created_by: currentUser }) });
     await logOrder(o.id, 'created', o);
   }));
 }
@@ -4573,6 +4610,7 @@ function openEditOrder(id) {
     `<label class="fgroup"><input type="checkbox" id="ord-closed"${o.closed ? ' checked' : ''}> ${t('Κλειστή: τα υπόλοιπα δεν θα έρθουν')}</label>`, orderSave(async () => {
     const f = readOrder(); if (!f) return false;
     f.closed = document.getElementById('ord-closed').checked;
+    if (f.closed !== !!o.closed) f.got_qty = f.closed ? receivedOf(o) : null;   // closed: it counts only what had come
     const changes = Object.fromEntries(Object.keys(f).filter(k => String(f[k] ?? '') !== String(o[k] ?? '')).map(k => [k, { from: o[k], to: f[k] }]));
     if (!Object.keys(changes).length) return;
     await sbFetch(`vaccine_orders?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify(f) });
@@ -4581,31 +4619,168 @@ function openEditOrder(id) {
 }
 async function deleteOrder(id) {
   const o = vOrders.find(o => o.id === id);
-  if (!confirm(t('Διαγραφή της παραγγελίας {v} ({q}) μαζί με τις παραλαβές της;', { v: o.vaccine, q: unitQty(o.qty, o.unit) }))) return;
+  if (!confirm(t('Διαγραφή της παραγγελίας {v} ({q});', { v: o.vaccine, q: unitQty(o.qty, o.unit) }))) return;
   await orderSave(async () => {
-    await sbFetch(`vaccine_orders?id=eq.${id}`, { method: 'DELETE' });   // its deliveries go with it
-    await logOrder(id, 'deleted', { ...o, arrivals: arrivalsOf(o) });
+    await sbFetch(`vaccine_orders?id=eq.${id}`, { method: 'DELETE' });
+    await logOrder(id, 'deleted', o);
   })();
 }
-function openArrival(id) {
-  const o = vOrders.find(o => o.id === id), left = Number(o.qty) - arrivedOf(o);
-  openMini(`${t('Παραλαβή')}: ${o.vaccine}`, field(t('Ποσότητα') + (o.unit !== 'Δόσεις' ? ` (${t(o.unit)})` : ''), `<input type="text" id="arr-qty" value="${nfmt(left)}">`) +
-    field(t('Ημερομηνία παραλαβής'), `<input type="date" id="arr-date" value="${todayIso()}">`), orderSave(async () => {
-    const qty = readQty('arr-qty'), arrived_on = document.getElementById('arr-date').value;
-    if (!(qty > 0) || !arrived_on) { toast(t('Συμπληρώστε ποσότητα και ημερομηνία.'), true); return false; }
-    // less than what was still to come: OK = the rest will come (order stays open), Cancel = it won't (order closed)
-    const close = qty < left && !confirm(t('Ήρθαν {q} από {left}. Θα έρθουν τα υπόλοιπα;\n\nOK = ναι, μένει ανοιχτή · Ακύρωση = όχι, κλείνει', { q: unitQty(qty, o.unit), left: unitQty(left, o.unit) }));
-    const [a] = await sbFetch('vaccine_arrivals', { method: 'POST', prefer: 'return=representation', body: JSON.stringify({ order_id: id, qty, arrived_on, created_by: currentUser }) });
-    if (close) await sbFetch(`vaccine_orders?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify({ closed: true }) });
-    await logOrder(id, 'arrival', close ? { arrival: a, closed: true } : { arrival: a });
-  }));
+
+// ── DELIVERIES ── «Παραλαβή σήμερα»: what came in (house + hatch if the box says) → the app picks the lines, earliest
+// first, and asks «Αυτές είναι;» → saved; a line that gets all it needs is ticked Ψυγείο. What is left waits in Περίσσευμα.
+const UNITS = ['Δόσεις', 'Κιλά', 'Μπουκαλάκια'];
+let delRows = [], delDate = null, delCheck = null;   // the form's rows; delCheck = the plans while asking «Αυτές είναι;»
+const blankDel = () => ({ vaccine: '', qty: '', unit: 'Δόσεις', payer: '', house: '', hatch: '' });
+const optionsHtml = (list, value, label) => list.map(o => `<option value="${x(o)}"${o === value ? ' selected' : ''}>${x(label(o))}</option>`).join('');
+function deliveryBody() {
+  if (delCheck) return deliveryCheckBody();
+  if (!delRows.length) delRows = [blankDel()];
+  const names = [...new Set([...coverage.map(c => c.vaccine), ...vOrders.map(o => o.vaccine)])].sort((a, b) => a.localeCompare(b, 'el'));
+  const payers = [...new Set(['', ...coverage.map(c => c.payer || ''), ...delRows.map(r => r.payer)])];
+  const houses = ['', ...new Set(coverage.map(c => c.anath).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'el'));
+  return `<datalist id="del-names">${names.map(n => `<option value="${x(n)}">`).join('')}</datalist>` +
+    field(t('Ημερομηνία παραλαβής'), `<input type="date" id="del-date" value="${delDate || todayIso()}">`) +
+    `<table class="cust-table del-form"><thead><tr><th>${t('Εμβόλιο')}</th><th>${t('Ποσότητα')}</th><th>${t('Μονάδα')}</th><th>${t('Πληρώνει')}</th>` +
+    `<th>${t('Θάλαμος')}</th><th>${t('Εκκόλαψη')}</th><th></th></tr></thead><tbody>` +
+    delRows.map((r, i) => `<tr data-i="${i}"><td><input type="text" list="del-names" class="del-vaccine" value="${x(r.vaccine)}" onchange="delUnit(${i}, this.value)"></td>` +
+      `<td><input type="text" class="del-qty" inputmode="decimal" value="${x(r.qty)}"></td>` +
+      `<td><select class="del-unit">${optionsHtml(UNITS, r.unit, u => t(u))}</select></td>` +
+      `<td><select class="del-payer">${optionsHtml(payers, r.payer, p => p || t('εμείς'))}</select></td>` +
+      `<td><select class="del-house">${optionsHtml(houses, r.house, h => h || '—')}</select></td>` +
+      `<td><input type="date" class="del-hatch" value="${x(r.hatch)}"></td>` +
+      `<td>${delRows.length > 1 ? `<button class="row-btn del" title="${t('Αφαίρεση')}" onclick="delRemove(${i})">✕</button>` : ''}</td></tr>`).join('') +
+    `</tbody></table><div class="del-acts"><button class="btn-secondary" onclick="delAdd()">${t('+ Άλλο εμβόλιο')}</button>` +
+    `<button class="btn-primary" onclick="delPlanAll()">${t('Επόμενο: ποιες γραμμές')}</button></div>` +
+    `<p class="muted">${t('Θάλαμος και εκκόλαψη: αν τα γράφει το κουτί. Κενά = η εφαρμογή ξεκινά από τη νωρίτερη γραμμή. Πάντα ρωτά πριν αποθηκεύσει.')}</p>`;
 }
-async function deleteArrival(id) {
-  const a = vArrivals.find(a => a.id === id), o = vOrders.find(o => o.id === a.order_id);
-  if (!confirm(t('Διαγραφή της παραλαβής {q} ({d});', { q: unitQty(a.qty, o.unit), d: fmt(a.arrived_on) }))) return;
+// form inputs → delRows (before any re-draw)
+function delRead() {
+  const d = document.getElementById('del-date'); if (d) delDate = d.value;
+  document.querySelectorAll('.del-form tbody tr').forEach(tr => { const v = s => tr.querySelector(s).value;
+    Object.assign(delRows[+tr.dataset.i], { vaccine: v('.del-vaccine').trim(), qty: v('.del-qty'), unit: v('.del-unit'), payer: v('.del-payer'), house: v('.del-house'), hatch: v('.del-hatch') }); });
+}
+function delAdd() { delRead(); delRows.push(blankDel()); renderOrdersTab(); }
+function delRemove(i) { delRead(); delRows.splice(i, 1); renderOrdersTab(); }
+// the name as the lines write it: "clone30" → "CLONE30 / AVINEW" when only that line has it
+const poolName = name => coverage.some(c => c.vaccine === name) ? name : (coverage.find(c => c.status !== 'noqty' && sameVaccine(c.vaccine, name)) || {}).vaccine || name;
+// the unit follows the vaccine's lines (Κιλά for a powder, …)
+function delUnit(i, name) { const c = coverage.find(c => c.vaccine === poolName(name) && c.unit); if (c) document.querySelector(`.del-form tr[data-i="${i}"] .del-unit`).value = c.unit; }
+// lines a delivery can go to: same pool, Ψυγείο not ticked, still needing doses; earliest vaccination first
+const delLines = (vaccine, unit, payer) => coverage.filter(c => c.vaccine === vaccine && c.unit === unit && (c.payer || '') === payer &&
+  c.psygeio !== 'ΝΑΙ' && Number(c.qty) > Number(c.covered_arrived || 0)).sort((a, b) => a.hm_emv.localeCompare(b.hm_emv) || a.id - b.id);
+const delPick = cands => cands.map(c => ({ c, need: Number(c.qty) - Number(c.covered_arrived || 0), on: true, give: 0 }));
+// the doses go down the ticked lines in order; what is left = surplus
+function delSpread(p) { let left = p.qty; p.lines.forEach(l => { l.give = l.on ? Math.min(left, l.need) : 0; left -= l.give; }); p.left = left; return p; }
+function delPlan(r) {
+  const vaccine = poolName(r.vaccine), cands = delLines(vaccine, r.unit, r.payer);
+  let first = [], note = '';
+  if (r.house || r.hatch) {
+    const where = (h, d) => [h, d ? t('εκκόλαψη') + ' ' + fmt(d) : ''].filter(Boolean).join(' · ');
+    first = cands.filter(c => (!r.house || c.anath === r.house) && (!r.hatch || c.hm_ekk === r.hatch));
+    if (!first.length) {   // the house / hatch typed has no open line of this vaccine: the closest hatch instead
+      const days = c => r.hatch ? Math.abs(new Date(c.hm_ekk) - new Date(r.hatch)) : 0;
+      const near = cands.filter(c => !r.house || c.anath === r.house).sort((a, b) => days(a) - days(b))[0];
+      if (near) first = cands.filter(c => c.anath === near.anath && c.hm_ekk === near.hm_ekk);
+      note = t('Δεν βρέθηκε ανοιχτή γραμμή {v} για {where}.', { v: vaccine, where: where(r.house, r.hatch) }) + ' ' +
+        (near ? t('Πήρε την πιο κοντινή: {where}.', { where: where(near.anath, near.hm_ekk) }) : t('Ξεκινά από τη νωρίτερη γραμμή.'));
+    }
+  }
+  if (!cands.length) note = t('Καμία ανοιχτή γραμμή: όλη η ποσότητα πάει στο Περίσσευμα.');
+  return delSpread({ vaccine, actual: r.vaccine, unit: r.unit, payer: r.payer, qty: parseQty(r.qty), note,
+    lines: delPick([...first, ...cands.filter(c => !first.includes(c))]) });
+}
+function delPlanAll() {
+  delRead();
+  const rows = delRows.filter(r => r.vaccine || r.qty);
+  if (!delDate || !rows.length || rows.some(r => !r.vaccine || !(parseQty(r.qty) > 0))) { toast(t('Συμπληρώστε εμβόλιο, ποσότητα και ημερομηνία.'), true); return; }
+  delCheck = rows.map(delPlan); renderOrdersTab();
+}
+// a line in «Αυτές είναι;»: how much it gets
+const delGiveText = (l, unit) => !l.give ? t('τίποτα') : l.give >= l.need ? t('{q} · γεμίζει, Ψυγείο ✓', { q: unitQty(l.give, unit) })
+  : t('{q} από {need} · λείπουν ακόμα {m}', { q: unitQty(l.give, unit), need: unitQty(l.need, unit), m: unitQty(l.need - l.give, unit) });
+function deliveryCheckBody() {
+  return `<h3>${t('Αυτές είναι οι γραμμές;')}</h3>` + delCheck.map((p, i) => {
+    const last = p.lines.reduce((m, l, k) => l.give ? k : m, -1);   // lines after the last one that gets doses: only the next 2
+    return `<div class="cust-block"><b>${x(p.vaccine)} · ${unitQty(p.qty, p.unit)}${payerTagOf(p.payer)}</b>` + (p.note ? `<div class="del-note">${x(p.note)}</div>` : '') +
+      p.lines.map((l, k) => (k <= last + 2 || !l.on) ? `<label class="ord-pick${l.give ? '' : ' muted'}"><input type="checkbox"${l.on ? ' checked' : ''} onchange="delToggle(${i}, ${k}, this.checked)"> ` +
+        `${x(l.c.anath)} · ${t('εκκόλαψη')} ${fmt(l.c.hm_ekk)} · ${t('εμβ.')} ${fmt(l.c.hm_emv)}${l.c.pelatis ? ' · ' + x(l.c.pelatis) : ''} — ${delGiveText(l, p.unit)}</label>` : '').join('') +
+      (p.left > 0 ? `<div class="ord-entries">${t('Περισσεύουν {q}: μένουν στο Περίσσευμα για τις επόμενες εκκολάψεις.', { q: unitQty(p.left, p.unit) })}</div>` : '') + '</div>';
+  }).join('') + `<div class="del-acts"><button class="btn-secondary" onclick="delCheck = null; renderOrdersTab()">${t('Πίσω')}</button>` +
+    `<button class="btn-primary" onclick="saveDelivery()">${t('Ναι, αποθήκευση')}</button></div>`;
+}
+function delToggle(i, k, on) { delCheck[i].lines[k].on = on; delSpread(delCheck[i]); renderOrdersTab(); }
+// «Παραλαβή» on an expected order: the form filled with what is still to come
+function startDelivery(id) {
+  const o = vOrders.find(o => o.id === id);
+  delCheck = null; delRows = [{ ...blankDel(), vaccine: o.vaccine, qty: nfmt(openOf(o)), unit: o.unit, payer: o.payer || '' }];
+  ordSub = 'delivery'; renderOrdersTab();
+}
+// «Μοίρασε» in Περίσσευμα: the same question, for doses already delivered
+function shareStock(k) {
+  const s = stockPools()[k];
+  delCheck = [delSpread({ vaccine: s.vaccine, actual: s.vaccine, unit: s.unit, payer: s.payer, qty: s.stock, fromStock: true, note: t('Από το Περίσσευμα.'),
+    lines: delPick(delLines(s.vaccine, s.unit, s.payer)) })];
+  ordSub = 'delivery'; renderOrdersTab();
+}
+// Ψυγείο on / off for a line from a delivery, with history (like a click on the pill); emvolio = which alternative came
+async function tickFridge(id, on, emvolio) {
+  const before = data.find(r => r.id === id); if (!before || (before.psygeio === 'ΝΑΙ') === on) return null;   // not loaded (bin) or already so
+  const row = { psygeio: on ? 'ΝΑΙ' : null, updated_by: currentUser, updated_at: new Date().toISOString() };
+  if (on && emvolio && emvolio !== before.emvolio) row.emvolio = emvolio;
+  const [updated] = await sbUpdate(id, row);
+  await sbHInsert({ row_id: id, action: 'edited', user_name: currentUser, ts: row.updated_at, changes_json: JSON.stringify(buildChanges(before, row)) });
+  data[data.indexOf(before)] = updated;
+  return row.emvolio ? updated : null;
+}
+async function saveDelivery() {
+  const plans = delCheck, date = delDate || todayIso(), renamed = [];
+  // a line written "A / B" that gets filled: which one came (asked before anything is saved)
+  for (const p of plans) {
+    if (vaccineAlts(p.vaccine).length < 2 || !p.lines.some(l => l.give && l.give >= l.need)) continue;
+    p.actual = vaccineAlts(p.vaccine).find(v => v.toUpperCase() === p.actual.toUpperCase()) || await askArrived(p.vaccine, t('Παραλαβή'));
+    if (!p.actual) return;
+  }
+  const before = new Map(vOrders.map(o => [o.id, receivedOf(o)]));
+  try {
+    for (const p of plans) {
+      let sources;
+      if (p.fromStock) sources = stockPools().find(s => poolKey(s) === poolKey(p)).from;   // oldest delivery first
+      else {
+        [p.delivery] = await sbFetch('vaccine_deliveries', { method: 'POST', prefer: 'return=representation',
+          body: JSON.stringify({ vaccine: p.vaccine, unit: p.unit, payer: p.payer || null, qty: p.qty, arrived_on: date, created_by: currentUser }) });
+        sources = [{ id: p.delivery.id, left: p.qty }];
+      }
+      const rows = [], given = p.lines.filter(l => l.give > 0);
+      for (const l of given) {   // a line's doses can come from more than one delivery (surplus)
+        let q = l.give;
+        for (const s of sources) { const take = Math.min(q, s.left); if (!take) continue; s.left -= take; q -= take; rows.push({ delivery_id: s.id, line_id: l.c.id, qty: take, ticked: l.give >= l.need }); if (!q) break; }
+      }
+      if (rows.length) await sbFetch('vaccine_delivery_lines', { method: 'POST', body: JSON.stringify(rows) });
+      for (const l of given.filter(l => l.give >= l.need)) { const u = await tickFridge(l.c.id, true, vaccineAlts(p.vaccine).length > 1 ? p.actual : null); if (u) renamed.push(u); }
+      await logOrder(null, p.fromStock ? 'stock_shared' : 'delivery', { delivery: p.delivery || null, vaccine: p.vaccine, qty: p.qty, lines: rows });
+    }
+  } catch (e) { toast(t('Σφάλμα: {msg}', { msg: e.message }), true); await openOrdersTab(); return; }
+  delRows = []; delCheck = null;
+  if (renamed.length) refreshHistory(renamed);
+  await openOrdersTab();
+  // orders that got part of what they wait for: will the rest come? (no = closed, it counts only what came)
+  let closed = 0;
+  for (const o of vOrders.filter(o => !o.closed && openOf(o) > 0 && receivedOf(o) > (before.get(o.id) || 0))) {
+    if (confirm(t('Παραγγελία {v} της {d}: ήρθαν {q} από {all}. Θα έρθουν τα υπόλοιπα;\n\nOK = ναι, μένει ανοιχτή · Ακύρωση = όχι, κλείνει',
+      { v: o.vaccine, d: fmt(o.ordered_on), q: unitQty(receivedOf(o), o.unit), all: unitQty(o.qty, o.unit) }))) continue;
+    await sbFetch(`vaccine_orders?id=eq.${o.id}`, { method: 'PATCH', body: JSON.stringify({ closed: true, got_qty: receivedOf(o) }) });
+    await logOrder(o.id, 'closed', { got_qty: receivedOf(o) }); closed++;
+  }
+  if (closed) await openOrdersTab();
+  toast(t('Αποθηκεύτηκε ✓'));
+}
+async function deleteDelivery(id) {
+  const d = vDeliveries.find(d => d.id === id), lines = vDelLines.filter(l => l.delivery_id === id);
+  if (!confirm(t('Διαγραφή της παραλαβής {v} {q} ({d}); Οι γραμμές που γέμισε χάνουν το Ψυγείο.', { v: d.vaccine, q: unitQty(d.qty, d.unit), d: fmt(d.arrived_on) }))) return;
   await orderSave(async () => {
-    await sbFetch(`vaccine_arrivals?id=eq.${id}`, { method: 'DELETE' });
-    await logOrder(a.order_id, 'arrival_deleted', a);
+    for (const l of lines.filter(l => l.ticked)) await tickFridge(l.line_id, false);
+    await sbFetch(`vaccine_deliveries?id=eq.${id}`, { method: 'DELETE' });   // its lines go with it
+    await logOrder(null, 'delivery_deleted', { delivery: d, lines });
   })();
 }
 
