@@ -1219,7 +1219,7 @@ body.printing-card .printcard-doc{display:block}
     <div id="planwin-body"></div>
     <div class="modal-actions"><div style="flex:1"></div>
       <button data-t class="btn-secondary" onclick="closePlanWin()">Ακύρωση</button>
-      <button data-t class="btn-primary" id="planwin-ok" onclick="applyPlanWin()">OK</button></div>
+      <button data-t class="btn-primary" id="planwin-ok" onclick="runOnce(this, applyPlanWin)">OK</button></div>
   </div>
 </div>
 <!-- "Δημιουργία εμβολιακού": Νεοσσοί, the customers found, ΚΟΡΥΖΑ product (HATCH ΕΜΒΟΛΙΑΚΑ in the script) -->
@@ -4349,10 +4349,17 @@ async function rememberHouseVaccine(pel, vaccine, day) {
 }
 
 // a small window: title, fields, OK runs onOk — it stays open when onOk returns false (invalid input)
+// a button runs its action once at a time: greyed out until it finishes, so a second click while saving does nothing
+async function runOnce(btn, fn) {
+  if (btn.disabled) return;
+  btn.disabled = true;
+  try { return await fn(); } finally { btn.disabled = false; }
+}
 function openMini(title, html, onOk) {
   document.getElementById('vaxmini-title').textContent = title;
   document.getElementById('vaxmini-body').innerHTML = html;
-  document.getElementById('vaxmini-ok').onclick = async () => { if (await onOk() !== false) closeMini(); };
+  const ok = document.getElementById('vaxmini-ok');
+  ok.onclick = () => runOnce(ok, async () => { if (await onOk() !== false) closeMini(); });
   document.getElementById('vaxmini-bg').style.display = 'flex';
   const first = document.querySelector('#vaxmini-body input'); if (first) first.focus();
 }
