@@ -346,7 +346,7 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
 /* a clicked customer: their lines in red (click again to clear) */
 .vax-table tr.cust-hl td{background:rgba(255,107,107,0.16)}.vax-table tr.cust-hl td:first-child{box-shadow:inset 3px 0 0 var(--gh-danger-fg)}
 .cust-pick{cursor:pointer}.cust-pick:hover b{text-decoration:underline}.cust-table tr.cust-on td{background:rgba(255,107,107,0.16)}
-.vax-right h4{font-size:13px;margin:0 0 6px}
+.vax-right h4{font-size:13px;margin:0 0 6px}.vax-cust-btn{width:100%;margin-bottom:8px}
 .vax-tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
 .cust-mem{font-size:11px;color:#c4a5ff;margin-top:2px}
 /* step bar: done = green, next = blue outline, later = dashed */
@@ -1320,6 +1320,11 @@ body.printing-card .printcard-doc{display:block}
 <script>
 // ── TRANSLATIONS ── this page's English (Greek text → English); shared words are in common.js
 addTranslations({
+  'Αλλαγή πελατών': 'Change customers',
+  'Συμπλήρωση από το πρότυπο ({n})': 'Fill from the template ({n})', 'Συμπλήρωση από το πρότυπο': 'Fill from the template',
+  'έχει περάσει': 'already past', 'την ίδια μέρα υπάρχει: {v}': 'same day already has: {v}', 'Προστέθηκαν {n} γραμμές ✓': '{n} lines added ✓',
+  'Εμβόλια του προτύπου που λείπουν από αυτή την εκκόλαψη. Προστίθενται μόνο όσα είναι τσεκαρισμένα· οι υπάρχουσες γραμμές δεν αλλάζουν.':
+    'Template vaccines missing from this hatch. Only the ticked ones are added; existing lines do not change.',
   'Για αυτή την εκκόλαψη υπάρχουν ήδη στο Περίσσευμα: {list}.\n\nΆνοιγμα του Περισσεύματος για «Μοίρασε»;':
     'For this hatch there is already stock in Surplus: {list}.\n\nOpen Surplus to «Share out»?',
   'Τυπώθηκε το εμβολιακό;': 'Was the vaccination plan printed?', 'αποθηκεύτηκε ✓': 'saved ✓',
@@ -3734,7 +3739,9 @@ function renderSheet() {
     const g = rows.filter(r => roundOf(r) === round).sort(byDate);
     return g.length ? `<tr class="vax-grp"><td colspan="7">${t(label)} · ${t('ημ. {n}', { n: ageOf(g[0]) })} · ${fmt(g[0].hm_emv)}</td></tr>` + g.map(line).join('') : '';
   };
+  const missing = pl && doneSet(pl).has('base') ? templateMissing(p).length : 0;
   const edit = pl ? `<button class="btn-secondary" onclick="openAddVax()">${t('+ Εμβόλιο')}</button>` +
+    (missing ? `<button class="btn-secondary" onclick="openFillTemplate()">${t('Συμπλήρωση από το πρότυπο ({n})', { n: missing })}</button>` : '') +
     (pl.customers.length ? `<button class="btn-secondary" onclick="openPayVax()">${t('Πληρώνει πελάτης…')}</button>` : '') : '';
   const allDone = pl && stepsDone(p) === vaxSteps(p).length;
   const print = (printChanges(p).length ? `<button class="vax-pill print-warn" onclick="openVaxPrint()" title="${t('Άλλαξε μετά την εκτύπωση')}">⚠ ${t('Τυπώστε ξανά')}</button>` : '') +
@@ -3743,12 +3750,14 @@ function renderSheet() {
     : st === 'draft' ? `<button class="btn-danger" onclick="deleteVax()">${t('Διαγραφή εμβολιακού')}</button>` +
       (allDone ? `<button class="btn-primary" onclick="activateVax()">${t('Ενεργοποίηση')}</button>` : '') : '';
   const booked = (p.customers || []).reduce((s, c) => s + custBirds(c), 0);
-  const right = `<aside class="vax-right"><h4>${t('Πελάτες (από τον Προγραμματισμό)')}</h4>${customerTableHtml(p)}` +
+  // an active εμβολιακό: no step bar, its customers are changed from the right (step 1's window)
+  const right = `<aside class="vax-right">${pl && st !== 'draft' ? `<button class="btn-secondary vax-cust-btn" onclick="runStep('cust')">${t('Αλλαγή πελατών')}</button>` : ''}` +
+    `<h4>${t('Πελάτες (από τον Προγραμματισμό)')}</h4>${customerTableHtml(p)}` +
     (pl ? `<p class="muted">${t('Νεοσσοί')} ${nfmt(pl.chicks)} · ${t(LEFTOVER)} ${nfmt(Math.max(pl.chicks - booked, 0))}</p>` : '') + '</aside>';
   box.innerHTML = `<div class="vax-sheet"><div class="vax-top"><b>${x(p.house)} · ${t('Εκκόλαψη')} ${fmt(p.doc_date)}</b>` +
     `<span class="muted">${x(p.breed || '—')}${pl ? ` · ${t('Νεοσσοί')} <a href="#" class="vax-chicks" onclick="openChicksVax(); return false">${nfmt(pl.chicks)} ✎</a> · ${t('Πελάτες')} ${pl.customers.length}` : ''}</span>` +
     `<span class="vax-pill ${st}">${t(VAX_STATE_LABEL[st])}</span><span class="tb-spacer"></span>${print}${actions}</div>` +
-    `<div class="vax-grid"><div class="vax-left">${pl ? stepBarHtml(p) : ''}${edit ? `<div class="vax-tools">${edit}</div>` : ''}` +
+    `<div class="vax-grid"><div class="vax-left">${pl && st === 'draft' ? stepBarHtml(p) : ''}${edit ? `<div class="vax-tools">${edit}</div>` : ''}` +
     (rows.length ? `<div class="vax-lines"><table class="vax-table"><thead><tr><th>${t('Ημέρα')}</th><th>${t('Ημερομηνία')}</th><th>${t('Εμβόλιο')}</th><th>${t('Ποσότητα')}</th>` +
       `<th>${t('Πελάτης')}</th><th>${t('Παραγγελία')}</th><th>${t('Ψυγείο')}</th></tr></thead><tbody>` +
       rows.filter(r => !roundOf(r)).sort(byDate).map(line).join('') + group(1, 'ΠΡΩΤΑ ΕΝΕΣΙΜΑ') + group(2, 'ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ') + '</tbody></table></div>'
@@ -4346,6 +4355,29 @@ function openMini(title, html, onOk) {
 }
 function closeMini() { document.getElementById('vaxmini-bg').style.display = 'none'; }
 const field = (label, inner) => `<div class="fgroup"><label>${label}</label>${inner}</div>`;
+// ── FILL FROM THE TEMPLATE ── εμβολιακά made over lines typed the old way (or before a template change) lack template lines:
+// the missing ones are listed with a tick each (a past day, or a day that already has another vaccine, starts unticked);
+// OK adds only the ticked ones — nothing existing changes.
+const templateMissing = p => diffLines(hatchRows(p).filter(r => !roundOf(r)), baseLines(p), null).adds.sort((a, b) => a.hm_emv.localeCompare(b.hm_emv));
+let fillList = [];
+function openFillTemplate() {
+  const p = sheetHatch(), rows = hatchRows(p), today = todayIso();
+  fillList = templateMissing(p).map(l => {
+    const other = rows.filter(r => r.hm_emv === l.hm_emv && !roundOf(r)).map(r => r.emvolio);
+    return { l, on: l.hm_emv >= today && !other.length,
+      why: l.hm_emv < today ? t('έχει περάσει') : other.length ? t('την ίδια μέρα υπάρχει: {v}', { v: other.join(', ') }) : '' };
+  });
+  openMini(t('Συμπλήρωση από το πρότυπο'), `<p class="muted">${t('Εμβόλια του προτύπου που λείπουν από αυτή την εκκόλαψη. Προστίθενται μόνο όσα είναι τσεκαρισμένα· οι υπάρχουσες γραμμές δεν αλλάζουν.')}</p>` +
+    fillList.map((f, i) => `<label class="ord-pick"><input type="checkbox" data-i="${i}"${f.on ? ' checked' : ''}> ${t('ημ. {n}', { n: ageOf({ ...f.l, hm_ekk: p.doc_date }) })} · ${fmt(f.l.hm_emv)} · ` +
+      `<b>${x(vaccineLabel(f.l.emvolio))}</b>${f.l.pelatis ? ' · ' + x(f.l.pelatis) : ''}${f.why ? ` <span class="muted">(${x(f.why)})</span>` : ''}</label>`).join(''),
+    () => sheetAction(async p => {
+      const picked = [...document.querySelectorAll('#vaxmini-body input[data-i]')].filter(b => b.checked).map(b => fillList[+b.dataset.i].l);
+      if (!picked.length) return;
+      const withQty = doneSet(planOf(p)).has('qty'), all = [...hatchRows(p), ...picked];   // quantities as step 4 would set them
+      await addLines(p, picked.map(l => ({ ...l, posotita: withQty ? qtyFor(p, { ...l, hm_ekk: p.doc_date }, all) : null })));
+      toast(t('Προστέθηκαν {n} γραμμές ✓', { n: picked.length }));
+    }));
+}
 function openAddVax() {
   openMini(t('+ Εμβόλιο'), field(t('Ημέρα'), '<input type="number" id="vx-add-day" min="1">') +
     field(t('Εμβόλιο'), '<input type="text" id="vx-add-vaccine" list="vaccine-list">') +
