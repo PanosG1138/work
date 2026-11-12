@@ -176,6 +176,15 @@ select.cell.on{border-color:rgba(79,209,139,0.5);color:var(--gh-success-fg);back
       <a data-t href="vaccine_tracker_beta.html#customers">Άνοιγμα καρτέλας Πελάτες →</a></p>
   </section>
 
+  <section>
+    <h2 data-t>Εκτύπωση εμβολιακού</h2>
+    <p data-t class="hint">Τι γράφει το εκτυπώσιμο εμβολιακό για κάθε εμβόλιο: τη στήλη ΕΜΒΟΛΙΟ (η ασθένεια) και τον συνηθισμένο ΤΡΟΠΟ. Ο ΤΡΟΠΟΣ αλλάζει και ανά εκκόλαψη, στη σελίδα εκτύπωσης.</p>
+    <div class="tbl"><table>
+      <thead><tr><th data-t>Εμβόλιο</th><th data-t>Ασθένεια (στήλη ΕΜΒΟΛΙΟ)</th><th data-t>Τρόπος</th></tr></thead>
+      <tbody id="print-body"></tbody>
+    </table></div>
+  </section>
+
   <section hidden>   <!-- hidden for now (user, 2026-11-07); the code still loads it -->
     <h2 data-t>Προμηθευτής ανά εμβόλιο</h2>
     <p data-t class="hint">Ο προμηθευτής που προτείνεται σε κάθε νέα γραμμή.</p>
@@ -210,6 +219,9 @@ addTranslations({
   'Ένας ή περισσότεροι πελάτες, με κόμμα. Τότε μπαίνει για όλο το αναθρεπτήριο.': 'One or more customers, comma-separated. Then it is added for the whole house.',
   'μόνο με {names}': 'only with {names}',
   'Πελάτης': 'Customer', 'Εμείς': 'Us', 'ΚΟΡΥΖΑ': 'CORYZA',
+  'Εκτύπωση εμβολιακού': 'Printable vaccination plan', 'Ασθένεια (στήλη ΕΜΒΟΛΙΟ)': 'Disease (ΕΜΒΟΛΙΟ column)', 'Τρόπος': 'Method',
+  'Τι γράφει το εκτυπώσιμο εμβολιακό για κάθε εμβόλιο: τη στήλη ΕΜΒΟΛΙΟ (η ασθένεια) και τον συνηθισμένο ΤΡΟΠΟ. Ο ΤΡΟΠΟΣ αλλάζει και ανά εκκόλαψη, στη σελίδα εκτύπωσης.':
+    'What the printable plan shows for each vaccine: the ΕΜΒΟΛΙΟ column (the disease) and the usual ΤΡΟΠΟΣ. ΤΡΟΠΟΣ can also be changed per hatch, on the print page.',
   'Προμηθευτής ανά εμβόλιο': 'Supplier per vaccine', 'Ο προμηθευτής που προτείνεται σε κάθε νέα γραμμή.': 'The supplier suggested for every new row.', 'Προμηθευτής': 'Supplier',
   'Γραμμή προγράμματος': 'Programme row', 'Είδος': 'Type', 'ΠΡΩΤΑ ΕΝΕΣΙΜΑ': 'FIRST INJECTIONS', 'ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ': 'SECOND INJECTIONS',
   'Όνομα εμβολίου…': 'Vaccine name…', '= Νεοσσοί + % ÷ αριθμό': '= chicks placed + % ÷ number', 'Σταθερή ποσότητα': 'Fixed quantity',
@@ -295,12 +307,12 @@ async function loadAll() {
     [programme, injectables, suppliers] = await Promise.all([
       sbFetch(`${PROG}?order=days.asc,id.asc`),
       sbFetch(`${INJ}?order=round.asc,sort.asc`),
-      sbFetch('vaccines?select=name,supplier&order=name.asc'),
+      sbFetch('vaccines?select=name,supplier,disease,method&order=name.asc'),
     ]);
     VACCINE_OPTIONS = suppliers.map(v => v.name);   // the vaccine list resolveVaccineName checks against
     fillVaccineList();
     setSync('ok', t('Συνδέθηκε ✓'));
-    renderProgramme(); renderInjectables(); renderSuppliers();
+    renderProgramme(); renderInjectables(); renderSuppliers(); renderPrintInfo();
   } catch (e) {
     setSync('err', t('Σφάλμα σύνδεσης'));
     toast(t('Σφάλμα: {msg}', { msg: e.message }), true);
@@ -447,6 +459,21 @@ async function setSupplier(input) {
     v.supplier = supplier; input.value = supplier || '';
     fillSupplierList(); setSync('ok', t('Αποθηκεύτηκε ✓'));
   } catch (e) { input.value = v.supplier || ''; toast(t('Σφάλμα: {msg}', { msg: e.message }), true); }
+}
+
+// ── PRINT INFO PER VACCINE ── vaccines.disease / .method, read by the beta's printable εμβολιακό
+function renderPrintInfo() {
+  const cell = (v, field) => `<td><input type="text" value="${escapeHtml(v[field] || '')}" data-name="${escapeHtml(v.name)}" data-field="${field}" onchange="setPrintInfo(this)"></td>`;
+  document.getElementById('print-body').innerHTML = suppliers.map(v => `<tr><td>${escapeHtml(v.name)}</td>${cell(v, 'disease')}${cell(v, 'method')}</tr>`).join('');
+}
+async function setPrintInfo(input) {
+  const v = suppliers.find(s => s.name === input.dataset.name), field = input.dataset.field, value = input.value.trim() || null;
+  try {
+    const [saved] = await sbFetch(`vaccines?name=eq.${encodeURIComponent(v.name)}`, { method: 'PATCH', prefer: 'return=representation', body: JSON.stringify({ [field]: value }) }) || [];
+    if (!saved) throw new Error(t('Η εγγραφή δεν υπάρχει πια — ανανεώστε τη σελίδα.'));
+    await logChange('vaccines', v.name, 'edited', { [field]: v[field] }, { [field]: value });
+    v[field] = value; input.value = value || ''; setSync('ok', t('Αποθηκεύτηκε ✓'));
+  } catch (e) { input.value = v[field] || ''; toast(t('Σφάλμα: {msg}', { msg: e.message }), true); }
 }
 
 // ── INIT ──

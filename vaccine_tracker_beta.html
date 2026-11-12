@@ -744,6 +744,37 @@ tbody tr.row-late{border-left:3px solid var(--gh-danger-fg)}
   @page{margin:1cm;size:landscape}
 }
 
+/* ── PRINTABLE ΕΜΒΟΛΙΑΚΟ (renderVaxPrint) ── */
+.vaxprint-modal{width:1000px;max-width:96vw;max-height:94vh}
+.vaxprint-bar{display:flex;align-items:center;gap:8px;margin-bottom:8px}.vaxprint-bar b{font-size:15px}
+.vp-warn{border:1px solid var(--gh-attention-fg);color:var(--gh-attention-fg);border-radius:var(--r);padding:8px 12px;margin-bottom:8px;font-size:13px}.vp-warn ul{margin:4px 0 4px 18px}
+.vax-pill.print-warn{cursor:pointer;color:var(--gh-attention-fg);border-color:var(--gh-attention-fg);background:transparent}
+.vaxprint-paper{background:#fff;color:#000;padding:18px 22px;border-radius:6px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.vp-co{color:#2e7d32;font-weight:700;font-size:10px}.vp-co.big{font-size:17px}.vp-head{margin-bottom:10px}
+.vp-title{border:1px solid #000;text-align:center;font-weight:700;font-size:15px;padding:5px;margin-bottom:6px}.vp-title span{display:block;font-size:11px;font-weight:400}
+.vp-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px}
+.vp-table th,.vp-table td{border:1px solid #000;padding:4px 6px;color:#000;background:#fff;vertical-align:middle;white-space:normal;overflow:visible;text-overflow:clip;max-width:none}
+.vp-table th{background:#d9d9d9;text-align:center}
+.vp-table td.vp-d{background:#ffff00;text-align:center}
+.vp-table tr.vp-salm td{background:#ffff00}.vp-table tr.vp-salm .vp-type{color:#f00}
+.vp-table tr.vp-scale td{background:#f8cbad}.vp-table tr.vp-inj td{background:#9dc3e6}
+.vp-m[contenteditable="true"]{cursor:text;outline:none;box-shadow:inset 0 -1px 0 #999}.vp-m[contenteditable="true"]:focus{box-shadow:inset 0 0 0 2px #2f81f7}
+@media print{
+  body.printing-vax .shell,body.printing-vax header,body.printing-vax .toast{display:none!important}
+  body.printing-vax #vaxprint-bg{display:block!important;position:static;background:#fff;backdrop-filter:none}
+  body.printing-vax .vaxprint-modal{width:auto;max-width:none;max-height:none;overflow:visible;border:none;padding:0;background:#fff}
+  body.printing-vax .vaxprint-bar,body.printing-vax #vaxprint-warn{display:none!important}
+  body.printing-vax .vaxprint-paper{padding:0}
+  body.printing-vax .vp-table th,body.printing-vax .vp-table td{border:1px solid #000!important;color:#000!important;background:#fff!important}
+  body.printing-vax .vp-table th{background:#d9d9d9!important}
+  body.printing-vax .vp-table td.vp-d,body.printing-vax .vp-table tr.vp-salm td{background:#ffff00!important}
+  body.printing-vax .vp-table tr.vp-salm .vp-type{color:#f00!important}
+  body.printing-vax .vp-table tr.vp-scale td{background:#f8cbad!important}
+  body.printing-vax .vp-table tr.vp-inj td{background:#9dc3e6!important}
+  body.printing-vax .vp-m{box-shadow:none!important}
+  @page{margin:1cm;size:portrait}
+}
+
 /* ── PRINT CARD — overrides the rule above when active ── */
 .printcard-doc{display:none}
 body.printing-card .printcard-doc{display:block}
@@ -1255,6 +1286,18 @@ body.printing-card .printcard-doc{display:block}
   </div>
 </div>
 
+<!-- PRINTABLE ΕΜΒΟΛΙΑΚΟ — renderVaxPrint(); only the paper prints (body.printing-vax) -->
+<div id="vaxprint-bg" class="modal-bg" style="display:none" onclick="if(event.target===this)closeVaxPrint()">
+  <div class="modal vaxprint-modal">
+    <div class="vaxprint-bar"><b id="vaxprint-title"></b><span class="tb-spacer"></span>
+      <button class="btn-secondary" onclick="downloadVaxExcel()">Excel</button>
+      <button data-t class="btn-primary" onclick="printVax()">🖨 Εκτύπωση</button>
+      <button data-t class="btn-secondary" onclick="closeVaxPrint()">Κλείσιμο</button></div>
+    <div id="vaxprint-warn"></div>
+    <div class="vaxprint-paper" id="vaxprint-paper"></div>
+  </div>
+</div>
+
 <!-- CHANGELOG MODAL -->
 <div id="changelog-bg" class="modal-bg" style="display:none">
 
@@ -1276,6 +1319,13 @@ body.printing-card .printcard-doc{display:block}
 <script>
 // ── TRANSLATIONS ── this page's English (Greek text → English); shared words are in common.js
 addTranslations({
+  'Τυπώστε ξανά': 'Print again', 'τυπώστε ξανά': 'print again', 'Άλλαξε μετά την εκτύπωση': 'Changed since it was printed',
+  'Άλλαξε μετά την εκτύπωση της {d}': 'Changed since it was printed on {d}', '… και {n} ακόμα': '… and {n} more',
+  'Τυπώστε ξανά για να είναι σωστό το χαρτί.': 'Print again so the paper is right.',
+  'Η εκκόλαψη δεν έχει εμβολιακό: ο ΤΡΟΠΟΣ δεν αποθηκεύεται.': 'This hatch has no vaccination plan: ΤΡΟΠΟΣ is not saved.',
+  'Τυπώθηκε {d} από {who}, χωρίς αλλαγές από τότε.': 'Printed {d} by {who}, no changes since.',
+  'Δεν έχει τυπωθεί ακόμα. Κλικ σε ένα κελί ΤΡΟΠΟΣ για να γράψετε.': 'Not printed yet. Click a ΤΡΟΠΟΣ cell to type.',
+  'ημερομηνία': 'date', 'εμβόλιο': 'vaccine', 'ποσότητα': 'quantity', 'τρόπος': 'method', 'ασθένεια': 'disease',
   'Παραλαβή σήμερα': 'Delivery today', 'Υπάρχει στο ψυγείο': 'In the fridge', '{a} / {q} ήρθαν': '{a} / {q} arrived',
   'Ήρθε με παραλαβή που δεν δόθηκε ακόμα σε γραμμή: Περίσσευμα › Μοίρασε.': 'Came in a delivery not yet given to a line: Surplus › Share out.',
   'Μονάδα': 'Unit', 'Θάλαμος': 'House', '+ Άλλο εμβόλιο': '+ Another vaccine', 'Επόμενο: ποιες γραμμές': 'Next: which lines',
@@ -3621,12 +3671,13 @@ async function loadVaxData() {
       sbFetch('vaccine_programme?order=days.asc,id.asc'),
       sbFetch('injectables?order=round.asc,sort.asc'),
       sbFetch('customer_vaccines?select=customer,vaccine,at,how,payer,product'),
-      sbFetch('vaccines?select=name,supplier'),
+      sbFetch('vaccines?select=name,supplier,disease,method'),
       // hatches not yet binned (≤ 126 days old) up to 60 days ahead
       sbFetch(`placements?select=id,house,doc_date,breed,chicks,customers,ptino&doc_date=gte.${subDays(todayIso(), 126)}&doc_date=lte.${subDays(todayIso(), -60)}&order=doc_date.asc`),
       sbFetch(`${PLANS}?select=*`),
     ]);
-    vaxData = { programme, injectables, usual, placements, plans, supplier: Object.fromEntries(vaccines.map(v => [v.name, v.supplier || ''])) };
+    vaxData = { programme, injectables, usual, placements, plans, supplier: Object.fromEntries(vaccines.map(v => [v.name, v.supplier || ''])),
+      vaccines: Object.fromEntries(vaccines.map(v => [v.name, v])) };
     return true;
   } catch (e) { document.getElementById('vax-cards').innerHTML = `<p class="tab-soon">${x(t('Σφάλμα φόρτωσης: {msg}', { msg: e.message }))}</p>`; return false; }
 }
@@ -3642,19 +3693,12 @@ function renderVax() {
       const st = vaxState(p), late = st === 'active' ? lateOrders(p).length : 0;
       return `<button class="vax-hatch${p.id === sheetHatchId ? ' on' : ''}" onclick="openSheet('${p.id}')">${fmt(p.doc_date)} · ${when(p)}` +
         `<span class="vax-pill ${st}">${t(VAX_STATE_LABEL[st])}${st === 'draft' ? ' · ' + t('βήμα {n}/{m}', { n: stepsDone(p), m: vaxSteps(p).length }) : ''}` +
-        `${late ? ' · ' + t('{n} χωρίς παραγγελία', { n: late }) : ''}</span></button>`;
+        `${late ? ' · ' + t('{n} χωρίς παραγγελία', { n: late }) : ''}${printChanges(p).length ? ' · ⚠ ' + t('τυπώστε ξανά') : ''}</span></button>`;
     }).join('') || `<span class="muted">${t('Καμία εκκόλαψη')}</span>`) + '</div>';
   }).join('');
   renderSheet();
 }
 function openSheet(id) { sheetHatchId = id; hlCustomer = null; renderVax(); }
-// the hatch's printable card (same as ⋯ → 🖨 Καρτέλα), for the open sheet
-function printHatch() {
-  const p = vaxData.placements.find(h => h.id === sheetHatchId);
-  document.getElementById('printcard-picker').style.display = 'none';
-  renderPrintCard(p.doc_date + '|' + p.house);
-  document.getElementById('printcard-bg').style.display = 'flex';
-}
 // the hatch's sheet, like the vet's Excel: general vaccines by date, then the ΠΡΩΤΑ / ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ groups
 function renderSheet() {
   const box = document.getElementById('vax-sheet');
@@ -3679,7 +3723,8 @@ function renderSheet() {
   const edit = pl ? `<button class="btn-secondary" onclick="openAddVax()">${t('+ Εμβόλιο')}</button>` +
     (pl.customers.length ? `<button class="btn-secondary" onclick="openPayVax()">${t('Πληρώνει πελάτης…')}</button>` : '') : '';
   const allDone = pl && stepsDone(p) === vaxSteps(p).length;
-  const print = rows.length ? `<button class="btn-secondary" onclick="printHatch()">${t('🖨 Εκτύπωση')}</button>` : '';
+  const print = (printChanges(p).length ? `<button class="vax-pill print-warn" onclick="openVaxPrint()" title="${t('Άλλαξε μετά την εκτύπωση')}">⚠ ${t('Τυπώστε ξανά')}</button>` : '') +
+    (rows.length ? `<button class="btn-secondary" onclick="openVaxPrint()">${t('🖨 Εκτύπωση')}</button>` : '');
   const actions = st === 'none' ? `<button class="btn-primary" onclick="openCreateVax()">${t('Δημιουργία εμβολιακού από το πρότυπο')}</button>`
     : st === 'draft' ? `<button class="btn-danger" onclick="deleteVax()">${t('Διαγραφή εμβολιακού')}</button>` +
       (allDone ? `<button class="btn-primary" onclick="activateVax()">${t('Ενεργοποίηση')}</button>` : '') : '';
@@ -3694,6 +3739,148 @@ function renderSheet() {
       `<th>${t('Πελάτης')}</th><th>${t('Παραγγελία')}</th><th>${t('Ψυγείο')}</th></tr></thead><tbody>` +
       rows.filter(r => !roundOf(r)).sort(byDate).map(line).join('') + group(1, 'ΠΡΩΤΑ ΕΝΕΣΙΜΑ') + group(2, 'ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ') + '</tbody></table></div>'
       : `<p class="tab-soon">${t(pl ? 'Το εμβολιακό είναι άδειο — ξεκινήστε από το βήμα 1.' : 'Δεν υπάρχουν γραμμές για αυτή την εκκόλαψη.')}</p>`) + `</div>${right}</div></div>`;
+}
+
+// ── PRINTABLE ΕΜΒΟΛΙΑΚΟ ── like the farm's ΕΜΒΟΛΙΑΚΟ ΠΡΟΓΡΑΜΜΑ sheet: one row per vaccination date from the hatch's own
+// lines (vaccines of the same day share a row), plus the fixed rows; ΕΜΒΟΛΙΟ (disease) and the usual ΤΡΟΠΟΣ come from the
+// template page (vaccines.disease / .method), ΤΡΟΠΟΣ typed here is kept per hatch (hatch_plans.print_notes).
+// Printing or the Excel keeps what was printed (hatch_plans.printed): any later difference = «Άλλαξε μετά την εκτύπωση».
+// ponytail: day-0 hatchery vaccines (per breed / hatchery) and the contents of the ΕΝΕΣΙΜΑ rows are not filled in yet.
+const PRINT_FIXED = [[2, 'paper', 'ΧΑΡΤΟΝΙΑ ΕΛΕΓΧΟΥ ΣΑΛΜΟΝΕΛΑ'], [60, 'scale', 'ΖΥΓΑΡΙΑ'], [82, 'scale', 'ΖΥΓΑΡΙΑ'], [105, 'end', '']];   // day 105 = 15 weeks, usual delivery
+const PRINT_INJ = { 1: 'ΠΡΩΤΑ ΕΝΕΣΙΜΑ ΕΜΒΟΛΙΑ', 2: 'ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ ΕΜΒΟΛΙΑ' };
+const PRINT_ORDER = { paper: 0, vaccine: 1, scale: 2, inj: 3, end: 4 };   // rows of the same day
+const COMPANY = ['ΓΕΩΡΓΑΣΟΠΟΥΛΟΣ Π. ΚΩΝΣΤΑΝΤΙΝΟΣ', 'ΠΤΗΝΟΤΡΟΦΙΚΗ ΕΠΙΧΕΙΡΗΣΗ',
+  '45ο χλμ Ε.Ο ΑΘΗΝΩΝ- ΛΑΜΙΑΣ • ΑΥΛΩΝΑΣ ΑΤΤΙΚΗΣ Τ.Κ 190 11 Τ.Θ 308 • Τ.22950-42820, 41378',
+  'F. 22950-42821 • E: info@georgasopoulos.gr • www.georgasopoulos.gr'];
+const PRINT_COLS = ['ΗΜΕΡΑ', '', 'ΕΜΒΟΛΙΟ', 'ΤΥΠΟΣ ΕΜΒΟΛΙΟΥ', 'ΠΟΣΟΤΗΤΑ', 'ΤΡΟΠΟΣ'];
+const vacInfo = name => (vaxData.vaccines || {})[name] || {};
+// the quantity of one vaccine on one day: numbers added up ("28.000" + "5.000" → 33.000), text kept ("2 ΚΙΛΑ")
+function qtyText(lines) {
+  const qs = lines.map(r => String(r.posotita || '').trim());
+  return qs.every(q => /^[0-9.]+$/.test(q)) ? nfmt(qs.reduce((s, q) => s + Number(q.replace(/\./g, '')), 0)) : [...new Set(qs.filter(Boolean))].join(' + ');
+}
+// the printable rows of a hatch; withNotes = false gives the ΤΡΟΠΟΣ the template page suggests
+function printRows(p, withNotes = true) {
+  const lines = hatchRows(p), rows = [], byDate = new Map();
+  lines.filter(r => !roundOf(r) && r.hm_emv).sort((a, b) => a.id - b.id)
+    .forEach(r => { if (!byDate.has(r.hm_emv)) byDate.set(r.hm_emv, []); byDate.get(r.hm_emv).push(r); });
+  byDate.forEach((ls, date) => {
+    const parts = [...new Set(ls.map(r => r.emvolio))].map(n => ({ n, info: vacInfo(n), q: qtyText(ls.filter(r => r.emvolio === n)) }));
+    const methods = [...new Set(parts.map(v => v.info.method || ''))];
+    rows.push({ key: 'v|' + date, date, kind: 'vaccine', disease: [...new Set(parts.map(v => v.info.disease).filter(Boolean))].join(' + '),
+      type: parts.map(v => vaccineLabel(v.n)).join(' + '), qty: parts.map(v => v.q).join(' + '),
+      method: methods.length === 1 ? methods[0] : parts.filter(v => v.info.method).map(v => `${v.info.method} (${v.n})`).join(' + ') });
+  });
+  PRINT_FIXED.forEach(([day, kind, label]) => rows.push({ key: `f|${kind}|${day}`, date: dayDate(p, day), kind, disease: label, type: '', qty: '', method: '' }));
+  [1, 2].forEach(round => {   // the ΕΝΕΣΙΜΑ rounds: one placeholder row each, on the day of their lines (or the template's day)
+    const ls = lines.filter(r => roundOf(r) === round && r.hm_emv), day = injDay(round);
+    const date = ls.length ? ls.map(r => r.hm_emv).sort()[0] : day != null ? dayDate(p, day) : null;
+    if (date) rows.push({ key: 'inj|' + round, date, kind: 'inj', disease: PRINT_INJ[round], type: '', qty: '', method: '' });
+  });
+  const notes = withNotes ? (planOf(p) || {}).print_notes || {} : {};
+  rows.forEach(r => { r.day = Math.round((Date.parse(r.date) - Date.parse(p.doc_date)) / 864e5); if (notes[r.key] != null) r.method = notes[r.key]; });
+  return rows.sort((a, b) => a.date.localeCompare(b.date) || PRINT_ORDER[a.kind] - PRINT_ORDER[b.kind]);
+}
+// what differs from the last print, as short lines (none = same, or never printed)
+function printChanges(p) {
+  const pl = planOf(p); if (!pl || !pl.printed) return [];
+  const now = printRows(p), old = pl.printed.rows || [], out = [];
+  const label = r => `${r.type || r.disease || t('ημ. {n}', { n: r.day })} ${fmt(r.date).slice(0, 5)}`;
+  const FIELDS = [['date', 'ημερομηνία'], ['type', 'εμβόλιο'], ['qty', 'ποσότητα'], ['method', 'τρόπος'], ['disease', 'ασθένεια']];
+  now.forEach(r => {
+    const o = old.find(o => o.key === r.key);
+    if (!o) { out.push('+ ' + label(r)); return; }
+    FIELDS.filter(([k]) => (o[k] || '') !== (r[k] || '')).forEach(([k, name]) =>
+      out.push(`${label(r)}: ${t(name)} ${(k === 'date' ? fmt(o[k]) : o[k]) || '—'} → ${(k === 'date' ? fmt(r[k]) : r[k]) || '—'}`));
+  });
+  old.filter(o => !now.some(r => r.key === o.key)).forEach(o => out.push('− ' + label(o)));
+  return out;
+}
+const printTitle = p => `ΕΜΒΟΛΙΑΚΟ ΠΡΟΓΡΑΜΜΑ ${p.house}`;
+const printSub = p => [`ΕΚΚΟΛΑΨΗ ${fmt(p.doc_date)}`, p.breed, planOf(p) ? `${nfmt(planOf(p).chicks)} ΝΕΟΣΣΟΙ` : ''].filter(Boolean).join(' · ');
+// a row's look, as in the sheet: yellow dates, ΣΑΛΜΟΝΕΛΑ rows all yellow with the vaccine in red, ΖΥΓΑΡΙΑ peach, ΕΝΕΣΙΜΑ blue
+const rowLook = r => r.kind === 'scale' ? 'vp-scale' : r.kind === 'inj' ? 'vp-inj' : /ΣΑΛΜΟΝΕΛΑ/.test(r.disease) && r.kind === 'vaccine' ? 'vp-salm' : 'vp-plain';
+
+function openVaxPrint() { document.getElementById('vaxprint-bg').style.display = 'flex'; renderVaxPrint(); }
+function closeVaxPrint() { document.getElementById('vaxprint-bg').style.display = 'none'; renderVax(); }
+function renderVaxPrint() {
+  const p = sheetHatch(), pl = planOf(p), rows = printRows(p), changes = printChanges(p), canEdit = !!pl;
+  document.getElementById('vaxprint-title').textContent = `${p.house} · ${t('Εκκόλαψη')} ${fmt(p.doc_date)}`;
+  document.getElementById('vaxprint-warn').innerHTML = changes.length
+    ? `<div class="vp-warn"><b>⚠ ${x(t('Άλλαξε μετά την εκτύπωση της {d}', { d: fmt(pl.printed.at.slice(0, 10)) }))}</b><ul>${changes.slice(0, 10).map(c => `<li>${x(c)}</li>`).join('')}` +
+      `${changes.length > 10 ? `<li>${t('… και {n} ακόμα', { n: changes.length - 10 })}</li>` : ''}</ul>${t('Τυπώστε ξανά για να είναι σωστό το χαρτί.')}</div>`
+    : `<p class="muted">${!pl ? t('Η εκκόλαψη δεν έχει εμβολιακό: ο ΤΡΟΠΟΣ δεν αποθηκεύεται.')
+      : pl.printed ? t('Τυπώθηκε {d} από {who}, χωρίς αλλαγές από τότε.', { d: fmt(pl.printed.at.slice(0, 10)), who: tValue(pl.printed.by || '') })
+      : t('Δεν έχει τυπωθεί ακόμα. Κλικ σε ένα κελί ΤΡΟΠΟΣ για να γράψετε.')}</p>`;
+  document.getElementById('vaxprint-paper').innerHTML =
+    `<div class="vp-head">${COMPANY.map((l, i) => `<div class="vp-co${i < 2 ? ' big' : ''}">${x(l)}</div>`).join('')}</div>` +
+    `<div class="vp-title">${x(printTitle(p))}<span>${x(printSub(p))}</span></div>` +
+    `<table class="vp-table"><colgroup><col style="width:13%"><col style="width:6%"><col style="width:22%"><col style="width:24%"><col style="width:12%"><col></colgroup>` +
+    `<thead><tr>${PRINT_COLS.map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>` +
+    rows.map(r => `<tr class="${rowLook(r)}"><td class="vp-d">${fmt(r.date).replace(/\/(\d\d)(\d\d)$/, '/$2')}</td><td class="vp-d">${r.day}</td>` +
+      `<td><b>${x(r.disease)}</b></td><td class="vp-type"><b>${x(r.type)}</b></td><td>${x(r.qty)}</td>` +
+      `<td class="vp-m"${canEdit ? ` contenteditable="true" data-key="${x(r.key)}" onblur="saveVaxNote(this)"` : ''}>${x(r.method)}</td></tr>`).join('') +
+    '</tbody></table>';
+}
+// ΤΡΟΠΟΣ typed in a cell → kept for this hatch (back to the suggestion = the note is dropped)
+async function saveVaxNote(el) {
+  const p = sheetHatch(), pl = planOf(p), key = el.dataset.key, text = el.innerText.trim();
+  const suggested = (printRows(p, false).find(r => r.key === key) || {}).method || '';
+  const notes = { ...(pl.print_notes || {}) };
+  if (text === suggested) delete notes[key]; else notes[key] = text;
+  if (JSON.stringify(notes) === JSON.stringify(pl.print_notes || {})) return;
+  try {
+    await sbFetch(`${PLANS}?id=eq.${pl.id}`, { method: 'PATCH', body: JSON.stringify({ print_notes: notes }) });
+    pl.print_notes = notes; setSyncStatus('ok', t('Αποθηκεύτηκε ✓'));
+  } catch (e) { toast(t('Σφάλμα: {msg}', { msg: e.message }), true); }
+  renderVaxPrint();
+}
+// printed (paper or Excel): keep what it looked like, so later changes can be shown
+async function markPrinted(p) {
+  const pl = planOf(p); if (!pl) return;
+  const printed = { at: new Date().toISOString(), by: currentUser, rows: printRows(p) };
+  try { await sbFetch(`${PLANS}?id=eq.${pl.id}`, { method: 'PATCH', body: JSON.stringify({ printed }) }); pl.printed = printed; }
+  catch (e) { toast(t('Σφάλμα: {msg}', { msg: e.message }), true); }
+}
+async function printVax() {
+  if (document.activeElement && document.activeElement.isContentEditable) await saveVaxNote(document.activeElement);
+  const p = sheetHatch();
+  await markPrinted(p);
+  document.body.classList.add('printing-vax'); window.print(); document.body.classList.remove('printing-vax');
+  renderVaxPrint();
+}
+const loadScript = src => new Promise((ok, fail) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => fail(new Error(src)); document.head.append(s); });
+// the same page as an .xlsx (ExcelJS, loaded on first use)
+async function downloadVaxExcel() {
+  if (document.activeElement && document.activeElement.isContentEditable) await saveVaxNote(document.activeElement);
+  const p = sheetHatch(), rows = printRows(p);
+  try {
+    if (!window.ExcelJS) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js');
+    const wb = new ExcelJS.Workbook(), ws = wb.addWorksheet('ΕΜΒΟΛΙΑΚΟ', { pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
+    ws.columns = [12, 6, 30, 30, 14, 30].map(width => ({ width }));
+    const fill = argb => ({ type: 'pattern', pattern: 'solid', fgColor: { argb } });
+    const thin = { style: 'thin', color: { argb: 'FF000000' } }, box = { top: thin, left: thin, bottom: thin, right: thin };
+    COMPANY.forEach((line, i) => { ws.mergeCells(i + 1, 1, i + 1, 6); const c = ws.getCell(i + 1, 1);
+      c.value = line; c.font = { bold: true, size: i < 2 ? 14 : 9, color: { argb: 'FF2E7D32' } }; });
+    ws.mergeCells(6, 1, 6, 6); Object.assign(ws.getCell(6, 1), { value: printTitle(p), font: { bold: true, size: 14 }, alignment: { horizontal: 'center' }, border: box });
+    ws.mergeCells(7, 1, 7, 6); Object.assign(ws.getCell(7, 1), { value: printSub(p), font: { size: 10 }, alignment: { horizontal: 'center' } });
+    const head = ws.getRow(9); head.values = PRINT_COLS;
+    head.eachCell({ includeEmpty: true }, c => { c.font = { bold: true }; c.alignment = { horizontal: 'center' }; c.border = box; c.fill = fill('FFD9D9D9'); });
+    const ROW_FILL = { 'vp-scale': 'FFF8CBAD', 'vp-inj': 'FF9DC3E6', 'vp-salm': 'FFFFFF00' };
+    rows.forEach((r, i) => {
+      const row = ws.getRow(10 + i), look = rowLook(r);
+      row.values = [fmt(r.date).replace(/\/(\d\d)(\d\d)$/, '/$2'), r.day, r.disease, r.type, r.qty, r.method];
+      row.eachCell({ includeEmpty: true }, (c, col) => {
+        c.border = box; c.alignment = { vertical: 'middle', wrapText: true, horizontal: col <= 2 ? 'center' : 'left' };
+        c.font = { bold: col === 3 || col === 4, color: { argb: look === 'vp-salm' && col === 4 ? 'FFFF0000' : 'FF000000' } };
+        const argb = ROW_FILL[look] || (col <= 2 ? 'FFFFFF00' : null); if (argb) c.fill = fill(argb);
+      });
+    });
+    const blob = new Blob([await wb.xlsx.writeBuffer()], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${p.house} εμβολιακό ${fmt(p.doc_date).replace(/\//g, '-')}.xlsx`;
+    a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+    await markPrinted(p); renderVaxPrint();
+  } catch (e) { toast(t('Σφάλμα: {msg}', { msg: e.message }), true); }
 }
 
 // ── LINES TO CHECK ── lines added because of a customer (injections, «μόνο με …» house vaccines, a paid share)
