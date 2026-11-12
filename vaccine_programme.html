@@ -227,6 +227,7 @@ addTranslations({
   'Ένας ή περισσότεροι πελάτες, με κόμμα. Τότε μπαίνει για όλο το αναθρεπτήριο.': 'One or more customers, comma-separated. Then it is added for the whole house.',
   'μόνο με {names}': 'only with {names}',
   'Πελάτης': 'Customer', 'Εμείς': 'Us', 'ΚΟΡΥΖΑ': 'CORYZA',
+  'Να ισχύσει ο ίδιος κανόνας ποσότητας και στις επόμενες ημέρες του {v} ({days});': 'Apply the same quantity rule to the later days of {v} ({days}) too?',
   'Εμβόλια εκκολαπτηρίου (ημέρα 0)': 'Hatchery vaccines (day 0)', 'ιδανικό, μόνο για αναφορά': 'ideal, for reference only', 'ισχύει': 'valid',
   'από την αρχή': 'from the start', 'από {d}': 'from {d}', 'Φυλές': 'Breeds', 'Ασθένεια': 'Disease', 'Τύπος εμβολίου': 'Vaccine product', '+ Γραμμή': '+ Row',
   'Ισχύει για εκκολάψεις από': 'Applies to hatches from', 'Η αλλαγή ισχύει μόνο για εκκολάψεις από αύριο και μετά.': 'A change only applies to hatches from tomorrow on.',
@@ -354,6 +355,31 @@ function syncModal() {
   document.getElementById('m-placed').style.display = placed ? '' : 'none';
   document.getElementById('m-fixed-wrap').style.display = placed ? 'none' : '';
 }
+// a repeated vaccine uses the rule of its first (earliest) row (user, 2026-11-12); exceptions are edited by hand
+const RULE_FIELDS = ['rule', 'extra_pct', 'divide_by', 'round_to', 'fixed_qty', 'unit'];
+const firstRowOf = vaccine => programme.filter(r => r.kind === 'general' && r.vaccine === vaccine).sort((a, b) => a.days[0] - b.days[0] || a.id - b.id)[0];
+// a new row for a vaccine the template already has: its rule filled in from the first row
+function copyFirstRule() {
+  if (editId) return;
+  const f = firstRowOf(document.getElementById('m-vaccine').value.trim()); if (!f) return;
+  const set = (el, v) => { document.getElementById(el).value = v ?? ''; };
+  set('m-rule', f.rule); set('m-pct', String(f.extra_pct).replace('.', ',')); set('m-div', f.divide_by); set('m-round', String(f.round_to));
+  set('m-fixed', f.fixed_qty == null ? '' : String(f.fixed_qty).replace('.', ',')); set('m-unit', f.unit);
+  syncModal(); showExample();
+}
+// the first row's rule changed: the later rows of the same vaccine follow, if you say so
+async function followFirstRule(saved, before) {
+  if (saved.kind !== 'general' || firstRowOf(saved.vaccine) !== saved || (before && RULE_FIELDS.every(k => String(before[k] ?? '') === String(saved[k] ?? '')))) return;
+  const later = programme.filter(r => r !== saved && r.kind === 'general' && r.vaccine === saved.vaccine && RULE_FIELDS.some(k => String(r[k] ?? '') !== String(saved[k] ?? '')));
+  if (!later.length || !confirm(t('Να ισχύσει ο ίδιος κανόνας ποσότητας και στις επόμενες ημέρες του {v} ({days});', { v: saved.vaccine, days: later.flatMap(r => r.days).join(', ') }))) return;
+  const rule = Object.fromEntries(RULE_FIELDS.map(k => [k, saved[k]]));
+  for (const r of later) {
+    const [u] = await sbFetch(`${PROG}?id=eq.${r.id}`, { method: 'PATCH', prefer: 'return=representation', body: JSON.stringify(rule) }) || [];
+    if (!u) continue;
+    await logChange(PROG, r.id, 'edited', r, u);
+    programme = programme.map(x => x.id === r.id ? u : x);
+  }
+}
 // id null = new row
 function openProg(id) {
   editId = id;
@@ -363,6 +389,7 @@ function openProg(id) {
   set('m-pct', String(r.extra_pct).replace('.', ',')); set('m-div', r.divide_by); set('m-round', String(r.round_to));
   set('m-fixed', r.fixed_qty == null || r.fixed_qty === '' ? '' : String(r.fixed_qty).replace('.', ',')); set('m-unit', r.unit);
   document.getElementById('m-delete').style.display = id ? '' : 'none';
+  document.getElementById('m-vaccine').onchange = copyFirstRule;
   syncModal(); showExample();
   document.getElementById('prog-bg').style.display = 'flex';
 }
@@ -394,6 +421,7 @@ async function saveProg() {
     if (!saved) throw new Error(t('Η εγγραφή δεν υπάρχει πια — ανανεώστε τη σελίδα.'));
     await logChange(PROG, saved.id, id ? 'edited' : 'created', before, saved);
     programme = (id ? programme.map(r => r.id === id ? saved : r) : [...programme, saved]).sort((a, b) => a.days[0] - b.days[0] || a.id - b.id);
+    await followFirstRule(saved, before);
     closeProg(); renderProgramme(); toast(t('Αποθηκεύτηκε ✓'));
   } catch (e) { toast(t('Σφάλμα: {msg}', { msg: e.message }), true); }
 }
