@@ -1320,6 +1320,7 @@ body.printing-card .printcard-doc{display:block}
 <script>
 // ── TRANSLATIONS ── this page's English (Greek text → English); shared words are in common.js
 addTranslations({
+  'Η ποσότητα μένει ίδια ({q}) και με αυτή τη στρογγυλοποίηση.': 'The quantity stays the same ({q}) with this rounding too.',
   'Αλλαγή πελατών': 'Change customers',
   'Συμπλήρωση από το πρότυπο ({n})': 'Fill from the template ({n})', 'Συμπλήρωση από το πρότυπο': 'Fill from the template',
   'έχει περάσει': 'already past', 'την ίδια μέρα υπάρχει: {v}': 'same day already has: {v}', 'Προστέθηκαν {n} γραμμές ✓': '{n} lines added ✓',
@@ -3727,7 +3728,7 @@ function renderSheet() {
   // rounding switch on unordered standard lines (its click must not open the edit window)
   const stepSel = r => { const tpl = templateOf(r), step = pl && tpl && tpl.rule === 'placed' && !ordered(r) ? stepOf(r, pl.chicks) : undefined;
     return step == null ? '' : `<select class="vax-step" onclick="event.stopPropagation()" onchange="setLineStep(${r.id}, this.value)" title="${t('Στρογγυλοποίηση προς τα πάνω σε')}">` +
-      [1000, 5000, 10000].map(s => `<option value="${s}"${s === step ? ' selected' : ''}>${nfmt(s)}</option>`).join('') + '</select>'; };
+      [1000, 5000, 10000].map(s => `<option value="${s}"${s === step ? ' selected' : ''}>${nfmt(s)} → ${fmtPosotita(posotitaText(planQty({ ...tpl, round_to: s }, pl.chicks), tpl.unit))}</option>`).join('') + '</select>'; };
   const byDate = (a, b) => (a.hm_emv || '').localeCompare(b.hm_emv || '') || (a.emvolio || '').localeCompare(b.emvolio || '');
   const short = iso => fmt(iso).slice(0, 5);   // dd/mm
   const orderCell = r => r.paragelia === 'ΝΑΙ' ? `<span class="ord-yes">✓${r.hm_par ? ' ' + short(r.hm_par) : ''}</span>`
@@ -4320,8 +4321,10 @@ const setVaxChicks = s => sheetAction(async p => {
 });
 const setLineStep = (id, step) => sheetAction(async p => {
   const r = data.find(x => x.id === id), tpl = templateOf(r);
+  const posotita = posotitaText(planQty({ ...tpl, round_to: Number(step) }, planOf(p).chicks), tpl.unit);
+  if (posotita === String(r.posotita)) { toast(t('Η ποσότητα μένει ίδια ({q}) και με αυτή τη στρογγυλοποίηση.', { q: fmtPosotita(posotita) })); return; }
   if (!confirmOrdered([r])) return;
-  await patchLines([r], { posotita: posotitaText(planQty({ ...tpl, round_to: Number(step) }, planOf(p).chicks), tpl.unit) });
+  await patchLines([r], { posotita });
 });
 const addVaxLine = () => sheetAction(async p => {
   const g = id => document.getElementById(id).value.trim();
