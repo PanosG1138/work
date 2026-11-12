@@ -753,8 +753,8 @@ tbody tr.row-late{border-left:3px solid var(--gh-danger-fg)}
 .vp-title{border:1px solid #000;text-align:center;font-weight:700;font-size:15px;padding:5px;margin-bottom:6px}
 .vp-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px}
 .vp-table th,.vp-table td{border:1px solid #000;padding:4px 6px;color:#000;background:#fff;vertical-align:middle;white-space:normal;overflow:visible;text-overflow:clip;max-width:none}
-.vp-table th{background:#d9d9d9;text-align:center}
-.vp-table td{text-align:center}.vp-table td.vp-d{background:#ffff00}.vp-table tr.vp-gap td{height:22px}
+.vp-table th{background:#d9d9d9;text-align:left}
+.vp-table td{text-align:left}.vp-table td.vp-d{background:#ffff00}.vp-table tr.vp-gap td{height:22px}
 .vp-table tr.vp-salm td{background:#ffff00}.vp-table tr.vp-salm .vp-type{color:#f00}
 .vp-table tr.vp-scale td{background:#f8cbad}.vp-table tr.vp-inj td{background:#9dc3e6}
 .vp-table td[contenteditable="true"]{cursor:text;outline:none;box-shadow:inset 0 -1px 0 #999}.vp-table td[contenteditable="true"]:focus{box-shadow:inset 0 0 0 2px #2f81f7}
@@ -1291,8 +1291,8 @@ body.printing-card .printcard-doc{display:block}
   <div class="modal vaxprint-modal">
     <div class="vaxprint-bar"><b id="vaxprint-title"></b><span class="tb-spacer"></span>
       <button class="btn-secondary" onclick="downloadVaxExcel()">Excel</button>
-      <button data-t class="btn-primary" onclick="printVax()">🖨 Εκτύπωση</button>
-      <button data-t class="btn-secondary" onclick="closeVaxPrint()">Κλείσιμο</button></div>
+      <button class="btn-primary" onclick="printVax()">🖨 Εκτύπωση</button>
+      <button class="btn-secondary" onclick="closeVaxPrint()">Κλείσιμο</button></div>
     <div id="vaxprint-warn"></div>
     <div id="vaxprint-hatch"></div>
     <div class="vaxprint-paper" id="vaxprint-paper"></div>
@@ -1554,7 +1554,8 @@ addTranslations({
 const TABLE  = 'emvolia';
 // supplier of a new line: the vaccine's own (Πρότυπο εμβολιακού page) or else Β. ΚΟΜΠΟΥΛΗΣ
 const DEFAULT_SUPPLIER = 'Β. ΚΟΜΠΟΥΛΗΣ';
-const supplierFor = vaccine => (vaxData && vaxData.supplier[vaccine]) || DEFAULT_SUPPLIER;
+// a line a customer pays is almost always bought from Β. ΚΟΜΠΟΥΛΗΣ (user, 2026-11-12)
+const supplierFor = (vaccine, payer) => (!payer && vaxData && vaxData.supplier[vaccine]) || DEFAULT_SUPPLIER;
 const HTABLE = 'emvolia_history';
 
 
@@ -3761,6 +3762,8 @@ function renderSheet() {
 // Day 0 = the hatchery's vaccines (not ordered, done at the hatchery): the list of the hatchery that supplies the hatch's breed
 // (hatchery_programmes, newest version up to the hatch date), or the hatch's own list once changed here (hatch_plans.hatchery).
 // ponytail: the contents of the ΕΝΕΣΙΜΑ rows are not filled in yet.
+// the printable page is always in Greek, whatever the app's language: {name} parts filled, never translated
+const gr = (greek, values) => values ? greek.replace(/\{(\w+)\}/g, (m, k) => (k in values ? values[k] : m)) : greek;
 const PRINT_FIXED = [[2, 'paper', 'ΧΑΡΤΟΝΙΑ ΕΛΕΓΧΟΥ ΣΑΛΜΟΝΕΛΑ'], [60, 'scale', 'ΖΥΓΑΡΙΑ'], [82, 'scale', 'ΖΥΓΑΡΙΑ'], [105, 'end', '']];   // day 105 = 15 weeks, usual delivery
 const PRINT_INJ = { 1: 'ΠΡΩΤΑ ΕΝΕΣΙΜΑ ΕΜΒΟΛΙΑ', 2: 'ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ ΕΜΒΟΛΙΑ' };
 const PRINT_ORDER = { hatchery: -1, paper: 0, vaccine: 1, scale: 2, inj: 3, end: 4 };   // rows of the same day
@@ -3803,13 +3806,13 @@ function printRows(p, withNotes = true) {
 function printChanges(p) {
   const pl = planOf(p); if (!pl || !pl.printed) return [];
   const now = printRows(p), old = pl.printed.rows || [], out = [];
-  const label = r => `${r.type || r.disease || t('ημ. {n}', { n: r.day })} ${fmt(r.date).slice(0, 5)}`;
+  const label = r => `${r.type || r.disease || gr('ημ. {n}', { n: r.day })} ${fmt(r.date).slice(0, 5)}`;
   const FIELDS = [['date', 'ημερομηνία'], ['type', 'εμβόλιο'], ['qty', 'ποσότητα'], ['method', 'τρόπος'], ['disease', 'ασθένεια']];
   now.forEach(r => {
     const o = old.find(o => o.key === r.key);
     if (!o) { out.push('+ ' + label(r)); return; }
     FIELDS.filter(([k]) => (o[k] || '') !== (r[k] || '')).forEach(([k, name]) =>
-      out.push(`${label(r)}: ${t(name)} ${(k === 'date' ? fmt(o[k]) : o[k]) || '—'} → ${(k === 'date' ? fmt(r[k]) : r[k]) || '—'}`));
+      out.push(`${label(r)}: ${gr(name)} ${(k === 'date' ? fmt(o[k]) : o[k]) || '—'} → ${(k === 'date' ? fmt(r[k]) : r[k]) || '—'}`));
   });
   old.filter(o => !now.some(r => r.key === o.key)).forEach(o => out.push('− ' + label(o)));
   return out;
@@ -3822,20 +3825,20 @@ function openVaxPrint() { document.getElementById('vaxprint-bg').style.display =
 function closeVaxPrint() { document.getElementById('vaxprint-bg').style.display = 'none'; renderVax(); }
 function renderVaxPrint() {
   const p = sheetHatch(), pl = planOf(p), rows = printRows(p), changes = printChanges(p), canEdit = !!pl;
-  document.getElementById('vaxprint-title').textContent = `${p.house} · ${t('Εκκόλαψη')} ${fmt(p.doc_date)}`;
+  document.getElementById('vaxprint-title').textContent = `${p.house} · ${gr('Εκκόλαψη')} ${fmt(p.doc_date)}`;
   document.getElementById('vaxprint-warn').innerHTML = changes.length
-    ? `<div class="vp-warn"><b>⚠ ${x(t('Άλλαξε μετά την εκτύπωση της {d}', { d: fmt(pl.printed.at.slice(0, 10)) }))}</b><ul>${changes.slice(0, 10).map(c => `<li>${x(c)}</li>`).join('')}` +
-      `${changes.length > 10 ? `<li>${t('… και {n} ακόμα', { n: changes.length - 10 })}</li>` : ''}</ul>${t('Τυπώστε ξανά για να είναι σωστό το χαρτί.')}</div>`
-    : `<p class="muted">${!pl ? t('Η εκκόλαψη δεν έχει εμβολιακό: ο ΤΡΟΠΟΣ δεν αποθηκεύεται.')
-      : pl.printed ? t('Τυπώθηκε {d} από {who}, χωρίς αλλαγές από τότε.', { d: fmt(pl.printed.at.slice(0, 10)), who: tValue(pl.printed.by || '') })
-      : t('Δεν έχει τυπωθεί ακόμα. Κλικ σε ένα κελί ΤΡΟΠΟΣ για να γράψετε.')}</p>`;
+    ? `<div class="vp-warn"><b>⚠ ${x(gr('Άλλαξε μετά την εκτύπωση της {d}', { d: fmt(pl.printed.at.slice(0, 10)) }))}</b><ul>${changes.slice(0, 10).map(c => `<li>${x(c)}</li>`).join('')}` +
+      `${changes.length > 10 ? `<li>${gr('… και {n} ακόμα', { n: changes.length - 10 })}</li>` : ''}</ul>${gr('Τυπώστε ξανά για να είναι σωστό το χαρτί.')}</div>`
+    : `<p class="muted">${!pl ? gr('Η εκκόλαψη δεν έχει εμβολιακό: ο ΤΡΟΠΟΣ δεν αποθηκεύεται.')
+      : pl.printed ? gr('Τυπώθηκε {d} από {who}, χωρίς αλλαγές από τότε.', { d: fmt(pl.printed.at.slice(0, 10)), who: tValue(pl.printed.by || '') })
+      : gr('Δεν έχει τυπωθεί ακόμα. Κλικ σε ένα κελί ΤΡΟΠΟΣ για να γράψετε.')}</p>`;
   const hn = hatcheryOf(p), own = !!(pl && pl.hatchery);
-  document.getElementById('vaxprint-hatch').innerHTML = `<p class="${hn || own ? 'muted' : 'vp-warn-line'}">` + (!p.breed && !own ? '⚠ ' + t('Η εκκόλαψη δεν έχει φυλή στον Προγραμματισμό: τα εμβόλια εκκολαπτηρίου είναι κενά.')
-      : !hn && !own ? '⚠ ' + t('Καμία λίστα εκκολαπτηρίου για τη φυλή {b} (σελίδα Πρότυπο εμβολιακού).', { b: x(p.breed) })
-      : t('Ημέρα 0, εκκολαπτήριο: {h}', { h: own ? t('αλλαγμένο για αυτή την εκκόλαψη') : x(`${hn.hatchery} (${p.breed})`) })) +
-    (canEdit ? ` <button class="btn-secondary" onclick="addHatchRow()">${t('+ Γραμμή εκκολαπτηρίου')}</button>` +
-      (own ? ` <button class="btn-secondary" onclick="resetHatchList()">${t('Επαναφορά στη λίστα του εκκολαπτηρίου')}</button>` : '') +
-      `<span class="vp-tip">${t('Σβήστε και τα 3 κελιά μιας γραμμής για να φύγει.')}</span>` : '') + '</p>';
+  document.getElementById('vaxprint-hatch').innerHTML = `<p class="${hn || own ? 'muted' : 'vp-warn-line'}">` + (!p.breed && !own ? '⚠ ' + gr('Η εκκόλαψη δεν έχει φυλή στον Προγραμματισμό: τα εμβόλια εκκολαπτηρίου είναι κενά.')
+      : !hn && !own ? '⚠ ' + gr('Καμία λίστα εκκολαπτηρίου για τη φυλή {b} (σελίδα Πρότυπο εμβολιακού).', { b: x(p.breed) })
+      : gr('Ημέρα 0, εκκολαπτήριο: {h}', { h: own ? gr('αλλαγμένο για αυτή την εκκόλαψη') : x(`${hn.hatchery} (${p.breed})`) })) +
+    (canEdit ? ` <button class="btn-secondary" onclick="addHatchRow()">${gr('+ Γραμμή εκκολαπτηρίου')}</button>` +
+      (own ? ` <button class="btn-secondary" onclick="resetHatchList()">${gr('Επαναφορά στη λίστα του εκκολαπτηρίου')}</button>` : '') +
+      `<span class="vp-tip">${gr('Σβήστε και τα 3 κελιά μιας γραμμής για να φύγει.')}</span>` : '') + '</p>';
   const day0 = rows.filter(r => r.kind === 'hatchery').length;
   const edit = (r, field, i) => canEdit && r.key !== 'h|none' ? ` contenteditable="true" data-i="${i}" data-field="${field}" onblur="saveHatchCell(this)"` : '';
   const cells = (r, i) => r.kind === 'hatchery'
@@ -3879,12 +3882,12 @@ async function saveHatchList(p, list) {
   renderVaxPrint();
 }
 async function addHatchRow() {
-  const p = sheetHatch(), list = [...hatchList(p), { disease: '', type: t('νέο εμβόλιο'), method: '' }];
+  const p = sheetHatch(), list = [...hatchList(p), { disease: '', type: gr('νέο εμβόλιο'), method: '' }];
   await saveHatchList(p, list);
   const cells = document.querySelectorAll('#vaxprint-paper td[data-field="type"]'); if (cells.length) cells[cells.length - 1].focus();
 }
 async function resetHatchList() {
-  if (!confirm(t('Να ξαναπάρει η εκκόλαψη τη λίστα του εκκολαπτηρίου; Οι αλλαγές της χάνονται.'))) return;
+  if (!confirm(gr('Να ξαναπάρει η εκκόλαψη τη λίστα του εκκολαπτηρίου; Οι αλλαγές της χάνονται.'))) return;
   await saveHatchList(sheetHatch(), null);
 }
 // printed (paper or Excel): keep what it looked like, so later changes can be shown
@@ -3900,7 +3903,7 @@ async function printVax() {
   await saveTyping();
   const p = sheetHatch();
   document.body.classList.add('printing-vax'); window.print(); document.body.classList.remove('printing-vax');
-  if (confirm(t('Τυπώθηκε το εμβολιακό;'))) await markPrinted(p);   // the browser can't tell a cancelled print
+  if (confirm(gr('Τυπώθηκε το εμβολιακό;'))) await markPrinted(p);   // the browser can't tell a cancelled print
   renderVaxPrint();
 }
 const loadScript = src => new Promise((ok, fail) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => fail(new Error(src)); document.head.append(s); });
@@ -3916,14 +3919,14 @@ async function downloadVaxExcel() {
     const thin = { style: 'thin', color: { argb: 'FF000000' } }, box = { top: thin, left: thin, bottom: thin, right: thin };
     ws.mergeCells(1, 1, 1, 6); Object.assign(ws.getCell(1, 1), { value: printTitle(p), font: { bold: true, size: 14 }, alignment: { horizontal: 'center' }, border: box });
     const head = ws.getRow(3); head.values = PRINT_COLS;
-    head.eachCell({ includeEmpty: true }, c => { c.font = { bold: true }; c.alignment = { horizontal: 'center' }; c.border = box; c.fill = fill('FFD9D9D9'); });
+    head.eachCell({ includeEmpty: true }, c => { c.font = { bold: true }; c.alignment = { horizontal: 'left' }; c.border = box; c.fill = fill('FFD9D9D9'); });
     const ROW_FILL = { 'vp-scale': 'FFF8CBAD', 'vp-inj': 'FF9DC3E6', 'vp-salm': 'FFFFFF00' };
     let n = 4;   // the next sheet row
     rows.forEach((r, i) => {
       const row = ws.getRow(n++), look = rowLook(r);
       row.values = [fmt(r.date).replace(/\/(\d\d)(\d\d)$/, '/$2'), r.day, r.disease, r.type, r.qty, r.method];
       row.eachCell({ includeEmpty: true }, (c, col) => {
-        c.border = box; c.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+        c.border = box; c.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
         c.font = { bold: col === 3 || col === 4, color: { argb: look === 'vp-salm' && col === 4 ? 'FFFF0000' : 'FF000000' } };
         const argb = ROW_FILL[look] || (col <= 2 ? 'FFFFFF00' : null); if (argb) c.fill = fill(argb);
       });
@@ -4052,7 +4055,7 @@ function baseLines(p) {
   const tpl = tplRows().flatMap(r => { const payers = r.rule === 'placed' ? customers.filter(c => paysFor(c.name, r.vaccine)) : [];
     const common = { emvolio: r.vaccine, posotita: null, promitheutis: supplierFor(r.vaccine) };
     return r.days.filter(day => !(salm && salm.mode === 'house' && r.vaccine === SALMOVAC && day === third)).flatMap(day => [{ ...common, hm_emv: dayDate(p, day), to_check: false },
-      ...payers.map(c => { const pel = pelatisName(c.name); return { ...common, hm_emv: dayDate(p, day), pelatis: pel, payer: pel, to_check: true }; })]); });
+      ...payers.map(c => { const pel = pelatisName(c.name); return { ...common, hm_emv: dayDate(p, day), pelatis: pel, payer: pel, promitheutis: supplierFor(r.vaccine, pel), to_check: true }; })]); });
   const water = waterWanted(customers).map(w => ({ emvolio: w.vaccine, posotita: null, promitheutis: supplierFor(w.vaccine), hm_emv: dayDate(p, w.day), to_check: true }));
   return [...tpl, ...water];
 }
@@ -4066,8 +4069,9 @@ function custVaxLines(p) {
     memItems(c.name).filter(i => i.how === 'injection').forEach(i => {
       const emvolio = i.vaccine === CORYZA ? i.product : i.vaccine;
       const qty = i.vaccine === SEST && salm && salm.sest && salm.sest[pel] != null ? String(salm.sest[pel]) : injQty(c.qty);
-      out.push({ hm_emv: dayDate(p, atDay(i.at)), emvolio, posotita: qty, pelatis: pel, payer: i.pays && !c.leftover ? pel : null, to_check: !c.leftover,
-        promitheutis: supplierFor(emvolio), sxolia_panos: injNote(p, i.at) });
+      const payer = i.pays && !c.leftover ? pel : null;
+      out.push({ hm_emv: dayDate(p, atDay(i.at)), emvolio, posotita: qty, pelatis: pel, payer, to_check: !c.leftover,
+        promitheutis: supplierFor(emvolio, payer), sxolia_panos: injNote(p, i.at) });
     });
   });
   if (salm && salm.mode === 'house' && salm.rest > 0) {
@@ -4397,7 +4401,7 @@ const setCustomerPays = () => sheetAction(async p => {
   const tpls = house.map(templateOf);
   for (const [k, r] of house.entries()) await patchLines([r], { posotita: posotitaText(planQty(tpls[k], Math.max(rest, 0)), tpls[k].unit) });
   if (on) await addLines(p, house.map((r, k) => ({ hm_emv: r.hm_emv, emvolio: vaccine, posotita: posotitaText(planQty(tpls[k], cust.qty), tpls[k].unit),
-    pelatis: pel, payer: pel, promitheutis: r.promitheutis, to_check: true })));
+    pelatis: pel, payer: pel, promitheutis: supplierFor(vaccine, pel), to_check: true })));
   else await removeLines(shares);
   await rememberPays(pel, vaccine, on);
 });
