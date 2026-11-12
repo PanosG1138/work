@@ -45,6 +45,8 @@ tbody tr:last-child td{border-bottom:none}
 .chip button:hover{color:var(--gh-danger-fg)}
 .chip.std{border-color:var(--gh-accent-emphasis);background:var(--gh-accent-subtle)}
 .chip .star{color:var(--gh-attention-fg);font-size:13px;padding:0 2px 0 0}
+.hatcheries{display:flex;flex-direction:column;gap:18px;max-width:900px}
+.hb-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0;font-size:13px}.hb-breeds{flex:1}.hatchery td input{width:100%}.hatchery td{padding:4px 6px}.hatchery td:nth-child(1){width:32%}.hatchery td:nth-child(2){width:42%}.hatchery td:last-child{width:1%}
 .only{font-size:11px;color:var(--gh-attention-fg);border:1px solid rgba(240,180,41,0.4);border-radius:99px;padding:0 7px;margin-left:6px;white-space:nowrap}
 /* the customer window: the round's vaccines as chips */
 .pick{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--gh-border-default);border-radius:var(--rs);padding:2px 6px;font-size:12px}
@@ -55,7 +57,7 @@ tbody tr:last-child td{border-bottom:none}
 .fgroup .pays{display:flex;gap:6px;align-items:center;font-weight:400;color:var(--gh-fg-default);margin-top:4px}
 
 /* ── FORM CONTROLS + BUTTONS ── */
-input[type=text],input[type=number],select{background:var(--gh-canvas-default);border:1px solid var(--gh-border-default);border-radius:var(--rs);color:var(--gh-fg-default);font-family:inherit;font-size:13px;padding:5px 8px;outline:none}
+input[type=text],input[type=number],input[type=date],select{background:var(--gh-canvas-default);border:1px solid var(--gh-border-default);border-radius:var(--rs);color:var(--gh-fg-default);font-family:inherit;font-size:13px;padding:5px 8px;outline:none}
 input:focus,select:focus{border-color:var(--gh-accent-emphasis)}
 select.cell{padding:3px 6px;font-size:12px;min-width:84px}
 select.cell.on{border-color:rgba(79,209,139,0.5);color:var(--gh-success-fg);background:var(--gh-success-subtle)}
@@ -177,6 +179,12 @@ select.cell.on{border-color:rgba(79,209,139,0.5);color:var(--gh-success-fg);back
   </section>
 
   <section>
+    <h2 data-t>Εμβόλια εκκολαπτηρίου (ημέρα 0)</h2>
+    <p data-t class="hint">Γίνονται στο εκκολαπτήριο την ημέρα της εκκόλαψης και δεν παραγγέλνονται. Κάθε εκκόλαψη παίρνει τη λίστα του εκκολαπτηρίου της φυλής της (φυλή από τον Προγραμματισμό). Μια αλλαγή εδώ ισχύει μόνο για εκκολάψεις που δεν έχουν γίνει ακόμα· για μία μόνο εκκόλαψη, αλλάξτε τη στη σελίδα εκτύπωσης.</p>
+    <div id="hatchery-box" class="hatcheries"></div>
+  </section>
+
+  <section>
     <h2 data-t>Εκτύπωση εμβολιακού</h2>
     <p data-t class="hint">Τι γράφει το εκτυπώσιμο εμβολιακό για κάθε εμβόλιο: τη στήλη ΕΜΒΟΛΙΟ (η ασθένεια) και τον συνηθισμένο ΤΡΟΠΟ. Ο ΤΡΟΠΟΣ αλλάζει και ανά εκκόλαψη, στη σελίδα εκτύπωσης.</p>
     <div class="tbl"><table>
@@ -219,6 +227,12 @@ addTranslations({
   'Ένας ή περισσότεροι πελάτες, με κόμμα. Τότε μπαίνει για όλο το αναθρεπτήριο.': 'One or more customers, comma-separated. Then it is added for the whole house.',
   'μόνο με {names}': 'only with {names}',
   'Πελάτης': 'Customer', 'Εμείς': 'Us', 'ΚΟΡΥΖΑ': 'CORYZA',
+  'Εμβόλια εκκολαπτηρίου (ημέρα 0)': 'Hatchery vaccines (day 0)', 'ιδανικό, μόνο για αναφορά': 'ideal, for reference only', 'ισχύει': 'valid',
+  'από την αρχή': 'from the start', 'από {d}': 'from {d}', 'Φυλές': 'Breeds', 'Ασθένεια': 'Disease', 'Τύπος εμβολίου': 'Vaccine product', '+ Γραμμή': '+ Row',
+  'Ισχύει για εκκολάψεις από': 'Applies to hatches from', 'Η αλλαγή ισχύει μόνο για εκκολάψεις από αύριο και μετά.': 'A change only applies to hatches from tomorrow on.',
+  'Αποθηκεύτηκε: ισχύει για εκκολάψεις από {d}.': 'Saved: applies to hatches from {d}.',
+  'Γίνονται στο εκκολαπτήριο την ημέρα της εκκόλαψης και δεν παραγγέλνονται. Κάθε εκκόλαψη παίρνει τη λίστα του εκκολαπτηρίου της φυλής της (φυλή από τον Προγραμματισμό). Μια αλλαγή εδώ ισχύει μόνο για εκκολάψεις που δεν έχουν γίνει ακόμα· για μία μόνο εκκόλαψη, αλλάξτε τη στη σελίδα εκτύπωσης.':
+    'Done at the hatchery on the hatch day, never ordered. Each hatch gets the list of the hatchery of its breed (breed from the scheduler). A change here only applies to hatches that have not happened yet; for a single hatch, change it on the print page.',
   'Εκτύπωση εμβολιακού': 'Printable vaccination plan', 'Ασθένεια (στήλη ΕΜΒΟΛΙΟ)': 'Disease (ΕΜΒΟΛΙΟ column)', 'Τρόπος': 'Method',
   'Τι γράφει το εκτυπώσιμο εμβολιακό για κάθε εμβόλιο: τη στήλη ΕΜΒΟΛΙΟ (η ασθένεια) και τον συνηθισμένο ΤΡΟΠΟ. Ο ΤΡΟΠΟΣ αλλάζει και ανά εκκόλαψη, στη σελίδα εκτύπωσης.':
     'What the printable plan shows for each vaccine: the ΕΜΒΟΛΙΟ column (the disease) and the usual ΤΡΟΠΟΣ. ΤΡΟΠΟΣ can also be changed per hatch, on the print page.',
@@ -247,7 +261,7 @@ const PROG = 'vaccine_programme', INJ = 'injectables', HIST = 'settings_history'
 const KIND_LABEL = { injectables_1: 'ΠΡΩΤΑ ΕΝΕΣΙΜΑ', injectables_2: 'ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ' };   // shown through t()
 
 // ── STATE ──
-let programme = [], injectables = [], suppliers = [];
+let programme = [], injectables = [], suppliers = [], hatcheries = [];
 let currentUser = '', editId = null;
 
 // ── RULES ── (customerName and CORYZA: common.js, VACCINE PLANNING)
@@ -304,15 +318,16 @@ function logChange(table, rowKey, action, before, after) {
 async function loadAll() {
   setSync('loading', t('Φόρτωση…'));
   try {
-    [programme, injectables, suppliers] = await Promise.all([
+    [programme, injectables, suppliers, hatcheries] = await Promise.all([
       sbFetch(`${PROG}?order=days.asc,id.asc`),
       sbFetch(`${INJ}?order=round.asc,sort.asc`),
       sbFetch('vaccines?select=name,supplier,disease,method&order=name.asc'),
+      sbFetch('hatchery_programmes?order=hatchery.asc,valid_from.desc'),
     ]);
     VACCINE_OPTIONS = suppliers.map(v => v.name);   // the vaccine list resolveVaccineName checks against
     fillVaccineList();
     setSync('ok', t('Συνδέθηκε ✓'));
-    renderProgramme(); renderInjectables(); renderSuppliers(); renderPrintInfo();
+    renderProgramme(); renderInjectables(); renderSuppliers(); renderPrintInfo(); renderHatcheries();
   } catch (e) {
     setSync('err', t('Σφάλμα σύνδεσης'));
     toast(t('Σφάλμα: {msg}', { msg: e.message }), true);
@@ -474,6 +489,49 @@ async function setPrintInfo(input) {
     await logChange('vaccines', v.name, 'edited', { [field]: v[field] }, { [field]: value });
     v[field] = value; input.value = value || ''; setSync('ok', t('Αποθηκεύτηκε ✓'));
   } catch (e) { input.value = v[field] || ''; toast(t('Σφάλμα: {msg}', { msg: e.message }), true); }
+}
+
+// ── HATCHERY VACCINES (day 0) ── hatchery_programmes: one row per version of a hatchery's list; a hatch uses the newest
+// version not after its hatch date. Saving asks from which hatch date it applies (tomorrow on: hatched chicks keep theirs).
+// ΙΔΑΝΙΚΟ is the ideal list, for reference only.
+const newestOf = name => hatcheries.filter(h => h.hatchery === name).sort((a, b) => b.valid_from.localeCompare(a.valid_from))[0];
+const tomorrowIso = () => { const d = new Date(); d.setDate(d.getDate() + 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const hatcheryRowHtml = r => `<tr>${['disease', 'type', 'method'].map(f => `<td><input type="text" class="hb-${f}" value="${escapeHtml(r[f] || '')}"></td>`).join('')}` +
+  `<td><button class="btn-secondary" title="${t('Αφαίρεση')}" onclick="this.closest('tr').remove()">✕</button></td></tr>`;
+function renderHatcheries() {
+  const names = [...new Set(hatcheries.map(h => h.hatchery))].sort((a, b) => newestOf(a).ideal - newestOf(b).ideal || a.localeCompare(b));
+  const since = d => d <= '2000-01-01' ? t('από την αρχή') : t('από {d}', { d: isoGr(d) });
+  document.getElementById('hatchery-box').innerHTML = names.map(name => {
+    const v = newestOf(name), versions = hatcheries.filter(h => h.hatchery === name);
+    return `<div class="hatchery" data-name="${escapeHtml(name)}"><div class="round-title">${escapeHtml(name)}` +
+      (v.ideal ? ` <span class="only">${t('ιδανικό, μόνο για αναφορά')}</span>` : ` · <span class="muted">${t('ισχύει')} ${versions.map(h => since(h.valid_from)).join(' · ')}</span>`) + '</div>' +
+      (v.ideal ? '' : `<label class="hb-line">${t('Φυλές')} <input type="text" class="hb-breeds" value="${escapeHtml((v.breeds || []).join(', '))}"></label>`) +
+      `<div class="tbl"><table><thead><tr><th>${t('Ασθένεια')}</th><th>${t('Τύπος εμβολίου')}</th><th>${t('Τρόπος')}</th><th></th></tr></thead>` +
+      `<tbody>${(v.rows || []).map(hatcheryRowHtml).join('')}</tbody></table></div>` +
+      `<div class="hb-line"><button class="btn-secondary" onclick="addHatcheryRow(this)">${t('+ Γραμμή')}</button>` +
+      (v.ideal ? '' : `<label>${t('Ισχύει για εκκολάψεις από')} <input type="date" class="hb-from" min="${tomorrowIso()}" value="${tomorrowIso()}"></label>`) +
+      `<button class="btn-primary" onclick="saveHatchery(this)">${t('Αποθήκευση')}</button></div></div>`;
+  }).join('');
+}
+function addHatcheryRow(btn) { btn.closest('.hatchery').querySelector('tbody').insertAdjacentHTML('beforeend', hatcheryRowHtml({})); }
+async function saveHatchery(btn) {
+  const box = btn.closest('.hatchery'), name = box.dataset.name, v = newestOf(name), val = (tr, c) => tr.querySelector(c).value.trim();
+  const rows = [...box.querySelectorAll('tbody tr')].map(tr => ({ disease: val(tr, '.hb-disease'), type: val(tr, '.hb-type'), method: val(tr, '.hb-method') }))
+    .filter(r => r.disease || r.type || r.method);
+  const breeds = v.ideal ? [] : box.querySelector('.hb-breeds').value.split(',').map(b => b.trim()).filter(Boolean);
+  const from = v.ideal ? v.valid_from : box.querySelector('.hb-from').value;
+  if (!v.ideal && !(from >= tomorrowIso())) { toast(t('Η αλλαγή ισχύει μόνο για εκκολάψεις από αύριο και μετά.'), true); return; }
+  const same = hatcheries.find(h => h.hatchery === name && h.valid_from === from);   // that date already has a version: it is replaced
+  const body = { hatchery: name, breeds, valid_from: from, ideal: v.ideal, rows, updated_by: currentUser, updated_at: new Date().toISOString() };
+  try {
+    const [saved] = await sbFetch(same ? `hatchery_programmes?id=eq.${same.id}` : 'hatchery_programmes',
+      { method: same ? 'PATCH' : 'POST', prefer: 'return=representation', body: JSON.stringify(body) });
+    await logChange('hatchery_programmes', `${name} ${from}`, same ? 'edited' : 'created',
+      same ? { rows: JSON.stringify(same.rows), breeds: same.breeds.join(', ') } : null, { rows: JSON.stringify(rows), breeds: breeds.join(', ') });
+    hatcheries = hatcheries.filter(h => h !== same).concat(saved);
+    renderHatcheries(); setSync('ok', t('Αποθηκεύτηκε ✓'));
+    if (!v.ideal) toast(t('Αποθηκεύτηκε: ισχύει για εκκολάψεις από {d}.', { d: isoGr(from) }));
+  } catch (e) { toast(t('Σφάλμα: {msg}', { msg: e.message }), true); }
 }
 
 // ── INIT ──
