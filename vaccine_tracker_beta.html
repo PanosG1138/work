@@ -393,17 +393,15 @@ tr.row-draft.row-check td{opacity:1}   /* lines to check stand out among the fad
 .inj-cust{border-top:1px solid var(--gh-border-muted);padding:10px 0}
 .inj-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .inj-head b{font-size:13px}
-.inj-qty{width:90px!important}
-.inj-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
-.inj-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--gh-border-default);border-radius:var(--rs);padding:3px 8px;font-size:12px}
-.inj-chip.on{border-color:rgba(79,209,139,0.5);background:var(--gh-success-subtle)}
-.inj-chip select{width:auto;padding:1px 4px;font-size:12px}
-.inj-pay{display:inline-flex;align-items:center;gap:3px;color:var(--gh-attention-fg);font-size:11px}
-.inj-new{display:flex;gap:6px;margin-top:10px}.inj-new input{width:180px}
-.inj-chip.water{border-color:rgba(77,141,255,0.5);background:var(--gh-accent-subtle)}
-.pw-x{background:none;border:none;color:var(--gh-fg-muted);cursor:pointer;padding:0 2px;font-size:12px}.pw-x:hover{color:var(--gh-danger-fg)}
 .pw-add{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;align-items:center}.pw-add input[type=text]{width:200px}.pw-add input[type=number]{width:96px}.pw-add select{width:auto}
 .pw-salm{border:2px solid var(--gh-attention-fg);border-radius:10px;padding:10px 12px;margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.pw-secs{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.pw-sec{border:1px solid var(--gh-border-default);border-radius:8px;padding:6px 10px}
+.pw-sh{font-size:12px;font-weight:600;color:var(--gh-fg-muted);margin-bottom:4px}
+.pw-row{display:grid;grid-template-columns:minmax(170px,230px) 150px 170px auto;align-items:center;gap:10px;padding:2px 0;font-size:13px}.pw-row.off .pw-do{opacity:.45;text-decoration:line-through}
+.pw-row.pw-house{display:block}
+.pw-do{display:flex;align-items:center;gap:6px;cursor:pointer}.pw-pay{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--gh-attention-fg)}
+.pw-house{color:var(--gh-fg-muted)}.pw-row select{width:auto;padding:2px 6px;font-size:12px}
 .pw-preview{border-top:1px solid var(--gh-border-default);margin-top:12px;padding-top:8px;font-size:13px}.pw-preview ul{margin:4px 0 0;padding-left:4px;list-style:none}
 .pw-preview li{padding:2px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.pw-preview label{display:flex;align-items:center;gap:6px;cursor:pointer}
 .pw-preview .pw-pq{width:90px;padding:2px 6px;font-size:12px}
@@ -1358,7 +1356,8 @@ addTranslations({
   '{l}: {s} δόσεις για {n} νεοσσούς — λείπουν {d}': '{l}: {s} doses for {n} chicks — {d} short', '{l}: {s} δόσεις για {n} νεοσσούς — πάνω από 20% παραπάνω': '{l}: {s} doses for {n} chicks — over 20% too many',
   '{l}: {q} δόσεις για {b} πουλιά': '{l}: {q} doses for {b} birds', '{l}: {q} δόσεις για {b} πουλιά — πάνω από 20% παραπάνω': '{l}: {q} doses for {b} birds — over 20% too many',
   'Έλεγχος: κανένα πρόβλημα': 'Check: no problems', '1 λάθος': '1 mistake', '{n} λάθη': '{n} mistakes', '1 προς έλεγχο': '1 to check', '{n} προς έλεγχο': '{n} to check',
-  'ήδη παραγγέλθηκε — τσεκάρετε για αντικατάσταση': 'already ordered — tick to overwrite', 'μόνο τα πουλιά του': 'their birds only',
+  'ήδη παραγγέλθηκε — τσεκάρετε για αντικατάσταση': 'already ordered — tick to overwrite', 'μόνο τα πουλιά του': 'their birds only', 'Ημέρα {n}': 'Day {n}', 'καμία ένεση': 'no injection',
+  '+ άλλο εμβόλιο': '+ another vaccine', 'Άλλες ημέρες': 'Other days', 'καμία': 'none', 'όλο το αναθρεπτήριο, πάντα': 'whole house, always',
   'Ξετσεκάρετε ό,τι δεν θέλετε να γίνει· αλλάξτε την ποσότητα στο κουτάκι.': 'Untick what you don\'t want done; change the quantity in the box.',
   'απόκρυψη': 'hide', 'Λύθηκε': 'Resolved', 'Επαναφορά': 'Restore', '1 κρυμμένο': '1 hidden', '{n} κρυμμένα': '{n} hidden',
   'Αιτία (προαιρετικά)': 'Reason (optional)', 'Ξαναεμφανίζεται μόνο του αν αλλάξει κάτι σε αυτό.': 'It shows again by itself if anything about it changes.', 'Κρύφτηκε ✓': 'Hidden ✓',
@@ -4686,7 +4685,7 @@ const finalSalm = () => { const W = planWin, saved = planOf(W.p).salmonella;
   if (sestCustomers().length) return W.salm || pwSalmDefaults('customers');
   return W.salm && !(saved && Object.keys(saved.sest || {}).length) && hatchRows(W.p).some(r => r.emvolio === SEST) ? W.salm : null; };
 // SE+ST customers of the window → the 3rd salmonella box (suggested: only them; SALMOVAC for the rest)
-const sestCustomers = () => planWin.customers.filter(c => !c.leftover && c.items.some(i => i.vaccine === SEST && i.how === 'injection'));
+const sestCustomers = () => planWin.customers.filter(c => !c.leftover && c.items.some(i => !i.off && i.vaccine === SEST && i.how === 'injection'));
 // suggested numbers: each SE+ST customer's birds ↑1.000; the rest of the chicks get SALMOVAC (template rule) or SE+ST
 function salmDefaults(mode, list, chicks) {
   const sest = {}, tpl = tplRows().find(r => r.vaccine === SALMOVAC && r.days.includes(thirdSalmovac()));
@@ -4728,36 +4727,43 @@ function pwSalmSet(pel, value) {
   renderPlanWin();
 }
 function renderPlanWin() {
-  const W = planWin, p = W.p, days = [injDay(1), injDay(2)].filter(Boolean);
+  const W = planWin, p = W.p;
   document.getElementById('planwin-title').textContent = W.solo ? `${t('Μνήμη πελάτη')} · ${W.customers[0].name}` : `${t('Πελάτες')} · ${p.house} ${fmt(p.doc_date)}`;
-  // a hatch's customers are shown, not edited (their memory is the Πελάτες tab's); the memory window and ΥΠΟΛΟΙΠΑ are edited here
-  const editable = k => W.solo || W.customers[k].leftover;
-  const chip = (k, n, i) => !editable(k)
-    ? `<span class="inj-chip on${i.how !== 'injection' ? ' water' : ''}" data-chip="${k}-${n}">${x(vacLabel(i))} · ${t('ημ. {n}', { n: atDay(i.at) })}</span>`
-    : `<span class="inj-chip on${i.how !== 'injection' ? ' water' : ''}" data-chip="${k}-${n}">${x(i.vaccine === CORYZA ? t(CORYZA) : i.vaccine)} · ${t('ημ. {n}', { n: atDay(i.at) })}` +
-    (i.how !== 'injection' ? ` · ${t('νερό / σπρέι')} <label class="inj-pay"><input type="checkbox"${i.how === 'water' ? ' checked' : ''} onchange="pwSet(${k}, ${n}, 'how', this.checked ? 'water' : 'own')"> ${t('όλο το αναθρεπτήριο')}</label>` : '') +
-    (i.vaccine === CORYZA ? `<select onchange="pwSet(${k}, ${n}, 'product', this.value)"><option value="">${t('— επιλογή —')}</option>` +
-      CORYZA_PRODUCTS.map(v => `<option${v === i.product ? ' selected' : ''}>${x(v)}</option>`).join('') + '</select>' : '') +
-    (W.customers[k].leftover ? '' : `<label class="inj-pay"><input type="checkbox"${i.pays ? ' checked' : ''} onchange="pwSet(${k}, ${n}, 'pays', this.checked)"> ${t('πληρώνει')}</label>`) +
-    `<button type="button" class="pw-x" title="${t('Αφαίρεση')}" onclick="pwRemove(${k}, ${n})">✕</button></span>`;
   document.getElementById('planwin-body').innerHTML = (W.solo ? '' : `<p class="muted">${t('Πελάτες και πουλιά από τον Προγραμματισμό, εμβόλια από τη μνήμη τους (αλλάζει στην καρτέλα Πελάτες). Εδώ επιλέγονται μόνο τα εμβόλια των ΥΠΟΛΟΙΠΩΝ.')}</p>`) +
-    W.customers.map((c, k) => {
-    const note = p && !c.leftover ? schedNote(p, c.name) : '';
-    return `<div class="inj-cust" data-cust="${k}"><div class="inj-head"><b>${x(c.leftover ? t(LEFTOVER) : c.name)}</b>` +
-      (W.solo ? '' : `<span class="muted">${t('Πουλιά')} ${nfmt(c.leftover ? pwLeftover() : c.qty)}</span>`) + '</div>' +
-      (note ? `<div class="cust-note">${x(note)}</div>` : '') +
-      `<div class="inj-chips">${c.items.map((i, n) => chip(k, n, i)).join('') || `<span class="muted">${t('κανένα')}</span>`}</div>` +
-      (!editable(k) ? '</div>' :
-      // «+»: any vaccine (from the list or typed), on an injection day or any day, injection or water
-      `<div class="pw-add"><input type="text" list="vaccine-list" placeholder="${t('+ εμβόλιο')}" id="pw-v-${k}">` +
-      // the day: the injection days, or «άλλη μέρα…» opens a box for any day
-      `<select id="pw-ds-${k}" title="${t('Ημέρα')}" onchange="document.getElementById('pw-d-${k}').hidden = this.value !== 'other'">` +
-      days.map((d, n) => `<option value="${d}">${t('ημ. {n}', { n: d })} · ${t(n ? '2η ένεση' : '1η ένεση')}</option>`).join('') +
-      `<option value="other"${days.length ? '' : ' selected'}>${t('άλλη μέρα…')}</option></select>` +
-      `<input type="number" min="1" id="pw-d-${k}" placeholder="${t('Ημέρα')}"${days.length ? ' hidden' : ''}>` +
+    W.customers.map((c, k) => custBlockHtml(c, k)).join('') + salmBoxHtml() + (W.solo ? '' : planPreviewHtml());
+}
+// One customer, the way the farm thinks of them: day 60, day 82 (the vaccines remembered from last time as a tick list —
+// does it · pays — and a box to type another), then the other days. A hatch's customers are only shown here (their memory
+// is edited in the Πελάτες tab); the memory window and ΥΠΟΛΟΙΠΑ are edited. Unticked = not done (kept on screen, not saved).
+function custBlockHtml(c, k) {
+  const W = planWin, p = W.p, edit = W.solo || c.leftover, note = p && !c.leftover ? schedNote(p, c.name) : '';
+  const items = c.items.map((i, n) => ({ i, n })), name = i => x(i.vaccine === CORYZA ? t(CORYZA) : i.vaccine);
+  const done = (i, n, label) => edit ? `<label class="pw-do"><input type="checkbox"${i.off ? '' : ' checked'} onchange="pwSet(${k}, ${n}, 'off', !this.checked)"> ${label}</label>` : `<span class="pw-do">${label}</span>`;
+  const coryza = (i, n) => i.vaccine !== CORYZA ? '' : edit ? `<select onchange="pwSet(${k}, ${n}, 'product', this.value)"><option value="">${t('— επιλογή —')}</option>` +
+    CORYZA_PRODUCTS.map(v => `<option${v === i.product ? ' selected' : ''}>${x(v)}</option>`).join('') + '</select>' : (i.product ? `<span>${x(i.product)}</span>` : '');
+  const pays = (i, n) => c.leftover ? '' : edit ? `<label class="pw-pay"><input type="checkbox"${i.pays ? ' checked' : ''} onchange="pwSet(${k}, ${n}, 'pays', this.checked)"> ${t('πληρώνει')}</label>`
+    : i.pays ? `<span class="pw-pay">${t('πληρώνει')}</span>` : '';
+  const water = (i, n) => i.how === 'injection' ? '' : edit ? `<label class="pw-pay"><input type="checkbox"${i.how === 'water' ? ' checked' : ''} onchange="pwSet(${k}, ${n}, 'how', this.checked ? 'water' : 'own')"> ${t('όλο το αναθρεπτήριο')}</label>`
+    : `<span class="muted">${t(i.how === 'water' ? 'νερό, όλο το αναθρεπτήριο' : 'νερό, μόνο τα πουλιά του')}</span>`;
+  // four columns, every row the same (an empty cell where it does not apply), so the ticks line up under each other
+  const cell = h => h || '<span></span>';
+  const row = ({ i, n }, label) => `<div class="pw-row${i.off ? ' off' : ''}" data-item="${n}">${done(i, n, label)}${cell(coryza(i, n))}${cell(water(i, n))}${cell(pays(i, n))}</div>`;
+  const round = r => {
+    const at = 'inj' + r, list = items.filter(o => o.i.at === at), day = p ? injDayOf(p, r) : injDay(r);
+    const house = vaxData.injectables.filter(j => j.whole_house && j.round === r).map(j => `<div class="pw-row pw-house">✓ ${x(j.vaccine)} <span class="muted">${t('όλο το αναθρεπτήριο, πάντα')}</span></div>`).join('');
+    return `<div class="pw-sec" data-sec="${at}"><div class="pw-sh">${t('Ημέρα {n}', { n: day })} · ${t(r === 1 ? '1η ένεση' : '2η ένεση')}</div>` +
+      list.map(o => row(o, name(o.i))).join('') + (list.length ? '' : `<div class="muted">${t('καμία ένεση')}</div>`) + house +
+      (edit ? `<div class="pw-add"><input type="text" list="vaccine-list" placeholder="${t('+ άλλο εμβόλιο')}" id="pw-v-${k}-${at}"><button type="button" class="btn-secondary" onclick="pwAddAt(${k}, '${at}')">+</button></div>` : '') + '</div>';
+  };
+  const other = items.filter(o => !/^inj/.test(o.i.at)).sort((a, b) => atDay(a.i.at) - atDay(b.i.at));
+  return `<div class="inj-cust" data-cust="${k}"><div class="inj-head"><b>${x(c.leftover ? t(LEFTOVER) : c.name)}</b>` +
+    (W.solo ? '' : `<span class="muted">${t('Πουλιά')} ${nfmt(c.leftover ? pwLeftover() : c.qty)}</span>`) + '</div>' + (note ? `<div class="cust-note">${x(note)}</div>` : '') +
+    `<div class="pw-secs">${[1, 2].filter(r => injDay(r)).map(round).join('')}` +
+    `<div class="pw-sec" data-sec="other"><div class="pw-sh">${t('Άλλες ημέρες')}</div>` +
+    (other.map(o => row(o, `${t('ημ. {n}', { n: atDay(o.i.at) })} · ${name(o.i)}`)).join('') || `<div class="muted">${t('καμία')}</div>`) +
+    (edit ? `<div class="pw-add"><input type="number" min="1" id="pw-d-${k}" placeholder="${t('Ημέρα')}"><input type="text" list="vaccine-list" placeholder="${t('Εμβόλιο')}" id="pw-v-${k}">` +
       `<select id="pw-h-${k}"><option value="injection">${t('Ένεση')}</option><option value="water">${t('Νερό / σπρέι')}</option></select>` +
-      `<button type="button" class="btn-secondary" onclick="pwAdd(${k})">+</button></div></div>`);
-  }).join('') + salmBoxHtml() + (W.solo ? '' : planPreviewHtml());
+      `<button type="button" class="btn-secondary" onclick="pwAdd(${k})">+</button></div>` : '') + '</div></div></div>';
 }
 // what OK will do, worked out without writing anything: the window's decisions put in place in memory, the line changes
 // worked out, then everything put back
@@ -4804,24 +4810,29 @@ function pickedDiffs(diffs) {
     changes: on.filter(it => it.kind === 'ch').map(it => ({ row: it.l, fields: typed(it) != null ? { ...it.c.fields, posotita: typed(it) } : it.c.fields })) }];
 }
 function pwSet(k, n, key, value) { planWin.customers[k].items[n][key] = value; renderPlanWin(); }
-function pwRemove(k, n) { planWin.customers[k].items.splice(n, 1); renderPlanWin(); }
-async function pwAdd(k) {
-  const pick = document.getElementById(`pw-ds-${k}`).value, how = document.getElementById(`pw-h-${k}`).value;
-  const v = document.getElementById(`pw-v-${k}`).value.trim(), day = Number(pick === 'other' ? document.getElementById(`pw-d-${k}`).value : pick);
-  if (!v) { toast(t('Εισάγετε όνομα εμβολίου'), true); return; }
+// «+» on an injection day: the typed vaccine, as an injection that day
+const pwAddAt = (k, at) => pwAddItem(k, document.getElementById(`pw-v-${k}-${at}`).value, at, 'injection');
+// «+» under the other days: day + vaccine + injection / water
+function pwAdd(k) {
+  const day = Number(document.getElementById(`pw-d-${k}`).value);
   if (!Number.isInteger(day) || day < 1) { toast(t('Η ημέρα πρέπει να είναι ακέραιος από 1 και πάνω.'), true); return; }
+  return pwAddItem(k, document.getElementById(`pw-v-${k}`).value, dayAt(day), document.getElementById(`pw-h-${k}`).value);
+}
+async function pwAddItem(k, typed, at, how) {
+  const v = String(typed || '').trim();
+  if (!v) { toast(t('Εισάγετε όνομα εμβολίου'), true); return; }
   const vaccine = v.toUpperCase() === CORYZA ? CORYZA : await resolveVaccineAlts(v);
   if (vaccine === null) return;
-  const c = planWin.customers[k], at = dayAt(day);
-  if (c.items.some(i => i.vaccine === vaccine && i.at === at)) { toast(t('Υπάρχει ήδη.'), true); return; }
-  c.items.push({ vaccine, product: '', at, how, pays: false });
+  const c = planWin.customers[k], had = c.items.find(i => i.vaccine === vaccine && i.at === at);
+  if (had && !had.off) { toast(t('Υπάρχει ήδη.'), true); return; }
+  if (had) had.off = false; else c.items.push({ vaccine, product: '', at, how, pays: false });   // typed again = ticked again
   if (vaccine === SEST) planWin.salm = null;   // suggestions recalculated with the new SE+ST customer
   renderPlanWin();
 }
 // a customer's memory = the window's injections + water vaccines ('none' for an injection day left empty); shares stay
 function memRows(c) {
   const pel = c.leftover ? LEFTOVER : pelatisName(c.name);
-  const rows = c.items.map(i => ({ customer: pel, vaccine: i.vaccine, at: i.at, how: i.how, payer: i.pays ? 'customer' : 'us', product: i.vaccine === CORYZA ? i.product || null : null }));
+  const rows = c.items.filter(i => !i.off).map(i => ({ customer: pel, vaccine: i.vaccine, at: i.at, how: i.how, payer: i.pays ? 'customer' : 'us', product: i.vaccine === CORYZA ? i.product || null : null }));
   [1, 2].filter(round => injDay(round) && !rows.some(r => r.at === 'inj' + round)).forEach(round => rows.push({ customer: pel, vaccine: '', at: 'inj' + round, how: 'none', payer: 'us', product: null }));
   return { pel, rows };
 }
@@ -4888,7 +4899,7 @@ function planDiffs(p, was) {
 }
 const applyPlanWin = async () => {
   const W = planWin;
-  if (W.customers.some(c => c.items.some(i => i.vaccine === CORYZA && !i.product))) { toast(t('Επιλέξτε προϊόν ΚΟΡΥΖΑ για κάθε πελάτη.'), true); return false; }
+  if (W.customers.some(c => c.items.some(i => !i.off && i.vaccine === CORYZA && !i.product))) { toast(t('Επιλέξτε προϊόν ΚΟΡΥΖΑ για κάθε πελάτη.'), true); return false; }
   if (W.solo) {
     if (!guardConnected()) return false;
     try { await saveCustomerMemory(W.customers[0]); closePlanWin(); renderCustTab(); toast(t('Αποθηκεύτηκε ✓')); }
