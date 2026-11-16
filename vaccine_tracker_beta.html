@@ -348,7 +348,8 @@ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gh-accent-fg);cur
 .cust-pick{cursor:pointer}.cust-pick:hover b{text-decoration:underline}.cust-table tr.cust-on td{background:rgba(255,107,107,0.16)}
 .vax-right h4{font-size:13px;margin:0 0 6px}.vax-cust-btn{width:100%;margin-bottom:8px}
 .vax-tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
-.cust-mem{font-size:11px;color:#c4a5ff;margin-top:2px}
+.cust-mem{font-size:11px;color:#c4a5ff;margin-top:2px;line-height:1.5}
+.mem-day{display:grid;grid-template-columns:48px 1fr;gap:6px}.mem-d{font-weight:600;white-space:nowrap}
 /* step bar: done = green, next = blue outline, later = dashed */
 .vax-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-bottom:10px}
 .vstep{border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:4px;font-size:12px;border:1px solid var(--gh-border-default)}
@@ -403,7 +404,10 @@ tr.row-draft.row-check td{opacity:1}   /* lines to check stand out among the fad
 .pw-x{background:none;border:none;color:var(--gh-fg-muted);cursor:pointer;padding:0 2px;font-size:12px}.pw-x:hover{color:var(--gh-danger-fg)}
 .pw-add{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;align-items:center}.pw-add input[type=text]{width:200px}.pw-add input[type=number]{width:96px}.pw-add select{width:auto}
 .pw-salm{border:2px solid var(--gh-attention-fg);border-radius:10px;padding:10px 12px;margin-top:12px;display:flex;flex-direction:column;gap:6px}
-.pw-preview{border-top:1px solid var(--gh-border-default);margin-top:12px;padding-top:8px;font-size:13px}.pw-preview ul{margin:4px 0 0;padding-left:4px;list-style:none}.pw-preview li{padding:1px 0}
+.pw-preview{border-top:1px solid var(--gh-border-default);margin-top:12px;padding-top:8px;font-size:13px}.pw-preview ul{margin:4px 0 0;padding-left:4px;list-style:none}
+.pw-preview li{padding:2px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.pw-preview label{display:flex;align-items:center;gap:6px;cursor:pointer}
+.pw-preview .pw-pq{width:90px;padding:2px 6px;font-size:12px}
+.pw-preview li.pw-ord{border-left:3px solid var(--gh-attention-fg);padding-left:6px}.pw-ordtag{font-size:11px;color:var(--gh-attention-fg)}
 .pw-salm-modes{display:flex;flex-direction:column;gap:4px}.pw-salm-modes label{display:flex;gap:6px;align-items:center;font-size:13px}
 .pw-num{display:flex;gap:8px;align-items:center;font-size:13px}.pw-num input{width:110px}
 .pw-check{font-size:12px;color:var(--gh-fg-muted)}
@@ -1354,6 +1358,8 @@ addTranslations({
   '{l}: {s} δόσεις για {n} νεοσσούς — λείπουν {d}': '{l}: {s} doses for {n} chicks — {d} short', '{l}: {s} δόσεις για {n} νεοσσούς — πάνω από 20% παραπάνω': '{l}: {s} doses for {n} chicks — over 20% too many',
   '{l}: {q} δόσεις για {b} πουλιά': '{l}: {q} doses for {b} birds', '{l}: {q} δόσεις για {b} πουλιά — πάνω από 20% παραπάνω': '{l}: {q} doses for {b} birds — over 20% too many',
   'Έλεγχος: κανένα πρόβλημα': 'Check: no problems', '1 λάθος': '1 mistake', '{n} λάθη': '{n} mistakes', '1 προς έλεγχο': '1 to check', '{n} προς έλεγχο': '{n} to check',
+  'ήδη παραγγέλθηκε — τσεκάρετε για αντικατάσταση': 'already ordered — tick to overwrite', 'μόνο τα πουλιά του': 'their birds only',
+  'Ξετσεκάρετε ό,τι δεν θέλετε να γίνει· αλλάξτε την ποσότητα στο κουτάκι.': 'Untick what you don\'t want done; change the quantity in the box.',
   'απόκρυψη': 'hide', 'Λύθηκε': 'Resolved', 'Επαναφορά': 'Restore', '1 κρυμμένο': '1 hidden', '{n} κρυμμένα': '{n} hidden',
   'Αιτία (προαιρετικά)': 'Reason (optional)', 'Ξαναεμφανίζεται μόνο του αν αλλάξει κάτι σε αυτό.': 'It shows again by itself if anything about it changes.', 'Κρύφτηκε ✓': 'Hidden ✓',
   '{v} αντί για {w} (ίδια ασθένεια: {d}), ημ. {n}': '{v} instead of {w} (same disease: {d}), day {n}', 'λεπτομέρειες': 'details', 'Κλικ: δείξε τις γραμμές': 'Click: show the lines', 'Εκτύπωση': 'Print',
@@ -4055,12 +4061,16 @@ async function pullChicks(inputId) {
 // what the tracker remembers about a customer: injections per round (★ = nothing remembered, the standard set),
 // whole-house vaccines they pay themselves, template rows given only when they are in the house
 function memoryHtml(c) {
-  const name = customerName(c.name), parts = [];
+  const name = customerName(c.name);
   const items = memItems(name), shares = memOf(name).filter(u => u.how === 'share').map(u => u.vaccine);
-  if (items.length) parts.push(byDayText(items));
-  if (shares.length) parts.push(t('πληρώνει μόνος: {v}', { v: shares.join(', ') }));
-  if (!parts.length) parts.push(t('κανένα'));
-  return `<div class="cust-mem">${t('θυμάται')}: ${x(parts.join(' · '))}</div>`;
+  if (!items.length && !shares.length) return `<div class="cust-mem">${t('θυμάται')}: ${t('κανένα')}</div>`;
+  // one line per day: the day in its own column, the day's vaccines beside it ("VAXSAFE · μόνο τα πουλιά του · πληρώνει")
+  const label = i => [i.vaccine === CORYZA ? t(CORYZA) + (i.product ? ' ' + i.product : '') : i.vaccine,
+    i.how === 'water' ? t('νερό') : i.how === 'own' ? t('μόνο τα πουλιά του') : '', i.pays ? t('πληρώνει') : ''].filter(Boolean).join(' · ') + (i.std ? ' ★' : '');
+  const days = [...new Set(items.map(i => atDay(i.at)))].sort((a, b) => a - b);
+  return `<div class="cust-mem">${days.map(d => `<div class="mem-day"><span class="mem-d">${t('ημ. {n}', { n: d })}</span>` +
+    `<span>${x(items.filter(i => atDay(i.at) === d).map(label).join(', '))}</span></div>`).join('')}` +
+    (shares.length ? `<div>${x(t('πληρώνει μόνος: {v}', { v: shares.join(', ') }))}</div>` : '') + '</div>';
 }
 
 // ── STEPS ── a new εμβολιακό starts empty and is filled step by step (hatch_plans.steps_done keeps which are done;
@@ -4731,14 +4741,36 @@ function planWinPreview() {
   Object.assign(pl, fields);
   try { return { fields, salm, diffs: planDiffs(p, was) }; } finally { vaxData.usual = before.usual; Object.assign(pl, before.plan); }
 }
-// the bottom of the window: the lines OK adds (+), removes (−) or changes (~)
+// The bottom of the window: every line OK adds (+), removes (−) or changes (~). Ticked = done (overwrite), unticked = skipped
+// (the line stays as it is), the box = another quantity (amend). A line already ordered starts unticked.
+// planWin.picks keeps the choices by line while the window is redrawn.
+function previewItems(diffs) {
+  return [...diffs.flatMap(d => d.adds).map(l => ({ kind: 'add', l, qty: l.posotita ?? '', key: 'add|' + lineKey(l) })),
+    ...diffs.flatMap(d => d.removals).map(r => ({ kind: 'rm', l: r, key: 'rm|' + r.id })),
+    ...diffs.flatMap(d => d.changes).map(c => ({ kind: 'ch', l: c.row, c, qty: c.fields.posotita ?? c.row.posotita ?? '', key: 'ch|' + c.row.id }))]
+    .map(it => ({ ...it, ordered: it.kind !== 'add' && ordered(it.l) }));
+}
+const pickOf = it => (planWin.picks || {})[it.key] || { on: !it.ordered, qty: it.qty };
+function pwPick(i, field, value) { const it = planWin.items[i]; planWin.picks = { ...planWin.picks, [it.key]: { ...pickOf(it), [field]: value } }; }
 function planPreviewHtml() {
-  const { diffs } = planWinPreview(), p = planWin.p;
-  const li = (l, sign, extra = '') => `<li>${sign} ${t('ημ. {n}', { n: ageOf({ ...l, hm_ekk: p.doc_date }) })} · <b>${x(vaccineLabel(l.emvolio))}</b> · ${x(l.pelatis || t('όλο το αναθρεπτήριο'))}${extra}</li>`;
-  const items = [...diffs.flatMap(d => d.adds).map(l => li(l, '+')), ...diffs.flatMap(d => d.removals).map(r => li(r, '−')),
-    ...diffs.flatMap(d => d.changes).map(c => li(c.row, '~', c.fields.posotita ? ` · ${fmtPosotita(c.row.posotita)} → ${fmtPosotita(c.fields.posotita)}` : ''))];
+  const { diffs } = planWinPreview(), p = planWin.p, items = planWin.items = previewItems(diffs);
+  const detail = it => it.kind !== 'ch' ? '' : ('payer' in it.c.fields ? ` · ${t('πληρώνει')}: ${x(it.l.payer || t('εμείς'))} → ${x(it.c.fields.payer || t('εμείς'))}` : '') +
+    ('emvolio' in it.c.fields ? ` · ${x(it.l.emvolio)} → ${x(it.c.fields.emvolio)}` : '') + (it.c.fields.posotita ? ` · ${fmtPosotita(it.l.posotita)} →` : '');
+  const row = (it, i) => { const pk = pickOf(it);
+    return `<li class="${it.ordered ? 'pw-ord' : ''}"><label><input type="checkbox"${pk.on ? ' checked' : ''} onchange="pwPick(${i}, 'on', this.checked)"> ` +
+      `${{ add: '+', rm: '−', ch: '~' }[it.kind]} ${t('ημ. {n}', { n: ageOf({ ...it.l, hm_ekk: p.doc_date }) })} · <b>${x(vaccineLabel(it.l.emvolio))}</b> · ${x(it.l.pelatis || t('όλο το αναθρεπτήριο'))}${detail(it)}</label>` +
+      (it.kind !== 'rm' ? `<input type="text" class="pw-pq" value="${x(String(pk.qty ?? ''))}" placeholder="${t('Ποσότητα')}" title="${t('Ποσότητα')}" onchange="pwPick(${i}, 'qty', this.value)">` : '') +
+      (it.ordered ? `<span class="pw-ordtag">${t('ήδη παραγγέλθηκε — τσεκάρετε για αντικατάσταση')}</span>` : '') + '</li>'; };
   return `<div class="pw-preview"><b>${t('Με το ΟΚ, στις γραμμές της εκκόλαψης:')}</b>` +
-    (items.length ? `<ul>${items.join('')}</ul>` : `<p class="muted">${t('καμία αλλαγή')}</p>`) + '</div>';
+    (items.length ? `<p class="muted">${t('Ξετσεκάρετε ό,τι δεν θέλετε να γίνει· αλλάξτε την ποσότητα στο κουτάκι.')}</p><ul>${items.map(row).join('')}</ul>` : `<p class="muted">${t('καμία αλλαγή')}</p>`) + '</div>';
+}
+// the window's choices on the worked-out changes: skipped ones dropped, typed quantities used ("32.000" → "32000")
+function pickedDiffs(diffs) {
+  const items = previewItems(diffs), on = items.filter(it => pickOf(it).on);
+  const typed = it => { const q = String(pickOf(it).qty ?? '').trim(); return q === String(it.qty ?? '') ? null : /^[\d.]+$/.test(q) ? String(parseBirds(q)) : q || null; };
+  return [{ adds: on.filter(it => it.kind === 'add').map(it => ({ ...it.l, posotita: typed(it) ?? it.l.posotita ?? null })),
+    removals: on.filter(it => it.kind === 'rm').map(it => it.l),
+    changes: on.filter(it => it.kind === 'ch').map(it => ({ row: it.l, fields: typed(it) != null ? { ...it.c.fields, posotita: typed(it) } : it.c.fields })) }];
 }
 function pwSet(k, n, key, value) { planWin.customers[k].items[n][key] = value; renderPlanWin(); }
 function pwRemove(k, n) { planWin.customers[k].items.splice(n, 1); renderPlanWin(); }
@@ -4835,11 +4867,10 @@ const applyPlanWin = async () => {
   return sheetAction(async p => {
     // the line changes worked out on the decisions (in memory only), ordered lines asked about, and only then anything written
     const { fields, salm, diffs } = planWinPreview();
-    W.salm = salm;
-    if (!confirmOrdered([...new Set(diffs.flatMap(d => [...d.removals, ...d.changes.filter(c => 'emvolio' in c.fields || 'payer' in c.fields).map(c => c.row)]))])) return false;
+    W.salm = salm;   // ordered lines are not asked here: the preview shows them unticked (skipped) unless ticked
     for (const c of W.customers.filter(c => c.leftover)) await saveCustomerMemory(c);   // a customer's memory is only written from the Πελάτες tab
     if (Object.keys(fields).length) await savePlanRecord(p, fields);
-    for (const d of diffs) {
+    for (const d of pickedDiffs(diffs)) {
       await removeLines(d.removals);
       for (const c of d.changes) await patchLines([c.row], c.fields);
       await addLines(p, d.adds);
