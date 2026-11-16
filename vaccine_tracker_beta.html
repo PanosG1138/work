@@ -431,6 +431,17 @@ tr.row-draft.row-check td{opacity:1}   /* lines to check stand out among the fad
 .del-note{font-size:12px;color:var(--gh-attention-fg)}.ord-pick.muted{opacity:.6}
 .cov.late{color:var(--gh-danger-fg);background:var(--gh-danger-subtle)}
 .cust-hist{display:flex;flex-direction:column;gap:2px;border-top:1px solid var(--gh-border-muted);padding-top:6px}
+/* checks: one line above the table, the list under it on click; the lines involved get a coloured left edge */
+.chk-bar{display:flex;align-items:center;gap:8px;width:100%;margin:0 0 8px;padding:6px 10px;border-radius:8px;font-size:13px;font-weight:600;text-align:left;cursor:pointer;border:1px solid}
+.chk-bar.red{color:var(--gh-danger-fg);background:var(--gh-danger-subtle);border-color:var(--gh-danger-fg)}
+.chk-bar.amber{color:var(--gh-attention-fg);background:var(--gh-attention-subtle);border-color:var(--gh-attention-fg)}
+.chk-bar.ok{color:var(--gh-fg-muted);font-weight:400;border:none;padding:0 2px;cursor:default;font-size:12px}
+.chk-more{margin-left:auto;font-weight:400;font-size:12px;text-decoration:underline}
+.chk-list{list-style:none;margin:-4px 0 10px;padding:0;font-size:13px;display:flex;flex-direction:column;gap:2px}
+.chk-list li{padding:4px 10px;border-left:3px solid;cursor:pointer}.chk-list li:hover{background:var(--gh-canvas-subtle)}
+.chk-list li.red{border-color:var(--gh-danger-fg)}.chk-list li.amber{border-color:var(--gh-attention-fg)}
+tr.chk-red td:first-child{box-shadow:inset 3px 0 0 var(--gh-danger-fg)}tr.chk-amber td:first-child{box-shadow:inset 3px 0 0 var(--gh-attention-fg)}
+tr.chk-flash td{background:var(--gh-attention-subtle)}
 /* one row per vaccine: name · day · how · who pays */
 .cust-vax{display:grid;grid-template-columns:minmax(120px,max-content) 60px 1fr auto;gap:2px 12px;align-items:center}
 .cust-vax>span{padding:3px 0;border-top:1px solid var(--gh-border-muted)}.cust-vax>.how{color:var(--gh-fg-muted)}
@@ -1325,12 +1336,27 @@ body.printing-card .printcard-doc{display:block}
 <script>
 // ── TRANSLATIONS ── this page's English (Greek text → English); shared words are in common.js
 addTranslations({
-  'νερό, μόνο τα πουλιά του': 'water, their birds only', 'νερό, όλο το αναθρεπτήριο': 'water, whole house', 'ένεση': 'injection', 'νερό / σπρέι': 'water / spray', 'Νερό / σπρέι': 'Water / spray', 'όλο το αναθρεπτήριο': 'whole house',
+  'νερό, μόνο τα πουλιά του': 'water, their birds only', 'νερό, όλο το αναθρεπτήριο': 'water, whole house', 'ένεση': 'injection', '1η ένεση': '1st injection', '2η ένεση': '2nd injection', 'άλλη μέρα…': 'other day…',
+  'Διπλή γραμμή: {l}': 'Duplicate line: {l}', 'Ημερομηνία εκτός ορίων (από την εκκόλαψη έως ημ. {max}): {l}': 'Date out of range (from the hatch to day {max}): {l}',
+  'Εμβόλιο που δεν είναι στη λίστα: {l}': 'Vaccine not in the list: {l}',
+  'Πληρώνει ο πελάτης, αλλά προμηθευτής {s}: {l}': 'The customer pays, but the supplier is {s}: {l}', 'Πληρώνουμε εμείς, αλλά προμηθευτής {s}: {l}': 'We pay, but the supplier is {s}: {l}',
+  'Χωρίς ποσότητα: {l}': 'No quantity: {l}', 'Νεοσσοί: Προγραμματισμός {a}, εμβολιακό {b} — διορθώστε με ✎': 'Chicks: scheduler {a}, plan {b} — fix with ✎',
+  'Οι πελάτες άλλαξαν στον Προγραμματισμό: {d} — «Αλλαγή πελατών»': 'The customers changed in the scheduler: {d} — «Change customers»',
+  'Η μνήμη του πελάτη έχει γραμμή που λείπει: {l} — «Αλλαγή πελατών»': 'The customer\'s memory has a line that is missing: {l} — «Change customers»',
+  'Λείπει από το πρότυπο: {l} — «Συμπλήρωση από το πρότυπο»': 'Missing from the template: {l} — «Fill from the template»',
+  'Λείπει: {l} για όλο το αναθρεπτήριο': 'Missing: {l} for the whole house',
+  '{l} γίνεται σε όλο το αναθρεπτήριο, αλλά υπάρχουν και γραμμές πελατών ({c}) — «Αλλαγή πελατών»': '{l} is given to the whole house, but there are customer lines too ({c}) — «Change customers»',
+  '{l}: {s} δόσεις για {n} νεοσσούς — λείπουν {d}': '{l}: {s} doses for {n} chicks — {d} short', '{l}: {s} δόσεις για {n} νεοσσούς — πάνω από 20% παραπάνω': '{l}: {s} doses for {n} chicks — over 20% too many',
+  '{l}: {q} δόσεις για {b} πουλιά': '{l}: {q} doses for {b} birds', '{l}: {q} δόσεις για {b} πουλιά — πάνω από 20% παραπάνω': '{l}: {q} doses for {b} birds — over 20% too many',
+  'Έλεγχος: κανένα πρόβλημα': 'Check: no problems', '1 λάθος': '1 mistake', '{n} λάθη': '{n} mistakes', '1 προς έλεγχο': '1 to check', '{n} προς έλεγχο': '{n} to check',
+  'απόκρυψη': 'hide', 'λεπτομέρειες': 'details', 'Κλικ: δείξε τις γραμμές': 'Click: show the lines', 'Εκτύπωση': 'Print',
+  '{what}: το εμβολιακό έχει {n} λάθη:': '{what}: the plan has {n} mistakes:', 'Συνέχεια παρ’ όλα αυτά;': 'Continue anyway?', 'νερό / σπρέι': 'water / spray', 'Νερό / σπρέι': 'Water / spray', 'όλο το αναθρεπτήριο': 'whole house',
   'Κλικ: οι γραμμές του πελάτη με κόκκινο · διπλό κλικ: η μνήμη του': 'Click: the customer\'s lines in red · double-click: their memory',
   'Η ποσότητα μένει ίδια ({q}) και με αυτή τη στρογγυλοποίηση.': 'The quantity stays the same ({q}) with this rounding too.',
   'Αλλαγή πελατών': 'Change customers',
   'Συμπλήρωση από το πρότυπο ({n})': 'Fill from the template ({n})', 'Συμπλήρωση από το πρότυπο': 'Fill from the template',
-  'έχει περάσει': 'already past', 'την ίδια μέρα υπάρχει: {v}': 'same day already has: {v}', 'Προστέθηκαν {n} γραμμές ✓': '{n} lines added ✓',
+  'έχει περάσει': 'already past', 'την ίδια μέρα υπάρχει: {v}': 'same day already has: {v}',
+  'έχουν δικές τους γραμμές: {v} — πατήστε «Αλλαγή πελατών» και ΟΚ': 'they have lines of their own: {v} — press «Change customers» and OK', 'Προστέθηκαν {n} γραμμές ✓': '{n} lines added ✓',
   'Εμβόλια του προτύπου που λείπουν από αυτή την εκκόλαψη. Προστίθενται μόνο όσα είναι τσεκαρισμένα· οι υπάρχουσες γραμμές δεν αλλάζουν.':
     'Template vaccines missing from this hatch. Only the ticked ones are added; existing lines do not change.',
   'Για αυτή την εκκόλαψη υπάρχουν ήδη στο Περίσσευμα: {list}.\n\nΆνοιγμα του Περισσεύματος για «Μοίρασε»;':
@@ -3724,10 +3750,10 @@ function renderVax() {
   document.getElementById('vax-cards').innerHTML = HOUSES.map(h => {
     const hatches = vaxData.placements.filter(p => p.house === h);
     return `<div class="vax-house"><b>${x(h)}</b>` + (hatches.map(p => {
-      const st = vaxState(p), late = st === 'active' ? lateOrders(p).length : 0;
+      const st = vaxState(p), late = st === 'active' ? lateOrders(p).length : 0, wrong = hatchChecks(p).filter(c => c.lvl === 'red').length;
       return `<button class="vax-hatch${p.id === sheetHatchId ? ' on' : ''}" onclick="openSheet('${p.id}')">${fmt(p.doc_date)} · ${when(p)}` +
         `<span class="vax-pill ${st}">${t(VAX_STATE_LABEL[st])}${st === 'draft' ? ' · ' + t('βήμα {n}/{m}', { n: stepsDone(p), m: vaxSteps(p).length }) : ''}` +
-        `${late ? ' · ' + t('{n} χωρίς παραγγελία', { n: late }) : ''}${printChanges(p).length ? ' · ⚠ ' + t('τυπώστε ξανά') : ''}</span></button>`;
+        `${late ? ' · ' + t('{n} χωρίς παραγγελία', { n: late }) : ''}${wrong ? ' · ⚠ ' + t(wrong === 1 ? '1 λάθος' : '{n} λάθη', { n: wrong }) : ''}${printChanges(p).length ? ' · ⚠ ' + t('τυπώστε ξανά') : ''}</span></button>`;
     }).join('') || `<span class="muted">${t('Καμία εκκόλαψη')}</span>`) + '</div>';
   }).join('');
   renderSheet();
@@ -3747,7 +3773,9 @@ function renderSheet() {
   const short = iso => fmt(iso).slice(0, 5);   // dd/mm
   const orderCell = r => r.paragelia === 'ΝΑΙ' ? `<span class="ord-yes">✓${r.hm_par ? ' ' + short(r.hm_par) : ''}</span>`
     : r.hm_paragelia ? `<span class="${r.hm_paragelia < today ? 'ord-late' : 'ord-due'}">${t('έως {d}', { d: short(r.hm_paragelia) })}</span>` : '—';
-  const line = r => `<tr class="${r.draft ? 'row-draft' : ''}${r.to_check ? ' row-check' : ''}${custLine(r) ? ' cust-hl' : ''}" onclick="editEntry(${r.id})" title="${t('Κλικ για επεξεργασία')}">` +
+  const checks = hatchChecks(p), mark = new Map();   // line id → its worst check (red over amber)
+  checks.forEach(c => c.ids.forEach(id => mark.get(id) !== 'red' && mark.set(id, c.lvl)));
+  const line = r => `<tr data-id="${r.id}" class="${r.draft ? 'row-draft' : ''}${r.to_check ? ' row-check' : ''}${custLine(r) ? ' cust-hl' : ''}${mark.has(r.id) ? ' chk-' + mark.get(r.id) : ''}" onclick="editEntry(${r.id})" title="${t('Κλικ για επεξεργασία')}">` +
     `<td>${ageOf(r) ?? '—'}</td><td>${fmt(r.hm_emv)}</td><td>${x(vaccineLabel(r.emvolio))}${checkTag(r)}</td><td>${fmtPosotita(r.posotita)}${stepSel(r)}</td>` +
     `<td>${x(r.pelatis || '—')}${payerTag(r)}</td><td>${orderCell(r)}</td><td>${r.psygeio === 'ΝΑΙ' ? '✓' : '—'}</td></tr>`;
   const group = (round, label) => {
@@ -3772,7 +3800,7 @@ function renderSheet() {
   box.innerHTML = `<div class="vax-sheet"><div class="vax-top"><b>${x(p.house)} · ${t('Εκκόλαψη')} ${fmt(p.doc_date)}</b>` +
     `<span class="muted">${x(p.breed || '—')}${pl ? ` · ${t('Νεοσσοί')} <a href="#" class="vax-chicks" onclick="openChicksVax(); return false">${nfmt(pl.chicks)} ✎</a> · ${t('Πελάτες')} ${pl.customers.length}` : ''}</span>` +
     `<span class="vax-pill ${st}">${t(VAX_STATE_LABEL[st])}</span><span class="tb-spacer"></span>${print}${actions}</div>` +
-    `<div class="vax-grid"><div class="vax-left">${pl && st === 'draft' ? stepBarHtml(p) : ''}${edit ? `<div class="vax-tools">${edit}</div>` : ''}` +
+    `<div class="vax-grid"><div class="vax-left">${pl && st === 'draft' ? stepBarHtml(p) : ''}${edit ? `<div class="vax-tools">${edit}</div>` : ''}${rows.length ? checksHtml(checks) : ''}` +
     (rows.length ? `<div class="vax-lines"><table class="vax-table"><thead><tr><th>${t('Ημέρα')}</th><th>${t('Ημερομηνία')}</th><th>${t('Εμβόλιο')}</th><th>${t('Ποσότητα')}</th>` +
       `<th>${t('Πελάτης')}</th><th>${t('Παραγγελία')}</th><th>${t('Ψυγείο')}</th></tr></thead><tbody>` +
       rows.filter(r => !roundOf(r)).sort(byDate).map(line).join('') + group(1, 'ΠΡΩΤΑ ΕΝΕΣΙΜΑ') + group(2, 'ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ') + '</tbody></table></div>'
@@ -3847,7 +3875,7 @@ const printTitle = p => `ΕΜΒΟΛΙΑΚΟ ΠΡΟΓΡΑΜΜΑ ${p.house}`;
 // a row's look, as in the sheet: yellow dates, ΣΑΛΜΟΝΕΛΑ rows all yellow with the vaccine in red, ΖΥΓΑΡΙΑ peach, ΕΝΕΣΙΜΑ blue
 const rowLook = r => r.kind === 'scale' ? 'vp-scale' : r.kind === 'inj' ? 'vp-inj' : /ΣΑΛΜΟΝΕΛΑ/.test(r.disease) && r.kind === 'vaccine' ? 'vp-salm' : 'vp-plain';
 
-function openVaxPrint() { document.getElementById('vaxprint-bg').style.display = 'flex'; renderVaxPrint(); }
+function openVaxPrint() { if (!confirmChecks(sheetHatch(), t('Εκτύπωση'))) return; document.getElementById('vaxprint-bg').style.display = 'flex'; renderVaxPrint(); }
 function closeVaxPrint() { document.getElementById('vaxprint-bg').style.display = 'none'; renderVax(); }
 function renderVaxPrint() {
   const p = sheetHatch(), pl = planOf(p), rows = printRows(p), changes = printChanges(p), canEdit = !!pl;
@@ -4031,7 +4059,7 @@ const tplFor = r => !roundOf(r) ? tplRows().find(t => t.vaccine === r.emvolio &&
 const inTemplate = (vaccine, day) => tplRows().some(r => r.vaccine === vaccine && r.days.includes(day));   // every hatch gets it anyway
 const isShare = r => !roundOf(r) && !!r.pelatis && r.payer === r.pelatis && (!!tplFor(r) || paysFor(r.pelatis, r.emvolio, ageOf(r)));
 // lines step 3 owns: customer injections (any day, ΥΠΟΛΟΙΠΑ too) + the whole-house SE+ST of «όλο το αναθρεπτήριο»
-const isCustVax = r => (!!r.pelatis && !isShare(r)) || (!r.pelatis && r.emvolio === SEST);
+const isCustVax = r => (!!r.pelatis && !isShare(r)) || (!r.pelatis && (r.emvolio === SEST || isHouseInj(r.emvolio, 'inj' + roundOf(r))));
 const vaxSteps = p => [
   { key: 'cust', label: () => t('Πελάτες'), btn: 'Επιλογή', reopen: true, text: () => t('{n} πελάτες', { n: planOf(p).customers.length }) },
   { key: 'base', label: () => t('Βασικά εμβόλια'), btn: 'Προσθήκη', count: () => hatchRows(p).filter(r => !r.pelatis && !isCustVax(r)).length },
@@ -4090,11 +4118,17 @@ function baseLines(p) {
 const stepBase = () => sheetAction(async p => { await addLines(p, baseLines(p)); await markStep(p, 'base', true); });
 // step 3: every customer injection at its day (birds ↑1.000; SE+ST as set in step 1), ΥΠΟΛΟΙΠΑ's own, the house SE+ST
 const injNote = (p, at) => at === 'inj1' ? `ΠΡΩΤΑ ΕΝΕΣΙΜΑ ${p.house}` : at === 'inj2' ? `ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ ${p.house}` : null;
+// injection-day vaccines ticked «όλο το αναθρεπτήριο» on the template page (e.g. VECTROMUNE day 82): one line for all
+// the chicks on every hatch, paid by us; a customer who has it in memory gets no line of their own for it
+const isHouseInj = (vaccine, at) => vaxData.injectables.some(i => i.whole_house && 'inj' + i.round === at && i.vaccine === vaccine);
+const houseInjLines = p => { const chicks = planOf(p).chicks;
+  return vaxData.injectables.filter(i => i.whole_house && injDay(i.round)).map(i => ({ hm_emv: dayDate(p, injDay(i.round)), emvolio: i.vaccine,
+    posotita: chicks ? injQty(chicks) : null, pelatis: null, payer: null, to_check: true, promitheutis: supplierFor(i.vaccine), sxolia_panos: injNote(p, 'inj' + i.round) })); };
 function custVaxLines(p) {
-  const pl = planOf(p), salm = pl.salmonella, out = [];
+  const pl = planOf(p), salm = pl.salmonella, out = houseInjLines(p);
   gridCustomers(p).forEach(c => {
     const pel = c.leftover ? LEFTOVER : pelatisName(c.name);
-    memItems(c.name).filter(i => i.how === 'injection' || i.how === 'own').forEach(i => {
+    memItems(c.name).filter(i => (i.how === 'injection' || i.how === 'own') && !isHouseInj(i.vaccine, i.at)).forEach(i => {
       const emvolio = i.vaccine === CORYZA ? i.product : i.vaccine;
       const qty = i.vaccine === SEST && salm && salm.sest && salm.sest[pel] != null ? String(salm.sest[pel]) : injQty(c.qty);
       const payer = i.pays && !c.leftover ? pel : null;
@@ -4141,6 +4175,89 @@ const undoStep = key => sheetAction(async p => {
   await markStep(p, key, false);
 });
 
+// ── CHECKS ── safeguards on one hatch: red = a mistake to fix, amber = worth a look. One line above the table
+// (click → the list; a point in it scrolls to its lines; the lines involved get a coloured edge); asked again before
+// activating or printing. Quantity checks only look at lines still ahead (a past day can't be changed).
+const MAX_VAX_DAY = 126;   // vaccinating after day 105 is rare, never after 126 (user, 2026-11-16)
+const qtyNum = r => /^[\d.]+$/.test(String(r.posotita ?? '').trim()) ? parseBirds(r.posotita) : null;   // doses only, not "5 ΚΙΛΑ"
+const lineName = r => `${vaccineLabel(r.emvolio)} ${t('ημ. {n}', { n: ageOf(r) })}${r.pelatis ? ' · ' + r.pelatis : ''}`;
+function hatchChecks(p) {
+  const pl = planOf(p), rows = hatchRows(p), today = todayIso(), out = [];
+  const add = (lvl, text, ids = []) => out.push({ lvl, text, ids });
+  const ahead = r => r.hm_emv >= today, at = l => ({ ...l, hm_ekk: p.doc_date });
+  // the same vaccine twice on a day for the same customer (or the house)
+  const byKey = new Map(); rows.forEach(r => byKey.set(lineKey(r), [...(byKey.get(lineKey(r)) || []), r]));
+  byKey.forEach(g => g.length > 1 && add('red', t('Διπλή γραμμή: {l}', { l: lineName(g[0]) }), g.map(r => r.id)));
+  // dates from the hatch up to day 126
+  rows.filter(r => r.hm_emv < p.doc_date || ageOf(r) > MAX_VAX_DAY)
+    .forEach(r => add('red', t('Ημερομηνία εκτός ορίων (από την εκκόλαψη έως ημ. {max}): {l}', { max: MAX_VAX_DAY, l: lineName(r) }), [r.id]));
+  // names not in the vaccine list
+  rows.filter(r => r.emvolio && !vaccineAlts(r.emvolio).every(v => vaxData.vaccines[v] || CORYZA_PRODUCTS.includes(v)))
+    .forEach(r => add('red', t('Εμβόλιο που δεν είναι στη λίστα: {l}', { l: lineName(r) }), [r.id]));
+  // supplier against who pays (the customer buys from Β. ΚΟΜΠΟΥΛΗΣ; we from the vaccine's own supplier, when it has one)
+  rows.filter(r => r.payer ? r.promitheutis !== DEFAULT_SUPPLIER : r.promitheutis === DEFAULT_SUPPLIER && (vaxData.supplier[r.emvolio] || DEFAULT_SUPPLIER) !== DEFAULT_SUPPLIER)
+    .forEach(r => add('amber', t(r.payer ? 'Πληρώνει ο πελάτης, αλλά προμηθευτής {s}: {l}' : 'Πληρώνουμε εμείς, αλλά προμηθευτής {s}: {l}', { s: r.promitheutis || '—', l: lineName(r) }), [r.id]));
+  // no quantity in the next 30 days
+  rows.filter(r => ahead(r) && r.hm_emv <= subDays(today, -30) && !/[1-9]/.test(String(r.posotita ?? '')))
+    .forEach(r => add('amber', t('Χωρίς ποσότητα: {l}', { l: lineName(r) }), [r.id]));
+  if (!pl) return out;   // entered the old way: no εμβολιακό record to compare with
+  const done = doneSet(pl), salm = pl.salmonella;
+  // the scheduler changed after the εμβολιακό was made
+  if (p.chicks && p.chicks !== pl.chicks) add('amber', t('Νεοσσοί: Προγραμματισμός {a}, εμβολιακό {b} — διορθώστε με ✎', { a: nfmt(p.chicks), b: nfmt(pl.chicks) }));
+  const now = new Map(placementCustomers(p).map(c => [pelatisName(c.name), c.qty])), was = new Map(pl.customers.map(c => [pelatisName(c.name), c.qty]));
+  const moved = [...new Set([...now.keys(), ...was.keys()])].filter(n => now.get(n) !== was.get(n))
+    .map(n => `${n} ${was.has(n) ? nfmt(was.get(n)) : '—'} → ${now.has(n) ? nfmt(now.get(n)) : '—'}`);
+  if (moved.length) add('amber', t('Οι πελάτες άλλαξαν στον Προγραμματισμό: {d} — «Αλλαγή πελατών»', { d: moved.join(', ') }));
+  // the customers' memory wants a line the hatch lacks
+  if (done.has('cvax')) diffLines(rows.filter(r => r.pelatis && isCustVax(r)), custVaxLines(p).filter(l => l.pelatis && ahead(l)), null).adds
+    .forEach(l => add('amber', t('Η μνήμη του πελάτη έχει γραμμή που λείπει: {l} — «Αλλαγή πελατών»', { l: lineName(at(l)) })));
+  // template vaccines (and paid shares, water vaccines) missing
+  if (done.has('base')) templateMissing(p).filter(l => ahead(l) && !l.sxolia_panos)
+    .forEach(l => add('red', t('Λείπει από το πρότυπο: {l} — «Συμπλήρωση από το πρότυπο»', { l: lineName(at(l)) })));
+  // whole-house injections (VECTROMUNE day 82): there, and no customer line of their own beside it
+  if (done.has('cvax')) houseInjLines(p).filter(ahead).forEach(l => {
+    const same = rows.filter(r => r.hm_emv === l.hm_emv && colOf(r.emvolio) === colOf(l.emvolio)), own = same.filter(r => r.pelatis);
+    if (!same.some(r => !r.pelatis)) add('red', t('Λείπει: {l} για όλο το αναθρεπτήριο', { l: lineName(at(l)) }));
+    if (own.length) add('red', t('{l} γίνεται σε όλο το αναθρεπτήριο, αλλά υπάρχουν και γραμμές πελατών ({c}) — «Αλλαγή πελατών»', { l: lineName(at(l)), c: own.map(r => r.pelatis).join(', ') }), own.map(r => r.id));
+  });
+  // quantities, whole house: the day's doses of the vaccine (house line + customers' lines) against the rule on all the chicks
+  rows.filter(r => !r.pelatis && ahead(r) && qtyNum(r) != null).forEach(r => {
+    const rule = tplFor(r) || (isWater(p, r) || (roundOf(r) && (r.emvolio === SEST || isHouseInj(r.emvolio, 'inj' + roundOf(r)))) ? WATER_RULE : null);
+    if (!rule || rule.rule === 'fixed' || (salm && salm.mode === 'customers' && r.emvolio === SALMOVAC && ageOf(r) === thirdSalmovac())) return;   // 3rd SALMOVAC: only the birds without SE+ST
+    const day = rows.filter(o => o.hm_emv === r.hm_emv && colOf(o.emvolio) === colOf(r.emvolio)), sum = day.reduce((s, o) => s + (qtyNum(o) || 0), 0), need = planExact(rule, pl.chicks);
+    const say = { l: lineName({ ...r, pelatis: null }), s: nfmt(sum), n: nfmt(pl.chicks) };
+    if (sum < need - 0.5) add('red', t('{l}: {s} δόσεις για {n} νεοσσούς — λείπουν {d}', { ...say, d: nfmt(Math.ceil(need - sum)) }), day.map(o => o.id));
+    else if (sum > need * 1.2 + 10000) add('amber', t('{l}: {s} δόσεις για {n} νεοσσούς — πάνω από 20% παραπάνω', say), day.map(o => o.id));
+  });
+  // quantities, per customer: their line against their birds (a paid share by its rule, the rest one dose a bird)
+  const birdsOf = pel => (gridCustomers(p).find(c => (c.leftover ? LEFTOVER : pelatisName(c.name)) === pel) || {}).qty || 0;
+  rows.filter(r => r.pelatis && ahead(r) && qtyNum(r) != null && birdsOf(r.pelatis)).forEach(r => {
+    const rule = isShare(r) ? tplFor(r) || WATER_RULE : WATER_RULE, q = qtyNum(r), birds = birdsOf(r.pelatis);
+    if (rule.rule === 'fixed') return;
+    const need = planExact(rule, birds), say = { l: lineName(r), q: nfmt(q), b: nfmt(birds) };
+    if (q < need - 0.5) add('red', t('{l}: {q} δόσεις για {b} πουλιά', say), [r.id]);
+    else if (q > need * 1.2 + 1000) add('amber', t('{l}: {q} δόσεις για {b} πουλιά — πάνω από 20% παραπάνω', say), [r.id]);
+  });
+  return out.sort((a, b) => (a.lvl === 'red' ? 0 : 1) - (b.lvl === 'red' ? 0 : 1));
+}
+let checksOpen = false;   // the list under the line, open or closed (per page visit)
+function checksHtml(list) {
+  if (!list.length) return `<div class="chk-bar ok">✓ ${t('Έλεγχος: κανένα πρόβλημα')}</div>`;
+  const red = list.filter(c => c.lvl === 'red').length, amber = list.length - red;
+  const count = [red && t(red === 1 ? '1 λάθος' : '{n} λάθη', { n: red }), amber && t(amber === 1 ? '1 προς έλεγχο' : '{n} προς έλεγχο', { n: amber })].filter(Boolean).join(' · ');
+  return `<button type="button" class="chk-bar ${red ? 'red' : 'amber'}" aria-expanded="${checksOpen}" onclick="checksOpen = !checksOpen; renderSheet()">⚠ ${count}` +
+    `<span class="chk-more">${t(checksOpen ? 'απόκρυψη' : 'λεπτομέρειες')}</span></button>` +
+    (checksOpen ? `<ul class="chk-list">${list.map(c => `<li class="${c.lvl}"${c.ids.length ? ` onclick="flashRows('${c.ids.join(',')}')" title="${t('Κλικ: δείξε τις γραμμές')}"` : ''}>${x(c.text)}</li>`).join('')}</ul>` : '');
+}
+function flashRows(ids) {
+  const trs = ids.split(',').map(id => document.querySelector(`#vax-sheet tr[data-id="${id}"]`)).filter(Boolean);
+  if (trs[0]) trs[0].scrollIntoView({ block: 'center' });
+  trs.forEach(tr => { tr.classList.add('chk-flash'); setTimeout(() => tr.classList.remove('chk-flash'), 1600); });
+}
+// before activating / printing: the red ones listed, go on only if the user says so
+const confirmChecks = (p, what) => { const red = hatchChecks(p).filter(c => c.lvl === 'red');
+  return !red.length || confirm(t('{what}: το εμβολιακό έχει {n} λάθη:', { what, n: red.length }) + '\n' + red.map(c => '• ' + c.text).join('\n') + '\n\n' + t('Συνέχεια παρ’ όλα αυτά;')); };
+
 // ── HATCH ΕΜΒΟΛΙΑΚΑ: create, activate, delete ──
 function openCreateVax() {
   const p = vaxData.placements.find(h => h.id === sheetHatchId);
@@ -4185,6 +4302,7 @@ async function activateVax() {
   if (!guardConnected()) return;
   const p = vaxData.placements.find(h => h.id === sheetHatchId), pl = planOf(p), drafts = hatchRows(p).filter(r => r.draft);
   const unchecked = hatchRows(p).filter(r => r.to_check).length;
+  if (!confirmChecks(p, t('Ενεργοποίηση'))) return;
   if (unchecked && !confirm(t('{n} γραμμές είναι ακόμα «προς έλεγχο». Ενεργοποίηση παρ’ όλα αυτά;', { n: unchecked }))) return;
   if (!confirm(t('Ενεργοποίηση του εμβολιακού {house} {date}: οι {n} γραμμές του μετρούν πλέον στις παραγγελίες. Συνέχεια;',
     { house: p.house, date: fmt(p.doc_date), n: drafts.length }))) return;
@@ -4385,14 +4503,18 @@ const field = (label, inner) => `<div class="fgroup"><label>${label}</label>${in
 // ── FILL FROM THE TEMPLATE ── εμβολιακά made over lines typed the old way (or before a template change) lack template lines:
 // the missing ones are listed with a tick each (a past day, or a day that already has another vaccine, starts unticked);
 // OK adds only the ticked ones — nothing existing changes.
-const templateMissing = p => diffLines(hatchRows(p).filter(r => !roundOf(r)), baseLines(p), null).adds.sort((a, b) => a.hm_emv.localeCompare(b.hm_emv));
+const templateMissing = p => [...diffLines(hatchRows(p).filter(r => !roundOf(r)), baseLines(p), null).adds,
+  ...(doneSet(planOf(p)).has('cvax') ? diffLines(hatchRows(p).filter(r => !r.pelatis && roundOf(r)), houseInjLines(p), null).adds : [])].sort((a, b) => a.hm_emv.localeCompare(b.hm_emv));
 let fillList = [];
 function openFillTemplate() {
   const p = sheetHatch(), rows = hatchRows(p), today = todayIso();
   fillList = templateMissing(p).map(l => {
     const other = rows.filter(r => r.hm_emv === l.hm_emv && !roundOf(r)).map(r => r.emvolio);
-    return { l, on: l.hm_emv >= today && !other.length,
-      why: l.hm_emv < today ? t('έχει περάσει') : other.length ? t('την ίδια μέρα υπάρχει: {v}', { v: other.join(', ') }) : '' };
+    // a whole-house injection where customers still have their own lines of it: «Αλλαγή πελατών» swaps them, so no bird counts twice
+    const own = l.sxolia_panos ? rows.filter(r => r.hm_emv === l.hm_emv && r.pelatis && r.emvolio === l.emvolio).map(r => r.pelatis) : [];
+    return { l, on: l.hm_emv >= today && !(l.sxolia_panos ? own : other).length,
+      why: l.hm_emv < today ? t('έχει περάσει') : own.length ? t('έχουν δικές τους γραμμές: {v} — πατήστε «Αλλαγή πελατών» και ΟΚ', { v: own.join(', ') })
+        : !l.sxolia_panos && other.length ? t('την ίδια μέρα υπάρχει: {v}', { v: other.join(', ') }) : '' };
   });
   openMini(t('Συμπλήρωση από το πρότυπο'), `<p class="muted">${t('Εμβόλια του προτύπου που λείπουν από αυτή την εκκόλαψη. Προστίθενται μόνο όσα είναι τσεκαρισμένα· οι υπάρχουσες γραμμές δεν αλλάζουν.')}</p>` +
     fillList.map((f, i) => `<label class="ord-pick"><input type="checkbox" data-i="${i}"${f.on ? ' checked' : ''}> ${t('ημ. {n}', { n: ageOf({ ...f.l, hm_ekk: p.doc_date }) })} · ${fmt(f.l.hm_emv)} · ` +
@@ -4401,7 +4523,7 @@ function openFillTemplate() {
       const picked = [...document.querySelectorAll('#vaxmini-body input[data-i]')].filter(b => b.checked).map(b => fillList[+b.dataset.i].l);
       if (!picked.length) return;
       const withQty = doneSet(planOf(p)).has('qty'), all = [...hatchRows(p), ...picked];   // quantities as step 4 would set them
-      await addLines(p, picked.map(l => ({ ...l, posotita: withQty ? qtyFor(p, { ...l, hm_ekk: p.doc_date }, all) : null })));
+      await addLines(p, picked.map(l => ({ ...l, posotita: l.posotita ?? (withQty ? qtyFor(p, { ...l, hm_ekk: p.doc_date }, all) : null) })));   // whole-house injections carry theirs
       toast(t('Προστέθηκαν {n} γραμμές ✓', { n: picked.length }));
     }));
 }
@@ -4517,10 +4639,14 @@ function renderPlanWin() {
       `<div class="inj-chips">${c.items.map((i, n) => chip(k, n, i)).join('') || `<span class="muted">${t('κανένα')}</span>`}</div>` +
       // «+»: any vaccine (from the list or typed), on an injection day or any day, injection or water
       `<div class="pw-add"><input type="text" list="vaccine-list" placeholder="${t('+ εμβόλιο')}" id="pw-v-${k}">` +
-      `<input type="number" min="1" list="pw-days" value="${days[0] || ''}" id="pw-d-${k}" title="${t('Ημέρα')}">` +
+      // the day: the injection days, or «άλλη μέρα…» opens a box for any day
+      `<select id="pw-ds-${k}" title="${t('Ημέρα')}" onchange="document.getElementById('pw-d-${k}').hidden = this.value !== 'other'">` +
+      days.map((d, n) => `<option value="${d}">${t('ημ. {n}', { n: d })} · ${t(n ? '2η ένεση' : '1η ένεση')}</option>`).join('') +
+      `<option value="other"${days.length ? '' : ' selected'}>${t('άλλη μέρα…')}</option></select>` +
+      `<input type="number" min="1" id="pw-d-${k}" placeholder="${t('Ημέρα')}"${days.length ? ' hidden' : ''}>` +
       `<select id="pw-h-${k}"><option value="injection">${t('Ένεση')}</option><option value="water">${t('Νερό / σπρέι')}</option></select>` +
       `<button type="button" class="btn-secondary" onclick="pwAdd(${k})">+</button></div></div>`;
-  }).join('') + `<datalist id="pw-days">${days.map(d => `<option value="${d}">`).join('')}</datalist>` + salmBoxHtml() +
+  }).join('') + salmBoxHtml() +
     (W.solo ? '' : `<div class="inj-new"><input type="text" id="pw-new-name" placeholder="${t('Όνομα πελάτη')}"><input type="text" id="pw-new-qty" placeholder="${t('Πουλιά')}" class="inj-qty">` +
       `<button class="btn-secondary" onclick="pwAddCustomer()">${t('+ Πελάτης')}</button></div>`);
 }
@@ -4528,7 +4654,8 @@ function pwSet(k, n, key, value) { planWin.customers[k].items[n][key] = value; r
 function pwRemove(k, n) { planWin.customers[k].items.splice(n, 1); renderPlanWin(); }
 function pwRemoveCustomer(k) { const c = planWin.customers[k]; if (c.orig) planWin.removed.push(c.orig); planWin.customers.splice(k, 1); renderPlanWin(); }
 async function pwAdd(k) {
-  const v = document.getElementById(`pw-v-${k}`).value.trim(), day = Number(document.getElementById(`pw-d-${k}`).value), how = document.getElementById(`pw-h-${k}`).value;
+  const pick = document.getElementById(`pw-ds-${k}`).value, how = document.getElementById(`pw-h-${k}`).value;
+  const v = document.getElementById(`pw-v-${k}`).value.trim(), day = Number(pick === 'other' ? document.getElementById(`pw-d-${k}`).value : pick);
   if (!v) { toast(t('Εισάγετε όνομα εμβολίου'), true); return; }
   if (!Number.isInteger(day) || day < 1) { toast(t('Η ημέρα πρέπει να είναι ακέραιος από 1 και πάνω.'), true); return; }
   const vaccine = v.toUpperCase() === CORYZA ? CORYZA : await resolveVaccineAlts(v);
@@ -4557,7 +4684,7 @@ async function saveCustomerMemory(c) {
   const { pel, rows } = memRows(c), before = memOf(pel).filter(u => u.how !== 'share');
   // the new rows first, the old ones removed only once they are in: a failure never leaves the customer with no memory
   const added = await sbFetch('customer_vaccines', { method: 'POST', prefer: 'return=representation', body: JSON.stringify(rows) });
-  await sbFetch(`customer_vaccines?customer=eq.${encodeURIComponent(pel)}&how=in.(injection,water,none)${notIds(added)}`, { method: 'DELETE' });
+  await sbFetch(`customer_vaccines?customer=eq.${encodeURIComponent(pel)}&how=in.(injection,water,own,none)${notIds(added)}`, { method: 'DELETE' });
   vaxData.usual = vaxData.usual.filter(u => !(u.customer === pel && u.how !== 'share')).concat(rows);
   await logMemory(pel, before.length ? 'edited' : 'created', before, rows);
 }

@@ -45,6 +45,7 @@ tbody tr:last-child td{border-bottom:none}
 .chip button:hover{color:var(--gh-danger-fg)}
 .chip.std{border-color:var(--gh-accent-emphasis);background:var(--gh-accent-subtle)}
 .chip .star{color:var(--gh-attention-fg);font-size:13px;padding:0 2px 0 0}
+.chip .whole{display:inline-flex;align-items:center;gap:3px;margin-left:6px;color:var(--gh-fg-muted);font-size:11px;cursor:pointer}
 .hatcheries{display:flex;flex-direction:column;gap:18px;max-width:900px}
 .hb-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0;font-size:13px}.hb-breeds{flex:1}.hatchery td input{width:100%}.hatchery td{padding:4px 6px}.hatchery td:nth-child(1){width:32%}.hatchery td:nth-child(2){width:42%}.hatchery td:last-child{width:1%}
 .only{font-size:11px;color:var(--gh-attention-fg);border:1px solid rgba(240,180,41,0.4);border-radius:99px;padding:0 7px;margin-left:6px;white-space:nowrap}
@@ -206,6 +207,8 @@ select.cell.on{border-color:rgba(79,209,139,0.5);color:var(--gh-success-fg);back
 <script>
 // ── TRANSLATIONS ── this page's English (Greek text → English); shared words are in common.js
 addTranslations({
+  'όλο το αναθρεπτήριο': 'whole house',
+  'Όλο το αναθρεπτήριο: μία γραμμή για όλους τους νεοσσούς σε κάθε εκκόλαψη, πληρωμένη από εμάς, ό,τι κι αν θυμούνται οι πελάτες': 'Whole house: one line for all the chicks on every hatch, paid by us, whatever the customers remember',
   'ΕΜΒΟΛΙΑ — Πρότυπο εμβολιακού': 'VACCINES — Plan template', '← Παραγγελίες': '← Orders', 'Πίσω στις παραγγελίες': 'Back to orders',
   'Πρότυπο εμβολιακού': 'Vaccination plan template', 'Εμβόλια': 'Vaccines', '+ Γραμμή': '+ Row',
   'Κάθε νέα εκκόλαψη αντιγράφει αυτές τις γραμμές. Η ημέρα μετράει από την εκκόλαψη (ημέρα 0).': 'Every new hatch copies these rows. The day counts from the hatch (day 0).',
@@ -442,7 +445,9 @@ function renderInjectables() {
   [1, 2].forEach(round => {
     const list = injectables.filter(i => i.round === round);
     document.getElementById(`inj-${round}`).innerHTML = list.map(i =>
-      `<span class="chip${i.standard ? ' std' : ''}"><button class="star" aria-pressed="${!!i.standard}" title="${t('Βασικό: το κάνουν οι πελάτες που δεν έχουν δικά τους')}" onclick="toggleStandard(${i.id})">${i.standard ? '★' : '☆'}</button>${injLabel(i.vaccine)}<button title="${t('Αφαίρεση')}" onclick="removeInjectable(${i.id})">×</button></span>`).join('')
+      `<span class="chip${i.standard ? ' std' : ''}"><button class="star" aria-pressed="${!!i.standard}" title="${t('Βασικό: το κάνουν οι πελάτες που δεν έχουν δικά τους')}" onclick="toggleInj(${i.id}, 'standard')">${i.standard ? '★' : '☆'}</button>${injLabel(i.vaccine)}` +
+      `<label class="whole" title="${t('Όλο το αναθρεπτήριο: μία γραμμή για όλους τους νεοσσούς σε κάθε εκκόλαψη, πληρωμένη από εμάς, ό,τι κι αν θυμούνται οι πελάτες')}">` +
+      `<input type="checkbox"${i.whole_house ? ' checked' : ''} onchange="toggleInj(${i.id}, 'whole_house')"> ${t('όλο το αναθρεπτήριο')}</label><button title="${t('Αφαίρεση')}" onclick="removeInjectable(${i.id})">×</button></span>`).join('')
       || `<span class="muted">${t('Κανένα')}</span>`;
     document.getElementById(`inj-add-${round}`).innerHTML = `<option value="">${t('— προσθήκη —')}</option>` +
       [CORYZA, ...VACCINE_OPTIONS].filter(v => !list.some(i => i.vaccine === v)).map(v => `<option value="${escapeHtml(v)}">${injLabel(v)}</option>`).join('');
@@ -470,10 +475,11 @@ async function removeInjectable(id) {
   } catch (e) { toast(t('Σφάλμα: {msg}', { msg: e.message }), true); }
 }
 
-async function toggleStandard(id) {
+// flips ★ standard or «όλο το αναθρεπτήριο» (whole_house) on one injectable
+async function toggleInj(id, field) {
   const inj = injectables.find(i => i.id === id);
   try {
-    const [saved] = await sbFetch(`${INJ}?id=eq.${id}`, { method: 'PATCH', prefer: 'return=representation', body: JSON.stringify({ standard: !inj.standard }) }) || [];
+    const [saved] = await sbFetch(`${INJ}?id=eq.${id}`, { method: 'PATCH', prefer: 'return=representation', body: JSON.stringify({ [field]: !inj[field] }) }) || [];
     if (!saved) throw new Error(t('Η εγγραφή δεν υπάρχει πια — ανανεώστε τη σελίδα.'));
     await logChange(INJ, id, 'edited', inj, saved);
     Object.assign(inj, saved);
