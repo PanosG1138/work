@@ -430,7 +430,12 @@ tr.row-draft.row-check td{opacity:1}   /* lines to check stand out among the fad
 .del-form input,.del-form select{width:100%;min-width:90px}.del-acts{display:flex;gap:8px;margin:8px 0}
 .del-note{font-size:12px;color:var(--gh-attention-fg)}.ord-pick.muted{opacity:.6}
 .cov.late{color:var(--gh-danger-fg);background:var(--gh-danger-subtle)}
-.cust-hist{display:flex;flex-direction:column;gap:2px;border-top:1px solid var(--gh-border-muted);padding-top:6px}.cust-hist span{color:var(--gh-fg-muted)}
+.cust-hist{display:flex;flex-direction:column;gap:2px;border-top:1px solid var(--gh-border-muted);padding-top:6px}
+/* one row per vaccine: name · day · how · who pays */
+.cust-vax{display:grid;grid-template-columns:minmax(120px,max-content) 60px 1fr auto;gap:2px 12px;align-items:center}
+.cust-vax>span{padding:3px 0;border-top:1px solid var(--gh-border-muted)}.cust-vax>.how{color:var(--gh-fg-muted)}
+.cust-vax .pay{font-size:11px;padding:1px 8px;border-radius:6px;justify-self:end;color:var(--gh-success-fg);background:var(--gh-success-subtle)}
+.cust-vax .pay.cust{color:var(--gh-attention-fg);background:var(--gh-attention-subtle)}
 .vax-step{margin-left:6px;padding:1px 4px;font-size:11px;width:auto}
 .confirm-ordered{display:block;margin-top:8px;color:var(--gh-attention-fg);font-weight:600;font-size:12px}
 .lock-note{display:block;font-size:11px;color:var(--gh-fg-subtle);margin-top:3px}
@@ -1320,7 +1325,7 @@ body.printing-card .printcard-doc{display:block}
 <script>
 // ── TRANSLATIONS ── this page's English (Greek text → English); shared words are in common.js
 addTranslations({
-  'νερό, μόνο τα πουλιά του': 'water, their birds only', 'νερό / σπρέι': 'water / spray', 'Νερό / σπρέι': 'Water / spray', 'όλο το αναθρεπτήριο': 'whole house',
+  'νερό, μόνο τα πουλιά του': 'water, their birds only', 'νερό, όλο το αναθρεπτήριο': 'water, whole house', 'ένεση': 'injection', 'νερό / σπρέι': 'water / spray', 'Νερό / σπρέι': 'Water / spray', 'όλο το αναθρεπτήριο': 'whole house',
   'Κλικ: οι γραμμές του πελάτη με κόκκινο · διπλό κλικ: η μνήμη του': 'Click: the customer\'s lines in red · double-click: their memory',
   'Η ποσότητα μένει ίδια ({q}) και με αυτή τη στρογγυλοποίηση.': 'The quantity stays the same ({q}) with this rounding too.',
   'Αλλαγή πελατών': 'Change customers',
@@ -3672,6 +3677,12 @@ function memItems(name) {
 }
 const vacLabel = i => (i.vaccine === CORYZA ? t(CORYZA) + (i.product ? ' ' + i.product : '') : i.vaccine) +
   (i.how === 'water' ? ` (${t('νερό')})` : i.how === 'own' ? ` (${t('νερό, μόνο τα πουλιά του')})` : '') + (i.pays ? ` (${t('πληρώνει')})` : '') + (i.std ? ' ★' : '');
+// Πελάτες tab: one row per vaccine — name · day · how · who pays
+const howText = i => t(i.how === 'water' ? 'νερό, όλο το αναθρεπτήριο' : i.how === 'own' ? 'νερό, μόνο τα πουλιά του' : 'ένεση');
+const vaxTable = items => items.length ? `<div class="cust-vax">` + items.map(i =>
+  `<span><b>${x(i.vaccine === CORYZA ? t(CORYZA) + (i.product ? ' ' + i.product : '') : i.vaccine)}</b>${i.std ? ' ★' : ''}</span>` +
+  `<span>${t('ημ. {n}', { n: atDay(i.at) })}</span><span class="how">${howText(i)}</span>` +
+  `<span class="pay${i.pays ? ' cust' : ''}">${t(i.pays ? 'πληρώνει ο πελάτης' : 'εμείς')}</span>`).join('') + '</div>' : '';
 // "ημ. 60: SG-9R, ΚΟΡΥΖΑ … · ημ. 82: …" for a list of items
 const byDayText = items => [...new Set(items.map(i => atDay(i.at)))].sort((a, b) => a - b)
   .map(d => `${t('ημ. {n}', { n: d })}: ${items.filter(i => atDay(i.at) === d).map(vacLabel).join(', ')}`).join(' · ');
@@ -4685,9 +4696,9 @@ function renderCustTab() {
   const histItem = h => ({ vaccine: h.vaccine, at: 'day:' + h.day, how: ['water', 'own'].includes(h.how) ? h.how : 'injection', pays: h.payer === 'customer' });
   box.innerHTML = `<h3>${x(custSel)}</h3><div class="cust-block"><div class="cust-block-head"><b>${t('Μνήμη')}</b>` +
     `<button class="btn-secondary" data-pel="${x(custSel)}" onclick="openPlanWin(this.dataset.pel)">${t('Επεξεργασία')}</button></div>` +
-    `<p>${x(byDayText(items)) || t('κανένα')}</p>${shares.length ? `<p class="muted">${x(t('πληρώνει μόνος: {v}', { v: shares.join(', ') }))}</p>` : ''}</div>` +
+    `${vaxTable(items) || `<p>${t('κανένα')}</p>`}${shares.length ? `<p class="muted">${x(t('πληρώνει μόνος: {v}', { v: shares.join(', ') }))}</p>` : ''}</div>` +
     `<div class="cust-block"><b>${t('Ιστορικό ανά εκκόλαψη')}</b>` + ([...hatches.values()].map(rows =>
-      `<div class="cust-hist"><b>${x(rows[0].house)} · ${t('εκκόλαψη')} ${fmt(rows[0].hatch)}</b><span>${x(byDayText(rows.map(histItem)))}</span></div>`).join('')
+      `<div class="cust-hist"><b>${x(rows[0].house)} · ${t('εκκόλαψη')} ${fmt(rows[0].hatch)}</b>${vaxTable(rows.map(histItem).sort((a, b) => atDay(a.at) - atDay(b.at)))}</div>`).join('')
       || `<p class="muted">${t('Δεν υπάρχει ιστορικό ακόμα (γράφεται όταν ενεργοποιείται ένα εμβολιακό).')}</p>`) + '</div>';
 }
 
