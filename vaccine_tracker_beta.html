@@ -1362,7 +1362,11 @@ addTranslations({
   'Ξετσεκάρετε ό,τι δεν θέλετε να γίνει· αλλάξτε την ποσότητα στο κουτάκι.': 'Untick what you don\'t want done; change the quantity in the box.',
   'απόκρυψη': 'hide', 'Λύθηκε': 'Resolved', 'Επαναφορά': 'Restore', '1 κρυμμένο': '1 hidden', '{n} κρυμμένα': '{n} hidden',
   'Αιτία (προαιρετικά)': 'Reason (optional)', 'Ξαναεμφανίζεται μόνο του αν αλλάξει κάτι σε αυτό.': 'It shows again by itself if anything about it changes.', 'Κρύφτηκε ✓': 'Hidden ✓',
-  '{v} αντί για {w} (ίδια ασθένεια: {d}), ημ. {n}': '{v} instead of {w} (same disease: {d}), day {n}', 'λεπτομέρειες': 'details', 'Κλικ: δείξε τις γραμμές': 'Click: show the lines', 'Εκτύπωση': 'Print',
+  '{v} αντί για {w} (ίδια ασθένεια: {d}), ημ. {n}': '{v} instead of {w} (same disease: {d}), day {n}',
+  'Μετακινήθηκε: {v} ημ. {a} αντί για ημ. {b}': 'Moved: {v} day {a} instead of day {b}',
+  'Οι πελάτες στον Προγραμματισμό έχουν {a} πουλιά, {d} περισσότερα από τους νεοσσούς ({b})': 'The customers in the scheduler have {a} birds, {d} more than the chicks ({b})',
+  '{c}: καμία ένεση την ημ. {n} (χωρίς μνήμη ή ★)': '{c}: no injection on day {n} (no memory or ★)',
+  '{c}: καμία ένεση την ημ. {n} — η μνήμη του έχει, «Ενημέρωση εμβολίων πελατών»': '{c}: no injection on day {n} — their memory has one, «Update customer vaccines»', 'λεπτομέρειες': 'details', 'Κλικ: δείξε τις γραμμές': 'Click: show the lines', 'Εκτύπωση': 'Print',
   '{what}: το εμβολιακό έχει {n} λάθη:': '{what}: the plan has {n} mistakes:', 'Συνέχεια παρ’ όλα αυτά;': 'Continue anyway?', 'νερό / σπρέι': 'water / spray', 'Νερό / σπρέι': 'Water / spray', 'όλο το αναθρεπτήριο': 'whole house',
   'Κλικ: οι γραμμές του πελάτη με κόκκινο · διπλό κλικ: η μνήμη του': 'Click: the customer\'s lines in red · double-click: their memory',
   'Η ποσότητα μένει ίδια ({q}) και με αυτή τη στρογγυλοποίηση.': 'The quantity stays the same ({q}) with this rounding too.',
@@ -4126,7 +4130,7 @@ function waterWanted(customers) {
 const isWater = (p, r) => !r.pelatis && !roundOf(r) && !tplFor(r) && waterWanted(planOf(p).customers).some(w => w.vaccine === r.emvolio && w.day === ageOf(r));
 // step 2: template vaccines (+ each paying customer's share), the customers' water vaccines; names + days only
 function baseLines(p) {
-  const pl = planOf(p), customers = pl.customers, salm = pl.salmonella, third = thirdSalmovac();
+  const pl = planOf(p), customers = pl.customers, salm = hatchSalm(p), third = thirdSalmovac();
   // a paying customer's share of a whole-house vaccine on a day: its own line (their birds), the house line covers the rest
   const shares = (vaccine, day) => customers.filter(c => paysFor(c.name, vaccine, day)).map(c => { const pel = pelatisName(c.name);
     return { emvolio: vaccine, posotita: null, hm_emv: dayDate(p, day), pelatis: pel, payer: pel, promitheutis: supplierFor(vaccine, pel), to_check: true }; });
@@ -4138,27 +4142,40 @@ function baseLines(p) {
 }
 const stepBase = () => sheetAction(async p => { await addLines(p, baseLines(p)); await markStep(p, 'base', true); });
 // step 3: every customer injection at its day (birds ↑1.000; SE+ST as set in step 1), ΥΠΟΛΟΙΠΑ's own, the house SE+ST
+// a hatch's injection day: the day most of its ΠΡΩΤΑ / ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ lines are on (older hatches: e.g. day 90),
+// the template's day when it has none yet
+function injDayOf(p, round) {
+  const ages = hatchRows(p).filter(r => roundOf(r) === round).map(ageOf);
+  if (!ages.length) return injDay(round);
+  const count = new Map(); ages.forEach(a => count.set(a, (count.get(a) || 0) + 1));
+  return [...count].sort((a, b) => b[1] - a[1])[0][0];
+}
+const dayOfAt = (p, at) => at === 'inj1' ? injDayOf(p, 1) : at === 'inj2' ? injDayOf(p, 2) : atDay(at);   // a memory day on this hatch
 const injNote = (p, at) => at === 'inj1' ? `ΠΡΩΤΑ ΕΝΕΣΙΜΑ ${p.house}` : at === 'inj2' ? `ΔΕΥΤΕΡΑ ΕΝΕΣΙΜΑ ${p.house}` : null;
 // injection-day vaccines ticked «όλο το αναθρεπτήριο» on the template page (e.g. VECTROMUNE day 82): one line for all
 // the chicks on every hatch, paid by us; a customer who has it in memory gets no line of their own for it
 const isHouseInj = (vaccine, at) => vaxData.injectables.some(i => i.whole_house && 'inj' + i.round === at && i.vaccine === vaccine);
 const houseInjLines = p => { const chicks = planOf(p).chicks;
-  return vaxData.injectables.filter(i => i.whole_house && injDay(i.round)).map(i => ({ hm_emv: dayDate(p, injDay(i.round)), emvolio: i.vaccine,
+  return vaxData.injectables.filter(i => i.whole_house && injDayOf(p, i.round)).map(i => ({ hm_emv: dayDate(p, injDayOf(p, i.round)), emvolio: i.vaccine,
     posotita: chicks ? injQty(chicks) : null, pelatis: null, payer: null, to_check: true, promitheutis: supplierFor(i.vaccine), sxolia_panos: injNote(p, 'inj' + i.round) })); };
+// a house line (no customer) of this vaccine on this day: older hatches typed injections for everyone that way (SE+ST is split on purpose)
+const houseCovers = (p, vaccine, day) => vaccine !== SEST && hatchRows(p).some(r => !r.pelatis && colOf(r.emvolio) === colOf(vaccine) && ageOf(r) === day);
 function custVaxLines(p) {
   const pl = planOf(p), salm = pl.salmonella, out = houseInjLines(p);
   gridCustomers(p).forEach(c => {
     const pel = c.leftover ? LEFTOVER : pelatisName(c.name);
     memItems(c.name).filter(i => (i.how === 'injection' || i.how === 'own') && !isHouseInj(i.vaccine, i.at)).forEach(i => {
       const emvolio = i.vaccine === CORYZA ? i.product : i.vaccine;
-      const qty = i.vaccine === SEST && salm && salm.sest && salm.sest[pel] != null ? String(salm.sest[pel]) : injQty(c.qty);
+      if (houseCovers(p, emvolio, dayOfAt(p, i.at))) return;
+      const qty = i.vaccine === SEST && salm && c.leftover && salm.mode === 'house' ? String(salm.rest)
+        : i.vaccine === SEST && salm && salm.sest && salm.sest[pel] != null ? String(salm.sest[pel]) : injQty(c.qty);
       const payer = i.pays && !c.leftover ? pel : null;
-      out.push({ hm_emv: dayDate(p, atDay(i.at)), emvolio, posotita: qty, pelatis: pel, payer, to_check: !c.leftover,
+      out.push({ hm_emv: dayDate(p, dayOfAt(p, i.at)), emvolio, posotita: qty, pelatis: pel, payer, to_check: !c.leftover,
         promitheutis: supplierFor(emvolio, payer), sxolia_panos: injNote(p, i.at) });
     });
   });
-  if (salm && salm.mode === 'house' && salm.rest > 0) {
-    const day = (out.find(l => l.emvolio === SEST) || {}).hm_emv || dayDate(p, injDay(2));
+  if (salm && salm.mode === 'house' && salm.rest > 0 && !out.some(l => l.pelatis === LEFTOVER && l.emvolio === SEST)) {
+    const day = (out.find(l => l.emvolio === SEST) || {}).hm_emv || dayDate(p, injDayOf(p, 2));
     out.push({ hm_emv: day, emvolio: SEST, posotita: String(salm.rest), pelatis: null, payer: null, to_check: true, promitheutis: supplierFor(SEST), sxolia_panos: injNote(p, 'inj2') });
   }
   return out;
@@ -4199,7 +4216,7 @@ const undoStep = key => sheetAction(async p => {
 // ── CHECKS ── safeguards on one hatch: red = a mistake to fix, amber = worth a look. One line above the table
 // (click → the list; a point in it scrolls to its lines; the lines involved get a coloured edge); asked again before
 // activating or printing. Quantity checks only look at lines still ahead (a past day can't be changed).
-const MAX_VAX_DAY = 126;   // vaccinating after day 105 is rare, never after 126 (user, 2026-11-16)
+const MAX_VAX_DAY = 126, MOVED_DAYS = 10;   // a template vaccine up to 10 days off its day = moved, not missing (user, 2026-11-16)   // vaccinating after day 105 is rare, never after 126 (user, 2026-11-16)
 const qtyNum = r => /^[\d.]+$/.test(String(r.posotita ?? '').trim()) ? parseBirds(r.posotita) : null;   // doses only, not "5 ΚΙΛΑ"
 const lineName = r => `${vaccineLabel(r.emvolio)} ${t('ημ. {n}', { n: ageOf(r) })}${r.pelatis ? ' · ' + r.pelatis : ''}`;
 // Every check carries a key (which warning: kind + vaccine + day + customer) and a fingerprint (the lines / numbers it was
@@ -4227,12 +4244,23 @@ function hatchChecks(p) {
   rows.filter(r => ahead(r) && r.hm_emv <= subDays(today, -30) && !/[1-9]/.test(String(r.posotita ?? '')))
     .forEach(r => add('amber', t('Χωρίς ποσότητα: {l}', { l: lineName(r) }), [r.id], 'noqty|' + r.id, `${r.hm_emv}|${r.posotita || ''}`));
   if (!pl) return out;   // entered the old way: no εμβολιακό record to compare with
-  const done = doneSet(pl), salm = pl.salmonella;
+  const done = doneSet(pl), salm = hatchSalm(p);
   // the scheduler changed after the εμβολιακό was made
   if (p.chicks && p.chicks !== pl.chicks) add('amber', t('Νεοσσοί: Προγραμματισμός {a}, εμβολιακό {b} — διορθώστε με ✎', { a: nfmt(p.chicks), b: nfmt(pl.chicks) }), [], 'chicks', `${p.chicks}|${pl.chicks}`);
   const now = new Map(placementCustomers(p).map(c => [pelatisName(c.name), c.qty])), was = new Map(pl.customers.map(c => [pelatisName(c.name), c.qty]));
   const moved = [...new Set([...now.keys(), ...was.keys()])].filter(n => now.get(n) !== was.get(n))
     .map(n => `${n} ${was.has(n) ? nfmt(was.get(n)) : '—'} → ${now.has(n) ? nfmt(now.get(n)) : '—'}`);
+  const booked = placementCustomers(p).reduce((sum, c) => sum + c.qty, 0);
+  if (booked > pl.chicks) add('amber', t('Οι πελάτες στον Προγραμματισμό έχουν {a} πουλιά, {d} περισσότερα από τους νεοσσούς ({b})', { a: nfmt(booked), b: nfmt(pl.chicks), d: nfmt(booked - pl.chicks) }),
+    [], 'over', `${booked}|${pl.chicks}`);
+  // a customer with no injection on an injection day still ahead (no memory and no ★ standard → nothing planned); 'none' in memory = on purpose
+  if (done.has('cvax')) [1, 2].map(round => ({ round, day: injDayOf(p, round) })).filter(x => x.day && dayDate(p, x.day) >= today).forEach(({ round, day }) =>
+    placementCustomers(p).map(c => pelatisName(c.name)).filter(pel => !rows.some(r => r.pelatis === pel && roundOf(r) === round)
+      && !memOf(pel).some(u => u.at === 'inj' + round && u.how === 'none')
+      && !rows.some(r => !r.pelatis && roundOf(r) === round && r.emvolio !== SEST && !isHouseInj(r.emvolio, 'inj' + round))).forEach(pel =>
+      add('amber', memItems(pel).some(i => i.how === 'injection' && i.at === 'inj' + round)
+        ? t('{c}: καμία ένεση την ημ. {n} — η μνήμη του έχει, «Ενημέρωση εμβολίων πελατών»', { c: pel, n: day })
+        : t('{c}: καμία ένεση την ημ. {n} (χωρίς μνήμη ή ★)', { c: pel, n: day }), [], `noinj|${pel}|${round}`, day)));
   if (moved.length) add('amber', t('Οι πελάτες άλλαξαν στον Προγραμματισμό: {d} — «Ενημέρωση εμβολίων πελατών»', { d: moved.join(', ') }), [], 'cust', moved.join());
   // the customers' memory wants a line the hatch lacks
   if (done.has('cvax')) diffLines(rows.filter(r => r.pelatis && isCustVax(r)), custVaxLines(p).filter(l => l.pelatis && ahead(l)), null).adds
@@ -4240,7 +4268,10 @@ function hatchChecks(p) {
   // template vaccines (and paid shares, water vaccines) missing; another vaccine for the same disease that day = amber, to check
   if (done.has('base')) templateMissing(p).filter(l => ahead(l) && !l.sxolia_panos).forEach(l => {
     const dis = diseaseOf(l.emvolio), swap = dis ? rows.filter(r => r.hm_emv === l.hm_emv && (r.pelatis || '') === (l.pelatis || '') && r.emvolio !== l.emvolio && diseaseOf(r.emvolio) === dis) : [];
-    if (swap.length) add('amber', t('{v} αντί για {w} (ίδια ασθένεια: {d}), ημ. {n}', { v: swap.map(r => r.emvolio).join(', '), w: l.emvolio, d: dis, n: ageOf(at(l)) }),
+    const moved = rows.filter(r => r.emvolio === l.emvolio && (r.pelatis || '') === (l.pelatis || '') && !tplFor(r) && Math.abs(ageOf(r) - ageOf(at(l))) <= MOVED_DAYS);
+    if (moved.length) add('amber', t('Μετακινήθηκε: {v} ημ. {a} αντί για ημ. {b}', { v: l.emvolio, a: moved.map(ageOf).join(', '), b: ageOf(at(l)) }),
+      moved.map(r => r.id), 'tpl|' + lineKey(l), moved.map(r => `${r.id}:${r.hm_emv}`).join());
+    else if (swap.length) add('amber', t('{v} αντί για {w} (ίδια ασθένεια: {d}), ημ. {n}', { v: swap.map(r => r.emvolio).join(', '), w: l.emvolio, d: dis, n: ageOf(at(l)) }),
       swap.map(r => r.id), 'tpl|' + lineKey(l), sameDayOf(rows, l));
     else add('red', t('Λείπει από το πρότυπο: {l} — «Συμπλήρωση από το πρότυπο»', { l: lineName(at(l)) }), [], 'tpl|' + lineKey(l), sameDayOf(rows, l));
   });
@@ -4251,11 +4282,11 @@ function hatchChecks(p) {
     if (own.length) add('red', t('{l} γίνεται σε όλο το αναθρεπτήριο, αλλά υπάρχουν και γραμμές πελατών ({c}) — «Ενημέρωση εμβολίων πελατών»', { l: lineName(at(l)), c: own.map(r => r.pelatis).join(', ') }),
       own.map(r => r.id), 'hinjown|' + lineKey(l), own.map(r => `${r.id}:${r.posotita}`).join());
   });
-  // quantities, whole house: the day's doses of the vaccine (house line + customers' lines) against the rule on all the chicks
+  // quantities, whole house: the day's doses of the vaccine (house line + customers' lines) against all the chicks (÷ divide_by)
   rows.filter(r => !r.pelatis && ahead(r) && qtyNum(r) != null).forEach(r => {
     const rule = tplFor(r) || (isWater(p, r) || (roundOf(r) && (r.emvolio === SEST || isHouseInj(r.emvolio, 'inj' + roundOf(r)))) ? WATER_RULE : null);
     if (!rule || rule.rule === 'fixed' || (salm && salm.mode === 'customers' && r.emvolio === SALMOVAC && ageOf(r) === thirdSalmovac())) return;   // 3rd SALMOVAC: only the birds without SE+ST
-    const day = rows.filter(o => o.hm_emv === r.hm_emv && colOf(o.emvolio) === colOf(r.emvolio)), sum = day.reduce((s, o) => s + (qtyNum(o) || 0), 0), need = planExact(rule, pl.chicks);
+    const day = rows.filter(o => o.hm_emv === r.hm_emv && colOf(o.emvolio) === colOf(r.emvolio)), sum = day.reduce((s, o) => s + (qtyNum(o) || 0), 0), need = pl.chicks / Number(rule.divide_by || 1);
     const say = { l: lineName({ ...r, pelatis: null }), s: nfmt(sum), n: nfmt(pl.chicks) }, key = `qty|${r.hm_emv}|${colOf(r.emvolio)}`, fp = `${sum}|${pl.chicks}`;
     if (sum < need - 0.5) add('red', t('{l}: {s} δόσεις για {n} νεοσσούς — λείπουν {d}', { ...say, d: nfmt(Math.ceil(need - sum)) }), day.map(o => o.id), key, fp);
     else if (sum > need * 1.2 + 10000) add('amber', t('{l}: {s} δόσεις για {n} νεοσσούς — πάνω από 20% παραπάνω', say), day.map(o => o.id), key, fp);
@@ -4265,7 +4296,7 @@ function hatchChecks(p) {
   rows.filter(r => r.pelatis && ahead(r) && qtyNum(r) != null && birdsOf(r.pelatis)).forEach(r => {
     const rule = isShare(r) ? tplFor(r) || WATER_RULE : WATER_RULE, q = qtyNum(r), birds = birdsOf(r.pelatis);
     if (rule.rule === 'fixed') return;
-    const need = planExact(rule, birds), say = { l: lineName(r), q: nfmt(q), b: nfmt(birds) }, key = 'cqty|' + r.id, fp = `${q}|${birds}`;
+    const need = birds / Number(rule.divide_by || 1), say = { l: lineName(r), q: nfmt(q), b: nfmt(birds) }, key = 'cqty|' + r.id, fp = `${q}|${birds}`;
     if (q < need - 0.5) add('red', t('{l}: {q} δόσεις για {b} πουλιά', say), [r.id], key, fp);
     else if (q > need * 1.2 + 1000) add('amber', t('{l}: {q} δόσεις για {b} πουλιά — πάνω από 20% παραπάνω', say), [r.id], key, fp);
   });
