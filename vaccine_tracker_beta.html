@@ -3927,7 +3927,7 @@ function renderVaxPrint() {
       `<td class="vp-m"${note(r, 'method')}>${x(r.method)}</td>`;
   document.getElementById('vaxprint-paper').innerHTML =
     `<div class="vp-title">${x(printTitle(p))}</div>` +
-    `<table class="vp-table"><colgroup><col style="width:13%"><col style="width:6%"><col style="width:22%"><col style="width:24%"><col style="width:12%"><col></colgroup>` +
+    `<table class="vp-table"><colgroup><col style="width:13%"><col style="width:6%"><col style="width:25%"><col style="width:27%"><col style="width:15%"><col style="width:14%"></colgroup>` +   // ΤΡΟΠΟΣ narrow (user, 2026-11-19)
     `<thead><tr>${PRINT_COLS.map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>` +
     rows.map((r, i) => `<tr class="${rowLook(r)}">` + (r.kind === 'hatchery' && i > 0 ? ''   // day-0 block: the date once, as in the sheet
       : `<td class="vp-d"${r.kind === 'hatchery' ? ` rowspan="${day0}"` : ''}>${fmt(r.date).replace(/\/(\d\d)(\d\d)$/, '/$2')}</td><td class="vp-d"${r.kind === 'hatchery' ? ` rowspan="${day0}"` : ''}>${r.day}</td>`) +
@@ -3995,7 +3995,7 @@ async function downloadVaxExcel() {
   try {
     if (!window.ExcelJS) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js');
     const wb = new ExcelJS.Workbook(), ws = wb.addWorksheet('ΕΜΒΟΛΙΑΚΟ', { pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
-    ws.columns = [12, 6, 30, 30, 14, 30].map(width => ({ width }));
+    ws.columns = [12, 6, 33, 35, 18, 17].map(width => ({ width }));   // ΤΡΟΠΟΣ narrow, as on the printout
     const fill = argb => ({ type: 'pattern', pattern: 'solid', fgColor: { argb } });
     const thin = { style: 'thin', color: { argb: 'FF000000' } }, box = { top: thin, left: thin, bottom: thin, right: thin };
     ws.mergeCells(1, 1, 1, 6); Object.assign(ws.getCell(1, 1), { value: printTitle(p), font: { bold: true, size: 14 }, alignment: { horizontal: 'center' }, border: box });
