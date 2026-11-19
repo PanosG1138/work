@@ -3897,7 +3897,7 @@ function printChanges(p) {
   old.filter(o => !now.some(r => r.key === o.key)).forEach(o => out.push('− ' + label(o)));
   return out;
 }
-const printTitle = p => `ΕΜΒΟΛΙΑΚΟ ΠΡΟΓΡΑΜΜΑ ${p.house}`;
+const printTitle = p => `ΕΜΒΟΛΙΑΚΟ ΠΡΟΓΡΑΜΜΑ ${p.house} - ΕΚΚΟΛΑΨΗ: ${fmt(p.doc_date)}`;   // the hatch date in the title (user, 2026-11-19)
 // two ways to print: with the hatchery's day-0 vaccines or without (the tick in the print window, kept for the page visit)
 let printHatchery = true;
 const paperRows = (p, withHatch = printHatchery) => printRows(p).filter(r => withHatch || r.kind !== 'hatchery');
