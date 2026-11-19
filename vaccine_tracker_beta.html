@@ -770,6 +770,7 @@ tbody tr.row-late{border-left:3px solid var(--gh-danger-fg)}
 /* ── PRINTABLE ΕΜΒΟΛΙΑΚΟ (renderVaxPrint) ── */
 .vaxprint-modal{width:1000px;max-width:96vw;max-height:94vh}
 .vaxprint-bar{display:flex;align-items:center;gap:8px;margin-bottom:8px}.vaxprint-bar b{font-size:15px}
+.vp-opt{display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;margin-right:6px}
 .vp-warn{border:1px solid var(--gh-attention-fg);color:var(--gh-attention-fg);border-radius:var(--r);padding:8px 12px;margin-bottom:8px;font-size:13px}.vp-warn ul{margin:4px 0 4px 18px}
 .vax-pill.print-warn{cursor:pointer;color:var(--gh-attention-fg);border-color:var(--gh-attention-fg);background:transparent}
 .vaxprint-paper{background:#fff;color:#000;padding:18px 22px;border-radius:6px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -1313,6 +1314,7 @@ body.printing-card .printcard-doc{display:block}
 <div id="vaxprint-bg" class="modal-bg" style="display:none" onclick="if(event.target===this)closeVaxPrint()">
   <div class="modal vaxprint-modal">
     <div class="vaxprint-bar"><b id="vaxprint-title"></b><span class="tb-spacer"></span>
+      <label class="vp-opt"><input type="checkbox" id="vp-hatch" checked onchange="printHatchery = this.checked; renderVaxPrint()"> Με τα εμβόλια εκκολαπτηρίου</label>
       <button class="btn-secondary" onclick="downloadVaxExcel()">Excel</button>
       <button class="btn-primary" onclick="printVax()">🖨 Εκτύπωση</button>
       <button class="btn-secondary" onclick="closeVaxPrint()">Κλείσιμο</button></div>
@@ -3883,7 +3885,7 @@ function printRows(p, withNotes = true) {
 // what differs from the last print, as short lines (none = same, or never printed)
 function printChanges(p) {
   const pl = planOf(p); if (!pl || !pl.printed) return [];
-  const now = printRows(p), old = pl.printed.rows || [], out = [];
+  const now = paperRows(p, pl.printed.with_hatchery !== false), old = pl.printed.rows || [], out = [];
   const label = r => `${r.type || r.disease || gr('ημ. {n}', { n: r.day })} ${fmt(r.date).slice(0, 5)}`;
   const FIELDS = [['date', 'ημερομηνία'], ['type', 'εμβόλιο'], ['qty', 'ποσότητα'], ['method', 'τρόπος'], ['disease', 'ασθένεια']];
   now.forEach(r => {
@@ -3896,13 +3898,17 @@ function printChanges(p) {
   return out;
 }
 const printTitle = p => `ΕΜΒΟΛΙΑΚΟ ΠΡΟΓΡΑΜΜΑ ${p.house}`;
+// two ways to print: with the hatchery's day-0 vaccines or without (the tick in the print window, kept for the page visit)
+let printHatchery = true;
+const paperRows = (p, withHatch = printHatchery) => printRows(p).filter(r => withHatch || r.kind !== 'hatchery');
 // a row's look, as in the sheet: yellow dates, ΣΑΛΜΟΝΕΛΑ rows all yellow with the vaccine in red, ΖΥΓΑΡΙΑ peach, ΕΝΕΣΙΜΑ blue
 const rowLook = r => r.kind === 'scale' ? 'vp-scale' : r.kind === 'inj' ? 'vp-inj' : /ΣΑΛΜΟΝΕΛΑ/.test(r.disease) && r.kind === 'vaccine' ? 'vp-salm' : 'vp-plain';
 
 function openVaxPrint() { if (!confirmChecks(sheetHatch(), t('Εκτύπωση'))) return; document.getElementById('vaxprint-bg').style.display = 'flex'; renderVaxPrint(); }
 function closeVaxPrint() { document.getElementById('vaxprint-bg').style.display = 'none'; renderVax(); }
 function renderVaxPrint() {
-  const p = sheetHatch(), pl = planOf(p), rows = printRows(p), changes = printChanges(p), canEdit = !!pl;
+  const p = sheetHatch(), pl = planOf(p), rows = paperRows(p), changes = printChanges(p), canEdit = !!pl;
+  document.getElementById('vp-hatch').checked = printHatchery;
   document.getElementById('vaxprint-title').textContent = `${p.house} · ${gr('Εκκόλαψη')} ${fmt(p.doc_date)}`;
   document.getElementById('vaxprint-warn').innerHTML = changes.length
     ? `<div class="vp-warn"><b>⚠ ${x(gr('Άλλαξε μετά την εκτύπωση της {d}', { d: fmt(pl.printed.at.slice(0, 10)) }))}</b><ul>${changes.slice(0, 10).map(c => `<li>${x(c)}</li>`).join('')}` +
@@ -3974,7 +3980,7 @@ async function resetHatchList() {
 // printed (paper or Excel): keep what it looked like, so later changes can be shown
 async function markPrinted(p) {
   const pl = planOf(p); if (!pl) return;
-  const printed = { at: new Date().toISOString(), by: currentUser, rows: printRows(p) };
+  const printed = { at: new Date().toISOString(), by: currentUser, rows: paperRows(p), with_hatchery: printHatchery };
   try { await sbFetch(`${PLANS}?id=eq.${pl.id}`, { method: 'PATCH', body: JSON.stringify({ printed }) }); pl.printed = printed; }
   catch (e) { toast(t('Σφάλμα: {msg}', { msg: e.message }), true); }
 }
@@ -3991,7 +3997,7 @@ const loadScript = src => new Promise((ok, fail) => { const s = document.createE
 // the same page as an .xlsx (ExcelJS, loaded on first use)
 async function downloadVaxExcel() {
   await saveTyping();
-  const p = sheetHatch(), rows = printRows(p);
+  const p = sheetHatch(), rows = paperRows(p);
   try {
     if (!window.ExcelJS) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js');
     const wb = new ExcelJS.Workbook(), ws = wb.addWorksheet('ΕΜΒΟΛΙΑΚΟ', { pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
