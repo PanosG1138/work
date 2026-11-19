@@ -3874,7 +3874,10 @@ function printRows(p, withNotes = true) {
     if (date) rows.push({ key: 'inj|' + round, date, kind: 'inj', disease: PRINT_INJ[round], type: '', qty: '', method: '' });
   });
   const notes = withNotes ? (planOf(p) || {}).print_notes || {} : {};
-  rows.forEach(r => { r.day = Math.round((Date.parse(r.date) - Date.parse(p.doc_date)) / 864e5); if (r.kind !== 'hatchery' && notes[r.key] != null) r.method = notes[r.key]; });
+  // typed on the printout for this hatch: ΤΡΟΠΟΣ under the row's key, ΕΜΒΟΛΙΟ (disease) under 'disease|' + key
+  rows.forEach(r => { r.day = Math.round((Date.parse(r.date) - Date.parse(p.doc_date)) / 864e5);
+    if (r.kind !== 'hatchery' && notes[r.key] != null) r.method = notes[r.key];
+    if (r.kind !== 'hatchery' && notes['disease|' + r.key] != null) r.disease = notes['disease|' + r.key]; });
   return rows.sort((a, b) => a.date.localeCompare(b.date) || PRINT_ORDER[a.kind] - PRINT_ORDER[b.kind] || (a.kind === 'vaccine' ? a.type.localeCompare(b.type) : 0));   // day-0 rows keep the hatchery's order
 }
 // what differs from the last print, as short lines (none = same, or never printed)
@@ -3916,10 +3919,12 @@ function renderVaxPrint() {
       `<span class="vp-tip">${gr('Σβήστε και τα 3 κελιά μιας γραμμής για να φύγει.')}</span>` : '') + '</p>';
   const day0 = rows.filter(r => r.kind === 'hatchery').length;
   const edit = (r, field, i) => canEdit && r.key !== 'h|none' ? ` contenteditable="true" data-i="${i}" data-field="${field}" onblur="saveHatchCell(this)"` : '';
+  // ΕΜΒΟΛΙΟ and ΤΡΟΠΟΣ of the other rows: typed for this hatch only (saveVaxNote)
+  const note = (r, field) => canEdit ? ` contenteditable="true" data-key="${x(r.key)}" data-field="${field}" onblur="saveVaxNote(this)"` : '';
   const cells = (r, i) => r.kind === 'hatchery'
     ? `<td${edit(r, 'disease', i)}><b>${x(r.disease)}</b></td><td class="vp-type"${edit(r, 'type', i)}><b>${x(r.type)}</b></td><td>${x(r.qty)}</td><td class="vp-m"${edit(r, 'method', i)}>${x(r.method)}</td>`
-    : `<td><b>${x(r.disease)}</b></td><td class="vp-type"><b>${x(r.type)}</b></td><td>${x(r.qty)}</td>` +
-      `<td class="vp-m"${canEdit ? ` contenteditable="true" data-key="${x(r.key)}" onblur="saveVaxNote(this)"` : ''}>${x(r.method)}</td>`;
+    : `<td${note(r, 'disease')}><b>${x(r.disease)}</b></td><td class="vp-type"><b>${x(r.type)}</b></td><td>${x(r.qty)}</td>` +
+      `<td class="vp-m"${note(r, 'method')}>${x(r.method)}</td>`;
   document.getElementById('vaxprint-paper').innerHTML =
     `<div class="vp-title">${x(printTitle(p))}</div>` +
     `<table class="vp-table"><colgroup><col style="width:13%"><col style="width:6%"><col style="width:22%"><col style="width:24%"><col style="width:12%"><col></colgroup>` +
@@ -3929,12 +3934,13 @@ function renderVaxPrint() {
       cells(r, i) + '</tr>' + (gapAfter(rows, i) ? '<tr class="vp-gap"><td></td><td></td><td></td><td></td><td></td><td></td></tr>' : '')).join('') +
     '</tbody></table>';
 }
-// ΤΡΟΠΟΣ typed in a cell → kept for this hatch (back to the suggestion = the note is dropped)
+// ΤΡΟΠΟΣ or ΕΜΒΟΛΙΟ typed in a cell → kept for this hatch (back to the suggestion = the note is dropped)
 async function saveVaxNote(el) {
-  const p = sheetHatch(), pl = planOf(p), key = el.dataset.key, text = el.innerText.trim();
-  const suggested = (printRows(p, false).find(r => r.key === key) || {}).method || '';
+  const p = sheetHatch(), pl = planOf(p), key = el.dataset.key, field = el.dataset.field || 'method', text = el.innerText.trim();
+  const noteKey = field === 'method' ? key : field + '|' + key;
+  const suggested = (printRows(p, false).find(r => r.key === key) || {})[field] || '';
   const notes = { ...(pl.print_notes || {}) };
-  if (text === suggested) delete notes[key]; else notes[key] = text;
+  if (text === suggested) delete notes[noteKey]; else notes[noteKey] = text;
   if (JSON.stringify(notes) === JSON.stringify(pl.print_notes || {})) return;
   try {
     await sbFetch(`${PLANS}?id=eq.${pl.id}`, { method: 'PATCH', body: JSON.stringify({ print_notes: notes }) });
